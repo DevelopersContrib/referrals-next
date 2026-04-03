@@ -24,44 +24,48 @@ export const metadata: Metadata = {
 
 const tiers = [
   {
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    description: "Perfect for getting started with referral marketing.",
+    name: "Pioneer Plan",
+    price: "$299",
+    period: "/month",
+    description: "For businesses ready to scale with unlimited referral power.",
     features: [
-      "1 brand",
-      "1 campaign",
-      "Up to 500 participants",
-      "Basic widget templates",
-      "Social sharing (Facebook, Twitter)",
-      "Email notifications",
-      "Community forum access",
+      "Unlimited Domains",
+      "Unlimited Campaigns",
+      "Unlimited Brands",
+      "GDPR Compliant",
+      "Priority Support",
+      "Advanced Analytics",
+      "Custom Widgets",
+      "API Access",
+      "Email Campaigns via SES",
+      "Remove Branding",
     ],
     cta: "Get Started",
     ctaHref: "/signup",
     highlighted: false,
+    accent: "#ff646c",
   },
   {
-    name: "Pro",
-    price: "$29",
-    period: "/month",
-    description: "For growing businesses that need more power and flexibility.",
+    name: "Premium (Grow)",
+    price: "$9",
+    period: "/Brand",
+    description: "Perfect for growing businesses focused on leads and sales.",
     features: [
-      "Unlimited brands",
-      "Unlimited campaigns",
-      "Up to 10,000 participants",
-      "All widget templates",
-      "All social channels",
-      "Custom reward rules",
-      "Email campaigns via SES",
-      "API access",
-      "Priority support",
-      "Advanced analytics",
-      "Remove branding",
+      "Lead Generation",
+      "Social Followers Growth",
+      "Sales & Conversions",
+      "Gamification Features",
+      "Advanced Analytics",
+      "Voting Campaigns",
+      "Contest & Leaderboards",
+      "Custom Reward Rules",
+      "All Social Channels",
+      "Priority Support",
     ],
-    cta: "Start Pro Trial",
+    cta: "Get Started",
     ctaHref: "/signup",
     highlighted: true,
+    accent: "#926efb",
   },
   {
     name: "Enterprise",
@@ -69,147 +73,188 @@ const tiers = [
     period: "",
     description: "For large teams with advanced needs and dedicated support.",
     features: [
-      "Everything in Pro",
-      "Unlimited participants",
-      "White-label solution",
-      "Custom integrations",
-      "Dedicated account manager",
-      "SLA guarantee",
+      "Everything in Premium",
+      "Unlimited Participants",
+      "White-label Solution",
+      "Custom Integrations",
+      "Dedicated Account Manager",
+      "SLA Guarantee",
       "SSO / SAML",
-      "Custom contracts",
-      "Onboarding assistance",
+      "Custom Contracts",
+      "Onboarding Assistance",
     ],
     cta: "Contact Sales",
     ctaHref: "/contact",
     highlighted: false,
+    accent: "#ff646c",
   },
+];
+
+const comparisonFeatures = [
+  ["Brands", "Unlimited", "Per Brand", "Unlimited"],
+  ["Campaigns", "Unlimited", "Unlimited", "Unlimited"],
+  ["Participants", "10,000", "10,000", "Unlimited"],
+  ["Widget Templates", "All", "All", "All + Custom"],
+  ["Social Sharing", "All channels", "All channels", "All channels"],
+  ["Email Campaigns", "Yes", "Yes", "Yes"],
+  ["API Access", "Yes", "Yes", "Yes"],
+  ["Gamification", "No", "Yes", "Yes"],
+  ["White-label", "No", "No", "Yes"],
+  ["Support", "Priority", "Priority", "Dedicated"],
+  ["GDPR Compliance", "Yes", "Yes", "Yes"],
+  ["Custom Domain", "Yes", "Yes", "Yes"],
 ];
 
 export default function PricingPage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900">
-          Simple, Transparent Pricing
-        </h1>
-        <p className="mt-4 text-lg text-gray-600">
-          Start free. Upgrade when you are ready. No hidden fees.
-        </p>
-      </div>
+    <div className="bg-[#212529]">
+      {/* Hero */}
+      <section className="py-20">
+        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
+            Simple, Transparent Pricing
+          </h1>
+          <p className="mt-4 text-lg text-gray-400">
+            Start free. Upgrade when you are ready. No hidden fees.
+          </p>
+        </div>
+      </section>
 
-      <div className="mt-12 grid gap-8 lg:grid-cols-3">
-        {tiers.map((tier) => (
-          <div
-            key={tier.name}
-            className={`rounded-xl border p-8 ${
-              tier.highlighted
-                ? "border-blue-600 ring-2 ring-blue-600"
-                : "border-gray-200"
-            }`}
-          >
-            {tier.highlighted && (
-              <span className="mb-4 inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                Most Popular
-              </span>
-            )}
-            <h2 className="text-xl font-semibold text-gray-900">{tier.name}</h2>
-            <div className="mt-2">
-              <span className="text-4xl font-bold text-gray-900">
-                {tier.price}
-              </span>
-              {tier.period && (
-                <span className="text-gray-500">{tier.period}</span>
-              )}
-            </div>
-            <p className="mt-3 text-sm text-gray-600">{tier.description}</p>
+      {/* Pricing Cards */}
+      <section className="pb-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-3">
+            {tiers.map((tier) => (
+              <div
+                key={tier.name}
+                className={`relative rounded-2xl border p-8 ${
+                  tier.highlighted
+                    ? "border-[#926efb]/30 bg-[#292A2D]"
+                    : "border-white/10 bg-[#292A2D]"
+                }`}
+              >
+                {tier.highlighted && (
+                  <span className="absolute -top-3 right-6 rounded-full bg-[#926efb] px-3 py-1 text-xs font-semibold text-white">
+                    Popular
+                  </span>
+                )}
+                <h2 className="text-xl font-semibold text-white">
+                  {tier.name}
+                </h2>
+                <div className="mt-4 flex items-baseline gap-1">
+                  <span className="text-4xl font-bold text-white">
+                    {tier.price}
+                  </span>
+                  {tier.period && (
+                    <span className="text-gray-400">{tier.period}</span>
+                  )}
+                </div>
+                <p className="mt-3 text-sm text-gray-400">{tier.description}</p>
 
-            <ul className="mt-6 space-y-3">
-              {tier.features.map((feature) => (
-                <li
-                  key={feature}
-                  className="flex items-start gap-2 text-sm text-gray-600"
+                <ul className="mt-8 space-y-3">
+                  {tier.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-center gap-3 text-sm text-gray-300"
+                    >
+                      <svg
+                        className="h-5 w-5 flex-shrink-0"
+                        style={{ color: tier.accent }}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <Link
+                  href={tier.ctaHref}
+                  className="mt-8 block rounded-xl px-6 py-3 text-center text-sm font-semibold text-white transition-all hover:shadow-lg"
+                  style={{
+                    backgroundColor: tier.accent,
+                  }}
                 >
-                  <svg
-                    className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  {feature}
-                </li>
-              ))}
-            </ul>
-
-            <Link
-              href={tier.ctaHref}
-              className={`mt-8 block rounded-lg px-4 py-2.5 text-center text-sm font-medium ${
-                tier.highlighted
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              {tier.cta}
-            </Link>
+                  {tier.cta}
+                </Link>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      </section>
 
       {/* Feature Comparison */}
-      <div className="mt-20">
-        <h2 className="text-center text-2xl font-bold text-gray-900">
-          Feature Comparison
-        </h2>
-        <div className="mt-8 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="py-3 text-left font-medium text-gray-500">
-                  Feature
-                </th>
-                <th className="py-3 text-center font-medium text-gray-500">
-                  Free
-                </th>
-                <th className="py-3 text-center font-medium text-gray-500">
-                  Pro
-                </th>
-                <th className="py-3 text-center font-medium text-gray-500">
-                  Enterprise
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {[
-                ["Brands", "1", "Unlimited", "Unlimited"],
-                ["Campaigns", "1", "Unlimited", "Unlimited"],
-                ["Participants", "500", "10,000", "Unlimited"],
-                ["Widget Templates", "Basic", "All", "All + Custom"],
-                ["Social Sharing", "2 channels", "All channels", "All channels"],
-                ["Email Campaigns", "No", "Yes", "Yes"],
-                ["API Access", "No", "Yes", "Yes"],
-                ["Remove Branding", "No", "Yes", "Yes"],
-                ["White-label", "No", "No", "Yes"],
-                ["Support", "Community", "Priority", "Dedicated"],
-              ].map(([feature, free, pro, enterprise]) => (
-                <tr key={feature}>
-                  <td className="py-3 text-gray-700">{feature}</td>
-                  <td className="py-3 text-center text-gray-600">{free}</td>
-                  <td className="py-3 text-center text-gray-600">{pro}</td>
-                  <td className="py-3 text-center text-gray-600">
-                    {enterprise}
-                  </td>
+      <section className="bg-[#1a1d21] py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <h2 className="text-center text-2xl font-bold text-white">
+            Feature Comparison
+          </h2>
+          <div className="mt-10 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="py-4 text-left font-medium text-gray-400">
+                    Feature
+                  </th>
+                  <th className="py-4 text-center font-medium text-gray-400">
+                    Pioneer
+                  </th>
+                  <th className="py-4 text-center font-medium text-[#926efb]">
+                    Premium
+                  </th>
+                  <th className="py-4 text-center font-medium text-gray-400">
+                    Enterprise
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {comparisonFeatures.map(
+                  ([feature, pioneer, premium, enterprise]) => (
+                    <tr key={feature} className="transition-colors hover:bg-white/[0.02]">
+                      <td className="py-3 text-gray-300">{feature}</td>
+                      <td className="py-3 text-center text-gray-400">
+                        {pioneer}
+                      </td>
+                      <td className="py-3 text-center text-gray-300">
+                        {premium}
+                      </td>
+                      <td className="py-3 text-center text-gray-400">
+                        {enterprise}
+                      </td>
+                    </tr>
+                  ),
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* CTA */}
+      <section className="bg-gradient-to-r from-[#ff646c] to-[#ff4f58] py-16">
+        <div className="mx-auto max-w-4xl px-4 text-center">
+          <h2 className="text-3xl font-bold text-white">
+            Ready to grow your business?
+          </h2>
+          <p className="mt-4 text-lg text-white/80">
+            Start your free trial today. No credit card required.
+          </p>
+          <Link
+            href="/signup"
+            className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#ff646c] shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
+          >
+            Start Free Trial
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

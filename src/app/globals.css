@@ -46,9 +46,27 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --color-coral: #FF5C62;
+  --color-coral-hover: #ff4f58;
+  --color-bg-dark: #212529;
+  --color-bg-card: #292A2D;
+  --color-accent-purple: #926efb;
 }
 
 :root {
+  --color-coral: #FF5C62;
+  --color-coral-hover: #ff4f58;
+  --color-dark: #212529;
+  --color-card: #292A2D;
+  --color-purple: #926efb;
+  --primary-coral: #FF5C62;
+  --primary-coral-hover: #ff4f58;
+  --bg-dark: #212529;
+  --bg-card: #292A2D;
+  --accent-purple: #926efb;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);

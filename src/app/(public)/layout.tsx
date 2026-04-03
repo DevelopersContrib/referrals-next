@@ -75,50 +75,66 @@ export default function PublicLayout({
       {/* Footer */}
       <footer className="border-t bg-gray-50">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
+            <div>
+              <Link href="/" className="mb-4 block">
+                <Image
+                  src="/images/logo/logo2.png"
+                  alt="Referrals.com"
+                  width={142}
+                  height={45}
+                />
+              </Link>
+              <p className="text-xs text-gray-500">
+                The best referral marketing platform. Grow your business through word-of-mouth.
+              </p>
+              <Link
+                href="/signup"
+                className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700"
+              >
+                Get Started
+              </Link>
+            </div>
             <div>
               <h3 className="text-sm font-semibold text-gray-900">Product</h3>
               <ul className="mt-4 space-y-2">
-                <li>
-                  <Link href="/how-it-works" className="text-sm text-gray-600 hover:text-gray-900">How It Works</Link>
-                </li>
-                <li>
-                  <Link href="/pricing" className="text-sm text-gray-600 hover:text-gray-900">Pricing</Link>
-                </li>
-                <li>
-                  <Link href="/developer" className="text-sm text-gray-600 hover:text-gray-900">Developers</Link>
-                </li>
+                <li><Link href="/features" className="text-sm text-gray-600 hover:text-gray-900">Features</Link></li>
+                <li><Link href="/pricing" className="text-sm text-gray-600 hover:text-gray-900">Pricing</Link></li>
+                <li><Link href="/whitelabel" className="text-sm text-gray-600 hover:text-gray-900">Whitelabel</Link></li>
+                <li><Link href="/how-it-works" className="text-sm text-gray-600 hover:text-gray-900">How It Works</Link></li>
+                <li><Link href="/developer" className="text-sm text-gray-600 hover:text-gray-900">Developers</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="text-sm font-semibold text-gray-900">Company</h3>
               <ul className="mt-4 space-y-2">
-                <li>
-                  <Link href="/about" className="text-sm text-gray-600 hover:text-gray-900">About</Link>
-                </li>
-                <li>
-                  <Link href="/blog" className="text-sm text-gray-600 hover:text-gray-900">Blog</Link>
-                </li>
-                <li>
-                  <Link href="/contact" className="text-sm text-gray-600 hover:text-gray-900">Contact</Link>
-                </li>
-                <li>
-                  <Link href="/referral-program" className="text-sm text-gray-600 hover:text-gray-900">Referral Program</Link>
-                </li>
+                <li><Link href="/about" className="text-sm text-gray-600 hover:text-gray-900">About</Link></li>
+                <li><Link href="/blog" className="text-sm text-gray-600 hover:text-gray-900">Blog</Link></li>
+                <li><Link href="/partners" className="text-sm text-gray-600 hover:text-gray-900">Partners</Link></li>
+                <li><Link href="/referral-program" className="text-sm text-gray-600 hover:text-gray-900">Referral Program</Link></li>
               </ul>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">Legal</h3>
+              <h3 className="text-sm font-semibold text-gray-900">Support</h3>
               <ul className="mt-4 space-y-2">
-                <li>
-                  <Link href="/privacy" className="text-sm text-gray-600 hover:text-gray-900">Privacy</Link>
-                </li>
-                <li>
-                  <Link href="/terms" className="text-sm text-gray-600 hover:text-gray-900">Terms</Link>
-                </li>
-                <li>
-                  <Link href="/cookie-policy" className="text-sm text-gray-600 hover:text-gray-900">Cookie Policy</Link>
-                </li>
+                <li><Link href="/support" className="text-sm text-gray-600 hover:text-gray-900">Support</Link></li>
+                <li><Link href="/knowledgebase" className="text-sm text-gray-600 hover:text-gray-900">Knowledgebase</Link></li>
+                <li><Link href="/contact" className="text-sm text-gray-600 hover:text-gray-900">Contact</Link></li>
+                <li><Link href="/feedback" className="text-sm text-gray-600 hover:text-gray-900">Feedback</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">Community</h3>
+              <ul className="mt-4 space-y-2">
+                <li><Link href="/community" className="text-sm text-gray-600 hover:text-gray-900">Community</Link></li>
+                <li><Link href="/forum" className="text-sm text-gray-600 hover:text-gray-900">Forum</Link></li>
+                <li><Link href="/contribute" className="text-sm text-gray-600 hover:text-gray-900">Contribute</Link></li>
+              </ul>
+              <h3 className="mt-6 text-sm font-semibold text-gray-900">Legal</h3>
+              <ul className="mt-4 space-y-2">
+                <li><Link href="/privacy" className="text-sm text-gray-600 hover:text-gray-900">Privacy</Link></li>
+                <li><Link href="/terms" className="text-sm text-gray-600 hover:text-gray-900">Terms</Link></li>
+                <li><Link href="/cookie-policy" className="text-sm text-gray-600 hover:text-gray-900">Cookie Policy</Link></li>
               </ul>
             </div>
           </div>

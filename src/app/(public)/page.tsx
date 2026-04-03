@@ -28,8 +28,8 @@ const campaignTemplates = [
     badge: "Free",
     description:
       "Reward users for sharing your brand on social media. Boost followers and engagement organically.",
-    iconColor: "text-[#ff646c]",
-    bgColor: "bg-[#ff646c]/10",
+    iconColor: "text-[#FF5C62]",
+    bgColor: "bg-[#FF5C62]/10",
     icon: (
       <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
@@ -54,8 +54,8 @@ const campaignTemplates = [
     badge: "Premium",
     description:
       "Create leaderboards, challenges and point systems. Turn referrals into a competitive game.",
-    iconColor: "text-[#ff646c]",
-    bgColor: "bg-[#ff646c]/10",
+    iconColor: "text-[#FF5C62]",
+    bgColor: "bg-[#FF5C62]/10",
     icon: (
       <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.023 6.023 0 01-2.77.896m5.25-6.624V2.721" />
@@ -81,102 +81,61 @@ const features = [
   {
     title: "Drive Engagement",
     description: "Boost leads, increase sales, and amplify your brand reach through referral-driven engagement.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
-      </svg>
-    ),
   },
   {
     title: "User-Friendly",
     description: "Simple, intuitive interface designed for quick setup. Launch your first campaign in minutes.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
-      </svg>
-    ),
   },
   {
     title: "Broad Compatibility",
     description: "Supports WordPress, Shopify, PHP, HTML and more. Works with any website or platform.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
-      </svg>
-    ),
   },
   {
     title: "Efficient Marketing",
     description: "Reduce customer acquisition costs while increasing your online presence and conversions.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
   },
   {
     title: "Reliable Performance",
     description: "99.99% uptime guarantee with enterprise-grade infrastructure and global CDN delivery.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-      </svg>
-    ),
   },
   {
     title: "Comprehensive Integration",
     description: "Syncs with Google Analytics, Facebook Pixel, MailChimp, Zapier and 5,000+ apps.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-      </svg>
-    ),
   },
   {
     title: "Data Compliance",
     description: "Fully GDPR compliant with built-in consent management and data protection features.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-      </svg>
-    ),
   },
   {
     title: "Unlimited Potential",
     description: "Launch campaigns across 10 domains with unlimited participants and referral tracking.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-      </svg>
-    ),
   },
   {
     title: "Ready-Made Templates",
     description: "Access high-quality referral templates to launch campaigns quickly without design skills.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-      </svg>
-    ),
   },
   {
     title: "Dedicated Support",
     description: "Step-by-step guides, knowledgebase articles, and responsive support when you need it.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-      </svg>
-    ),
   },
   {
     title: "Exclusive Market Access",
     description: "Feature deals and promotions to our growing network of 500k+ active subscribers.",
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-      </svg>
-    ),
   },
+];
+
+const featureIcons = [
+  <svg key="1" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>,
+  <svg key="2" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" /></svg>,
+  <svg key="3" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" /></svg>,
+  <svg key="4" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  <svg key="5" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>,
+  <svg key="6" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>,
+  <svg key="7" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>,
+  <svg key="8" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>,
+  <svg key="9" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>,
+  <svg key="10" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>,
+  <svg key="11" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>,
 ];
 
 const testimonials = [
@@ -217,18 +176,18 @@ export default function HomePage() {
       {/* Section 1 - Hero */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#212529] via-[#1a1d21] to-[#212529] py-24 sm:py-32">
         {/* Decorative gradient orbs */}
-        <div className="absolute left-1/4 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[#ff646c]/5 blur-3xl" />
+        <div className="absolute left-1/4 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[#FF5C62]/5 blur-3xl" />
         <div className="absolute right-1/4 top-20 h-[400px] w-[400px] rounded-full bg-[#926efb]/5 blur-3xl" />
 
         <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[#ff646c]/30 bg-[#ff646c]/10 px-4 py-1.5 text-sm font-medium text-[#ff646c]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#FF5C62]/30 bg-[#FF5C62]/10 px-4 py-1.5 text-sm font-medium text-[#FF5C62]">
             Refer, Reward, Grow
           </span>
 
-          <h1 className="mt-8 text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
+          <h1 className="mt-8 text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
             Skyrocket your
             <br />
-            <span className="bg-gradient-to-r from-[#ff646c] to-[#926efb] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#FF5C62] to-[#926efb] bg-clip-text text-transparent">
               network today
             </span>
           </h1>
@@ -238,55 +197,39 @@ export default function HomePage() {
             create website partnerships and experience growth like never before.
           </p>
 
-          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+          {/* Email Input + CTA */}
+          <div className="mx-auto mt-10 flex max-w-md flex-col items-center gap-3 sm:flex-row">
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="w-full rounded-xl border border-white/10 bg-[#292A2D] px-5 py-3.5 text-sm text-white placeholder-gray-500 transition-colors focus:border-[#FF5C62] focus:outline-none focus:ring-1 focus:ring-[#FF5C62] sm:flex-1"
+            />
             <Link
               href="/signup"
-              className="inline-flex items-center rounded-xl bg-[#ff646c] px-8 py-3.5 text-lg font-semibold text-white shadow-lg shadow-[#ff646c]/25 transition-all hover:bg-[#ff4f58] hover:shadow-xl hover:shadow-[#ff646c]/30"
+              className="w-full whitespace-nowrap rounded-xl bg-[#FF5C62] px-8 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-[#FF5C62]/25 transition-all hover:bg-[#ff4f58] hover:shadow-xl hover:shadow-[#FF5C62]/30 sm:w-auto"
             >
               Start trial!
             </Link>
-            <Link
-              href="/signup"
-              className="text-sm text-gray-400 transition-colors hover:text-white"
-            >
-              or sign-up free
-            </Link>
           </div>
 
+          <Link
+            href="/signup"
+            className="mt-4 inline-block text-sm text-gray-400 transition-colors hover:text-white"
+          >
+            or sign-up free
+          </Link>
+
+          {/* Social login row */}
           <div className="mt-8 flex items-center justify-center gap-3">
             <span className="text-xs text-gray-500">Sign in with</span>
-            {/* Google */}
-            <button className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-colors hover:bg-white/10">
+            <button className="flex h-10 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 transition-colors hover:bg-white/10">
               <svg className="h-5 w-5" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
-            </button>
-            {/* Facebook */}
-            <button className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-colors hover:bg-white/10">
-              <svg className="h-5 w-5 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-            </button>
-            {/* Twitter/X */}
-            <button className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-colors hover:bg-white/10">
-              <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
+              <span className="text-xs text-gray-300">Google</span>
             </button>
           </div>
         </div>
@@ -296,7 +239,7 @@ export default function HomePage() {
       <section className="bg-[#212529] py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-white sm:text-4xl">
+            <h2 className="text-3xl font-bold text-white sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
               Flexible Campaigns
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-400">
@@ -338,7 +281,7 @@ export default function HomePage() {
       <section className="bg-[#1a1d21] py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-white sm:text-4xl">
+            <h2 className="text-3xl font-bold text-white sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
               Powerful Features to Amplify
               <br className="hidden sm:block" /> Your Online Presence
             </h2>
@@ -348,13 +291,13 @@ export default function HomePage() {
           </div>
 
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature) => (
+            {features.map((feature, idx) => (
               <div
                 key={feature.title}
                 className="group rounded-xl border border-white/5 bg-[#292A2D] p-6 transition-all hover:border-white/10"
               >
                 <div className="mb-4 inline-flex rounded-lg bg-[#926efb]/10 p-2.5 text-[#926efb]">
-                  {feature.icon}
+                  {featureIcons[idx]}
                 </div>
                 <h3 className="text-lg font-semibold text-white">
                   {feature.title}
@@ -372,7 +315,7 @@ export default function HomePage() {
       <section className="bg-[#212529] py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-white sm:text-4xl">
+            <h2 className="text-3xl font-bold text-white sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
               What Our Users Say
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-400">
@@ -386,7 +329,7 @@ export default function HomePage() {
                 key={testimonial.name}
                 className="rounded-xl border border-white/5 bg-[#292A2D] p-6"
               >
-                <div className="mb-4 flex text-[#ff646c]">
+                <div className="mb-4 flex text-[#FF5C62]">
                   {[...Array(5)].map((_, i) => (
                     <svg
                       key={i}
@@ -402,7 +345,7 @@ export default function HomePage() {
                   &ldquo;{testimonial.quote}&rdquo;
                 </p>
                 <div className="mt-6 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#ff646c] to-[#926efb] text-sm font-bold text-white">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#FF5C62] to-[#926efb] text-sm font-bold text-white">
                     {testimonial.avatar}
                   </div>
                   <div>
@@ -422,7 +365,7 @@ export default function HomePage() {
       <section className="bg-[#1a1d21] py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-white sm:text-4xl">
+            <h2 className="text-3xl font-bold text-white sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
               Simple, Transparent Pricing
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-400">
@@ -431,8 +374,42 @@ export default function HomePage() {
           </div>
 
           <div className="mx-auto mt-12 grid max-w-4xl gap-8 lg:grid-cols-2">
-            {/* Pioneer Plan */}
+            {/* Premium Plan */}
             <div className="rounded-2xl border border-white/10 bg-[#292A2D] p-8">
+              <h3 className="text-xl font-semibold text-white">Premium (Grow)</h3>
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-bold text-white">$9</span>
+                <span className="text-gray-400">/Brand</span>
+              </div>
+              <ul className="mt-6 space-y-3">
+                {[
+                  "Lead Generation",
+                  "Social Followers Growth",
+                  "Sales & Conversions",
+                  "Gamification Features",
+                  "Advanced Analytics",
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-3 text-sm text-gray-300">
+                    <svg className="h-5 w-5 flex-shrink-0 text-[#FF5C62]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/signup"
+                className="mt-8 block rounded-xl bg-[#FF5C62] px-6 py-3 text-center text-sm font-semibold text-white transition-all hover:bg-[#ff4f58] hover:shadow-lg hover:shadow-[#FF5C62]/25"
+              >
+                Get Started
+              </Link>
+            </div>
+
+            {/* Pioneer Plan */}
+            <div className="relative rounded-2xl border border-[#926efb]/30 bg-[#292A2D] p-8">
+              <span className="absolute -top-3 right-6 rounded-full bg-[#926efb] px-3 py-1 text-xs font-semibold text-white">
+                Popular
+              </span>
               <h3 className="text-xl font-semibold text-white">Pioneer Plan</h3>
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="text-4xl font-bold text-white">$299</span>
@@ -445,42 +422,6 @@ export default function HomePage() {
                   "Unlimited Brands",
                   "GDPR Compliant",
                   "Priority Support",
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-3 text-sm text-gray-300">
-                    <svg className="h-5 w-5 flex-shrink-0 text-[#ff646c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/signup"
-                className="mt-8 block rounded-xl bg-[#ff646c] px-6 py-3 text-center text-sm font-semibold text-white transition-all hover:bg-[#ff4f58] hover:shadow-lg hover:shadow-[#ff646c]/25"
-              >
-                Get Started
-              </Link>
-            </div>
-
-            {/* Premium Plan */}
-            <div className="relative rounded-2xl border border-[#926efb]/30 bg-[#292A2D] p-8">
-              <span className="absolute -top-3 right-6 rounded-full bg-[#926efb] px-3 py-1 text-xs font-semibold text-white">
-                Popular
-              </span>
-              <h3 className="text-xl font-semibold text-white">
-                Premium (Grow)
-              </h3>
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-white">$9</span>
-                <span className="text-gray-400">/Brand</span>
-              </div>
-              <ul className="mt-6 space-y-3">
-                {[
-                  "Lead Generation",
-                  "Social Followers Growth",
-                  "Sales & Conversions",
-                  "Gamification Features",
-                  "Advanced Analytics",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-gray-300">
                     <svg className="h-5 w-5 flex-shrink-0 text-[#926efb]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -504,7 +445,7 @@ export default function HomePage() {
       {/* Section 6 - Integrations */}
       <section className="bg-[#212529] py-20">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-white sm:text-4xl">
+          <h2 className="text-3xl font-bold text-white sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
             Works with your favorite tools
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-gray-400">
@@ -525,9 +466,9 @@ export default function HomePage() {
       </section>
 
       {/* Section 7 - Final CTA */}
-      <section className="bg-gradient-to-r from-[#ff646c] to-[#ff4f58] py-20">
+      <section className="bg-gradient-to-r from-[#FF5C62] to-[#ff4f58] py-20">
         <div className="mx-auto max-w-4xl px-4 text-center">
-          <h2 className="text-3xl font-bold text-white sm:text-4xl">
+          <h2 className="text-3xl font-bold text-white sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
             Ready to skyrocket your growth?
           </h2>
           <p className="mt-4 text-lg text-white/80">
@@ -536,7 +477,7 @@ export default function HomePage() {
           </p>
           <Link
             href="/signup"
-            className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#ff646c] shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
+            className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#FF5C62] shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
           >
             Sign Up Now
           </Link>

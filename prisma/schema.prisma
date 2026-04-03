@@ -1,0 +1,786 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model affiliate_sales_warrior {
+  id             Int      @id @default(autoincrement())
+  offer_id       String   @db.VarChar(200)
+  product_id     String   @db.VarChar(200)
+  name           String   @db.VarChar(200)
+  email          String   @db.VarChar(200)
+  sale_id        String   @db.VarChar(200)
+  sale_amount    String   @db.VarChar(200)
+  coupon         String?  @db.VarChar(200)
+  date_purchased DateTime @default(now()) @db.Timestamp(0)
+}
+
+model api_call_history {
+  id           Int      @id @default(autoincrement())
+  api_key      String   @db.VarChar(100)
+  call         String?  @db.Text
+  date_called  DateTime @default(now()) @db.Timestamp(0)
+  call_from    String?  @db.VarChar(255)
+  call_from_ip String?  @db.VarChar(255)
+}
+
+model brand_deals {
+  id           Int       @id @default(autoincrement())
+  category_id  Int
+  url_id       Int
+  member_id    Int
+  title        String    @db.VarChar(200)
+  description  String?   @db.Text
+  price        String?   @db.VarChar(10)
+  banner       String?   @db.VarChar(100)
+  url          String?   @db.VarChar(255)
+  how_to       String?   @db.Text
+  date_end     String?   @db.VarChar(100)
+  date_created DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model brand_subdomains {
+  id            Int      @id @default(autoincrement())
+  url_id        Int
+  created_by    Int
+  subdomain     String?  @db.VarChar(200)
+  date_created  DateTime @default(now()) @db.Timestamp(0)
+  google_ua     String?  @db.VarChar(200)
+  header_script String?  @db.Text
+}
+
+model brand_whitelabel {
+  id                Int       @id @default(autoincrement())
+  url_id            Int
+  created_by        Int
+  domain            String?   @db.VarChar(200)
+  description       String?   @db.Text
+  logo              String?   @db.VarChar(200)
+  banner_image      String?   @db.VarChar(200)
+  featured_campaign Int?
+  header_script     String?   @db.Text
+  footer_script     String?   @db.Text
+  meta_title        String?   @db.VarChar(200)
+  meta_desc         String?   @db.Text
+  meta_keywords     String?   @db.VarChar(200)
+  vercel_identifier String?   @db.VarChar(200)
+  date_created      DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model campaign_api_keys {
+  id          Int    @id @default(autoincrement())
+  campaign_id Int
+  api_key     String @db.VarChar(200)
+  api_secret  String @db.VarChar(200)
+}
+
+model campaign_challenges {
+  id                   Int @id @default(autoincrement())
+  campaign_id          Int
+  contrib_challenge_id Int
+}
+
+model campaign_contest {
+  id              Int      @id @default(autoincrement())
+  campaign_id     Int
+  contest_name    String   @db.VarChar(200)
+  contest_type_id Int
+  description     String?  @db.Text
+  start_date      String?  @db.VarChar(100)
+  end_date        String?  @db.VarChar(100)
+  member_id       Int
+  max_winners     Int?     @default(1)
+  max_display     Int?     @default(10)
+  is_on           Boolean? @default(false)
+  date_added      DateTime @default(now()) @db.Timestamp(0)
+  winner_email    String?  @db.Text
+}
+
+model campaign_contest_type {
+  id        Int    @id @default(autoincrement())
+  type_name String @db.VarChar(200)
+}
+
+model campaign_coupons {
+  id          Int      @id @default(autoincrement())
+  campaign_id Int
+  code        String?  @db.VarChar(100)
+  is_used     Boolean? @default(false)
+}
+
+model campaign_email_content {
+  id          Int     @id @default(autoincrement())
+  campaign_id Int
+  subject     String  @db.VarChar(200)
+  template    String? @db.LongText
+}
+
+model campaign_integrations {
+  id                  Int      @id @default(autoincrement())
+  campaign_id         Int
+  mailchimp_key       String?  @db.VarChar(200)
+  mailchimp_list      String?  @db.VarChar(200)
+  mailchimp_allow     Boolean? @default(false)
+  facebook_page       String?  @db.VarChar(200)
+  facebook_page_id    String?  @db.VarChar(200)
+  facebook_app_id     String?  @db.VarChar(200)
+  facebook_secure_url String?  @db.Text
+  shopify_shop_name   String?  @db.VarChar(200)
+}
+
+model campaign_lander {
+  id                 Int                              @id @default(autoincrement())
+  campaign_id        Int
+  template_id        Int
+  header_title       String?                          @db.VarChar(200)
+  header_description String?                          @db.Text
+  footer_title       String?                          @db.VarChar(200)
+  footer_description String?                          @db.Text
+  background_type    campaign_lander_background_type? @default(image)
+  background_color   String?                          @db.VarChar(200)
+  background_image   String?                          @db.VarChar(200)
+  font_color         String?                          @db.VarChar(200)
+}
+
+model campaign_lander_preview {
+  id                 Int                                      @id @default(autoincrement())
+  campaign_id        Int
+  template_id        Int
+  header_title       String?                                  @db.VarChar(200)
+  header_description String?                                  @db.Text
+  footer_title       String?                                  @db.VarChar(200)
+  footer_description String?                                  @db.Text
+  background_type    campaign_lander_preview_background_type? @default(image)
+  background_color   String?                                  @db.VarChar(200)
+  background_image   String?                                  @db.VarChar(200)
+  font_color         String?                                  @db.VarChar(200)
+}
+
+model campaign_participants {
+  id             Int      @id @default(autoincrement())
+  campaign_id    Int
+  email          String   @db.VarChar(100)
+  name           String   @db.VarChar(100)
+  date_signedup  DateTime @default(now()) @db.Timestamp(0)
+  password       String?  @db.VarChar(100)
+  photo          String?  @db.VarChar(200)
+  participant_id Int?
+  wallet_address String?  @db.VarChar(255)
+  invited_by     Int?
+  invited_social Int?
+  ip_address     String?  @db.VarChar(100)
+  signup_url     String?  @db.VarChar(250)
+  referral_url   String?  @db.VarChar(250)
+}
+
+model campaign_promote {
+  id           Int      @id @default(autoincrement())
+  member_id    Int
+  campaign_id  Int
+  approved     Boolean? @default(false)
+  date_updated DateTime @default(now()) @db.Timestamp(0)
+  sent_email   Boolean? @default(false)
+}
+
+model campaign_reward {
+  id                   Int     @id @default(autoincrement())
+  campaign_id          Int
+  coupon_filename      String? @db.VarChar(100)
+  redirect_url         String? @db.VarChar(100)
+  custom_message       String? @db.LongText
+  token_symbol         String? @db.VarChar(100)
+  token_address        String? @db.VarChar(100)
+  token_amount         String? @db.VarChar(100)
+  reward_email_from    String? @db.VarChar(200)
+  reward_email_subject String? @db.VarChar(200)
+  reward_email_content String? @db.LongText
+  cash_value           Float?  @default(0) @db.Float
+  worth_value          Float?  @db.Float
+}
+
+model campaign_social_content {
+  id          Int     @id @default(autoincrement())
+  campaign_id Int
+  url         String  @db.VarChar(200)
+  description String  @db.Text
+  image_url   String? @db.VarChar(100)
+}
+
+model campaign_socials_allowed {
+  id          Int @id @default(autoincrement())
+  campaign_id Int
+  social_id   Int
+}
+
+model campaign_types {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(100)
+  has_default Boolean? @default(false)
+  campaign_id Int?
+}
+
+model campaign_widget {
+  id                       Int                                     @id @default(autoincrement())
+  campaign_id              Int
+  widget_type              campaign_widget_widget_type?            @default(widget)
+  color                    String?                                 @default("FF0000") @db.VarChar(100)
+  header_title             String?                                 @db.VarChar(100)
+  description              String?                                 @db.Text
+  button_text              String?                                 @default("Submit") @db.VarChar(100)
+  banner_image_url         String?                                 @db.VarChar(100)
+  field_label_1            String?                                 @db.VarChar(100)
+  field_label_2            String?                                 @db.VarChar(100)
+  button_color             String?                                 @db.VarChar(100)
+  widget_height            String?                                 @default("auto") @db.VarChar(100)
+  widget_width             String?                                 @default("auto") @db.VarChar(100)
+  body_text                String?                                 @db.LongText
+  background_image         String?                                 @db.VarChar(200)
+  join_button_text         String?                                 @db.VarChar(200)
+  template_id              Int?                                    @default(1)
+  popup_button_text        String?                                 @db.VarChar(200)
+  popup_button_color       String?                                 @db.VarChar(200)
+  popup_button_position    String?                                 @db.VarChar(200)
+  text_color               String?                                 @db.VarChar(100)
+  placement                campaign_widget_placement?              @default(embed)
+  background_type          campaign_widget_background_type?        @default(image)
+  background_color         String?                                 @default("000000") @db.VarChar(100)
+  success_message          String?                                 @db.LongText
+  stats_on                 Boolean?                                @default(true)
+  stats_start_participants Int?                                    @default(2000)
+  stats_start_shares       Int?                                    @default(2000)
+  stats_start_clicks       Int?                                    @default(2000)
+  stats_start_impressions  Int?                                    @default(2000)
+  header_font_color        String?                                 @default("000000") @db.VarChar(100)
+  left_image               String?                                 @db.VarChar(250)
+  allow_countdown          Boolean?                                @default(false)
+  countdown_end            String?                                 @db.VarChar(100)
+  header_background_type   campaign_widget_header_background_type? @default(color)
+  header_description_color String?                                 @default("000000") @db.VarChar(100)
+}
+
+model campaign_widget_impressions {
+  id          Int      @id @default(autoincrement())
+  campaign_id Int
+  ip_address  String?  @db.VarChar(200)
+  url_viewed  String?  @db.Text
+  date_viewed DateTime @default(now()) @db.Timestamp(0)
+}
+
+model campaign_widget_impressions_count {
+  id          Int     @id @default(autoincrement())
+  campaign_id Int     @unique(map: "campaign_id")
+  views       BigInt? @default(0)
+
+  @@index([id], map: "id")
+}
+
+model campaign_widget_templates {
+  id                       Int                                               @id @default(autoincrement())
+  name                     String                                            @db.VarChar(200)
+  screenshot               String                                            @db.VarChar(200)
+  template                 String                                            @db.Text
+  color                    String?                                           @default("FF0000") @db.VarChar(100)
+  header_title             String?                                           @db.VarChar(100)
+  description              String?                                           @db.Text
+  button_text              String?                                           @default("Submit") @db.VarChar(100)
+  banner_image_url         String?                                           @db.VarChar(100)
+  button_color             String?                                           @db.VarChar(100)
+  widget_height            String?                                           @default("auto") @db.VarChar(100)
+  widget_width             String?                                           @default("auto") @db.VarChar(100)
+  background_image         String?                                           @db.VarChar(200)
+  join_button_text         String?                                           @db.VarChar(200)
+  body_text                String?                                           @db.Text
+  campaign_type            Int?                                              @default(1)
+  popup_button_text        String?                                           @db.VarChar(200)
+  popup_button_color       String?                                           @db.VarChar(200)
+  popup_button_position    String?                                           @db.VarChar(200)
+  text_color               String?                                           @db.VarChar(100)
+  placement                campaign_widget_templates_placement?              @default(embed)
+  background_type          campaign_widget_templates_background_type?        @default(image)
+  background_color         String?                                           @default("000000") @db.VarChar(100)
+  success_message          String?                                           @db.Text
+  header_font_color        String?                                           @default("000000") @db.VarChar(100)
+  left_image               String?                                           @db.VarChar(250)
+  allow_countdown          Boolean?                                          @default(false)
+  countdown_end            String?                                           @db.VarChar(100)
+  header_background_type   campaign_widget_templates_header_background_type? @default(color)
+  header_description_color String?                                           @default("000000") @db.VarChar(100)
+}
+
+model campaign_widget_views {
+  id          Int  @id @default(autoincrement())
+  campaign_id Int
+  views       Int? @default(0)
+}
+
+model campaign_widget_vote_options {
+  id                 Int     @id @default(autoincrement())
+  campaign_id        Int
+  option_name        String  @db.VarChar(200)
+  option_photo       String? @db.Text
+  arrangement        Int?    @default(0)
+  option_description String? @db.Text
+}
+
+model campaign_widget_votes {
+  id             Int      @id @default(autoincrement())
+  participant_id Int
+  option_id      Int
+  date_voted     DateTime @default(now()) @db.Timestamp(0)
+}
+
+model category {
+  category_id       Int     @id @default(autoincrement())
+  category_name     String  @db.VarChar(200)
+  board_id          Int?    @default(0)
+  holding_url       String? @db.VarChar(100)
+  description       String? @db.Text
+  slug              String? @db.VarChar(100)
+  holding_domain    String? @db.VarChar(200)
+  holding_domain_id BigInt? @default(0)
+  background        String? @db.VarChar(250)
+  default_framework Int?    @default(8)
+}
+
+model comment_status {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(200)
+  icon String @db.VarChar(200)
+}
+
+model deal_clicks {
+  id         Int       @id @default(autoincrement())
+  deal_id    Int
+  clicks     String?   @db.VarChar(200)
+  click_date DateTime? @db.Timestamp(0)
+}
+
+model feeds {
+  id          Int       @id @default(autoincrement())
+  title       String?   @db.VarChar(200)
+  description String?   @db.Text
+  link        String?   @db.VarChar(200)
+  date_added  DateTime? @db.Timestamp(0)
+  from        Int?
+  image       String?   @db.VarChar(200)
+}
+
+model integration_requests {
+  id          Int      @id @default(autoincrement())
+  member_id   Int
+  campaign_id Int
+  subject     String   @db.VarChar(200)
+  message     String?  @db.Text
+  status      String   @default("new") @db.VarChar(200)
+  date_sent   DateTime @default(now()) @db.Timestamp(0)
+}
+
+model lander_templates {
+  id            Int     @id @default(autoincrement())
+  template_name String? @db.VarChar(200)
+  file_name     String? @db.VarChar(100)
+  screenshot    String? @db.VarChar(200)
+}
+
+model member_campaigns {
+  id                           Int                         @id @default(autoincrement())
+  type_id                      Int
+  url_id                       Int
+  member_id                    Int
+  reward_type                  Int
+  name                         String                      @db.VarChar(200)
+  allow_email                  Boolean?                    @default(false)
+  num_visits                   Int?
+  date_added                   DateTime                    @default(now()) @db.Timestamp(0)
+  reward_notify_subject        String?                     @db.VarChar(200)
+  reward_notify_message        String?                     @db.LongText
+  campaign_entry_subject       String?                     @db.Text
+  campaign_entry_message       String?                     @db.LongText
+  goal_type                    member_campaigns_goal_type?
+  num_signups                  Int?
+  publish                      member_campaigns_publish?   @default(public)
+  reward_invited               Boolean?                    @default(false)
+  topbar_link                  String?                     @db.VarChar(200)
+  twoway_reward_notify_subject String?                     @db.VarChar(200)
+  twoway_reward_notify_message String?                     @db.LongText
+  is_sample                    Boolean?                    @default(false)
+  voting_mechanics             String?                     @db.Text
+  voting_start                 String?                     @db.VarChar(100)
+  voting_end                   String?                     @db.VarChar(100)
+  allow_countdown              Boolean?                    @default(false)
+  countdown_end                String?                     @db.VarChar(100)
+}
+
+model member_keys {
+  user_key_id    Int      @id @default(autoincrement())
+  api_key        String?  @db.VarChar(100)
+  userid         Int
+  date_generated DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([userid], map: "fk_user_key_user_idx")
+}
+
+model member_mailchimp {
+  id        Int    @id @default(autoincrement())
+  member_id Int
+  api_key   String @db.VarChar(200)
+}
+
+model member_payment {
+  id               Int       @id @default(autoincrement())
+  member_id        Int
+  datetime_created DateTime  @default(now()) @db.Timestamp(0)
+  transaction_id   String?   @db.Text
+  token            String?   @db.Text
+  amount           Float?    @db.Float
+  currency         String?   @db.VarChar(3)
+  status           String?   @db.Text
+  firstname        String?   @db.Text
+  lastname         String?   @db.Text
+  email            String?   @db.Text
+  description      String?   @db.Text
+  summary          String?   @db.Text
+  plan_expiry      DateTime? @db.DateTime(0)
+}
+
+model member_plan {
+  id                  Int      @id @default(autoincrement())
+  member_id           Int
+  paypal_plan_id      String   @db.VarChar(200)
+  paypal_agreement_id String?  @db.VarChar(200)
+  agreement_cancel    String?  @db.VarChar(200)
+  agreement_activate  String?  @db.VarChar(200)
+  date_added          DateTime @default(now()) @db.Timestamp(0)
+  payment_id          Int?
+}
+
+model member_tokens {
+  id             Int      @id @default(autoincrement())
+  token          String   @db.VarChar(200)
+  email          String?  @db.VarChar(200)
+  api_key        String?  @db.VarChar(200)
+  ip             String?  @db.VarChar(100)
+  redirect_url   String?  @db.VarChar(200)
+  cancel_url     String?  @db.VarChar(200)
+  date_generated DateTime @default(now()) @db.Timestamp(0)
+}
+
+model member_urls {
+  id               Int       @id @default(autoincrement())
+  url              String    @db.VarChar(200)
+  logo_url         String?   @db.VarChar(200)
+  description      String?   @db.Text
+  member_id        Int
+  in_vnoc          Boolean?  @default(false)
+  vnoc_id          Int?
+  date_added       DateTime  @default(now()) @db.Timestamp(0)
+  domain           String    @db.VarChar(100)
+  background_image String?   @db.VarChar(200)
+  slug             String?   @db.VarChar(100)
+  plan_expiry      DateTime? @db.DateTime(0)
+}
+
+model member_zapier {
+  id          Int     @id @default(autoincrement())
+  member_id   Int
+  message     String? @db.Text
+  link        String  @db.VarChar(255)
+  campaign_id Int?
+}
+
+model members {
+  id                Int       @id @default(autoincrement())
+  email             String    @db.VarChar(200)
+  name              String    @db.VarChar(200)
+  password          String?   @db.VarChar(100)
+  verification_code String?   @db.VarChar(100)
+  is_verified       Boolean?  @default(false)
+  num_of_logins     Int?      @default(0)
+  plan_id           Int?      @default(0)
+  date_signedup     DateTime  @default(now()) @db.Timestamp(0)
+  photo             String?   @db.Text
+  signedup_social   String?   @db.VarChar(100)
+  plan_expiry       DateTime? @db.DateTime(0)
+  is_partner        Boolean?  @default(false)
+  in_blog           Boolean?  @default(false)
+  referred_by       Int?
+}
+
+model participants {
+  id            Int      @id @default(autoincrement())
+  email         String   @db.VarChar(200)
+  name          String   @db.VarChar(200)
+  password      String?  @db.VarChar(100)
+  photo         String?  @db.VarChar(200)
+  brand_id      Int?     @default(0)
+  date_signedup DateTime @default(now()) @db.Timestamp(0)
+}
+
+model participants_invited_emails {
+  id             Int      @id @default(autoincrement())
+  participant_id Int
+  campaign_id    Int
+  name           String   @db.VarChar(200)
+  email          String   @db.VarChar(200)
+  has_viewed     Boolean? @default(false)
+  date_sent      DateTime @default(now()) @db.Timestamp(0)
+  has_signedup   Boolean? @default(false)
+}
+
+model participants_rewards {
+  id                 Int      @id @default(autoincrement())
+  participant_id     Int
+  campaign_id        Int
+  reward_type        Int
+  redirect_url       String?  @db.VarChar(200)
+  coupon             String?  @db.VarChar(200)
+  custom_message     String?  @db.Text
+  token_address      String?  @db.VarChar(200)
+  token_symbol       String?  @db.VarChar(200)
+  token_amount       Float?   @db.Float
+  token_key          String?  @db.VarChar(100)
+  token_transaction  String?  @db.VarChar(255)
+  participant_wallet String?  @db.VarChar(200)
+  date_sent          DateTime @default(now()) @db.Timestamp(0)
+  social_type        Int
+  is_coupon_used     Boolean? @default(false)
+  cash_value         Float?   @db.Float
+}
+
+model participants_share {
+  id             Int      @id @default(autoincrement())
+  campaign_id    Int
+  social_type    Int
+  clicks         Int?     @default(0)
+  date_shared    DateTime @default(now()) @db.Timestamp(0)
+  participant_id Int
+  url            String?  @db.VarChar(200)
+  verified       Boolean? @default(false)
+}
+
+model paticipant_gmail_contacts {
+  id             Int    @id @default(autoincrement())
+  participant_id String @db.VarChar(200)
+  name           String @db.VarChar(200)
+  email          String @db.VarChar(200)
+}
+
+model plans {
+  id                     Int     @id @default(autoincrement())
+  name                   String? @db.VarChar(200)
+  campaigns_participants Int?    @default(0)
+  price                  Float?  @default(0) @db.Float
+  no_of_domains          Int?    @default(0)
+  unit                   String? @default("month") @db.VarChar(100)
+  no_unit                Int?    @default(0)
+  days                   Int?    @default(0)
+}
+
+model referral_coupons {
+  id          Int      @id @default(autoincrement())
+  code        String   @db.VarChar(100)
+  added_days  Int
+  date_added  DateTime @default(now()) @db.Timestamp(0)
+  plan_id     Int?     @default(2)
+  is_used     Boolean? @default(false)
+  used_by     Int?
+  is_assigned Boolean? @default(false)
+}
+
+model reviews {
+  id           Int      @id @default(autoincrement())
+  member_id    Int
+  rating       Int
+  message      String?  @db.Text
+  approved     Boolean? @default(false)
+  date_updated DateTime @default(now()) @db.Timestamp(0)
+}
+
+model reward_types {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  has_value Boolean? @default(false)
+}
+
+model shoutouts {
+  id           Int      @id @default(autoincrement())
+  member_id    Int
+  message      String?  @db.Text
+  approved     Boolean? @default(false)
+  date_updated DateTime @default(now()) @db.Timestamp(0)
+}
+
+model social_types {
+  id    Int     @id @default(autoincrement())
+  name  String  @db.VarChar(100)
+  image String? @db.VarChar(200)
+}
+
+model testimonials {
+  id           Int      @id @default(autoincrement())
+  member_id    Int
+  message      String?  @db.Text
+  approved     Boolean? @default(false)
+  date_updated DateTime @default(now()) @db.Timestamp(0)
+}
+
+model todolist {
+  id   Int     @id @default(autoincrement())
+  name String  @db.VarChar(200)
+  url  String? @db.VarChar(200)
+}
+
+model topic_categories {
+  id   Int     @id @default(autoincrement())
+  name String? @db.VarChar(200)
+  slug String? @db.VarChar(200)
+}
+
+model topic_comments {
+  id          Int      @id @default(autoincrement())
+  topic_id    Int?
+  answer      String?  @db.Text
+  member_id   Int?
+  date_posted DateTime @default(now()) @db.Timestamp(0)
+}
+
+model topic_comments_votes {
+  id         Int      @id @default(autoincrement())
+  comment_id Int
+  voted_by   Int      @default(0)
+  date_voted DateTime @default(now()) @db.Timestamp(0)
+}
+
+model topic_views {
+  id          Int       @id @default(autoincrement())
+  topic_id    Int
+  viewed_by   Int       @default(0)
+  date_viewed DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model topic_votes {
+  id         Int      @id @default(autoincrement())
+  topic_id   Int
+  voted_by   Int      @default(0)
+  date_voted DateTime @default(now()) @db.Timestamp(0)
+}
+
+model topics {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(200)
+  content     String   @db.Text
+  member_id   Int?
+  category_id Int?
+  date_posted DateTime @default(now()) @db.Timestamp(0)
+  slug        String?  @db.VarChar(200)
+  filename    String?  @db.VarChar(200)
+}
+
+model url_plan {
+  id                  Int      @id @default(autoincrement())
+  url_id              Int
+  member_id           Int
+  paypal_plan_id      String?  @db.VarChar(200)
+  paypal_agreement_id String?  @db.VarChar(200)
+  agreement_cancel    String?  @db.VarChar(200)
+  agreement_activate  String?  @db.VarChar(200)
+  date_added          DateTime @default(now()) @db.Timestamp(0)
+  payment_id          Int?
+}
+
+model url_socials {
+  id          Int    @id @default(autoincrement())
+  url_id      Int
+  social      String @db.VarChar(100)
+  profile_url String @db.VarChar(200)
+}
+
+model visitors {
+  id            Int      @id @default(autoincrement())
+  email         String   @db.VarChar(200)
+  name          String?  @db.VarChar(200)
+  ip            String?  @db.VarChar(100)
+  date_signedup DateTime @default(now()) @db.Timestamp(0)
+}
+
+model widget_field_types {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(200)
+}
+
+model widget_templates_attributes {
+  id            Int      @id @default(autoincrement())
+  attr_name     String   @db.VarChar(200)
+  attr_label    String   @db.VarChar(200)
+  choises       String?  @db.Text
+  field_type    Int
+  template_id   Int
+  is_required   Boolean? @default(false)
+  default_value String?  @db.Text
+  hide          Boolean? @default(false)
+}
+
+enum campaign_widget_widget_type {
+  widget
+  banner
+}
+
+enum campaign_lander_background_type {
+  color
+  image
+  transparent
+}
+
+enum campaign_lander_preview_background_type {
+  color
+  image
+  transparent
+}
+
+enum member_campaigns_goal_type {
+  visit
+  signup
+}
+
+enum member_campaigns_publish {
+  public
+  private
+}
+
+enum campaign_widget_templates_placement {
+  embed
+  popup
+}
+
+enum campaign_widget_placement {
+  embed
+  popup
+}
+
+enum campaign_widget_templates_background_type {
+  color
+  image
+  transparent
+}
+
+enum campaign_widget_background_type {
+  color
+  image
+  transparent
+}
+
+enum campaign_widget_templates_header_background_type {
+  color
+  image
+  transparent
+}
+
+enum campaign_widget_header_background_type {
+  color
+  image
+  transparent
+}

@@ -2,9 +2,24 @@ import { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Pricing",
+  title: "Pricing Plans",
   description:
-    "Simple, transparent pricing for referral marketing. Start free and scale as you grow.",
+    "Affordable referral marketing plans for businesses of all sizes. Start free, upgrade as you grow.",
+  openGraph: {
+    title: "Pricing Plans | Referrals.com",
+    description:
+      "Affordable referral marketing plans for businesses of all sizes. Start free, upgrade as you grow.",
+    url: "https://referrals.com/pricing",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Pricing Plans | Referrals.com",
+    description:
+      "Affordable referral marketing plans for businesses of all sizes. Start free, upgrade as you grow.",
+  },
 };
 
 const tiers = [

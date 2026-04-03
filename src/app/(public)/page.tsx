@@ -1,4 +1,26 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Referrals.com — The Best Referral Marketing Platform",
+  description:
+    "Create powerful referral campaigns, embed widgets, reward participants, and grow your business through word-of-mouth marketing.",
+  openGraph: {
+    title: "Referrals.com — The Best Referral Marketing Platform",
+    description:
+      "Create powerful referral campaigns, embed widgets, reward participants, and grow your business through word-of-mouth marketing.",
+    url: "https://referrals.com",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Referrals.com — The Best Referral Marketing Platform",
+    description:
+      "Create powerful referral campaigns, embed widgets, reward participants, and grow your business through word-of-mouth marketing.",
+  },
+};
 
 export default function HomePage() {
   return (

@@ -1,9 +1,25 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata = {
-  title: "Developer Portal - Referrals.com API",
+export const metadata: Metadata = {
+  title: "Developer API",
   description:
-    "Build powerful referral programs with the Referrals.com REST API. Manage brands, campaigns, participants, and rewards programmatically.",
+    "Build powerful integrations with the Referrals.com REST API. Full documentation, webhooks, and SDKs.",
+  openGraph: {
+    title: "Developer API | Referrals.com",
+    description:
+      "Build powerful integrations with the Referrals.com REST API. Full documentation, webhooks, and SDKs.",
+    url: "https://referrals.com/developer",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Developer API | Referrals.com",
+    description:
+      "Build powerful integrations with the Referrals.com REST API. Full documentation, webhooks, and SDKs.",
+  },
 };
 
 export default function DeveloperPage() {

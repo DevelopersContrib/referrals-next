@@ -3,7 +3,22 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "About Us",
   description:
-    "Learn about Referrals.com and our mission to help businesses grow through word-of-mouth referral marketing.",
+    "Learn about Referrals.com — the all-in-one referral marketing platform helping businesses grow through word-of-mouth.",
+  openGraph: {
+    title: "About Us | Referrals.com",
+    description:
+      "Learn about Referrals.com — the all-in-one referral marketing platform helping businesses grow through word-of-mouth.",
+    url: "https://referrals.com/about",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "About Us | Referrals.com",
+    description:
+      "Learn about Referrals.com — the all-in-one referral marketing platform helping businesses grow through word-of-mouth.",
+  },
 };
 
 export default function AboutPage() {

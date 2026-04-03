@@ -21,8 +21,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${post.title} | Referrals.com Blog`,
     description: post.excerpt,
     openGraph: {
-      title: post.title,
+      title: `${post.title} | Referrals.com Blog`,
       description: post.excerpt,
+      url: `https://referrals.com/blog/${slug}`,
+      siteName: "Referrals.com",
       images: [{ url: post.featuredImage }],
       type: "article",
       publishedTime: post.date,

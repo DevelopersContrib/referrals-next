@@ -5,6 +5,23 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata: Metadata = {
   title: "Verify Email",
+  description:
+    "Verify your email address for your Referrals.com account.",
+  openGraph: {
+    title: "Verify Email | Referrals.com",
+    description:
+      "Verify your email address for your Referrals.com account.",
+    url: "https://referrals.com/verify-email",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Verify Email | Referrals.com",
+    description:
+      "Verify your email address for your Referrals.com account.",
+  },
 };
 
 export default async function VerifyEmailPage({

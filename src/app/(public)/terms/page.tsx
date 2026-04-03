@@ -2,7 +2,23 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "Referrals.com terms of service. Read the terms that govern your use of our platform.",
+  description:
+    "Read the Referrals.com terms of service and acceptable use policy.",
+  openGraph: {
+    title: "Terms of Service | Referrals.com",
+    description:
+      "Read the Referrals.com terms of service and acceptable use policy.",
+    url: "https://referrals.com/terms",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Terms of Service | Referrals.com",
+    description:
+      "Read the Referrals.com terms of service and acceptable use policy.",
+  },
 };
 
 export default function TermsPage() {

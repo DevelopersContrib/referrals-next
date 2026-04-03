@@ -3,7 +3,23 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Contribute & Partner",
-  description: "Partner with Referrals.com. Explore integration, affiliate, and contribution opportunities.",
+  description:
+    "Partner with Referrals.com — integration partners, affiliates, content creators, and agencies.",
+  openGraph: {
+    title: "Contribute & Partner | Referrals.com",
+    description:
+      "Partner with Referrals.com — integration partners, affiliates, content creators, and agencies.",
+    url: "https://referrals.com/contribute",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Contribute & Partner | Referrals.com",
+    description:
+      "Partner with Referrals.com — integration partners, affiliates, content creators, and agencies.",
+  },
 };
 
 export default function ContributePage() {

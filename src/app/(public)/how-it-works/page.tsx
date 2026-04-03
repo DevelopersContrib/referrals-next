@@ -4,7 +4,22 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "Learn how to create a referral campaign, share your widget, and track rewards with Referrals.com.",
+    "Create a campaign, embed a widget, track referrals, and reward your participants. See how Referrals.com works in 3 simple steps.",
+  openGraph: {
+    title: "How It Works | Referrals.com",
+    description:
+      "Create a campaign, embed a widget, track referrals, and reward your participants. See how Referrals.com works in 3 simple steps.",
+    url: "https://referrals.com/how-it-works",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "How It Works | Referrals.com",
+    description:
+      "Create a campaign, embed a widget, track referrals, and reward your participants. See how Referrals.com works in 3 simple steps.",
+  },
 };
 
 const steps = [

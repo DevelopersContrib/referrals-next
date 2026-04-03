@@ -3,7 +3,24 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "Signup Successful",
+  title: "Account Created",
+  description:
+    "Your Referrals.com account has been created. Check your email to verify.",
+  openGraph: {
+    title: "Account Created | Referrals.com",
+    description:
+      "Your Referrals.com account has been created. Check your email to verify.",
+    url: "https://referrals.com/signup/success",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Account Created | Referrals.com",
+    description:
+      "Your Referrals.com account has been created. Check your email to verify.",
+  },
 };
 
 export default async function SignupSuccessPage({

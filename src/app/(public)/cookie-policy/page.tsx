@@ -2,7 +2,23 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Cookie Policy",
-  description: "Learn how Referrals.com uses cookies and similar tracking technologies.",
+  description:
+    "Learn about how Referrals.com uses cookies and similar technologies.",
+  openGraph: {
+    title: "Cookie Policy | Referrals.com",
+    description:
+      "Learn about how Referrals.com uses cookies and similar technologies.",
+    url: "https://referrals.com/cookie-policy",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Cookie Policy | Referrals.com",
+    description:
+      "Learn about how Referrals.com uses cookies and similar technologies.",
+  },
 };
 
 export default function CookiePolicyPage() {

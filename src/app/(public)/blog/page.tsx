@@ -1,10 +1,26 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getPaginatedPosts } from "@/lib/blog";
 
-export const metadata = {
-  title: "Blog - Referral Marketing Insights | Referrals.com",
+export const metadata: Metadata = {
+  title: "Blog — Referral Marketing Insights",
   description:
-    "Expert articles on referral marketing, growth hacking, and word-of-mouth strategies.",
+    "Tips, strategies, and insights on referral marketing, growth hacking, and word-of-mouth strategies.",
+  openGraph: {
+    title: "Blog — Referral Marketing Insights | Referrals.com",
+    description:
+      "Tips, strategies, and insights on referral marketing, growth hacking, and word-of-mouth strategies.",
+    url: "https://referrals.com/blog",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Blog — Referral Marketing Insights | Referrals.com",
+    description:
+      "Tips, strategies, and insights on referral marketing, growth hacking, and word-of-mouth strategies.",
+  },
 };
 
 export default async function BlogIndexPage({

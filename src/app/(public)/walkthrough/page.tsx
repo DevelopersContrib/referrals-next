@@ -2,8 +2,24 @@ import { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Walkthrough",
-  description: "Step-by-step walkthrough of how to set up and launch your referral campaign on Referrals.com.",
+  title: "Platform Walkthrough",
+  description:
+    "Step-by-step guide to setting up your first referral campaign on Referrals.com.",
+  openGraph: {
+    title: "Platform Walkthrough | Referrals.com",
+    description:
+      "Step-by-step guide to setting up your first referral campaign on Referrals.com.",
+    url: "https://referrals.com/walkthrough",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Platform Walkthrough | Referrals.com",
+    description:
+      "Step-by-step guide to setting up your first referral campaign on Referrals.com.",
+  },
 };
 
 const walkthroughSteps = [

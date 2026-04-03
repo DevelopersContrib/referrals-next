@@ -4,7 +4,22 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Referral Program",
   description:
-    "Join the Referrals.com referral program. Earn rewards by referring new users to our platform.",
+    "Join the Referrals.com referral program and earn rewards for bringing new users to the platform.",
+  openGraph: {
+    title: "Referral Program | Referrals.com",
+    description:
+      "Join the Referrals.com referral program and earn rewards for bringing new users to the platform.",
+    url: "https://referrals.com/referral-program",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Referral Program | Referrals.com",
+    description:
+      "Join the Referrals.com referral program and earn rewards for bringing new users to the platform.",
+  },
 };
 
 export default function ReferralProgramPage() {

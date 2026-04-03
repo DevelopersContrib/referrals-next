@@ -11,11 +11,26 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Referrals.com — Grow with Referrals",
+    default: "Referrals.com — The Best Referral Marketing Platform",
     template: "%s | Referrals.com",
   },
   description:
-    "The best referral platform. Create referral campaigns, track shares, reward participants, and grow your business through word-of-mouth.",
+    "The best referral marketing platform. Create referral campaigns, track shares, reward participants, and grow your business through word-of-mouth.",
+  metadataBase: new URL("https://referrals.com"),
+  openGraph: {
+    siteName: "Referrals.com",
+    type: "website",
+    locale: "en_US",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+  },
+  twitter: {
+    card: "summary",
+    site: "@referralscom",
+  },
+  icons: {
+    icon: "/images/logo/logo.png",
+    apple: "/images/logo/logo.png",
+  },
 };
 
 export default function RootLayout({

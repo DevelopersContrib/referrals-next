@@ -1,8 +1,25 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata = {
-  title: "API Documentation - Referrals.com",
-  description: "Complete API reference for the Referrals.com REST API v1.",
+export const metadata: Metadata = {
+  title: "API Documentation",
+  description:
+    "Complete API reference for Referrals.com. Endpoints for members, brands, campaigns, participants, webhooks, and billing.",
+  openGraph: {
+    title: "API Documentation | Referrals.com",
+    description:
+      "Complete API reference for Referrals.com. Endpoints for members, brands, campaigns, participants, webhooks, and billing.",
+    url: "https://referrals.com/developer/docs",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "API Documentation | Referrals.com",
+    description:
+      "Complete API reference for Referrals.com. Endpoints for members, brands, campaigns, participants, webhooks, and billing.",
+  },
 };
 
 interface Endpoint {

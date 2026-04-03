@@ -2,7 +2,23 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "Referrals.com privacy policy. Learn how we collect, use, and protect your data.",
+  description:
+    "Read the Referrals.com privacy policy. Learn how we collect, use, and protect your data.",
+  openGraph: {
+    title: "Privacy Policy | Referrals.com",
+    description:
+      "Read the Referrals.com privacy policy. Learn how we collect, use, and protect your data.",
+    url: "https://referrals.com/privacy",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Privacy Policy | Referrals.com",
+    description:
+      "Read the Referrals.com privacy policy. Learn how we collect, use, and protect your data.",
+  },
 };
 
 export default function PrivacyPage() {

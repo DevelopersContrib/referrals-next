@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Sidebar,
@@ -39,8 +40,13 @@ export function DashboardSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b px-6 py-4">
-        <Link href="/dashboard" className="text-xl font-bold text-blue-600">
-          Referrals.com
+        <Link href="/dashboard">
+          <Image
+            src="/images/logo/logo2.png"
+            alt="Referrals.com"
+            width={142}
+            height={45}
+          />
         </Link>
       </SidebarHeader>
       <SidebarContent>

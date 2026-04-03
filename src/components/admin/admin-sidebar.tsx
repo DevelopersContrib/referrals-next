@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Sidebar,
@@ -82,9 +83,15 @@ export function AdminSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b px-6 py-4">
-        <Link href="/admin" className="text-xl font-bold text-red-600">
-          Admin Panel
+        <Link href="/admin">
+          <Image
+            src="/images/logo/logo2.png"
+            alt="Referrals.com"
+            width={142}
+            height={45}
+          />
         </Link>
+        <span className="text-xs font-semibold text-red-600 mt-1">Admin Panel</span>
         <Link href="/dashboard" className="text-xs text-muted-foreground hover:underline">
           &larr; Back to Dashboard
         </Link>

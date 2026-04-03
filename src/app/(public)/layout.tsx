@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function PublicLayout({
   children,
@@ -10,8 +11,14 @@ export default function PublicLayout({
       {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-sm">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="text-xl font-bold text-blue-600">
-            Referrals.com
+          <Link href="/">
+            <Image
+              src="/images/logo/logo.png"
+              alt="Referrals.com"
+              width={142}
+              height={45}
+              priority
+            />
           </Link>
           <nav className="hidden items-center gap-6 md:flex">
             <Link

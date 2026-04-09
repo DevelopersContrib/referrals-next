@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { GoogleIcon } from "@/components/auth/google-icon";
 
 export default function SignInPage() {
   return (
@@ -96,9 +97,10 @@ function SignInForm() {
           <div className="space-y-3">
             <Button
               variant="outline"
-              className="w-full"
+              className="w-full gap-2"
               onClick={() => signIn("google", { callbackUrl })}
             >
+              <GoogleIcon className="size-5 shrink-0" />
               Continue with Google
             </Button>
             <Button

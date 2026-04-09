@@ -3,10 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { GoogleIcon } from "@/components/auth/google-icon";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -115,6 +118,32 @@ export default function SignUpPage() {
               {loading ? "Creating account..." : "Create Account"}
             </Button>
           </form>
+
+          <div className="my-6 flex items-center gap-4">
+            <Separator className="flex-1" />
+            <span className="text-xs text-muted-foreground">OR</span>
+            <Separator className="flex-1" />
+          </div>
+
+          <div className="space-y-3">
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              type="button"
+              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            >
+              <GoogleIcon className="size-5 shrink-0" />
+              Continue with Google
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              type="button"
+              onClick={() => signIn("facebook", { callbackUrl: "/dashboard" })}
+            >
+              Continue with Facebook
+            </Button>
+          </div>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Already have an account?{" "}

@@ -46,34 +46,32 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  --color-coral: #FF5C62;
-  --color-coral-hover: #ff4f58;
-  --color-bg-dark: #212529;
-  --color-bg-card: #292A2D;
-  --color-accent-purple: #926efb;
+
+  /* Metronic-inspired brand colors */
+  --color-brand: #5867dd;
+  --color-brand-hover: #4a58c8;
+  --color-brand-light: #e8eaf6;
+  --color-brand-foreground: #ffffff;
+  --color-success: #28a745;
+  --color-success-light: #e8f5e9;
+  --color-warning: #ffc107;
+  --color-warning-light: #fff8e1;
+  --color-danger: #dc3545;
+  --color-danger-light: #fce4ec;
+  --color-info: #36a3f7;
+  --color-info-light: #e3f2fd;
+  --color-dashboard-bg: #f2f3f8;
+  --color-portlet-border: #ebeef0;
 }
 
 :root {
-  --color-coral: #FF5C62;
-  --color-coral-hover: #ff4f58;
-  --color-dark: #212529;
-  --color-card: #292A2D;
-  --color-purple: #926efb;
-  --primary-coral: #FF5C62;
-  --primary-coral-hover: #ff4f58;
-  --bg-dark: #212529;
-  --bg-card: #292A2D;
-  --accent-purple: #926efb;
-  --text-primary: #ffffff;
-  --text-secondary: #9ca3af;
-
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: #5867dd;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -81,24 +79,24 @@
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --destructive: #dc3545;
+  --border: #ebeef0;
+  --input: #ebeef0;
+  --ring: #5867dd;
+  --chart-1: #5867dd;
+  --chart-2: #28a745;
+  --chart-3: #ffc107;
+  --chart-4: #dc3545;
+  --chart-5: #36a3f7;
+  --radius: 0.5rem;
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: #575962;
+  --sidebar-primary: #5867dd;
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-accent: #f2f3f8;
+  --sidebar-accent-foreground: #5867dd;
+  --sidebar-border: #ebeef0;
+  --sidebar-ring: #5867dd;
 }
 
 .dark {
@@ -108,8 +106,8 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: #5867dd;
+  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -144,5 +142,101 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* Metronic-inspired dashboard utility classes */
+@layer utilities {
+  .bg-brand {
+    background-color: #5867dd;
+  }
+  .bg-brand-hover {
+    background-color: #4a58c8;
+  }
+  .text-brand {
+    color: #5867dd;
+  }
+  .border-brand {
+    border-color: #5867dd;
+  }
+  .ring-brand {
+    --tw-ring-color: #5867dd;
+  }
+
+  .bg-dashboard {
+    background-color: #f2f3f8;
+  }
+
+  .portlet {
+    background: white;
+    border: 1px solid #ebeef0;
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+  }
+
+  .subheader {
+    background: linear-gradient(135deg, #5867dd 0%, #6f42c1 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: white;
+    border: 1px solid #ebeef0;
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
+  }
+  .stat-card:hover {
+    box-shadow: 0 4px 24px rgba(88, 103, 221, 0.12);
+    transform: translateY(-1px);
+  }
+
+  .brand-overlay-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    transition: box-shadow 0.25s ease, transform 0.15s ease;
+  }
+  .brand-overlay-card:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+  }
+  .brand-overlay-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.7) 100%);
+    z-index: 1;
+  }
+  .brand-overlay-card > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .quick-link-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.25rem;
+    background: white;
+    border: 1px solid #ebeef0;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    text-align: center;
+    cursor: pointer;
+  }
+  .quick-link-card:hover {
+    border-color: #5867dd;
+    box-shadow: 0 4px 16px rgba(88, 103, 221, 0.1);
+    transform: translateY(-1px);
   }
 }

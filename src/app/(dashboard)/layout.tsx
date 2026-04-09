@@ -14,7 +14,14 @@ export default function DashboardLayout({
         <DashboardSidebar />
         <SidebarInset>
           <DashboardHeader />
-          <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
+          <main className="flex-1 overflow-auto bg-dashboard p-4 md:p-6 lg:p-8">
+            {children}
+          </main>
+          <footer className="border-t border-[#ebeef0] bg-white px-6 py-3">
+            <p className="text-xs text-[#a7abc3]">
+              2026 &copy; Referrals.com &mdash; Grow your business with referral marketing
+            </p>
+          </footer>
         </SidebarInset>
       </SidebarProvider>
     </SessionProvider>

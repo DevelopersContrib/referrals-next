@@ -231,7 +231,7 @@ model campaign_widget {
   header_title             String?                                 @db.VarChar(100)
   description              String?                                 @db.Text
   button_text              String?                                 @default("Submit") @db.VarChar(100)
-  banner_image_url         String?                                 @db.VarChar(100)
+  banner_image_url         String?                                 @db.LongText
   field_label_1            String?                                 @db.VarChar(100)
   field_label_2            String?                                 @db.VarChar(100)
   button_color             String?                                 @db.VarChar(100)

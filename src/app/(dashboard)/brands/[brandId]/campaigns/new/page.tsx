@@ -39,6 +39,7 @@ export default async function NewCampaignPage({
 
       <CampaignWizard
         brandId={brandId}
+        brandUrl={brand.url}
         campaignTypes={campaignTypes.map((t) => ({ id: t.id, name: t.name }))}
         rewardTypes={rewardTypes.map((t) => ({ id: t.id, name: t.name }))}
       />

@@ -274,29 +274,15 @@ export default async function DashboardPage() {
             {brands.map((brand) => {
               const campaignCount = campaignCountByBrand.get(brand.id) || 0;
               return (
-                <Link
-                  key={brand.id}
-                  href={`/brands/${brand.id}`}
-                  className="group block"
-                >
+                <div key={brand.id} className="group relative block rounded-lg">
                   <div
-                    className="brand-overlay-card"
+                    className="brand-overlay-card relative z-0"
                     style={{
                       background: brand.logo_url
                         ? `url(${brand.logo_url}) center/cover no-repeat`
                         : "linear-gradient(135deg, #2c2e3e 0%, #1a1c2d 100%)",
                     }}
                   >
-                    {/* Campaign Button (top right) */}
-                    <div className="absolute right-3 top-3 z-10">
-                      <Link href={`/brands/${brand.id}/campaigns/new`}>
-                        <span className="inline-flex items-center gap-1 rounded-md bg-brand/90 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm transition hover:bg-brand">
-                          <PlusIcon className="size-3" />
-                          Campaign
-                        </span>
-                      </Link>
-                    </div>
-
                     {/* Brand Info */}
                     <div className="p-5">
                       {brand.logo_url ? (
@@ -353,7 +339,23 @@ export default async function DashboardPage() {
                       </div>
                     </div>
                   </div>
-                </Link>
+                  <Link
+                    href={`/brands/${brand.id}`}
+                    className="absolute inset-0 z-[1] rounded-lg"
+                    aria-label={`View brand ${brand.domain ?? brand.url}`}
+                  />
+                  <div className="pointer-events-none absolute right-3 top-3 z-[2]">
+                    <Link
+                      href={`/brands/${brand.id}/campaigns/new`}
+                      className="pointer-events-auto"
+                    >
+                      <span className="inline-flex items-center gap-1 rounded-md bg-brand/90 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm transition hover:bg-brand">
+                        <PlusIcon className="size-3" />
+                        Campaign
+                      </span>
+                    </Link>
+                  </div>
+                </div>
               );
             })}
 

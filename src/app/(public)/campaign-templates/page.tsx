@@ -22,11 +22,13 @@ export default function CampaignTemplatesPage() {
   return (
     <div>
       {/* Breadcrumb Hero */}
-      <section className="border-b border-white/10 py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="text-sm text-[#FF5C62] font-medium">Explore Our</p>
-          <h1 className="mt-2 text-4xl font-bold sm:text-5xl">Campaign Templates</h1>
-          <p className="mt-4 max-w-2xl text-lg text-gray-400">
+      <section className="public-hero border-b border-white/10 overflow-x-hidden lg:overflow-visible">
+        <div className="mx-auto min-w-0 max-w-7xl px-4 sm:px-6 lg:px-8">
+          <p className="text-sm font-medium text-[#FF5C62]">Explore Our</p>
+          <h1 className="mt-2 text-[1.65rem] font-bold leading-tight min-[380px]:text-[1.85rem] sm:text-4xl md:text-5xl">
+            Campaign Templates
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm text-gray-400 sm:mt-4 sm:text-base md:text-lg">
             Choose from our library of proven referral campaign templates. Each template is fully customizable and optimized for maximum conversions.
           </p>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,10 +20,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { CampaignWizardPreview } from "@/components/campaigns/campaign-wizard-preview";
+import { sanitizeWidgetHtml } from "@/lib/sanitize-widget-html";
+import {
+  SparklesIcon,
+  ImageIcon,
+  LayoutTemplateIcon,
+  ChevronRightIcon,
+  CheckCircle2Icon,
+} from "lucide-react";
 
 interface CampaignType {
   id: number;
@@ -35,8 +43,9 @@ interface RewardType {
   name: string;
 }
 
-interface CampaignWizardProps {
+export interface CampaignWizardProps {
   brandId: string;
+  brandUrl?: string | null;
   campaignTypes: CampaignType[];
   rewardTypes: RewardType[];
 }
@@ -53,16 +62,33 @@ interface FormData {
   campaign_entry_subject: string;
   campaign_entry_message: string;
   publish: "public" | "private";
+  widget_description: string;
+  widget_button_text: string;
+  body_text: string;
+  banner_image_url: string;
+  widget_color: string;
+  widget_button_color: string;
 }
+
+const STEPS = [
+  { id: "basic", label: "Basics", hint: "Name your campaign and who can see it." },
+  { id: "goal", label: "Goal", hint: "Pick what referrers must achieve to unlock rewards." },
+  { id: "rewards", label: "Messages & design", hint: "Emails, widget copy, and optional AI banner." },
+  { id: "review", label: "Review", hint: "Confirm everything — you can edit after creation." },
+] as const;
+
+type StepId = (typeof STEPS)[number]["id"];
 
 export function CampaignWizard({
   brandId,
+  brandUrl,
   campaignTypes,
   rewardTypes,
 }: CampaignWizardProps) {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState("basic");
+  const [currentStep, setCurrentStep] = useState<StepId>("basic");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [aiLoading, setAiLoading] = useState<null | "emails" | "bannerHtml" | "bannerImage">(null);
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -78,30 +104,29 @@ export function CampaignWizard({
     campaign_entry_message:
       "Thank you for joining! Share your unique link with friends to earn rewards.",
     publish: "public",
+    widget_description:
+      "Invite friends with your link. When they complete the goal, rewards unlock automatically.",
+    widget_button_text: "Join now",
+    body_text: "",
+    banner_image_url: "",
+    widget_color: "6366f1",
+    widget_button_color: "6366f1",
   });
 
-  const steps = [
-    { id: "basic", label: "Basic Info", number: 1 },
-    { id: "goal", label: "Goal", number: 2 },
-    { id: "rewards", label: "Rewards", number: 3 },
-    { id: "review", label: "Review & Create", number: 4 },
-  ];
-
-  const stepOrder = ["basic", "goal", "rewards", "review"];
+  const stepOrder: StepId[] = ["basic", "goal", "rewards", "review"];
+  const currentIndex = stepOrder.indexOf(currentStep);
 
   function updateField(field: keyof FormData, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }));
   }
 
   function goToNextStep() {
-    const currentIndex = stepOrder.indexOf(currentStep);
     if (currentIndex < stepOrder.length - 1) {
       setCurrentStep(stepOrder[currentIndex + 1]);
     }
   }
 
   function goToPrevStep() {
-    const currentIndex = stepOrder.indexOf(currentStep);
     if (currentIndex > 0) {
       setCurrentStep(stepOrder[currentIndex - 1]);
     }
@@ -109,7 +134,7 @@ export function CampaignWizard({
 
   function validateBasic() {
     if (!formData.name.trim()) {
-      toast.error("Campaign name is required");
+      toast.error("Give your campaign a short, clear name (e.g. “Spring launch referrals”).");
       return false;
     }
     return true;
@@ -118,16 +143,16 @@ export function CampaignWizard({
   function validateGoal() {
     if (
       formData.goal_type === "visit" &&
-      (!formData.num_visits || parseInt(formData.num_visits) <= 0)
+      (!formData.num_visits || parseInt(formData.num_visits, 10) <= 0)
     ) {
-      toast.error("Please enter a valid number of visits");
+      toast.error("Enter how many visits are needed before rewards trigger.");
       return false;
     }
     if (
       formData.goal_type === "signup" &&
-      (!formData.num_signups || parseInt(formData.num_signups) <= 0)
+      (!formData.num_signups || parseInt(formData.num_signups, 10) <= 0)
     ) {
-      toast.error("Please enter a valid number of signups");
+      toast.error("Enter how many successful signups are needed for a reward.");
       return false;
     }
     return true;
@@ -139,6 +164,62 @@ export function CampaignWizard({
     goToNextStep();
   }
 
+  async function callAi(action: "emails" | "bannerHtml" | "bannerImage") {
+    setAiLoading(action);
+    try {
+      const selectedReward = rewardTypes.find((r) => r.id.toString() === formData.reward_type);
+      const goalSummary =
+        formData.goal_type === "visit"
+          ? `${formData.num_visits} referral visits`
+          : `${formData.num_signups} referral signups`;
+
+      const res = await fetch("/api/campaigns/ai/assist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action,
+          context: {
+            name: formData.name,
+            brandUrl: brandUrl || "",
+            goalSummary,
+            rewardTypeName: selectedReward?.name || "",
+            widgetDescription: formData.widget_description,
+          },
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "AI request failed");
+      }
+
+      if (action === "emails") {
+        setFormData((prev) => ({
+          ...prev,
+          reward_notify_subject: data.reward_notify_subject || prev.reward_notify_subject,
+          reward_notify_message: data.reward_notify_message || prev.reward_notify_message,
+          campaign_entry_subject: data.campaign_entry_subject || prev.campaign_entry_subject,
+          campaign_entry_message: data.campaign_entry_message || prev.campaign_entry_message,
+        }));
+        toast.success("Email copy updated — review and tweak as needed.");
+      } else if (action === "bannerHtml") {
+        const html = sanitizeWidgetHtml(String(data.html || ""));
+        if (!html) throw new Error("No HTML returned");
+        setFormData((prev) => ({ ...prev, body_text: html }));
+        toast.success("HTML banner block added — check the preview.");
+      } else if (action === "bannerImage") {
+        const url = String(data.url || "");
+        if (!url) throw new Error("No image URL");
+        setFormData((prev) => ({ ...prev, banner_image_url: url }));
+        toast.success("Hero image set — preview updates automatically.");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setAiLoading(null);
+    }
+  }
+
   async function handleSubmit() {
     setIsSubmitting(true);
     try {
@@ -147,6 +228,7 @@ export function CampaignWizard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          body_text: formData.body_text ? sanitizeWidgetHtml(formData.body_text) : "",
           url_id: brandId,
         }),
       });
@@ -157,345 +239,509 @@ export function CampaignWizard({
       }
 
       const campaign = await response.json();
-      toast.success("Campaign created successfully!");
+      toast.success("Campaign created — next you can fine-tune the widget and publish.");
       router.push(`/brands/${brandId}/campaigns/${campaign.id}`);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create campaign"
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to create campaign");
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  const selectedType = campaignTypes.find(
-    (t) => t.id.toString() === formData.type_id
-  );
-  const selectedReward = rewardTypes.find(
-    (r) => r.id.toString() === formData.reward_type
-  );
+  const selectedType = campaignTypes.find((t) => t.id.toString() === formData.type_id);
+  const selectedReward = rewardTypes.find((r) => r.id.toString() === formData.reward_type);
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <Tabs value={currentStep} onValueChange={(v: string | null) => setCurrentStep(v || "")}>
-        <TabsList className="grid w-full grid-cols-4">
-          {steps.map((step) => (
-            <TabsTrigger key={step.id} value={step.id}>
-              <span className="mr-2 hidden sm:inline">{step.number}.</span>
-              {step.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {/* Step 1: Basic Info */}
-        <TabsContent value="basic">
-          <Card>
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-              <CardDescription>
-                Set up the fundamentals of your campaign
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Campaign Name *</Label>
-                <Input
-                  id="name"
-                  placeholder="e.g. Summer Referral Program"
-                  value={formData.name}
-                  onChange={(e) => updateField("name", e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="type">Campaign Type</Label>
-                <Select
-                  value={formData.type_id}
-                  onValueChange={(val: string | null) => updateField("type_id", val || "")}
+    <div className="mx-auto max-w-6xl">
+      {/* Step header */}
+      <div className="mb-8 rounded-xl border border-slate-200/80 bg-white/90 p-4 shadow-sm">
+        <ol className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+          {STEPS.map((s, i) => {
+            const active = s.id === currentStep;
+            const done = i < currentIndex;
+            return (
+              <li key={s.id} className="flex min-w-0 flex-1 items-start gap-2 sm:flex-initial">
+                <span
+                  className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                    active
+                      ? "bg-brand text-white ring-2 ring-brand/30"
+                      : done
+                        ? "bg-emerald-500 text-white"
+                        : "bg-slate-100 text-slate-500"
+                  }`}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {campaignTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.id.toString()}>
-                        {type.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  {done ? <CheckCircle2Icon className="size-5" /> : i + 1}
+                </span>
+                <div className="min-w-0">
+                  <p
+                    className={`text-sm font-semibold ${active ? "text-slate-900" : "text-slate-600"}`}
+                  >
+                    {s.label}
+                  </p>
+                  <p className="text-xs text-slate-500">{s.hint}</p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="publish">Visibility</Label>
-                <Select
-                  value={formData.publish}
-                  onValueChange={(val) =>
-                    updateField("publish", val as "public" | "private")
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="public">Public</SelectItem>
-                    <SelectItem value="private">Private</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <Button onClick={handleNextStep}>Next: Set Goal</Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Step 2: Goal */}
-        <TabsContent value="goal">
-          <Card>
-            <CardHeader>
-              <CardTitle>Campaign Goal</CardTitle>
-              <CardDescription>
-                Define what success looks like for this campaign
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Goal Type</Label>
-                <Select
-                  value={formData.goal_type}
-                  onValueChange={(val) =>
-                    updateField("goal_type", val as "visit" | "signup")
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="visit">
-                      Visits - Reward after referral visits
-                    </SelectItem>
-                    <SelectItem value="signup">
-                      Signups - Reward after referral signups
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {formData.goal_type === "visit" && (
+      <div className="grid gap-8 lg:grid-cols-[1fr_minmax(300px,380px)]">
+        <div className="min-w-0 space-y-6">
+          {currentStep === "basic" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Campaign basics</CardTitle>
+                <CardDescription>
+                  Choose a name people recognize. Campaign type controls available features in the
+                  dashboard later.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg border border-sky-100 bg-sky-50/80 px-3 py-2 text-sm text-sky-900">
+                  <strong className="font-semibold">Tip:</strong> use the same name you’ll use in
+                  emails and social posts so participants trust the program.
+                </div>
                 <div className="space-y-2">
-                  <Label htmlFor="num_visits">
-                    Number of Visits to Earn Reward
-                  </Label>
+                  <Label htmlFor="name">Campaign name *</Label>
                   <Input
-                    id="num_visits"
-                    type="number"
-                    min="1"
-                    value={formData.num_visits}
-                    onChange={(e) => updateField("num_visits", e.target.value)}
+                    id="name"
+                    placeholder="e.g. Spring launch — double rewards"
+                    value={formData.name}
+                    onChange={(e) => updateField("name", e.target.value)}
                   />
                 </div>
-              )}
 
-              {formData.goal_type === "signup" && (
                 <div className="space-y-2">
-                  <Label htmlFor="num_signups">
-                    Number of Signups to Earn Reward
-                  </Label>
-                  <Input
-                    id="num_signups"
-                    type="number"
-                    min="1"
-                    value={formData.num_signups}
-                    onChange={(e) => updateField("num_signups", e.target.value)}
-                  />
+                  <Label htmlFor="type">Campaign type</Label>
+                  <Select
+                    value={formData.type_id}
+                    onValueChange={(val: string | null) => updateField("type_id", val || "")}
+                  >
+                    <SelectTrigger id="type">
+                      <SelectValue placeholder="Select a type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {campaignTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              )}
 
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={goToPrevStep}>
-                  Back
-                </Button>
-                <Button onClick={handleNextStep}>Next: Rewards</Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Step 3: Rewards */}
-        <TabsContent value="rewards">
-          <Card>
-            <CardHeader>
-              <CardTitle>Reward Settings</CardTitle>
-              <CardDescription>
-                Configure rewards for successful referrals
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Reward Type</Label>
-                <Select
-                  value={formData.reward_type}
-                  onValueChange={(val: string | null) => updateField("reward_type", val || "")}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select reward type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rewardTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.id.toString()}>
-                        {type.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <Label htmlFor="reward_subject">
-                  Reward Notification Subject
-                </Label>
-                <Input
-                  id="reward_subject"
-                  value={formData.reward_notify_subject}
-                  onChange={(e) =>
-                    updateField("reward_notify_subject", e.target.value)
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="reward_message">
-                  Reward Notification Message
-                </Label>
-                <Textarea
-                  id="reward_message"
-                  rows={4}
-                  value={formData.reward_notify_message}
-                  onChange={(e) =>
-                    updateField("reward_notify_message", e.target.value)
-                  }
-                />
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <Label htmlFor="entry_subject">Entry Email Subject</Label>
-                <Input
-                  id="entry_subject"
-                  value={formData.campaign_entry_subject}
-                  onChange={(e) =>
-                    updateField("campaign_entry_subject", e.target.value)
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="entry_message">Entry Email Message</Label>
-                <Textarea
-                  id="entry_message"
-                  rows={4}
-                  value={formData.campaign_entry_message}
-                  onChange={(e) =>
-                    updateField("campaign_entry_message", e.target.value)
-                  }
-                />
-              </div>
-
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={goToPrevStep}>
-                  Back
-                </Button>
-                <Button onClick={handleNextStep}>Next: Review</Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Step 4: Review */}
-        <TabsContent value="review">
-          <Card>
-            <CardHeader>
-              <CardTitle>Review & Create</CardTitle>
-              <CardDescription>
-                Review your campaign details before creating
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Campaign Name
-                </h3>
-                <p className="mt-1 text-lg font-semibold">{formData.name}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">
-                    Type
-                  </h3>
-                  <p className="mt-1">{selectedType?.name || "N/A"}</p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">
-                    Visibility
-                  </h3>
-                  <Badge
-                    variant={
-                      formData.publish === "public" ? "default" : "secondary"
+                <div className="space-y-2">
+                  <Label htmlFor="publish">Visibility</Label>
+                  <Select
+                    value={formData.publish}
+                    onValueChange={(val) =>
+                      updateField("publish", val as "public" | "private")
                     }
                   >
-                    {formData.publish}
-                  </Badge>
+                    <SelectTrigger id="publish">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="public">
+                        Public — shareable link & widget (most common)
+                      </SelectItem>
+                      <SelectItem value="private">
+                        Private — invite-only / testing
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
 
-              <Separator />
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">
-                    Goal Type
-                  </h3>
-                  <p className="mt-1 capitalize">{formData.goal_type}s</p>
+                <div className="flex justify-end pt-4">
+                  <Button onClick={handleNextStep}>
+                    Next: goal <ChevronRightIcon className="ml-1 size-4" />
+                  </Button>
                 </div>
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">
-                    Target
-                  </h3>
-                  <p className="mt-1">
-                    {formData.goal_type === "visit"
-                      ? `${formData.num_visits} visits`
-                      : `${formData.num_signups} signups`}
+              </CardContent>
+            </Card>
+          )}
+
+          {currentStep === "goal" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Referral goal</CardTitle>
+                <CardDescription>
+                  This is the bar referrers must hit before rewards fire. You can tune numbers after
+                  you see real traffic.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg border border-amber-100 bg-amber-50/80 px-3 py-2 text-sm text-amber-950">
+                  <strong className="font-semibold">Visits</strong> count tracked link opens.{" "}
+                  <strong className="font-semibold">Signups</strong> count completed registrations
+                  from those links.
+                </div>
+                <div className="space-y-2">
+                  <Label>Goal type</Label>
+                  <Select
+                    value={formData.goal_type}
+                    onValueChange={(val) => updateField("goal_type", val as "visit" | "signup")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="visit">Visits — reward after N visits on referral links</SelectItem>
+                      <SelectItem value="signup">
+                        Signups — reward after N friends complete signup
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formData.goal_type === "visit" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="num_visits">Visits required for reward</Label>
+                    <Input
+                      id="num_visits"
+                      type="number"
+                      min={1}
+                      value={formData.num_visits}
+                      onChange={(e) => updateField("num_visits", e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {formData.goal_type === "signup" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="num_signups">Signups required for reward</Label>
+                    <Input
+                      id="num_signups"
+                      type="number"
+                      min={1}
+                      value={formData.num_signups}
+                      onChange={(e) => updateField("num_signups", e.target.value)}
+                    />
+                  </div>
+                )}
+
+                <div className="flex justify-between pt-4">
+                  <Button type="button" variant="outline" onClick={goToPrevStep}>
+                    Back
+                  </Button>
+                  <Button onClick={handleNextStep}>
+                    Next: messages &amp; design <ChevronRightIcon className="ml-1 size-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {currentStep === "rewards" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Messages, widget &amp; AI helpers</CardTitle>
+                <CardDescription>
+                  These emails go to participants. The widget is what visitors see on your site — use
+                  the preview on the right (desktop) or below on mobile.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Reward type</Label>
+                  <Select
+                    value={formData.reward_type}
+                    onValueChange={(val: string | null) => updateField("reward_type", val || "")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select reward type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {rewardTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Separator />
+
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm font-medium text-slate-700">Email copy</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 border-violet-200 bg-violet-50/50 text-violet-900 hover:bg-violet-100"
+                    disabled={!!aiLoading}
+                    onClick={() => void callAi("emails")}
+                  >
+                    <SparklesIcon className="size-4" />
+                    {aiLoading === "emails" ? "Writing…" : "Suggest emails with AI"}
+                  </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reward_subject">Reward email subject</Label>
+                  <Input
+                    id="reward_subject"
+                    value={formData.reward_notify_subject}
+                    onChange={(e) => updateField("reward_notify_subject", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reward_message">Reward email body</Label>
+                  <Textarea
+                    id="reward_message"
+                    rows={4}
+                    value={formData.reward_notify_message}
+                    onChange={(e) => updateField("reward_notify_message", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="entry_subject">Welcome / entry email subject</Label>
+                  <Input
+                    id="entry_subject"
+                    value={formData.campaign_entry_subject}
+                    onChange={(e) => updateField("campaign_entry_subject", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="entry_message">Welcome / entry email body</Label>
+                  <Textarea
+                    id="entry_message"
+                    rows={4}
+                    value={formData.campaign_entry_message}
+                    onChange={(e) => updateField("campaign_entry_message", e.target.value)}
+                  />
+                </div>
+
+                <Separator />
+
+                <p className="text-sm font-semibold text-slate-800">Widget (embed) appearance</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="widget_desc">Short description under the title</Label>
+                    <Textarea
+                      id="widget_desc"
+                      rows={3}
+                      value={formData.widget_description}
+                      onChange={(e) => updateField("widget_description", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="widget_btn">Primary button label</Label>
+                    <Input
+                      id="widget_btn"
+                      value={formData.widget_button_text}
+                      onChange={(e) => updateField("widget_button_text", e.target.value)}
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Accent (#hex)</Label>
+                        <Input
+                          value={formData.widget_color}
+                          onChange={(e) =>
+                            updateField("widget_color", e.target.value.replace(/#/g, ""))
+                          }
+                          maxLength={6}
+                          className="font-mono text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Button (#hex)</Label>
+                        <Input
+                          value={formData.widget_button_color}
+                          onChange={(e) =>
+                            updateField("widget_button_color", e.target.value.replace(/#/g, ""))
+                          }
+                          maxLength={6}
+                          className="font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <Label htmlFor="banner_url">Hero image URL (optional)</Label>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        disabled={!!aiLoading}
+                        onClick={() => void callAi("bannerImage")}
+                      >
+                        <ImageIcon className="size-4" />
+                        {aiLoading === "bannerImage" ? "Generating…" : "AI hero image"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        disabled={!!aiLoading}
+                        onClick={() => void callAi("bannerHtml")}
+                      >
+                        <LayoutTemplateIcon className="size-4" />
+                        {aiLoading === "bannerHtml" ? "Designing…" : "AI HTML banner"}
+                      </Button>
+                    </div>
+                  </div>
+                  <Input
+                    id="banner_url"
+                    placeholder="https://… (or use AI hero image)"
+                    value={formData.banner_image_url}
+                    onChange={(e) => updateField("banner_image_url", e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Hero image shows above the title. HTML banner is rich content below the
+                    description (sanitized on save).
                   </p>
                 </div>
-              </div>
 
-              <Separator />
+                <div className="space-y-2">
+                  <Label htmlFor="body_html">Custom HTML block (optional)</Label>
+                  <Textarea
+                    id="body_html"
+                    rows={6}
+                    className="font-mono text-sm"
+                    placeholder='<div style="padding:12px;background:#fef3c7;border-radius:8px">…</div>'
+                    value={formData.body_text}
+                    onChange={(e) => updateField("body_text", e.target.value)}
+                  />
+                </div>
 
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Reward Type
-                </h3>
-                <p className="mt-1">{selectedReward?.name || "N/A"}</p>
-              </div>
+                <div className="flex justify-between pt-2">
+                  <Button type="button" variant="outline" onClick={goToPrevStep}>
+                    Back
+                  </Button>
+                  <Button onClick={handleNextStep}>
+                    Review <ChevronRightIcon className="ml-1 size-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={goToPrevStep}>
-                  Back
-                </Button>
-                <Button onClick={handleSubmit} disabled={isSubmitting}>
-                  {isSubmitting ? "Creating..." : "Create Campaign"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          {currentStep === "review" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Review &amp; create</CardTitle>
+                <CardDescription>
+                  You’ll land on the campaign dashboard next — widget script, rewards, and publishing
+                  can be adjusted anytime.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">Campaign name</h3>
+                  <p className="mt-1 text-lg font-semibold">{formData.name}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground">Type</h3>
+                    <p className="mt-1">{selectedType?.name || "N/A"}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground">Visibility</h3>
+                    <Badge variant={formData.publish === "public" ? "default" : "secondary"}>
+                      {formData.publish}
+                    </Badge>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground">Goal</h3>
+                    <p className="mt-1 capitalize">{formData.goal_type}s</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground">Target</h3>
+                    <p className="mt-1">
+                      {formData.goal_type === "visit"
+                        ? `${formData.num_visits} visits`
+                        : `${formData.num_signups} signups`}
+                    </p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">Reward type</h3>
+                  <p className="mt-1">{selectedReward?.name || "N/A"}</p>
+                </div>
+
+                <div className="lg:hidden">
+                  <h3 className="mb-2 text-sm font-medium text-muted-foreground">Widget preview</h3>
+                  <CampaignWizardPreview
+                    name={formData.name}
+                    description={formData.widget_description}
+                    buttonText={formData.widget_button_text}
+                    colorHex={formData.widget_color}
+                    buttonColorHex={formData.widget_button_color}
+                    bannerImageUrl={formData.banner_image_url}
+                    bodyHtml={formData.body_text}
+                  />
+                </div>
+
+                <div className="flex justify-between pt-4">
+                  <Button type="button" variant="outline" onClick={goToPrevStep}>
+                    Back
+                  </Button>
+                  <Button onClick={handleSubmit} disabled={isSubmitting}>
+                    {isSubmitting ? "Creating…" : "Create campaign"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        <div className="hidden lg:block">
+          <div className="sticky top-24">
+            <p className="mb-2 text-center text-xs font-medium uppercase tracking-wide text-slate-500">
+              Live preview
+            </p>
+            <CampaignWizardPreview
+              name={formData.name}
+              description={formData.widget_description}
+              buttonText={formData.widget_button_text}
+              colorHex={formData.widget_color}
+              buttonColorHex={formData.widget_button_color}
+              bannerImageUrl={formData.banner_image_url}
+              bodyHtml={formData.body_text}
+            />
+            <p className="mt-3 text-center text-xs text-slate-500">
+              Requires <code className="rounded bg-slate-100 px-1">OPENAI_API_KEY</code> for AI
+              buttons. Preview works offline.
+            </p>
+          </div>
+        </div>
+
+        {/* Mobile preview for steps 1–3 */}
+        {currentStep !== "review" && (
+          <div className="lg:col-span-2 lg:hidden">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+              Widget preview
+            </p>
+            <CampaignWizardPreview
+              name={formData.name}
+              description={formData.widget_description}
+              buttonText={formData.widget_button_text}
+              colorHex={formData.widget_color}
+              buttonColorHex={formData.widget_button_color}
+              bannerImageUrl={formData.banner_image_url}
+              bodyHtml={formData.body_text}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -24,18 +24,18 @@ export const metadata: Metadata = {
 
 export default function ReferralProgramPage() {
   return (
-    <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900">
+    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+      <section className="public-hero overflow-x-hidden text-center lg:overflow-visible">
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
           Our Referral Program
         </h1>
-        <p className="mt-4 text-lg text-gray-600">
+        <p className="mt-3 text-base text-gray-600 sm:mt-4 sm:text-lg">
           Love Referrals.com? Spread the word and earn rewards for every new
           user you refer.
         </p>
-      </div>
+      </section>
 
-      <div className="mt-12 space-y-12">
+      <div className="mt-8 space-y-10 sm:mt-12 sm:space-y-12">
         <section>
           <h2 className="text-2xl font-semibold text-gray-900">
             How It Works

@@ -47,10 +47,10 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* Metronic-inspired brand colors */
-  --color-brand: #5867dd;
-  --color-brand-hover: #4a58c8;
-  --color-brand-light: #e8eaf6;
+  /* Referrals red brand colors */
+  --color-brand: #ff5c62;
+  --color-brand-hover: #ff4f58;
+  --color-brand-light: #ffe5e7;
   --color-brand-foreground: #ffffff;
   --color-success: #28a745;
   --color-success-light: #e8f5e9;
@@ -71,7 +71,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #5867dd;
+  --primary: #ff5c62;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -82,8 +82,8 @@
   --destructive: #dc3545;
   --border: #ebeef0;
   --input: #ebeef0;
-  --ring: #5867dd;
-  --chart-1: #5867dd;
+  --ring: #ff5c62;
+  --chart-1: #ff5c62;
   --chart-2: #28a745;
   --chart-3: #ffc107;
   --chart-4: #dc3545;
@@ -91,12 +91,12 @@
   --radius: 0.5rem;
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: #575962;
-  --sidebar-primary: #5867dd;
+  --sidebar-primary: #ff5c62;
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: #f2f3f8;
-  --sidebar-accent-foreground: #5867dd;
+  --sidebar-accent-foreground: #ff5c62;
   --sidebar-border: #ebeef0;
-  --sidebar-ring: #5867dd;
+  --sidebar-ring: #ff5c62;
 }
 
 .dark {
@@ -106,7 +106,7 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: #5867dd;
+  --primary: #ff5c62;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -148,23 +148,23 @@
 /* Metronic-inspired dashboard utility classes */
 @layer utilities {
   .bg-brand {
-    background-color: #5867dd;
+    background-color: #ff5c62;
   }
   .bg-brand-hover {
-    background-color: #4a58c8;
+    background-color: #ff4f58;
   }
   .text-brand {
-    color: #5867dd;
+    color: #ff5c62;
   }
   .border-brand {
-    border-color: #5867dd;
+    border-color: #ff5c62;
   }
   .ring-brand {
-    --tw-ring-color: #5867dd;
+    --tw-ring-color: #ff5c62;
   }
 
   .bg-dashboard {
-    background-color: #f2f3f8;
+    background: linear-gradient(180deg, #fffdfd 0%, #fff6f7 55%, #fff3ee 100%);
   }
 
   .portlet {
@@ -175,7 +175,7 @@
   }
 
   .subheader {
-    background: linear-gradient(135deg, #5867dd 0%, #6f42c1 100%);
+    background: linear-gradient(135deg, #ff5c62 0%, #ff7a6f 100%);
     color: white;
     padding: 1.5rem 2rem;
     border-radius: 0.5rem;
@@ -190,7 +190,7 @@
     transition: box-shadow 0.2s ease, transform 0.15s ease;
   }
   .stat-card:hover {
-    box-shadow: 0 4px 24px rgba(88, 103, 221, 0.12);
+    box-shadow: 0 4px 24px rgba(255, 92, 98, 0.18);
     transform: translateY(-1px);
   }
 
@@ -235,8 +235,122 @@
     cursor: pointer;
   }
   .quick-link-card:hover {
-    border-color: #5867dd;
-    box-shadow: 0 4px 16px rgba(88, 103, 221, 0.1);
+    border-color: #ff5c62;
+    box-shadow: 0 4px 16px rgba(255, 92, 98, 0.16);
     transform: translateY(-1px);
+  }
+
+  /* Whitelabel marketing page — subtle motion (respect reduced motion below) */
+  .animate-wl-float {
+    animation: wl-float 5s ease-in-out infinite;
+  }
+  .animate-wl-float-delayed {
+    animation: wl-float 5s ease-in-out infinite;
+    animation-delay: 1.25s;
+  }
+  .animate-wl-float-slow {
+    animation: wl-float 7s ease-in-out infinite;
+    animation-delay: 0.5s;
+  }
+  .animate-wl-shimmer {
+    animation: wl-shimmer-sweep 3.2s ease-in-out infinite;
+  }
+  .animate-wl-glow {
+    animation: wl-glow 4s ease-in-out infinite;
+  }
+  .animate-wl-line-grow {
+    animation: wl-line-grow 2.4s ease-out infinite;
+    transform-origin: left center;
+  }
+
+  /*
+   * Public marketing hero: minimal top padding, first-screen fit on phones/tablets
+   * (100svh accounts for mobile browser chrome). Desktop scrolls normally.
+   */
+  .public-hero {
+    --public-header-h: 4rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .public-hero {
+      padding-top: 0.75rem;
+      padding-bottom: 1rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .public-hero {
+      padding-top: 1rem;
+      padding-bottom: 1.25rem;
+    }
+  }
+  @media (max-width: 1023px) {
+    .public-hero {
+      max-height: calc(100svh - var(--public-header-h));
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+  }
+}
+
+@keyframes wl-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes wl-shimmer-sweep {
+  0% {
+    transform: translateX(-130%);
+  }
+  100% {
+    transform: translateX(130%);
+  }
+}
+
+@keyframes wl-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes wl-line-grow {
+  0% {
+    transform: scaleX(0.06);
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+  80%,
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-wl-float,
+  .animate-wl-float-delayed,
+  .animate-wl-float-slow,
+  .animate-wl-shimmer,
+  .animate-wl-glow {
+    animation: none !important;
+  }
+  .animate-wl-line-grow {
+    animation: none !important;
+    transform: scaleX(1);
+    opacity: 1;
   }
 }

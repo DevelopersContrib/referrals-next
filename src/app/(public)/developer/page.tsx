@@ -25,18 +25,18 @@ export const metadata: Metadata = {
 export default function DeveloperPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
-        <div className="max-w-5xl mx-auto px-6 py-8">
-          <h1 className="text-3xl font-bold text-gray-900">
+      <header className="border-b bg-white">
+        <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-8">
+          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
             Referrals.com Developer Portal
           </h1>
-          <p className="mt-2 text-lg text-gray-600">
+          <p className="mt-2 text-base text-gray-600 sm:text-lg">
             Build and automate referral programs with our REST API
           </p>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-10 space-y-12">
+      <main className="mx-auto max-w-5xl space-y-10 px-4 py-8 sm:space-y-12 sm:px-6 sm:py-10">
         {/* Quick Start */}
         <section>
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">

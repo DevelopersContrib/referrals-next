@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { HeroCampaignSlideshow } from "@/components/marketing/hero-campaign-slideshow";
 
 export const metadata: Metadata = {
   title: "Referrals.com — The Best Referral Marketing Platform",
@@ -170,79 +172,187 @@ const integrations = [
   "MailChimp",
 ];
 
-export default function HomePage() {
+type HeroStats = {
+  weeklyCampaigns: number;
+  brands: number;
+  participants: number;
+  shares: number;
+  revenue: number;
+  recentSignups: number;
+  conversionRate: number;
+};
+
+const fallbackHeroStats: HeroStats = {
+  weeklyCampaigns: 143,
+  brands: 2481,
+  participants: 9014,
+  shares: 21844,
+  revenue: 34200,
+  recentSignups: 18,
+  conversionRate: 14.8,
+};
+
+function formatInt(value: number) {
+  return value.toLocaleString("en-US");
+}
+
+function formatMoney(value: number) {
+  if (!value) return "$0";
+  if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}m`;
+  if (value >= 1000) return `$${(value / 1000).toFixed(1)}k`;
+  return `$${Math.round(value).toLocaleString("en-US")}`;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+async function getHeroStats(): Promise<HeroStats> {
+  try {
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyMinsAgo = new Date(now.getTime() - 30 * 60 * 1000);
+
+    const [
+      weeklyCampaigns,
+      brands,
+      participants,
+      shares,
+      recentSignups,
+      revenueAgg,
+    ] = await Promise.all([
+      prisma.member_campaigns.count({
+        where: { date_added: { gte: weekAgo } },
+      }),
+      prisma.member_urls.count(),
+      prisma.campaign_participants.count(),
+      prisma.participants_share.count(),
+      prisma.members.count({
+        where: { date_signedup: { gte: thirtyMinsAgo } },
+      }),
+      prisma.member_payment.aggregate({
+        _sum: { amount: true },
+      }),
+    ]);
+
+    const rawConversionRate = participants > 0 ? (shares / participants) * 100 : 0;
+    const conversionRate = clamp(Number(rawConversionRate.toFixed(1)), 1, 99.9);
+
+    return {
+      weeklyCampaigns,
+      brands,
+      participants,
+      shares,
+      recentSignups,
+      revenue: revenueAgg._sum.amount ?? 0,
+      conversionRate,
+    };
+  } catch {
+    return fallbackHeroStats;
+  }
+}
+
+export default async function HomePage() {
+  const stats = await getHeroStats();
+
   return (
     <div>
-      {/* Section 1 - Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#212529] via-[#1a1d21] to-[#212529] py-24 sm:py-32">
-        {/* Decorative gradient orbs */}
-        <div className="absolute left-1/4 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[#FF5C62]/5 blur-3xl" />
-        <div className="absolute right-1/4 top-20 h-[400px] w-[400px] rounded-full bg-[#926efb]/5 blur-3xl" />
+      {/* Section 1 - Hero — compact top, fits first screen on mobile/tablet */}
+      <section className="public-hero relative overflow-x-hidden bg-gradient-to-b from-white via-rose-50/60 to-orange-50/50 lg:overflow-visible">
+        <div className="pointer-events-none absolute left-1/4 top-0 hidden h-[min(420px,55vw)] w-[min(500px,90vw)] -translate-x-1/2 rounded-full bg-[#FF5C62]/10 blur-3xl sm:block" />
+        <div className="pointer-events-none absolute right-1/4 top-10 hidden h-[min(380px,50vw)] w-[min(420px,85vw)] rounded-full bg-[#926efb]/10 blur-3xl sm:block" />
 
-        <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[#FF5C62]/30 bg-[#FF5C62]/10 px-4 py-1.5 text-sm font-medium text-[#FF5C62]">
-            Refer, Reward, Grow
-          </span>
-
-          <h1 className="mt-8 text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
-            Skyrocket your
-            <br />
-            <span className="bg-gradient-to-r from-[#FF5C62] to-[#926efb] bg-clip-text text-transparent">
-              network today
+        <div className="relative mx-auto grid max-w-7xl gap-6 px-4 sm:gap-8 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-12 lg:px-8">
+          <div className="min-w-0">
+            <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-[#FF5C62]/30 bg-[#FF5C62]/10 px-3 py-1 text-xs font-medium text-[#FF5C62] sm:px-4 sm:text-sm">
+              <span className="truncate">
+                {formatInt(stats.weeklyCampaigns)} campaigns launched this week
+              </span>
             </span>
-          </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-400">
-            Where Your Network Becomes Your Net Worth. Unlock crypto rewards,
-            create website partnerships and experience growth like never before.
-          </p>
-
-          {/* Email Input + CTA */}
-          <div className="mx-auto mt-10 flex max-w-md flex-col items-center gap-3 sm:flex-row">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="w-full rounded-xl border border-white/10 bg-[#292A2D] px-5 py-3.5 text-sm text-white placeholder-gray-500 transition-colors focus:border-[#FF5C62] focus:outline-none focus:ring-1 focus:ring-[#FF5C62] sm:flex-1"
-            />
-            <Link
-              href="/signup"
-              className="w-full whitespace-nowrap rounded-xl bg-[#FF5C62] px-8 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-[#FF5C62]/25 transition-all hover:bg-[#ff4f58] hover:shadow-xl hover:shadow-[#FF5C62]/30 sm:w-auto"
+            <h1
+              className="mt-3 text-[1.65rem] font-bold leading-tight tracking-tight text-gray-900 min-[380px]:text-[1.85rem] sm:mt-4 sm:text-4xl md:text-5xl lg:text-6xl"
+              style={{ fontFamily: "'Dosis', sans-serif" }}
             >
-              Start trial!
-            </Link>
+              Make your growth feel inevitable.
+              <span className="mt-1 block bg-gradient-to-r from-[#FF5C62] to-[#926efb] bg-clip-text text-transparent sm:mt-2">
+                Let every customer bring the next one.
+              </span>
+            </h1>
+
+            <p className="mt-3 max-w-2xl text-sm text-gray-700 sm:mt-4 sm:text-base md:text-lg">
+              Design a referral engine your customers want to share. Launch in
+              minutes, track every invite, and turn word of mouth into a repeatable
+              revenue channel.
+            </p>
+
+            <div className="mt-5 flex flex-col gap-2 sm:mt-6 sm:flex-row sm:gap-3">
+              <Link
+                href="/signup"
+                className="rounded-xl bg-[#FF5C62] px-7 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-[#FF5C62]/25 transition-all hover:bg-[#ff4f58] hover:shadow-xl hover:shadow-[#FF5C62]/35"
+              >
+                Start Free Trial
+              </Link>
+              <Link
+                href="/how-it-works"
+                className="rounded-xl border border-rose-200 bg-white px-7 py-3.5 text-center text-sm font-semibold text-gray-800 transition-colors hover:bg-rose-50"
+              >
+                See How It Works
+              </Link>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] text-gray-600 sm:mt-5 sm:gap-3 sm:text-xs">
+              <span className="rounded-full border border-rose-200 bg-white px-3 py-1.5">
+                No credit card required
+              </span>
+              <span className="rounded-full border border-rose-200 bg-white px-3 py-1.5">
+                Setup in under 10 minutes
+              </span>
+              <span className="rounded-full border border-rose-200 bg-white px-3 py-1.5">
+                Built-in anti-fraud tracking
+              </span>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-rose-100 bg-white/90 p-3 shadow-sm backdrop-blur sm:mt-5 sm:rounded-2xl sm:p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#FF5C62]">
+                Live activity
+              </p>
+              <div className="mt-3 space-y-2 text-sm text-gray-700">
+                <p>
+                  <span className="font-semibold text-gray-900">{formatInt(stats.recentSignups)}</span>{" "}
+                  people joined in the last 30 minutes.
+                </p>
+                <p>
+                  <span className="font-semibold text-gray-900">{formatInt(stats.shares)}</span>{" "}
+                  total shares are already tracked on Referrals.com.
+                </p>
+              </div>
+            </div>
           </div>
 
-          <Link
-            href="/signup"
-            className="mt-4 inline-block text-sm text-gray-400 transition-colors hover:text-white"
-          >
-            or sign-up free
-          </Link>
+          <div className="relative min-h-0 min-w-0">
+            <div className="absolute -left-1 -top-2 z-[1] hidden max-w-[calc(100%-0.5rem)] rounded-lg border border-[#926efb]/30 bg-[#926efb]/10 px-2 py-1 text-[10px] font-semibold text-[#6b4bb7] shadow-md shadow-[#926efb]/15 sm:block sm:-left-4 sm:-top-4 sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-xs md:text-sm">
+              {formatInt(stats.weeklyCampaigns)} fresh campaigns this week
+            </div>
+            <div className="absolute -bottom-2 -right-1 z-[1] hidden max-w-[calc(100%-0.5rem)] rounded-lg border border-[#FF5C62]/30 bg-[#FF5C62]/10 px-2 py-1 text-[10px] font-semibold text-[#b73f45] shadow-md shadow-[#FF5C62]/15 sm:block sm:-bottom-4 sm:right-2 sm:px-3 sm:py-1.5 sm:text-xs md:text-sm">
+              {formatInt(stats.recentSignups)} signups in the last 30 mins
+            </div>
 
-          {/* Social login row */}
-          <div className="mt-8 flex items-center justify-center gap-3">
-            <span className="text-xs text-gray-500">Sign in with</span>
-            <button className="flex h-10 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 transition-colors hover:bg-white/10">
-              <svg className="h-5 w-5" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
-              <span className="text-xs text-gray-300">Google</span>
-            </button>
+            <div className="max-h-[min(42svh,340px)] overflow-y-auto overflow-x-hidden pr-1 sm:max-h-[min(48svh,420px)] lg:max-h-none lg:overflow-visible">
+              <HeroCampaignSlideshow />
+            </div>
           </div>
         </div>
       </section>
 
       {/* Section 2 - Campaign Templates */}
-      <section className="bg-[#212529] py-20">
+      <section className="bg-gradient-to-b from-white to-rose-50/40 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-white sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
               Flexible Campaigns
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-400">
+            <p className="mx-auto mt-4 max-w-2xl text-gray-600">
               Choose from multiple campaign types to match your growth strategy
             </p>
           </div>
@@ -251,13 +361,13 @@ export default function HomePage() {
             {campaignTemplates.map((template) => (
               <div
                 key={template.title}
-                className="group rounded-xl border border-white/5 bg-[#292A2D] p-6 transition-all hover:border-white/10 hover:shadow-lg hover:shadow-black/20"
+                className="group rounded-xl border border-rose-100 bg-white p-6 transition-all hover:border-rose-200 hover:shadow-lg hover:shadow-rose-100/70"
               >
                 <div className={`mb-4 inline-flex rounded-lg p-3 ${template.bgColor}`}>
                   <span className={template.iconColor}>{template.icon}</span>
                 </div>
                 <div className="mb-2 flex items-center gap-2">
-                  <h3 className="text-lg font-semibold text-white">
+                  <h3 className="text-lg font-semibold text-gray-900">
                     {template.title}
                   </h3>
                   <span
@@ -270,7 +380,7 @@ export default function HomePage() {
                     {template.badge}
                   </span>
                 </div>
-                <p className="text-sm text-gray-400">{template.description}</p>
+                <p className="text-sm text-gray-600">{template.description}</p>
               </div>
             ))}
           </div>
@@ -278,14 +388,14 @@ export default function HomePage() {
       </section>
 
       {/* Section 3 - Features */}
-      <section className="bg-[#1a1d21] py-20">
+      <section className="bg-gradient-to-b from-rose-50/30 to-orange-50/30 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-white sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
               Powerful Features to Amplify
               <br className="hidden sm:block" /> Your Online Presence
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-400">
+            <p className="mx-auto mt-4 max-w-2xl text-gray-600">
               Everything you need to launch, manage, and scale referral programs
             </p>
           </div>
@@ -294,17 +404,29 @@ export default function HomePage() {
             {features.map((feature, idx) => (
               <div
                 key={feature.title}
-                className="group rounded-xl border border-white/5 bg-[#292A2D] p-6 transition-all hover:border-white/10"
+                className="group rounded-xl border border-rose-100 bg-white p-6 transition-all hover:border-rose-200 hover:shadow-lg hover:shadow-rose-100/70"
               >
-                <div className="mb-4 inline-flex rounded-lg bg-[#926efb]/10 p-2.5 text-[#926efb]">
+                <div className="mb-4 inline-flex rounded-lg bg-rose-100/70 p-2.5 text-[#FF5C62]">
                   {featureIcons[idx]}
                 </div>
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-semibold text-gray-900">
                   {feature.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-gray-400">
+                <p className="mt-2 text-sm leading-relaxed text-gray-600">
                   {feature.description}
                 </p>
+                <div className="mt-4 rounded-lg border border-rose-100 bg-rose-50/60 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-xs font-medium text-gray-500">Feature mockup</span>
+                    <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                  </div>
+                  <div className="h-1.5 rounded-full bg-rose-100">
+                    <div
+                      className="h-1.5 rounded-full bg-gradient-to-r from-[#FF5C62] to-[#926efb] animate-pulse"
+                      style={{ width: `${55 + (idx % 4) * 10}%` }}
+                    />
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -312,13 +434,13 @@ export default function HomePage() {
       </section>
 
       {/* Section 4 - Testimonials */}
-      <section className="bg-[#212529] py-20">
+      <section className="bg-gradient-to-b from-white to-rose-50/40 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-white sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
               What Our Users Say
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-400">
+            <p className="mx-auto mt-4 max-w-2xl text-gray-600">
               Trusted by businesses worldwide to drive referral growth
             </p>
           </div>
@@ -327,7 +449,7 @@ export default function HomePage() {
             {testimonials.map((testimonial) => (
               <div
                 key={testimonial.name}
-                className="rounded-xl border border-white/5 bg-[#292A2D] p-6"
+                className="rounded-xl border border-rose-100 bg-white p-6 shadow-sm"
               >
                 <div className="mb-4 flex text-[#FF5C62]">
                   {[...Array(5)].map((_, i) => (
@@ -341,7 +463,7 @@ export default function HomePage() {
                     </svg>
                   ))}
                 </div>
-                <p className="text-gray-300">
+                <p className="text-gray-700">
                   &ldquo;{testimonial.quote}&rdquo;
                 </p>
                 <div className="mt-6 flex items-center gap-3">
@@ -349,7 +471,7 @@ export default function HomePage() {
                     {testimonial.avatar}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-semibold text-gray-900">
                       {testimonial.name}
                     </p>
                     <p className="text-xs text-gray-500">{testimonial.role}</p>
@@ -362,24 +484,24 @@ export default function HomePage() {
       </section>
 
       {/* Section 5 - Pricing */}
-      <section className="bg-[#1a1d21] py-20">
+      <section className="bg-gradient-to-b from-rose-50/30 to-orange-50/30 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-white sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
               Simple, Transparent Pricing
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-400">
+            <p className="mx-auto mt-4 max-w-2xl text-gray-600">
               Choose the plan that fits your growth stage
             </p>
           </div>
 
           <div className="mx-auto mt-12 grid max-w-4xl gap-8 lg:grid-cols-2">
             {/* Premium Plan */}
-            <div className="rounded-2xl border border-white/10 bg-[#292A2D] p-8">
-              <h3 className="text-xl font-semibold text-white">Premium (Grow)</h3>
+            <div className="rounded-2xl border border-rose-100 bg-white p-8 shadow-sm">
+              <h3 className="text-xl font-semibold text-gray-900">Premium (Grow)</h3>
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-white">$9</span>
-                <span className="text-gray-400">/Brand</span>
+                <span className="text-4xl font-bold text-gray-900">$9</span>
+                <span className="text-gray-500">/Brand</span>
               </div>
               <ul className="mt-6 space-y-3">
                 {[
@@ -389,7 +511,7 @@ export default function HomePage() {
                   "Gamification Features",
                   "Advanced Analytics",
                 ].map((item) => (
-                  <li key={item} className="flex items-center gap-3 text-sm text-gray-300">
+                  <li key={item} className="flex items-center gap-3 text-sm text-gray-700">
                     <svg className="h-5 w-5 flex-shrink-0 text-[#FF5C62]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
@@ -406,14 +528,14 @@ export default function HomePage() {
             </div>
 
             {/* Pioneer Plan */}
-            <div className="relative rounded-2xl border border-[#926efb]/30 bg-[#292A2D] p-8">
+            <div className="relative rounded-2xl border border-[#926efb]/30 bg-white p-8 shadow-sm">
               <span className="absolute -top-3 right-6 rounded-full bg-[#926efb] px-3 py-1 text-xs font-semibold text-white">
                 Popular
               </span>
-              <h3 className="text-xl font-semibold text-white">Pioneer Plan</h3>
+              <h3 className="text-xl font-semibold text-gray-900">Pioneer Plan</h3>
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-white">$299</span>
-                <span className="text-gray-400">/month</span>
+                <span className="text-4xl font-bold text-gray-900">$299</span>
+                <span className="text-gray-500">/month</span>
               </div>
               <ul className="mt-6 space-y-3">
                 {[
@@ -423,7 +545,7 @@ export default function HomePage() {
                   "GDPR Compliant",
                   "Priority Support",
                 ].map((item) => (
-                  <li key={item} className="flex items-center gap-3 text-sm text-gray-300">
+                  <li key={item} className="flex items-center gap-3 text-sm text-gray-700">
                     <svg className="h-5 w-5 flex-shrink-0 text-[#926efb]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
@@ -443,12 +565,12 @@ export default function HomePage() {
       </section>
 
       {/* Section 6 - Integrations */}
-      <section className="bg-[#212529] py-20">
+      <section className="bg-gradient-to-b from-white to-rose-50/40 py-20">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-white sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
+          <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
             Works with your favorite tools
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-gray-400">
+          <p className="mx-auto mt-4 max-w-2xl text-gray-600">
             Seamlessly integrate with the platforms you already use
           </p>
 
@@ -456,7 +578,7 @@ export default function HomePage() {
             {integrations.map((name) => (
               <div
                 key={name}
-                className="flex h-16 items-center rounded-xl border border-white/5 bg-[#292A2D] px-8 text-sm font-medium text-gray-300 transition-colors hover:border-white/10 hover:text-white"
+                className="flex h-16 items-center rounded-xl border border-rose-100 bg-white px-8 text-sm font-medium text-gray-700 transition-colors hover:border-rose-200 hover:text-brand"
               >
                 {name}
               </div>

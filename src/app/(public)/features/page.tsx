@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  FeaturesDashboardShowcase,
+  FeaturesHeroDashboardMockup,
+  FeaturesRewardSystemMockup,
+} from "@/components/marketing/features-page-mockups";
 
 export const metadata: Metadata = {
   title: "Features",
@@ -270,20 +275,50 @@ const featureSections = [
 
 export default function FeaturesPage() {
   return (
-    <div className="bg-[#212529]">
+    <div className="bg-gradient-to-b from-white via-rose-50/60 to-orange-50/50">
       {/* Hero */}
-      <section className="py-20">
-        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-            Powerful Features to Amplify
-            <br className="hidden sm:block" /> Your Online Presence
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-400">
-            Everything you need to launch, manage, and scale referral programs
-            that drive real growth.
-          </p>
+      <section className="public-hero relative overflow-x-hidden lg:overflow-visible">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(255,92,98,0.18),transparent)]" />
+        <div className="pointer-events-none absolute -right-24 top-24 hidden h-72 w-72 rounded-full bg-[#926efb]/15 blur-3xl lg:block" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid min-w-0 items-center gap-6 sm:gap-8 lg:grid-cols-[1fr_minmax(0,420px)] lg:gap-12">
+            <div className="min-w-0 text-center lg:text-left">
+              <span className="inline-flex rounded-full border border-rose-200/80 bg-white/80 px-3 py-1 text-xs font-semibold text-[#FF5C62] shadow-sm backdrop-blur">
+                Built for growth teams
+              </span>
+              <h1 className="mt-3 text-[1.65rem] font-bold leading-tight tracking-tight text-gray-900 min-[380px]:text-[1.85rem] sm:mt-4 sm:text-4xl md:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
+                Everything to run referral programs that{" "}
+                <span className="bg-gradient-to-r from-[#FF5C62] via-[#ff7a6f] to-[#926efb] bg-clip-text text-transparent">
+                  actually convert
+                </span>
+              </h1>
+              <p className="mx-auto mt-3 max-w-xl text-sm text-gray-600 sm:mt-4 sm:text-base md:text-lg lg:mx-0">
+                Campaigns, embeddable widgets, rewards, analytics, and branding —
+                in one place. Scroll to explore, or jump in and ship.
+              </p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:mt-6 sm:gap-3 lg:justify-start">
+                <Link
+                  href="/signup"
+                  className="rounded-xl bg-[#FF5C62] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:bg-[#ff4f58]"
+                >
+                  Start for free
+                </Link>
+                <Link
+                  href="/pricing"
+                  className="rounded-xl border border-gray-200 bg-white px-6 py-3 text-base font-semibold text-gray-800 shadow-sm transition hover:border-rose-200 hover:shadow-md"
+                >
+                  View pricing
+                </Link>
+              </div>
+            </div>
+            <div className="mx-auto w-full max-w-md lg:mx-0 lg:max-w-none">
+              <FeaturesHeroDashboardMockup />
+            </div>
+          </div>
         </div>
       </section>
+
+      <FeaturesDashboardShowcase />
 
       {/* Feature Sections */}
       <section className="pb-20">
@@ -292,16 +327,19 @@ export default function FeaturesPage() {
             {featureSections.map((section, sectionIdx) => (
               <div key={section.category}>
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold text-white">
+                  <h2 className="text-2xl font-bold text-gray-900">
                     {section.category}
                   </h2>
-                  <p className="mt-2 text-gray-400">{section.description}</p>
+                  <p className="mt-2 text-gray-600">{section.description}</p>
                 </div>
+                {section.category === "Reward System" ? (
+                  <FeaturesRewardSystemMockup />
+                ) : null}
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                   {section.items.map((item) => (
                     <div
                       key={item.title}
-                      className="rounded-xl border border-white/5 bg-[#292A2D] p-6 transition-all hover:border-white/10"
+                      className="rounded-xl border border-rose-100 bg-white p-6 transition-all hover:border-rose-200 hover:shadow-md"
                     >
                       <div
                         className={`mb-4 inline-flex rounded-lg p-2.5 ${
@@ -312,10 +350,10 @@ export default function FeaturesPage() {
                       >
                         {item.icon}
                       </div>
-                      <h3 className="text-lg font-semibold text-white">
+                      <h3 className="text-lg font-semibold text-gray-900">
                         {item.title}
                       </h3>
-                      <p className="mt-2 text-sm leading-relaxed text-gray-400">
+                      <p className="mt-2 text-sm leading-relaxed text-gray-600">
                         {item.desc}
                       </p>
                     </div>

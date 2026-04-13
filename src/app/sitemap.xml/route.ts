@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://referrals.com";
+  const baseUrl =
+    process.env.BASE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "https://referrals.com";
 
   // Static pages
   const staticPages = [
@@ -12,6 +15,7 @@ export async function GET() {
     { url: "/pricing", priority: "0.8", changefreq: "weekly" },
     { url: "/developer", priority: "0.7", changefreq: "weekly" },
     { url: "/developer/docs", priority: "0.7", changefreq: "weekly" },
+    { url: "/.well-known/agent.json", priority: "0.5", changefreq: "monthly" },
   ];
 
   // Dynamic pages: public brand pages

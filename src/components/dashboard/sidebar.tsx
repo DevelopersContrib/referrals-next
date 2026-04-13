@@ -44,6 +44,9 @@ import {
   ShareIcon,
 } from "lucide-react";
 
+const DASHBOARD_LOGO_URL =
+  "https://d1p6j71028fbjm.cloudfront.net/logos/logo-new-referral-1.png";
+
 const mainNav = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboardIcon },
   { title: "Brands", href: "/brands", icon: GlobeIcon },
@@ -81,11 +84,12 @@ export function DashboardSidebar() {
       <SidebarHeader className="border-b border-[#ebeef0] px-5 py-4">
         <Link href="/dashboard" className="flex items-center gap-2">
           <Image
-            src="/images/logo/logo2.png"
+            src={DASHBOARD_LOGO_URL}
             alt="Referrals.com"
             width={142}
             height={45}
             className="h-[36px] w-auto"
+            unoptimized
           />
         </Link>
       </SidebarHeader>

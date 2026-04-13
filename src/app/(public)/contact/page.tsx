@@ -41,12 +41,12 @@ export default function ContactPage() {
   return (
     <div className="bg-[#212529]">
       {/* Hero */}
-      <section className="py-20">
-        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
+      <section className="public-hero overflow-x-hidden text-center lg:overflow-visible">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
             Contact Us
           </h1>
-          <p className="mt-4 text-lg text-gray-400">
+          <p className="mt-3 text-base text-gray-400 sm:mt-4 sm:text-lg">
             Have a question or need help? We&apos;d love to hear from you.
           </p>
         </div>

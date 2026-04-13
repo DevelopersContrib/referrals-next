@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sanitizeWidgetHtml } from "@/lib/sanitize-widget-html";
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -79,6 +80,12 @@ export async function POST(request: NextRequest) {
       campaign_entry_subject,
       campaign_entry_message,
       publish,
+      widget_description,
+      widget_button_text,
+      body_text,
+      banner_image_url,
+      widget_color,
+      widget_button_color,
     } = body;
 
     if (!name || !type_id || !url_id) {
@@ -118,15 +125,36 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create default widget
+    const safeBody = body_text ? sanitizeWidgetHtml(String(body_text)) : null;
+    const bannerUrl =
+      typeof banner_image_url === "string" && banner_image_url.trim()
+        ? String(banner_image_url).trim().slice(0, 4_000_000)
+        : null;
+    const desc =
+      typeof widget_description === "string" && widget_description.trim()
+        ? String(widget_description).trim().slice(0, 65000)
+        : `Join ${name} and earn rewards!`;
+    const btn =
+      typeof widget_button_text === "string" && widget_button_text.trim()
+        ? String(widget_button_text).trim().slice(0, 100)
+        : "Join Now";
+    const col = /^[0-9A-Fa-f]{6}$/.test(String(widget_color || ""))
+      ? String(widget_color)
+      : "6366f1";
+    const btnCol = /^[0-9A-Fa-f]{6}$/.test(String(widget_button_color || ""))
+      ? String(widget_button_color)
+      : col;
+
     await prisma.campaign_widget.create({
       data: {
         campaign_id: campaign.id,
         header_title: name,
-        description: `Join ${name} and earn rewards!`,
-        button_text: "Join Now",
-        color: "6366f1",
-        button_color: "6366f1",
+        description: desc,
+        button_text: btn,
+        color: col.replace("#", ""),
+        button_color: btnCol.replace("#", ""),
+        body_text: safeBody || null,
+        banner_image_url: bannerUrl,
       },
     });
 

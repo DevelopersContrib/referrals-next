@@ -89,13 +89,13 @@ export default function AboutPage() {
   return (
     <div className="bg-[#212529]">
       {/* Hero */}
-      <section className="py-20">
+      <section className="public-hero overflow-x-hidden lg:overflow-visible">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
+            <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
               About Referrals.com
             </h1>
-            <p className="mt-6 text-lg text-gray-400">
+            <p className="mt-3 text-base text-gray-400 sm:mt-4 sm:text-lg md:mt-6">
               We help businesses unlock the power of word-of-mouth marketing
               through simple, effective referral campaigns.
             </p>

@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -40,6 +41,9 @@ import {
   KeyIcon,
 } from "lucide-react";
 
+const DASHBOARD_LOGO_URL =
+  "https://d1p6j71028fbjm.cloudfront.net/logos/logo-new-referral-1.png";
+
 export function DashboardHeader() {
   const { data: session } = useSession();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -60,14 +64,15 @@ export function DashboardHeader() {
       {/* Left: Logo + Sidebar trigger */}
       <div className="flex items-center gap-3">
         <SidebarTrigger className="lg:hidden" />
-        <Link href="/dashboard" className="hidden items-center gap-2.5 lg:flex">
+        <Link href="/dashboard" className="flex items-center gap-2.5 md:hidden">
           <Image
-            src="/images/logo/logo2.png"
+            src={DASHBOARD_LOGO_URL}
             alt="Referrals.com"
             width={130}
             height={38}
             className="h-[34px] w-auto"
             priority
+            unoptimized
           />
         </Link>
       </div>
@@ -90,11 +95,13 @@ export function DashboardHeader() {
             <ChevronDownIcon className="size-3.5 opacity-50" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" sideOffset={8}>
-            <DropdownMenuLabel>My Brands</DropdownMenuLabel>
-            <DropdownMenuItem render={<Link href="/brands" />}>
-              <GlobeIcon className="size-4" />
-              View All Brands
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>My Brands</DropdownMenuLabel>
+              <DropdownMenuItem render={<Link href="/brands" />}>
+                <GlobeIcon className="size-4" />
+                View All Brands
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem render={<Link href="/brands/new" />}>
               <PlusIcon className="size-4" />

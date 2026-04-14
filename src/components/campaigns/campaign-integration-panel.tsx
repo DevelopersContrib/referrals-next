@@ -2,7 +2,8 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
@@ -49,13 +50,14 @@ export function CampaignIntegrationPanel({
   allow="clipboard-write; clipboard-read"
 ></iframe>`;
 
-  const nextSnippet = `// app/components/referral-widget.tsx
-"use client";
+  const nextSnippet = `"use client";
+
+const WIDGET_SRC = "${root}/widget/${id}/embed";
 
 export function ReferralWidget() {
   return (
     <iframe
-      src={process.env.NEXT_PUBLIC_REFERRALS_ORIGIN ?? "${root}" + "/widget/${id}/embed"}
+      src={WIDGET_SRC}
       title="Referral program"
       width="100%"
       height={560}
@@ -82,6 +84,45 @@ ${iframeSnippet}`;
 <!-- If base_url() points at your referrals host, use the absolute script URL instead: -->
 <!-- <script src="${root}/api/widget/js/${id}" async></script> -->`;
 
+  const reactCraSnippet = `// src/components/ReferralWidget.jsx — CRA, Vite, or any React SPA
+export function ReferralWidget() {
+  const src = "${root}/widget/${id}/embed";
+  return (
+    <iframe
+      src={src}
+      title="Referral program"
+      width="100%"
+      height={560}
+      style={{ border: 0, maxWidth: "100%" }}
+      loading="lazy"
+      allow="clipboard-write; clipboard-read"
+    />
+  );
+}
+
+// In App.jsx (or a page):
+// import { ReferralWidget } from "./components/ReferralWidget";
+// <ReferralWidget />`;
+
+  const webflowSnippet = `<!-- Webflow: Add panel → Embed → "HTML embed" → paste, then Publish.
+     Prefer iframe if the Designer strips external <script> tags. -->
+${iframeSnippet}
+
+<!-- Alternative: JS loader (inline / popup / floating from widget settings) -->
+${jsSnippet}`;
+
+  const squarespaceSnippet = `<!-- Squarespace 7.1: Edit page → + → Code → paste (Business plan or higher may be required for code blocks on some sites).
+     Use iframe for best compatibility. -->
+${iframeSnippet}`;
+
+  const gtmSnippet = `<!-- Google Tag Manager → Tags → New → Custom HTML → paste below
+     Trigger: All Pages (or DOM Ready / Consent Initialization if you use consent mode).
+     If GTM blocks external scripts, use an iframe-only snippet in Custom HTML instead. -->
+${jsSnippet}`;
+
+  const gtmIframeOnlySnippet = `<!-- GTM Custom HTML tag — iframe only (when <script src> is blocked) -->
+${iframeSnippet}`;
+
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const copy = useCallback(async (text: string, key: string) => {
     try {
@@ -107,17 +148,25 @@ ${iframeSnippet}`;
                 Campaign created — add it to your site
               </h2>
               <p className="mt-1 max-w-2xl text-sm text-slate-600">
-                Use the snippets below on your marketing site, store, or legacy PHP app. The loader
-                script reads your widget placement (inline, popup, or floating) from the dashboard.
+                Use the snippets below on your marketing site, store, CMS, tag manager, or legacy
+                PHP app. The loader script reads placement (inline, popup, or floating) from your{" "}
+                <Link
+                  href={`/brands/${brandId}/campaigns/${id}/widget`}
+                  className="font-medium text-brand underline-offset-2 hover:underline"
+                >
+                  widget settings
+                </Link>
+                .
               </p>
             </div>
           </div>
-          <Button asChild className="shrink-0 gap-1.5">
-            <Link href={`/brands/${brandId}/campaigns/${id}/widget`}>
-              <LayoutDashboardIcon className="size-4" />
-              Fine-tune widget
-            </Link>
-          </Button>
+          <Link
+            href={`/brands/${brandId}/campaigns/${id}/widget`}
+            className={cn(buttonVariants({ variant: "default", size: "default" }), "shrink-0 gap-1.5")}
+          >
+            <LayoutDashboardIcon className="size-4" />
+            Fine-tune widget
+          </Link>
         </div>
 
         <div className="mt-4 flex flex-col gap-2 rounded-xl border border-slate-200/80 bg-white/80 p-4 text-sm text-slate-700 sm:flex-row sm:flex-wrap sm:items-center">
@@ -168,6 +217,18 @@ ${iframeSnippet}`;
           </TabsTrigger>
           <TabsTrigger value="codeigniter" className="text-xs sm:text-sm">
             PHP / CI
+          </TabsTrigger>
+          <TabsTrigger value="react" className="text-xs sm:text-sm">
+            React (CRA/Vite)
+          </TabsTrigger>
+          <TabsTrigger value="webflow" className="text-xs sm:text-sm">
+            Webflow
+          </TabsTrigger>
+          <TabsTrigger value="squarespace" className="text-xs sm:text-sm">
+            Squarespace
+          </TabsTrigger>
+          <TabsTrigger value="gtm" className="text-xs sm:text-sm">
+            GTM
           </TabsTrigger>
         </TabsList>
 
@@ -265,15 +326,86 @@ ${iframeSnippet}`;
             copied={copiedKey === "ci"}
           />
         </TabsContent>
+
+        <TabsContent value="react" className="mt-0 space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Create React App, Vite + React, or any SPA: mount a small component wherever you want the
+            widget. For a global floating button, use the JavaScript tab instead and add the snippet
+            to <code className="rounded bg-slate-100 px-1">index.html</code>.
+          </p>
+          <CodeBlock
+            code={reactCraSnippet}
+            onCopy={() => void copy(reactCraSnippet, "react")}
+            copied={copiedKey === "react"}
+          />
+        </TabsContent>
+
+        <TabsContent value="webflow" className="mt-0 space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Designer: <strong className="font-medium text-foreground">Add</strong> →{" "}
+            <strong className="font-medium text-foreground">Embed</strong> →{" "}
+            <strong className="font-medium text-foreground">HTML embed</strong> → paste → Publish.
+            If Webflow strips <code className="rounded bg-slate-100 px-1">&lt;script&gt;</code>, use
+            only the iframe block from the snippet (delete the script block).
+          </p>
+          <CodeBlock
+            code={webflowSnippet}
+            onCopy={() => void copy(webflowSnippet, "webflow")}
+            copied={copiedKey === "webflow"}
+          />
+        </TabsContent>
+
+        <TabsContent value="squarespace" className="mt-0 space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Edit the page → <strong className="font-medium text-foreground">+</strong> →{" "}
+            <strong className="font-medium text-foreground">Code</strong> (not Markdown) → paste
+            the iframe. Code injection (Settings → Advanced) is another option for site-wide
+            footer embeds; duplicate the site before testing.
+          </p>
+          <CodeBlock
+            code={squarespaceSnippet}
+            onCopy={() => void copy(squarespaceSnippet, "sqsp")}
+            copied={copiedKey === "sqsp"}
+          />
+        </TabsContent>
+
+        <TabsContent value="gtm" className="mt-0 space-y-3">
+          <p className="text-sm text-muted-foreground">
+            <strong className="font-medium text-foreground">Tags</strong> →{" "}
+            <strong className="font-medium text-foreground">New</strong> →{" "}
+            <strong className="font-medium text-foreground">Tag Configuration</strong> →{" "}
+            <strong className="font-medium text-foreground">Custom HTML</strong> → paste → choose a
+            trigger (e.g. All Pages). Some workspaces restrict external{" "}
+            <code className="rounded bg-slate-100 px-1">script src</code>; if the tag fails validation,
+            use the iframe-only variant below.
+          </p>
+          <CodeBlock
+            code={gtmSnippet}
+            onCopy={() => void copy(gtmSnippet, "gtm")}
+            copied={copiedKey === "gtm"}
+          />
+          <p className="text-sm font-medium text-foreground">Iframe-only (stricter GTM policies)</p>
+          <CodeBlock
+            code={gtmIframeOnlySnippet}
+            onCopy={() => void copy(gtmIframeOnlySnippet, "gtm-if")}
+            copied={copiedKey === "gtm-if"}
+          />
+        </TabsContent>
       </Tabs>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-        <Button variant="outline" asChild>
-          <Link href={`/brands/${brandId}/campaigns/${id}`}>Open campaign dashboard</Link>
-        </Button>
-        <Button asChild>
-          <Link href={`/brands/${brandId}/campaigns`}>Back to all campaigns</Link>
-        </Button>
+        <Link
+          href={`/brands/${brandId}/campaigns/${id}`}
+          className={cn(buttonVariants({ variant: "outline", size: "default" }), "inline-flex justify-center")}
+        >
+          Open campaign dashboard
+        </Link>
+        <Link
+          href={`/brands/${brandId}/campaigns`}
+          className={cn(buttonVariants({ variant: "default", size: "default" }), "inline-flex justify-center")}
+        >
+          Back to all campaigns
+        </Link>
       </div>
     </div>
   );

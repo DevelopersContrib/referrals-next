@@ -22,6 +22,9 @@ export default async function NewCampaignPage({
   });
   if (!brand) redirect("/dashboard");
 
+  const embedBaseUrl =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") || "https://referrals.com";
+
   // Fetch campaign types and reward types
   const [campaignTypes, rewardTypes] = await Promise.all([
     prisma.campaign_types.findMany({ orderBy: { name: "asc" } }),
@@ -30,16 +33,19 @@ export default async function NewCampaignPage({
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Create New Campaign</h1>
-        <p className="mt-1 text-muted-foreground">
-          Set up a new referral campaign for {brand.url || "your brand"}
+      <div className="mb-6 rounded-xl border border-[#ebeef0] bg-gradient-to-r from-white to-rose-50/30 px-4 py-4 sm:px-5">
+        <h1 className="text-2xl font-bold text-[#575962]">Create new campaign</h1>
+        <p className="mt-1 text-sm text-[#a7abc3]">
+          Step through basics, goal, and creative — then copy embed code for{" "}
+          <span className="font-medium text-[#575962]">{brand.url || "your brand"}</span>.
         </p>
       </div>
 
       <CampaignWizard
         brandId={brandId}
         brandUrl={brand.url}
+        brandSlug={brand.slug}
+        embedBaseUrl={embedBaseUrl}
         campaignTypes={campaignTypes.map((t) => ({ id: t.id, name: t.name }))}
         rewardTypes={rewardTypes.map((t) => ({ id: t.id, name: t.name }))}
       />

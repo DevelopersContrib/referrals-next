@@ -62,6 +62,13 @@ export default async function SignupSuccessPage({
             Didn&apos;t receive an email? Check your spam folder or try signing
             up again.
           </p>
+          <p className="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-left text-sm text-gray-700">
+            <span className="font-medium text-gray-900">Next:</span> verify your
+            email, sign in, then open{" "}
+            <span className="font-medium text-gray-900">Billing</span> in the
+            dashboard to choose a plan so you can publish referral programs and add
+            extra brands.
+          </p>
           <div className="mt-6 flex flex-col gap-2">
             <Link
               href="/signin"

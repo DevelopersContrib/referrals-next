@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sanitizeWidgetHtml } from "@/lib/sanitize-widget-html";
+import {
+  isMemberOnPaidPlan,
+  subscriptionRequiredResponse,
+} from "@/lib/member-subscription";
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -106,6 +110,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const paid = await isMemberOnPaidPlan(memberId);
+    const resolvedPublish =
+      publish === "public" || publish === "private"
+        ? publish
+        : paid
+          ? "public"
+          : "private";
+    if (resolvedPublish === "public" && !paid) {
+      return subscriptionRequiredResponse();
+    }
+
     const campaign = await prisma.member_campaigns.create({
       data: {
         name,
@@ -120,7 +135,7 @@ export async function POST(request: NextRequest) {
         reward_notify_message: reward_notify_message || null,
         campaign_entry_subject: campaign_entry_subject || null,
         campaign_entry_message: campaign_entry_message || null,
-        publish: publish || "public",
+        publish: resolvedPublish,
         date_added: new Date(),
       },
     });

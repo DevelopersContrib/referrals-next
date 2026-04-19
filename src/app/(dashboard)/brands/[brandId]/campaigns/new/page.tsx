@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { isMemberOnPaidPlan } from "@/lib/member-subscription";
 import { CampaignWizard } from "@/components/campaigns/campaign-wizard";
 
 interface NewCampaignPageProps {
@@ -26,9 +27,10 @@ export default async function NewCampaignPage({
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") || "https://referrals.com";
 
   // Fetch campaign types and reward types
-  const [campaignTypes, rewardTypes] = await Promise.all([
+  const [campaignTypes, rewardTypes, paid] = await Promise.all([
     prisma.campaign_types.findMany({ orderBy: { name: "asc" } }),
     prisma.reward_types.findMany({ orderBy: { name: "asc" } }),
+    isMemberOnPaidPlan(memberId),
   ]);
 
   return (
@@ -48,6 +50,7 @@ export default async function NewCampaignPage({
         embedBaseUrl={embedBaseUrl}
         campaignTypes={campaignTypes.map((t) => ({ id: t.id, name: t.name }))}
         rewardTypes={rewardTypes.map((t) => ({ id: t.id, name: t.name }))}
+        initialPublish={paid ? "public" : "private"}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,36 +22,25 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-
-interface WidgetData {
-  id: number;
-  campaign_id: number;
-  widget_type: string | null;
-  color: string | null;
-  header_title: string | null;
-  description: string | null;
-  button_text: string | null;
-  button_color: string | null;
-  text_color: string | null;
-  background_color: string | null;
-  background_type: string | null;
-  placement: string | null;
-  success_message: string | null;
-  field_label_1: string | null;
-  field_label_2: string | null;
-  body_text: string | null;
-  stats_on: boolean | null;
-}
+import { SparklesIcon, LayoutTemplateIcon } from "lucide-react";
+import { buildCampaignEmbedSnippets } from "@/lib/campaign-embed-snippets";
+import { IntegrationEmbedSections } from "@/components/campaigns/integration-embed-sections";
+import { CopyToClipboardButton } from "@/components/ui/copy-to-clipboard-button";
+import { sanitizeWidgetHtml } from "@/lib/sanitize-widget-html";
 
 export default function WidgetCustomizerPage() {
   const router = useRouter();
   const params = useParams();
   const brandId = params.brandId as string;
   const campaignId = params.campaignId as string;
+  const cid = parseInt(campaignId, 10);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [widget, setWidget] = useState<WidgetData | null>(null);
+  const [campaignName, setCampaignName] = useState("");
+  const [siteOrigin, setSiteOrigin] = useState("");
+  const [aiLoading, setAiLoading] = useState<null | "widget" | "bannerHtml">(null);
+  const [vibe, setVibe] = useState("");
 
   const [formData, setFormData] = useState({
     header_title: "",
@@ -71,14 +60,34 @@ export default function WidgetCustomizerPage() {
   });
 
   useEffect(() => {
+    setSiteOrigin(
+      typeof window !== "undefined"
+        ? window.location.origin
+        : (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/+$/, "") ||
+            "https://referrals.com"
+    );
+  }, []);
+
+  const snippets = useMemo(
+    () =>
+      buildCampaignEmbedSnippets(
+        siteOrigin || process.env.NEXT_PUBLIC_APP_URL || "https://referrals.com",
+        cid
+      ),
+    [siteOrigin, cid]
+  );
+
+  const iframePreviewUrl = `/widget/${campaignId}/embed`;
+
+  useEffect(() => {
     async function fetchData() {
       try {
         const response = await fetch(`/api/campaigns/${campaignId}`);
         if (!response.ok) throw new Error("Failed to fetch");
 
         const data = await response.json();
+        setCampaignName(String(data.name || ""));
         if (data.widget) {
-          setWidget(data.widget);
           setFormData({
             header_title: data.widget.header_title || "",
             description: data.widget.description || "",
@@ -127,9 +136,73 @@ export default function WidgetCustomizerPage() {
     }
   }
 
-  const embedCode = `<iframe src="${typeof window !== "undefined" ? window.location.origin : ""}/widget/${campaignId}" width="100%" height="500" frameborder="0"></iframe>`;
+  const callAiWidget = useCallback(async () => {
+    setAiLoading("widget");
+    try {
+      const res = await fetch("/api/campaigns/ai/assist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "widgetTheme",
+          context: {
+            campaignId,
+            brandUrl: campaignName,
+            vibe: vibe || "friendly, clear, modern",
+          },
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "AI request failed");
+      setFormData((prev) => ({
+        ...prev,
+        header_title: data.header_title ?? prev.header_title,
+        description: data.description ?? prev.description,
+        button_text: data.button_text ?? prev.button_text,
+        success_message: data.success_message ?? prev.success_message,
+        field_label_1: data.field_label_1 ?? prev.field_label_1,
+        field_label_2: data.field_label_2 ?? prev.field_label_2,
+        color: data.color ?? prev.color,
+        button_color: data.button_color ?? prev.button_color,
+        text_color: data.text_color ?? prev.text_color,
+        background_color: data.background_color ?? prev.background_color,
+        body_text: data.body_text != null ? String(data.body_text) : prev.body_text,
+      }));
+      toast.success("Widget draft updated — review and click Save to publish.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setAiLoading(null);
+    }
+  }, [campaignId, campaignName, vibe]);
 
-  const scriptCode = `<script src="${typeof window !== "undefined" ? window.location.origin : ""}/widget/${campaignId}/embed.js" data-campaign="${campaignId}"></script>`;
+  const callAiBannerHtml = useCallback(async () => {
+    setAiLoading("bannerHtml");
+    try {
+      const res = await fetch("/api/campaigns/ai/assist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "bannerHtml",
+          context: {
+            name: formData.header_title || campaignName || "Referral program",
+            widgetDescription: formData.description,
+            goalSummary: "",
+            brandUrl: "",
+          },
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "AI request failed");
+      const html = String(data.html || "");
+      if (!html) throw new Error("No HTML returned");
+      setFormData((prev) => ({ ...prev, body_text: html }));
+      toast.success("HTML block added below the description in the preview.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setAiLoading(null);
+    }
+  }, [campaignName, formData.description, formData.header_title]);
 
   if (loading) {
     return (
@@ -140,26 +213,69 @@ export default function WidgetCustomizerPage() {
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
+    <div className="space-y-10 pb-16">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Widget Customizer</h1>
+          <h1 className="text-2xl font-bold">Widget studio</h1>
           <p className="mt-1 text-muted-foreground">
-            Customize the look and feel of your campaign widget
+            Use AI to draft copy and colors, fine-tune fields, save — then copy install snippets below.
           </p>
         </div>
         <Button
           variant="outline"
-          onClick={() =>
-            router.push(`/brands/${brandId}/campaigns/${campaignId}`)
-          }
+          onClick={() => router.push(`/brands/${brandId}/campaigns/${campaignId}`)}
         >
-          Back to Campaign
+          Back to campaign
         </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Settings */}
+      {/* AI + editor + preview */}
+      <Card className="border-violet-200/60 bg-gradient-to-br from-violet-50/40 via-white to-rose-50/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <SparklesIcon className="size-5 text-violet-600" />
+            AI widget creator
+          </CardTitle>
+          <CardDescription>
+            Generates a draft for this campaign (campaign id {cid}). Save when you are happy — the
+            live embed iframe uses saved settings.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="vibe">Optional tone / audience (one line)</Label>
+            <Input
+              id="vibe"
+              placeholder="e.g. playful, crypto-native, enterprise trust"
+              value={vibe}
+              onChange={(e) => setVibe(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              disabled={!!aiLoading}
+              onClick={() => void callAiWidget()}
+              className="gap-2 bg-violet-600 text-white hover:bg-violet-700"
+            >
+              <SparklesIcon className="size-4" />
+              {aiLoading === "widget" ? "Generating…" : "Generate copy & colors"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!!aiLoading}
+              onClick={() => void callAiBannerHtml()}
+              className="gap-2"
+            >
+              <LayoutTemplateIcon className="size-4" />
+              {aiLoading === "bannerHtml" ? "Designing…" : "Suggest HTML body"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -167,7 +283,7 @@ export default function WidgetCustomizerPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="header_title">Header Title</Label>
+                <Label htmlFor="header_title">Header title</Label>
                 <Input
                   id="header_title"
                   value={formData.header_title}
@@ -186,7 +302,7 @@ export default function WidgetCustomizerPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="body_text">Body Text</Label>
+                <Label htmlFor="body_text">Body HTML</Label>
                 <Textarea
                   id="body_text"
                   rows={3}
@@ -197,29 +313,25 @@ export default function WidgetCustomizerPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="field_label_1">Field 1 Label</Label>
+                  <Label htmlFor="field_label_1">Field 1 label</Label>
                   <Input
                     id="field_label_1"
                     value={formData.field_label_1}
-                    onChange={(e) =>
-                      updateField("field_label_1", e.target.value)
-                    }
+                    onChange={(e) => updateField("field_label_1", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="field_label_2">Field 2 Label</Label>
+                  <Label htmlFor="field_label_2">Field 2 label</Label>
                   <Input
                     id="field_label_2"
                     value={formData.field_label_2}
-                    onChange={(e) =>
-                      updateField("field_label_2", e.target.value)
-                    }
+                    onChange={(e) => updateField("field_label_2", e.target.value)}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="button_text">Button Text</Label>
+                <Label htmlFor="button_text">Button text</Label>
                 <Input
                   id="button_text"
                   value={formData.button_text}
@@ -228,14 +340,12 @@ export default function WidgetCustomizerPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="success_message">Success Message</Label>
+                <Label htmlFor="success_message">Success message</Label>
                 <Textarea
                   id="success_message"
                   rows={2}
                   value={formData.success_message}
-                  onChange={(e) =>
-                    updateField("success_message", e.target.value)
-                  }
+                  onChange={(e) => updateField("success_message", e.target.value)}
                 />
               </div>
             </CardContent>
@@ -248,7 +358,7 @@ export default function WidgetCustomizerPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="color">Primary Color</Label>
+                  <Label htmlFor="color">Primary color</Label>
                   <div className="flex gap-2">
                     <span className="text-muted-foreground">#</span>
                     <Input
@@ -264,15 +374,13 @@ export default function WidgetCustomizerPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="button_color">Button Color</Label>
+                  <Label htmlFor="button_color">Button color</Label>
                   <div className="flex gap-2">
                     <span className="text-muted-foreground">#</span>
                     <Input
                       id="button_color"
                       value={formData.button_color}
-                      onChange={(e) =>
-                        updateField("button_color", e.target.value)
-                      }
+                      onChange={(e) => updateField("button_color", e.target.value)}
                       maxLength={6}
                     />
                     <div
@@ -285,15 +393,13 @@ export default function WidgetCustomizerPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="text_color">Text Color</Label>
+                  <Label htmlFor="text_color">Text color</Label>
                   <div className="flex gap-2">
                     <span className="text-muted-foreground">#</span>
                     <Input
                       id="text_color"
                       value={formData.text_color}
-                      onChange={(e) =>
-                        updateField("text_color", e.target.value)
-                      }
+                      onChange={(e) => updateField("text_color", e.target.value)}
                       maxLength={6}
                     />
                     <div
@@ -303,15 +409,13 @@ export default function WidgetCustomizerPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="background_color">Background Color</Label>
+                  <Label htmlFor="background_color">Background color</Label>
                   <div className="flex gap-2">
                     <span className="text-muted-foreground">#</span>
                     <Input
                       id="background_color"
                       value={formData.background_color}
-                      onChange={(e) =>
-                        updateField("background_color", e.target.value)
-                      }
+                      onChange={(e) => updateField("background_color", e.target.value)}
                       maxLength={6}
                     />
                     <div
@@ -342,20 +446,23 @@ export default function WidgetCustomizerPage() {
             </CardContent>
           </Card>
 
-          <Button onClick={handleSave} disabled={saving} className="w-full">
-            {saving ? "Saving..." : "Save Widget Settings"}
+          <Button onClick={handleSave} disabled={saving} className="w-full" size="lg">
+            {saving ? "Saving…" : "Save widget settings"}
           </Button>
         </div>
 
-        {/* Live Preview + Embed Code */}
-        <div className="space-y-6">
+        <div className="space-y-6 lg:sticky lg:top-24">
           <Card>
             <CardHeader>
-              <CardTitle>Live Preview</CardTitle>
+              <CardTitle>Live draft preview</CardTitle>
+              <CardDescription>
+                Reflects the form on the left. The real embed below uses saved settings after you
+                click Save.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div
-                className="rounded-lg border p-6"
+                className="rounded-xl border p-5 shadow-inner"
                 style={{
                   backgroundColor: `#${formData.background_color}`,
                   color: `#${formData.text_color}`,
@@ -365,39 +472,39 @@ export default function WidgetCustomizerPage() {
                   className="text-xl font-bold"
                   style={{ color: `#${formData.color}` }}
                 >
-                  {formData.header_title || "Campaign Title"}
+                  {formData.header_title || "Campaign title"}
                 </h2>
-                <p className="mt-2 text-sm">
-                  {formData.description || "Campaign description goes here..."}
+                <p className="mt-2 text-sm opacity-90">
+                  {formData.description || "Description appears here."}
                 </p>
-                {formData.body_text && (
-                  <p className="mt-2 text-sm">{formData.body_text}</p>
-                )}
+                {formData.body_text ? (
+                  <div
+                    className="prose prose-sm mt-3 max-w-none dark:prose-invert"
+                    dangerouslySetInnerHTML={{
+                      __html: sanitizeWidgetHtml(formData.body_text),
+                    }}
+                  />
+                ) : null}
 
                 <div className="mt-4 space-y-3">
                   <div>
-                    <label className="text-xs font-medium">
-                      {formData.field_label_1 || "Full Name"}
-                    </label>
-                    <div className="mt-1 rounded border bg-white px-3 py-2 text-sm text-gray-400">
-                      John Doe
+                    <span className="text-xs font-medium">{formData.field_label_1}</span>
+                    <div className="mt-1 rounded-md border bg-white/90 px-3 py-2 text-sm text-muted-foreground">
+                      Sample name
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-medium">
-                      {formData.field_label_2 || "Email Address"}
-                    </label>
-                    <div className="mt-1 rounded border bg-white px-3 py-2 text-sm text-gray-400">
-                      john@example.com
+                    <span className="text-xs font-medium">{formData.field_label_2}</span>
+                    <div className="mt-1 rounded-md border bg-white/90 px-3 py-2 text-sm text-muted-foreground">
+                      you@example.com
                     </div>
                   </div>
                   <button
-                    className="w-full rounded px-4 py-2 text-sm font-medium text-white"
-                    style={{
-                      backgroundColor: `#${formData.button_color}`,
-                    }}
+                    type="button"
+                    className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm"
+                    style={{ backgroundColor: `#${formData.button_color}` }}
                   >
-                    {formData.button_text || "Join Now"}
+                    {formData.button_text || "Join now"}
                   </button>
                 </div>
               </div>
@@ -406,46 +513,39 @@ export default function WidgetCustomizerPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Embed Code</CardTitle>
-              <CardDescription>
-                Copy and paste this code into your website
-              </CardDescription>
+              <CardTitle>Saved widget embed</CardTitle>
+              <CardDescription>iframe pointing at the live widget route (updates after Save).</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>iFrame Embed</Label>
-                <Textarea
-                  readOnly
-                  rows={3}
-                  value={embedCode}
-                  className="font-mono text-xs"
-                  onClick={(e) => (e.target as HTMLTextAreaElement).select()}
-                />
+            <CardContent className="space-y-3">
+              <iframe
+                src={iframePreviewUrl}
+                className="min-h-[380px] w-full rounded-lg border bg-muted/30"
+                title="Widget embed preview"
+                allow="clipboard-write; clipboard-read"
+              />
+              <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1 truncate rounded-md border bg-muted/40 px-2 py-1.5 font-mono text-xs">
+                  {snippets.iframe.split("\n")[0]}
+                </div>
+                <CopyToClipboardButton text={snippets.iframe} aria-label="Copy iframe code" />
               </div>
-              <div className="space-y-2">
-                <Label>Script Embed</Label>
-                <Textarea
-                  readOnly
-                  rows={3}
-                  value={scriptCode}
-                  className="font-mono text-xs"
-                  onClick={(e) => (e.target as HTMLTextAreaElement).select()}
-                />
-              </div>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  navigator.clipboard.writeText(embedCode);
-                  toast.success("Embed code copied to clipboard");
-                }}
-              >
-                Copy iFrame Code
-              </Button>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      <Separator className="my-2" />
+
+      <section id="install" className="scroll-mt-24 space-y-4">
+        <div>
+          <h2 className="text-xl font-bold tracking-tight">Add to your site</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Platform-specific install steps and copy buttons. Placement (inline, popup, floating)
+            still comes from the form above once saved.
+          </p>
+        </div>
+        <IntegrationEmbedSections snippets={snippets} brandId={brandId} campaignId={cid} />
+      </section>
     </div>
   );
 }

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  isMemberOnPaidPlan,
+  subscriptionRequiredResponse,
+} from "@/lib/member-subscription";
 
 export async function POST(
   request: NextRequest,
@@ -24,6 +28,10 @@ export async function POST(
   try {
     const body = await request.json();
     const newStatus = body.publish || (campaign.publish === "public" ? "private" : "public");
+
+    if (newStatus === "public" && !(await isMemberOnPaidPlan(memberId))) {
+      return subscriptionRequiredResponse();
+    }
 
     const updated = await prisma.member_campaigns.update({
       where: { id },

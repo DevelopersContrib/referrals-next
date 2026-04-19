@@ -16,7 +16,7 @@ export async function generateMetadata({
   return buildPublicCampaignMetadata(data);
 }
 
-export default async function PublicCampaignPage({
+export default async function LegacyStylePublicCampaignPage({
   params,
 }: {
   params: Promise<{ slug: string; campaignId: string }>;

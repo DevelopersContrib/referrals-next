@@ -1,29 +1,34 @@
-import { SessionProvider } from "next-auth/react";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { DashboardSidebar } from "@/components/dashboard/sidebar";
-import { DashboardHeader } from "@/components/dashboard/header";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { isMemberOnPaidPlan } from "@/lib/member-subscription";
+import { DashboardClientRoot } from "./dashboard-client-root";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/signin");
+
+  const memberId = parseInt(session.user.id, 10);
+  const [member, isPaid] = await Promise.all([
+    prisma.members.findUnique({
+      where: { id: memberId },
+      select: { is_verified: true },
+    }),
+    isMemberOnPaidPlan(memberId),
+  ]);
+
   return (
-    <SessionProvider>
-      <SidebarProvider>
-        <DashboardSidebar />
-        <SidebarInset>
-          <DashboardHeader />
-          <main className="flex-1 overflow-auto bg-dashboard p-4 md:p-6 lg:p-8">
-            {children}
-          </main>
-          <footer className="border-t border-[#ebeef0] bg-white px-6 py-3">
-            <p className="text-xs text-[#a7abc3]">
-              2026 &copy; Referrals.com &mdash; Grow your business with referral marketing
-            </p>
-          </footer>
-        </SidebarInset>
-      </SidebarProvider>
-    </SessionProvider>
+    <DashboardClientRoot
+      onboarding={{
+        isVerified: Boolean(member?.is_verified),
+        isPaid,
+      }}
+    >
+      {children}
+    </DashboardClientRoot>
   );
 }

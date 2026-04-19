@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  isMemberOnPaidPlan,
+  subscriptionRequiredResponse,
+} from "@/lib/member-subscription";
 
 async function verifyCampaignOwnership(campaignId: number, memberId: number) {
   const campaign = await prisma.member_campaigns.findFirst({
@@ -81,6 +85,7 @@ export async function PUT(
     }
 
     const body = await request.json();
+    const paid = await isMemberOnPaidPlan(memberId);
     const {
       name,
       type_id,
@@ -98,6 +103,13 @@ export async function PUT(
       twoway_reward_notify_subject,
       twoway_reward_notify_message,
     } = body;
+    const resolvedPublish =
+      publish !== undefined
+        ? String(publish)
+        : String(campaign.publish || "private");
+    if (resolvedPublish === "public" && !paid) {
+      return subscriptionRequiredResponse();
+    }
 
     const updated = await prisma.member_campaigns.update({
       where: { id },

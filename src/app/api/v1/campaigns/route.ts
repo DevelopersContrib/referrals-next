@@ -7,6 +7,7 @@ import {
   handleCors,
   getPagination,
 } from "@/lib/api/helpers";
+import { isMemberOnPaidPlan } from "@/lib/member-subscription";
 
 export async function OPTIONS() {
   return handleCors();
@@ -76,6 +77,20 @@ export async function POST(req: NextRequest) {
       return apiError("Brand not found or does not belong to you", 404);
     }
 
+    const paid = await isMemberOnPaidPlan(memberId);
+    const resolvedPublish =
+      publish === "public" || publish === "private"
+        ? publish
+        : paid
+          ? "public"
+          : "private";
+    if (resolvedPublish === "public" && !paid) {
+      return apiError(
+        "An active subscription is required to publish referral programs.",
+        403
+      );
+    }
+
     const campaign = await prisma.member_campaigns.create({
       data: {
         name,
@@ -85,7 +100,7 @@ export async function POST(req: NextRequest) {
         reward_type: reward_type || 1,
         goal_type: goal_type || undefined,
         num_signups: num_signups || undefined,
-        publish: publish || "public",
+        publish: resolvedPublish,
         date_added: new Date(),
       },
     });

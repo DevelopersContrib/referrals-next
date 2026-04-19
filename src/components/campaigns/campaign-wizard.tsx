@@ -58,6 +58,8 @@ export interface CampaignWizardProps {
   embedBaseUrl: string;
   campaignTypes: CampaignType[];
   rewardTypes: RewardType[];
+  /** Default visibility; unpaid members should use "private" so saves are not blocked by the API. */
+  initialPublish?: "public" | "private";
 }
 
 interface FormData {
@@ -100,6 +102,7 @@ export function CampaignWizard({
   embedBaseUrl,
   campaignTypes,
   rewardTypes,
+  initialPublish = "private",
 }: CampaignWizardProps) {
   const [currentStep, setCurrentStep] = useState<StepId>("basic");
   const [createdCampaignId, setCreatedCampaignId] = useState<number | null>(null);
@@ -119,7 +122,7 @@ export function CampaignWizard({
     campaign_entry_subject: "Welcome to our referral program!",
     campaign_entry_message:
       "Thank you for joining! Share your unique link with friends to earn rewards.",
-    publish: "public",
+    publish: initialPublish,
     widget_description:
       "Invite friends with your link. When they complete the goal, rewards unlock automatically.",
     widget_button_text: "Join now",
@@ -250,8 +253,12 @@ export function CampaignWizard({
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create campaign");
+        const error = await response.json().catch(() => ({}));
+        const msg =
+          error?.code === "REQUIRES_SUBSCRIPTION"
+            ? `${error.error || "Subscription required"} Open Billing to choose a plan.`
+            : error.error || "Failed to create campaign";
+        throw new Error(msg);
       }
 
       const campaign = await response.json();
@@ -277,6 +284,7 @@ export function CampaignWizard({
           brandId={brandId}
           baseUrl={embedBaseUrl}
           brandSlug={brandSlug}
+          publicSegment={brandSlug?.trim() || brandId}
         />
       </div>
     );

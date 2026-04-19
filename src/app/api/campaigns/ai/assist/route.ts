@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { sanitizeWidgetHtml } from "@/lib/sanitize-widget-html";
 
-type AssistAction = "emails" | "bannerHtml" | "bannerImage";
+type AssistAction = "emails" | "bannerHtml" | "bannerImage" | "widgetTheme";
 
 const OPENAI_CHAT = "https://api.openai.com/v1/chat/completions";
 const OPENAI_IMAGE = "https://api.openai.com/v1/images/generations";
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: { action?: AssistAction; context?: Record<string, string> };
+  let body: { action?: AssistAction; context?: Record<string, string | undefined> };
   try {
     body = await req.json();
   } catch {
@@ -200,6 +201,108 @@ Return ONLY valid JSON: { "html": "<div>...</div>" }`;
       }
 
       return NextResponse.json({ error: "No image in response" }, { status: 502 });
+    }
+
+    if (action === "widgetTheme") {
+      const memberId = parseInt(session.user!.id, 10);
+      const campaignIdRaw = ctx.campaignId;
+      const campaignId =
+        typeof campaignIdRaw === "string"
+          ? parseInt(campaignIdRaw, 10)
+          : Number(campaignIdRaw);
+      if (!Number.isFinite(campaignId) || campaignId <= 0) {
+        return NextResponse.json({ error: "campaignId is required" }, { status: 400 });
+      }
+
+      const campaign = await prisma.member_campaigns.findFirst({
+        where: { id: campaignId, member_id: memberId },
+        select: { id: true, name: true, goal_type: true, num_visits: true, num_signups: true },
+      });
+      if (!campaign) {
+        return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
+      }
+
+      const goalLine =
+        campaign.goal_type === "visit"
+          ? `${campaign.num_visits ?? "?"} referral visits`
+          : `${campaign.num_signups ?? "?"} referral signups`;
+
+      const prompt = `You design referral widget UI copy and colors for an embeddable signup widget.
+Return ONLY valid JSON with these keys (all strings except where noted):
+- header_title (max 80 chars, compelling)
+- description (max 400 chars, plain text, line breaks ok as \\n)
+- button_text (max 24 chars, action-oriented)
+- success_message (max 200 chars)
+- field_label_1 (default "Full Name" style, max 40 chars)
+- field_label_2 (default "Email" style, max 40 chars)
+- color (exactly 6 hex characters, no #, primary accent — e.g. FF5C62 or 6366f1)
+- button_color (6 hex, no #, can match color or contrast)
+- text_color (6 hex, no #, must be readable on background)
+- background_color (6 hex, no #, usually ffffff or very light)
+- body_text (optional string: short safe HTML block using ONLY div, span, p, strong, em, br — max 600 chars of tags+text; no script, iframe, or event handlers; can be empty string)
+
+Campaign name: ${campaign.name}
+Goal: ${goalLine}
+Brand hint: ${ctx.brandUrl || ""}
+Extra vibe from user: ${ctx.vibe || "friendly, trustworthy, modern"}
+
+Ensure color fields match /^[0-9A-Fa-f]{6}$/.`;
+
+      const res = await fetch(OPENAI_CHAT, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          temperature: 0.65,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: "You only output valid JSON objects. No markdown." },
+            { role: "user", content: prompt },
+          ],
+        }),
+      });
+
+      if (!res.ok) {
+        console.error("OpenAI widgetTheme error", await res.text());
+        return NextResponse.json({ error: "AI request failed" }, { status: 502 });
+      }
+
+      const data = (await res.json()) as {
+        choices?: { message?: { content?: string } }[];
+      };
+      const text = data.choices?.[0]?.message?.content;
+      if (!text) return NextResponse.json({ error: "Empty AI response" }, { status: 502 });
+
+      let parsed: Record<string, string>;
+      try {
+        parsed = JSON.parse(text) as Record<string, string>;
+      } catch {
+        return NextResponse.json({ error: "AI returned invalid JSON" }, { status: 502 });
+      }
+
+      const hex = (v: string) => {
+        const s = String(v || "").replace(/#/g, "").slice(0, 6);
+        return /^[0-9A-Fa-f]{6}$/.test(s) ? s : "6366f1";
+      };
+
+      const bodyHtml = sanitizeWidgetHtml(String(parsed.body_text || ""));
+
+      return NextResponse.json({
+        header_title: String(parsed.header_title || "Join our referral program").slice(0, 120),
+        description: String(parsed.description || "").slice(0, 650),
+        button_text: String(parsed.button_text || "Join now").slice(0, 80),
+        success_message: String(parsed.success_message || "Thanks for joining!").slice(0, 300),
+        field_label_1: String(parsed.field_label_1 || "Full name").slice(0, 80),
+        field_label_2: String(parsed.field_label_2 || "Email").slice(0, 80),
+        color: hex(parsed.color),
+        button_color: hex(parsed.button_color),
+        text_color: hex(parsed.text_color),
+        background_color: hex(parsed.background_color),
+        body_text: bodyHtml,
+      });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });

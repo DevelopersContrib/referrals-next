@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ParticipantTable } from "@/components/campaigns/participant-table";
+import { CampaignShareLinks } from "@/components/campaigns/campaign-share-links";
 import {
   HomeIcon,
   ChevronRightIcon,
@@ -22,15 +23,13 @@ import {
   MousePointerClickIcon,
   EyeIcon,
   SettingsIcon,
-  LinkIcon,
-  CopyIcon,
   BarChart3Icon,
   TrophyIcon,
   GiftIcon,
   CodeIcon,
   ZapIcon,
-  ExternalLinkIcon,
   LayoutDashboardIcon,
+  PuzzleIcon,
 } from "lucide-react";
 
 interface CampaignDashboardPageProps {
@@ -153,9 +152,11 @@ export default async function CampaignDashboardPage({
     },
   ];
 
-  // Build referral link
-  const referralLink = `https://referrals.com/r/${campaign.id}`;
-  const publicPageLink = `https://referrals.com/public/${brand?.slug || brand?.id}/campaign/${campaign.id}`;
+  const siteOrigin =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") || "https://referrals.com";
+  const slugOrId = brand?.slug?.trim() || String(brand?.id ?? brandId);
+  const referralLink = `${siteOrigin}/r/${campaign.id}`;
+  const publicPageLink = `${siteOrigin}/public/${encodeURIComponent(slugOrId)}/campaign/${campaign.id}`;
 
   return (
     <div className="space-y-6">
@@ -201,7 +202,13 @@ export default async function CampaignDashboardPage({
               : `${campaign.num_signups} signups`}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/brands/${brandId}/campaigns/${campaignId}/widget#install`}>
+            <Button className="gap-2 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 border border-white/20">
+              <PuzzleIcon className="size-4" />
+              Install / embed
+            </Button>
+          </Link>
           <Link href={`/brands/${brandId}/campaigns/${campaignId}/edit`}>
             <Button className="gap-2 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 border border-white/20">
               <SettingsIcon className="size-4" />
@@ -217,46 +224,9 @@ export default async function CampaignDashboardPage({
         </div>
       </div>
 
-      {/* Referral Link Display */}
+      {/* Referral + public page URLs */}
       <div className="portlet">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#a7abc3]">
-              Referral Link
-            </label>
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 flex-1 items-center rounded-md border border-[#ebeef0] bg-[#f7f8fa] px-3 text-sm text-[#575962]">
-                <LinkIcon className="mr-2 size-3.5 text-[#a7abc3]" />
-                <span className="truncate">{referralLink}</span>
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className="shrink-0 border-[#ebeef0] hover:border-brand hover:text-brand"
-              >
-                <CopyIcon className="size-4" />
-              </Button>
-            </div>
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#a7abc3]">
-              Public Page Link
-            </label>
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 flex-1 items-center rounded-md border border-[#ebeef0] bg-[#f7f8fa] px-3 text-sm text-[#575962]">
-                <ExternalLinkIcon className="mr-2 size-3.5 text-[#a7abc3]" />
-                <span className="truncate">{publicPageLink}</span>
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className="shrink-0 border-[#ebeef0] hover:border-brand hover:text-brand"
-              >
-                <CopyIcon className="size-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
+        <CampaignShareLinks referralUrl={referralLink} publicPageUrl={publicPageLink} />
       </div>
 
       {/* Stats Grid */}
@@ -418,6 +388,19 @@ export default async function CampaignDashboardPage({
 
         {/* Integrations Tab */}
         <TabsContent value="integrations" className="mt-6">
+          <div className="mb-6 rounded-xl border border-brand/20 bg-brand/5 p-4 sm:p-5">
+            <h3 className="text-sm font-semibold text-[#575962]">Installation and embed codes</h3>
+            <p className="mt-1 text-xs text-[#a7abc3] sm:text-sm">
+              Step-by-step snippets for JavaScript, Shopify, WordPress, Next.js, GTM, and more live on
+              the widget page (scroll to &quot;Add to your site&quot;).
+            </p>
+            <Link
+              href={`/brands/${brandId}/campaigns/${campaignId}/widget#install`}
+              className="mt-3 inline-flex text-sm font-semibold text-brand underline-offset-2 hover:underline"
+            >
+              Open install section
+            </Link>
+          </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Link
               href={`/brands/${brandId}/campaigns/${campaignId}/widget`}

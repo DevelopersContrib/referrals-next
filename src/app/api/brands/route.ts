@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  countMemberBrands,
+  isMemberOnPaidPlan,
+  subscriptionRequiredResponse,
+} from "@/lib/member-subscription";
 
 export async function GET() {
   try {
@@ -38,6 +43,11 @@ export async function POST(req: NextRequest) {
 
     if (!url) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
+    }
+
+    const existingBrands = await countMemberBrands(memberId);
+    if (existingBrands >= 1 && !(await isMemberOnPaidPlan(memberId))) {
+      return subscriptionRequiredResponse();
     }
 
     // Extract domain from URL

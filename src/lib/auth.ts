@@ -4,6 +4,7 @@ import Google from "next-auth/providers/google";
 import Facebook from "next-auth/providers/facebook";
 import { compareSync } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { memberIdIsPlatformAdmin, memberRowIsPlatformAdmin } from "@/lib/platform-admin";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -44,7 +45,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: String(member.id),
           email: member.email!,
           name: member.name || "",
-          isAdmin: false, // TODO: check admin flag
+          isAdmin: memberRowIsPlatformAdmin({
+            id: member.id,
+            email: member.email,
+          }),
         };
       },
     }),
@@ -68,14 +72,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.isAdmin = (user as any).isAdmin || false;
+        const mid = parseInt(String(user.id), 10);
+        const fromUser = Boolean((user as { isAdmin?: boolean }).isAdmin);
+        token.isAdmin =
+          !Number.isNaN(mid) &&
+          (fromUser || (await memberIdIsPlatformAdmin(mid)));
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        (session.user as any).isAdmin = token.isAdmin || false;
+        const u = session.user as typeof session.user & { isAdmin?: boolean };
+        u.isAdmin = Boolean(token.isAdmin);
       }
       return session;
     },

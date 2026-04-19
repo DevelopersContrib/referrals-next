@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { memberIdIsPlatformAdmin } from "@/lib/platform-admin";
 
 export function subscriptionRequiredResponse() {
   return NextResponse.json(
@@ -23,6 +24,7 @@ export function skipPaidSubscriptionGate() {
  */
 export async function isMemberOnPaidPlan(memberId: number): Promise<boolean> {
   if (skipPaidSubscriptionGate()) return true;
+  if (await memberIdIsPlatformAdmin(memberId)) return true;
 
   const member = await prisma.members.findUnique({
     where: { id: memberId },

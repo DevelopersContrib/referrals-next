@@ -27,7 +27,9 @@ export default function PlanDetailPage() {
         body: JSON.stringify({ planId: parseInt(params.planId as string, 10) }),
       });
       const data = await res.json();
-      if (data.approvalUrl) {
+      if (data.free && data.redirectUrl) {
+        router.push(data.redirectUrl);
+      } else if (data.approvalUrl) {
         window.location.href = data.approvalUrl;
       } else {
         alert(data.error || "Failed to create subscription");
@@ -58,11 +60,19 @@ export default function PlanDetailPage() {
             <p>{plan.days || 30} day billing cycle</p>
           </div>
           <Button onClick={handleSubscribe} disabled={loading} className="w-full" size="lg">
-            {loading ? "Redirecting to PayPal..." : `Subscribe — $${Number(plan.price || 0).toFixed(2)}/mo`}
+            {loading
+              ? Number(plan.price || 0) > 0
+                ? "Redirecting to PayPal..."
+                : "Activating..."
+              : Number(plan.price || 0) > 0
+                ? `Subscribe — $${Number(plan.price).toFixed(2)}/mo`
+                : "Activate Free Plan"}
           </Button>
-          <p className="text-xs text-center text-muted-foreground">
-            You&apos;ll be redirected to PayPal to complete payment. Cancel anytime.
-          </p>
+          {Number(plan.price || 0) > 0 && (
+            <p className="text-xs text-center text-muted-foreground">
+              You&apos;ll be redirected to PayPal to complete payment. Cancel anytime.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

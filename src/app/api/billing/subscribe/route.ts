@@ -15,6 +15,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Plan not found" }, { status: 404 });
 
   try {
+    // Free plan — activate immediately without PayPal
+    if (!plan.price || plan.price <= 0) {
+      const now = new Date();
+      const expiry = new Date(now);
+      expiry.setDate(expiry.getDate() + (plan.days || 30));
+
+      await prisma.members.update({
+        where: { id: parseInt(session.user.id, 10) },
+        data: { plan_id: plan.id, plan_expiry: expiry },
+      });
+
+      return NextResponse.json({ free: true, redirectUrl: "/billing/success" });
+    }
+
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const returnUrl = `${appUrl}/api/billing/execute?planId=${planId}&memberId=${session.user.id}${brandId ? `&brandId=${brandId}` : ""}`;
     const cancelUrl = `${appUrl}/billing`;

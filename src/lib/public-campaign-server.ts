@@ -36,8 +36,9 @@ export async function fetchPublicCampaignViewData(
   slug: string,
   campaignIdStr: string
 ): Promise<PublicCampaignViewPayload | null> {
+  const numericId = parseInt(slug, 10);
   const brand = await prisma.member_urls.findFirst({
-    where: { slug },
+    where: Number.isNaN(numericId) ? { slug } : { OR: [{ slug }, { id: numericId }] },
     select: { id: true, domain: true, slug: true },
   });
   if (!brand) return null;

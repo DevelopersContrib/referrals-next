@@ -60,7 +60,7 @@ export async function GET(
     const popupButtonColor = widget?.popup_button_color || color;
     const popupButtonPosition = widget?.popup_button_position || "bottom-right";
     const widgetWidth = widget?.widget_width || "100%";
-    const widgetHeight = widget?.widget_height || "600";
+    const widgetHeight = widget?.widget_height || "800";
 
     const js = generateWidgetJs({
       appUrl,
@@ -114,14 +114,22 @@ function generateWidgetJs(config: {
     var f = document.createElement("iframe");
     f.src = embedUrl;
     f.width = w;
-    f.height = h;
     f.style.border = "none";
-    f.style.overflow = "hidden";
     f.style.maxWidth = "100%";
     f.setAttribute("frameborder", "0");
     f.setAttribute("scrolling", "no");
     f.setAttribute("allow", "clipboard-write; clipboard-read");
     f.title = "Referral Widget";
+    if (h === "auto") {
+      f.style.height = "600px";
+      window.addEventListener("message", function(e) {
+        if (e.data && e.data.type === "rw-resize" && e.source === f.contentWindow) {
+          f.style.height = e.data.height + "px";
+        }
+      });
+    } else {
+      f.height = h;
+    }
     return f;
   }
 

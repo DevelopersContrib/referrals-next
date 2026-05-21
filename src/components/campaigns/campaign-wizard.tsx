@@ -372,7 +372,12 @@ export function CampaignWizard({
                       onValueChange={(val: string | null) => updateField("type_id", val || "")}
                     >
                       <SelectTrigger id="type">
-                        <SelectValue placeholder="Select a type" />
+                        <SelectValue placeholder="Select a type">
+                          {(value: string | null) =>
+                            campaignTypes.find((t) => t.id.toString() === value)?.name ??
+                            "Select a type"
+                          }
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {campaignTypes.map((type) => (
@@ -539,7 +544,12 @@ export function CampaignWizard({
                         onValueChange={(val: string | null) => updateField("reward_type", val || "")}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select reward type" />
+                          <SelectValue placeholder="Select reward type">
+                            {(value: string | null) =>
+                              rewardTypes.find((r) => r.id.toString() === value)?.name ??
+                              "Select reward type"
+                            }
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {rewardTypes.map((type) => (

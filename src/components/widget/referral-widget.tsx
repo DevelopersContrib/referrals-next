@@ -82,6 +82,23 @@ export function ReferralWidget({
   const headerColor = config.headerFontColor ? `#${config.headerFontColor.replace("#", "")}` : textColor;
   const descColor = config.headerDescriptionColor ? `#${config.headerDescriptionColor.replace("#", "")}` : "#6B7280";
 
+  // Post height to parent iframe for auto-resize
+  useEffect(() => {
+    if (!isEmbed) return;
+    function postHeight() {
+      const h = document.documentElement.scrollHeight;
+      window.parent.postMessage({ type: "rw-resize", height: h }, "*");
+    }
+    postHeight();
+    const observer = new MutationObserver(postHeight);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+    window.addEventListener("resize", postHeight);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", postHeight);
+    };
+  }, [isEmbed, step]);
+
   // Track impression on mount
   useEffect(() => {
     fetch("/api/widget/impression", {
@@ -192,7 +209,7 @@ export function ReferralWidget({
         maxWidth: isEmbed ? "100%" : "480px",
         margin: isEmbed ? "0" : "0 auto",
         borderRadius: isEmbed ? "0" : "12px",
-        overflow: "hidden",
+        overflow: "auto",
         boxShadow: isEmbed ? "none" : "0 4px 24px rgba(0,0,0,0.12)",
         ...bgStyle,
       }}

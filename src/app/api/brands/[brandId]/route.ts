@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  extractDomainFromUrl,
+  getBrandIfAccessible,
+  userCanAccessBrand,
+} from "@/lib/brand-access";
 
 type RouteParams = { params: Promise<{ brandId: string }> };
 
@@ -18,9 +23,11 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Invalid brand ID" }, { status: 400 });
     }
 
-    const brand = await prisma.member_urls.findFirst({
-      where: { id, member_id: memberId },
-    });
+    const brand = await getBrandIfAccessible(
+      id,
+      memberId,
+      Boolean((session.user as { isAdmin?: boolean }).isAdmin)
+    );
 
     if (!brand) {
       return NextResponse.json({ error: "Brand not found" }, { status: 404 });
@@ -43,6 +50,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const memberId = parseInt(session.user.id, 10);
+    const isAdmin = Boolean((session.user as { isAdmin?: boolean }).isAdmin);
     const { brandId } = await params;
     const id = parseInt(brandId, 10);
 
@@ -50,11 +58,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Invalid brand ID" }, { status: 400 });
     }
 
-    // Verify ownership
-    const existing = await prisma.member_urls.findFirst({
-      where: { id, member_id: memberId },
-    });
-
+    const existing = await getBrandIfAccessible(id, memberId, isAdmin);
     if (!existing) {
       return NextResponse.json({ error: "Brand not found" }, { status: 404 });
     }
@@ -62,13 +66,30 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     const body = await req.json();
     const { url, description, logo_url, background_image, slug } = body;
 
-    // If URL changed, re-extract domain
     let domain = existing.domain;
     if (url && url !== existing.url) {
-      try {
-        domain = new URL(url).hostname;
-      } catch {
-        domain = url.replace(/^https?:\/\//, "").split("/")[0];
+      domain = extractDomainFromUrl(url);
+
+      const duplicate = await prisma.member_urls.findFirst({
+        where: { domain, NOT: { id } },
+      });
+      if (duplicate) {
+        return NextResponse.json(
+          { error: "This domain is already registered" },
+          { status: 409 }
+        );
+      }
+    }
+
+    if (slug && slug !== existing.slug) {
+      const slugTaken = await prisma.member_urls.findFirst({
+        where: { slug, NOT: { id } },
+      });
+      if (slugTaken) {
+        return NextResponse.json(
+          { error: "Slug is not available" },
+          { status: 409 }
+        );
       }
     }
 
@@ -100,6 +121,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const memberId = parseInt(session.user.id, 10);
+    const isAdmin = Boolean((session.user as { isAdmin?: boolean }).isAdmin);
     const { brandId } = await params;
     const id = parseInt(brandId, 10);
 
@@ -107,16 +129,16 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Invalid brand ID" }, { status: 400 });
     }
 
-    // Verify ownership
-    const existing = await prisma.member_urls.findFirst({
-      where: { id, member_id: memberId },
-    });
-
-    if (!existing) {
+    const canAccess = await userCanAccessBrand(id, memberId, isAdmin);
+    if (!canAccess) {
       return NextResponse.json({ error: "Brand not found" }, { status: 404 });
     }
 
-    await prisma.member_urls.delete({ where: { id } });
+    await prisma.$transaction([
+      prisma.url_socials.deleteMany({ where: { url_id: id } }),
+      prisma.member_campaigns.deleteMany({ where: { url_id: id } }),
+      prisma.member_urls.delete({ where: { id } }),
+    ]);
 
     return NextResponse.json({ success: true });
   } catch (error) {

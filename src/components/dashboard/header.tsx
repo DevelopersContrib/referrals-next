@@ -110,6 +110,16 @@ export function DashboardHeader() {
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {(session?.user as { isAdmin?: boolean })?.isAdmin && (
+          <Link
+            href="/brands/allbrands"
+            className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-[#575962] transition-colors hover:bg-[#f2f3f8] hover:text-brand"
+          >
+            <GlobeIcon className="size-4" />
+            All Brands (Admin)
+          </Link>
+        )}
+
         {/* Resources Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-[#575962] transition-colors hover:bg-[#f2f3f8] hover:text-brand">

@@ -41,14 +41,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           data: { num_of_logins: { increment: 1 } },
         });
 
+        const isAdmin = await memberRowIsPlatformAdmin({
+          id: member.id,
+          email: member.email,
+        });
+        console.log("[isAdmin] credentials login", {
+          memberId: member.id,
+          email: member.email,
+          isAdmin,
+        });
+
         return {
           id: String(member.id),
           email: member.email!,
           name: member.name || "",
-          isAdmin: memberRowIsPlatformAdmin({
-            id: member.id,
-            email: member.email,
-          }),
+          isAdmin,
         };
       },
     }),
@@ -77,6 +84,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.isAdmin =
           !Number.isNaN(mid) &&
           (fromUser || (await memberIdIsPlatformAdmin(mid)));
+        console.log("[isAdmin] jwt callback", {
+          memberId: user.id,
+          email: user.email,
+          fromUser,
+          isAdmin: token.isAdmin,
+        });
       }
       return token;
     },
@@ -85,6 +98,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id as string;
         const u = session.user as typeof session.user & { isAdmin?: boolean };
         u.isAdmin = Boolean(token.isAdmin);
+        console.log("[isAdmin] session callback", {
+          memberId: token.id,
+          email: session.user.email,
+          isAdmin: u.isAdmin,
+        });
       }
       return session;
     },

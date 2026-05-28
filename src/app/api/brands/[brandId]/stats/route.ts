@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getBrandIfAccessible } from "@/lib/brand-access";
+import {
+  getBrandOverviewStats,
+  getBrandParticipantsSeries,
+  getBrandSharesSeries,
+} from "@/lib/brand-stats";
 
 type RouteParams = { params: Promise<{ brandId: string }> };
 
-export async function GET(_req: NextRequest, { params }: RouteParams) {
+export async function GET(req: NextRequest, { params }: RouteParams) {
   try {
     const session = await auth();
     if (!session?.user?.id)
@@ -18,53 +23,61 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Invalid brand ID" }, { status: 400 });
     }
 
-    // Verify ownership
-    const brand = await prisma.member_urls.findFirst({
-      where: { id, member_id: memberId },
-    });
+    const brand = await getBrandIfAccessible(
+      id,
+      memberId,
+      Boolean((session.user as { isAdmin?: boolean }).isAdmin)
+    );
 
     if (!brand) {
       return NextResponse.json({ error: "Brand not found" }, { status: 404 });
     }
 
-    // Get campaigns for this brand
-    const campaigns = await prisma.member_campaigns.findMany({
-      where: { url_id: id, member_id: memberId },
-      select: { id: true },
-    });
+    const { searchParams } = new URL(req.url);
+    const graph = searchParams.get("graph");
+    const from = searchParams.get("from");
+    const to = searchParams.get("to");
 
-    const campaignIds = campaigns.map((c) => c.id);
-    const campaignsCount = campaignIds.length;
-
-    let participantsCount = 0;
-    let totalClicks = 0;
-    let totalShares = 0;
-
-    if (campaignIds.length > 0) {
-      const [participantResult, clicksResult, sharesResult] =
-        await Promise.all([
-          prisma.campaign_participants.count({
-            where: { campaign_id: { in: campaignIds } },
-          }),
-          prisma.participants_share.aggregate({
-            where: { campaign_id: { in: campaignIds } },
-            _sum: { clicks: true },
-          }),
-          prisma.participants_share.count({
-            where: { campaign_id: { in: campaignIds } },
-          }),
-        ]);
-
-      participantsCount = participantResult;
-      totalClicks = clicksResult._sum.clicks || 0;
-      totalShares = sharesResult;
+    if (graph && from && to) {
+      try {
+        if (graph === "1") {
+          const stats = await getBrandOverviewStats(id, from, to);
+          return NextResponse.json({ graph: "1", ...stats });
+        }
+        if (graph === "2") {
+          const series = await getBrandParticipantsSeries(id, from, to);
+          return NextResponse.json({ graph: "2", series });
+        }
+        if (graph === "3") {
+          const series = await getBrandSharesSeries(id, from, to);
+          return NextResponse.json({ graph: "3", series });
+        }
+      } catch (err) {
+        return NextResponse.json(
+          {
+            error:
+              err instanceof Error ? err.message : "Invalid stats request",
+          },
+          { status: 400 }
+        );
+      }
     }
 
+    const range = from && to ? { from, to } : null;
+    const stats = range
+      ? await getBrandOverviewStats(id, range.from, range.to)
+      : await getBrandOverviewStats(
+          id,
+          new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10),
+          new Date().toISOString().slice(0, 10)
+        );
+
     return NextResponse.json({
-      campaignsCount,
-      participantsCount,
-      totalClicks,
-      totalShares,
+      campaignsCount: stats.totalCampaigns,
+      participantsCount: stats.totalParticipants,
+      totalClicks: stats.totalClicks,
+      totalShares: stats.totalShares,
+      totalImpressions: stats.totalImpressions,
     });
   } catch (error) {
     console.error("Error fetching brand stats:", error);

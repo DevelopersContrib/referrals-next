@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         destination: "/brands/:brandId/edit",
         permanent: true,
       },
+      {
+        source: "/brand/dashboard/:brandId",
+        destination: "/brands/:brandId",
+        permanent: true,
+      },
     ];
   },
   async headers() {

@@ -33,6 +33,26 @@ export async function getBrandIfAccessible(
   });
 }
 
+export async function getCampaignIfAccessible(
+  campaignId: number,
+  brandId: number,
+  memberId: number,
+  isAdminFromSession?: boolean
+) {
+  const isAdmin =
+    Boolean(isAdminFromSession) || (await memberIdIsPlatformAdmin(memberId));
+
+  if (isAdmin) {
+    return prisma.member_campaigns.findFirst({
+      where: { id: campaignId, url_id: brandId },
+    });
+  }
+
+  return prisma.member_campaigns.findFirst({
+    where: { id: campaignId, url_id: brandId, member_id: memberId },
+  });
+}
+
 export function extractDomainFromUrl(url: string): string {
   const trimmed = url.trim();
   try {

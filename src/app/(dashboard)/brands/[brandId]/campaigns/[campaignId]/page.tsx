@@ -1,6 +1,10 @@
 import { auth } from "@/lib/auth";
+import {
+  getBrandIfAccessible,
+  getCampaignIfAccessible,
+} from "@/lib/brand-access";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,18 +48,17 @@ export default async function CampaignDashboardPage({
 
   const { brandId, campaignId } = await params;
   const memberId = parseInt(session.user.id, 10);
+  const isAdmin = Boolean((session.user as { isAdmin?: boolean }).isAdmin);
+  const urlId = parseInt(brandId, 10);
   const id = parseInt(campaignId, 10);
 
-  const campaign = await prisma.member_campaigns.findFirst({
-    where: { id, member_id: memberId },
-  });
-  if (!campaign) redirect(`/brands/${brandId}/campaigns`);
+  if (isNaN(urlId) || isNaN(id)) notFound();
 
-  // Get the brand for breadcrumb
-  const brand = await prisma.member_urls.findFirst({
-    where: { id: parseInt(brandId, 10), member_id: memberId },
-    select: { domain: true, slug: true, id: true },
-  });
+  const [campaign, brand] = await Promise.all([
+    getCampaignIfAccessible(id, urlId, memberId, isAdmin),
+    getBrandIfAccessible(urlId, memberId, isAdmin),
+  ]);
+  if (!campaign || !brand) notFound();
 
   // Fetch stats
   const [participantCount, sharesData, impressionsData] = await Promise.all([

@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
+import { getBrandIfAccessible } from "@/lib/brand-access";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,18 +33,16 @@ export default async function CampaignListPage({
 
   const { brandId } = await params;
   const memberId = parseInt(session.user.id, 10);
+  const isAdmin = Boolean((session.user as { isAdmin?: boolean }).isAdmin);
   const urlId = parseInt(brandId, 10);
 
-  // Verify brand ownership
-  const brand = await prisma.member_urls.findFirst({
-    where: { id: urlId, member_id: memberId },
-  });
+  if (isNaN(urlId)) notFound();
 
-  if (!brand) redirect("/dashboard");
+  const brand = await getBrandIfAccessible(urlId, memberId, isAdmin);
+  if (!brand) notFound();
 
-  // Fetch campaigns
   const campaigns = await prisma.member_campaigns.findMany({
-    where: { url_id: urlId, member_id: memberId },
+    where: { url_id: urlId },
     orderBy: { date_added: "desc" },
   });
 

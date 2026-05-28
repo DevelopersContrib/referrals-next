@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
+import { getCampaignIfAccessible } from "@/lib/brand-access";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ParticipantTable } from "@/components/campaigns/participant-table";
@@ -17,12 +18,14 @@ export default async function ParticipantsPage({
 
   const { brandId, campaignId } = await params;
   const memberId = parseInt(session.user.id, 10);
+  const isAdmin = Boolean((session.user as { isAdmin?: boolean }).isAdmin);
+  const urlId = parseInt(brandId, 10);
   const id = parseInt(campaignId, 10);
 
-  const campaign = await prisma.member_campaigns.findFirst({
-    where: { id, member_id: memberId },
-  });
-  if (!campaign) redirect(`/brands/${brandId}/campaigns`);
+  if (isNaN(urlId) || isNaN(id)) notFound();
+
+  const campaign = await getCampaignIfAccessible(id, urlId, memberId, isAdmin);
+  if (!campaign) notFound();
 
   const totalParticipants = await prisma.campaign_participants.count({
     where: { campaign_id: id },

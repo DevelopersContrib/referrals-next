@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
+import { getBrandIfAccessible } from "@/lib/brand-access";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { isMemberOnPaidPlan } from "@/lib/member-subscription";
 import { CampaignWizard } from "@/components/campaigns/campaign-wizard";
 
@@ -16,12 +17,13 @@ export default async function NewCampaignPage({
 
   const { brandId } = await params;
   const memberId = parseInt(session.user.id, 10);
+  const isAdmin = Boolean((session.user as { isAdmin?: boolean }).isAdmin);
+  const urlId = parseInt(brandId, 10);
 
-  // Verify brand ownership
-  const brand = await prisma.member_urls.findFirst({
-    where: { id: parseInt(brandId, 10), member_id: memberId },
-  });
-  if (!brand) redirect("/dashboard");
+  if (isNaN(urlId)) notFound();
+
+  const brand = await getBrandIfAccessible(urlId, memberId, isAdmin);
+  if (!brand) notFound();
 
   const embedBaseUrl =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") || "https://referrals.com";

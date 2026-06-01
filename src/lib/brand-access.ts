@@ -53,6 +53,26 @@ export async function getCampaignIfAccessible(
   });
 }
 
+/** Same access rules as dashboard pages; resolves brand from the campaign row. */
+export async function getCampaignByIdIfAccessible(
+  campaignId: number,
+  memberId: number,
+  isAdminFromSession?: boolean
+) {
+  const row = await prisma.member_campaigns.findUnique({
+    where: { id: campaignId },
+    select: { url_id: true },
+  });
+  if (!row) return null;
+
+  return getCampaignIfAccessible(
+    campaignId,
+    row.url_id,
+    memberId,
+    isAdminFromSession
+  );
+}
+
 export function extractDomainFromUrl(url: string): string {
   const trimmed = url.trim();
   try {

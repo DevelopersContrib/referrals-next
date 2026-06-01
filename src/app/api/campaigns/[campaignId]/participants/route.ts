@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { getCampaignByIdIfAccessible } from "@/lib/brand-access";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -13,12 +14,9 @@ export async function GET(
   const { campaignId } = await params;
   const memberId = parseInt(session.user.id, 10);
   const id = parseInt(campaignId, 10);
+  const isAdmin = Boolean((session.user as { isAdmin?: boolean }).isAdmin);
 
-  // Verify ownership
-  const campaign = await prisma.member_campaigns.findFirst({
-    where: { id, member_id: memberId },
-  });
-  if (!campaign) {
+  if (!(await getCampaignByIdIfAccessible(id, memberId, isAdmin))) {
     return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
   }
 
@@ -117,11 +115,9 @@ export async function POST(
   const { campaignId } = await params;
   const memberId = parseInt(session.user.id, 10);
   const id = parseInt(campaignId, 10);
+  const isAdmin = Boolean((session.user as { isAdmin?: boolean }).isAdmin);
 
-  const campaign = await prisma.member_campaigns.findFirst({
-    where: { id, member_id: memberId },
-  });
-  if (!campaign) {
+  if (!(await getCampaignByIdIfAccessible(id, memberId, isAdmin))) {
     return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
   }
 

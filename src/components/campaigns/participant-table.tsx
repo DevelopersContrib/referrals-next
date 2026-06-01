@@ -53,7 +53,7 @@ export function ParticipantTable({
   const [sortBy, setSortBy] = useState("date_signedup");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  const limit = compact ? 5 : 20;
+  const limit = 20;
 
   const fetchParticipants = useCallback(async () => {
     setLoading(true);

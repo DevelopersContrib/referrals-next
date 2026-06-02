@@ -272,7 +272,7 @@ export default async function HomePage() {
 
             <h1
               className="mt-3 text-[1.65rem] font-bold leading-tight tracking-tight text-gray-900 min-[380px]:text-[1.85rem] sm:mt-4 sm:text-4xl md:text-5xl lg:text-6xl"
-              style={{ fontFamily: "'Dosis', sans-serif" }}
+              style={{ fontFamily: "var(--font-dosis), sans-serif" }}
             >
               Make your growth feel inevitable.
               <span className="mt-1 block bg-gradient-to-r from-[#FF5C62] to-[#926efb] bg-clip-text text-transparent sm:mt-2">
@@ -349,7 +349,7 @@ export default async function HomePage() {
       <section className="bg-gradient-to-b from-white to-rose-50/40 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "var(--font-dosis), sans-serif" }}>
               Flexible Campaigns
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-600">
@@ -391,7 +391,7 @@ export default async function HomePage() {
       <section className="bg-gradient-to-b from-rose-50/30 to-orange-50/30 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "var(--font-dosis), sans-serif" }}>
               Powerful Features to Amplify
               <br className="hidden sm:block" /> Your Online Presence
             </h2>
@@ -437,7 +437,7 @@ export default async function HomePage() {
       <section className="bg-gradient-to-b from-white to-rose-50/40 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "var(--font-dosis), sans-serif" }}>
               What Our Users Say
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-600">
@@ -487,7 +487,7 @@ export default async function HomePage() {
       <section className="bg-gradient-to-b from-rose-50/30 to-orange-50/30 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
+            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "var(--font-dosis), sans-serif" }}>
               Simple, Transparent Pricing
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-600">
@@ -567,7 +567,7 @@ export default async function HomePage() {
       {/* Section 6 - Integrations */}
       <section className="bg-gradient-to-b from-white to-rose-50/40 py-20">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
+          <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "var(--font-dosis), sans-serif" }}>
             Works with your favorite tools
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-gray-600">
@@ -590,7 +590,7 @@ export default async function HomePage() {
       {/* Section 7 - Final CTA */}
       <section className="bg-gradient-to-r from-[#FF5C62] to-[#ff4f58] py-20">
         <div className="mx-auto max-w-4xl px-4 text-center">
-          <h2 className="text-3xl font-bold text-white sm:text-4xl" style={{ fontFamily: "'Dosis', sans-serif" }}>
+          <h2 className="text-3xl font-bold text-white sm:text-4xl" style={{ fontFamily: "var(--font-dosis), sans-serif" }}>
             Ready to skyrocket your growth?
           </h2>
           <p className="mt-4 text-lg text-white/80">

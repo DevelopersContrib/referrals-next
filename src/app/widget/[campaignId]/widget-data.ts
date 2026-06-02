@@ -12,28 +12,33 @@ export async function getWidgetData(campaignId: number) {
       prisma.campaign_socials_allowed.findMany({
         where: { campaign_id: campaignId },
       }),
+      // Top referrers: group invitees by their inviter in a single query,
+      // then resolve the inviter names. Avoids an N+1 count-per-participant
+      // pattern that exhausts the DB connection pool on large campaigns.
       prisma.campaign_participants
-        .findMany({
-          where: { campaign_id: campaignId },
-          select: { name: true, id: true },
+        .groupBy({
+          by: ["invited_by"],
+          where: { campaign_id: campaignId, invited_by: { not: null } },
+          _count: { _all: true },
+          orderBy: { _count: { invited_by: "desc" } },
+          take: 10,
         })
-        .then(async (participants) => {
-          // Get referral counts for top participants
-          const entries = await Promise.all(
-            participants.map(async (p) => {
-              const referralCount = await prisma.campaign_participants.count({
-                where: {
-                  campaign_id: campaignId,
-                  invited_by: p.id,
-                },
-              });
-              return { name: p.name, referrals: referralCount };
-            })
-          );
-          return entries
-            .filter((e) => e.referrals > 0)
-            .sort((a, b) => b.referrals - a.referrals)
-            .slice(0, 10);
+        .then(async (groups) => {
+          if (groups.length === 0) return [];
+          const inviterIds = groups
+            .map((g) => g.invited_by)
+            .filter((id): id is number => id !== null);
+          const inviters = await prisma.campaign_participants.findMany({
+            where: { id: { in: inviterIds } },
+            select: { id: true, name: true },
+          });
+          const nameById = new Map(inviters.map((i) => [i.id, i.name]));
+          return groups
+            .map((g) => ({
+              name: nameById.get(g.invited_by as number) ?? "Unknown",
+              referrals: g._count._all,
+            }))
+            .filter((e) => e.referrals > 0);
         }),
     ]);
 

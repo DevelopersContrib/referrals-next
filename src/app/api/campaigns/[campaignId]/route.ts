@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getCampaignByIdIfAccessible } from "@/lib/brand-access";
 import {
   isMemberOnPaidPlan,
   subscriptionRequiredResponse,
 } from "@/lib/member-subscription";
-
-async function verifyCampaignOwnership(campaignId: number, memberId: number) {
-  const campaign = await prisma.member_campaigns.findFirst({
-    where: { id: campaignId, member_id: memberId },
-  });
-  return campaign;
-}
 
 export async function GET(
   _request: NextRequest,
@@ -24,9 +18,10 @@ export async function GET(
   const { campaignId } = await params;
   const memberId = parseInt(session.user.id, 10);
   const id = parseInt(campaignId, 10);
+  const isAdmin = Boolean((session.user as { isAdmin?: boolean }).isAdmin);
 
   try {
-    const campaign = await verifyCampaignOwnership(id, memberId);
+    const campaign = await getCampaignByIdIfAccessible(id, memberId, isAdmin);
     if (!campaign) {
       return NextResponse.json(
         { error: "Campaign not found" },
@@ -74,9 +69,10 @@ export async function PUT(
   const { campaignId } = await params;
   const memberId = parseInt(session.user.id, 10);
   const id = parseInt(campaignId, 10);
+  const isAdmin = Boolean((session.user as { isAdmin?: boolean }).isAdmin);
 
   try {
-    const campaign = await verifyCampaignOwnership(id, memberId);
+    const campaign = await getCampaignByIdIfAccessible(id, memberId, isAdmin);
     if (!campaign) {
       return NextResponse.json(
         { error: "Campaign not found" },
@@ -85,7 +81,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const paid = await isMemberOnPaidPlan(memberId);
+    const paid = isAdmin || (await isMemberOnPaidPlan(memberId));
     const {
       name,
       type_id,
@@ -209,9 +205,10 @@ export async function DELETE(
   const { campaignId } = await params;
   const memberId = parseInt(session.user.id, 10);
   const id = parseInt(campaignId, 10);
+  const isAdmin = Boolean((session.user as { isAdmin?: boolean }).isAdmin);
 
   try {
-    const campaign = await verifyCampaignOwnership(id, memberId);
+    const campaign = await getCampaignByIdIfAccessible(id, memberId, isAdmin);
     if (!campaign) {
       return NextResponse.json(
         { error: "Campaign not found" },

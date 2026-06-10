@@ -30,7 +30,7 @@ export async function GET(
     }
 
     // Get related data
-    const [widget, reward, emailContent, socialContent, campaignType, rewardType] =
+    const [widget, reward, emailContent, socialContent, campaignType, rewardType, rewardTypes, coupons] =
       await Promise.all([
         prisma.campaign_widget.findFirst({ where: { campaign_id: id } }),
         prisma.campaign_reward.findFirst({ where: { campaign_id: id } }),
@@ -38,6 +38,11 @@ export async function GET(
         prisma.campaign_social_content.findMany({ where: { campaign_id: id } }),
         prisma.campaign_types.findFirst({ where: { id: campaign.type_id } }),
         prisma.reward_types.findFirst({ where: { id: campaign.reward_type } }),
+        prisma.reward_types.findMany({ orderBy: { name: "asc" } }),
+        prisma.campaign_coupons.findMany({
+          where: { campaign_id: id },
+          select: { is_used: true },
+        }),
       ]);
 
     return NextResponse.json({
@@ -48,6 +53,15 @@ export async function GET(
       socialContent,
       typeName: campaignType?.name || "Unknown",
       rewardTypeName: rewardType?.name || "Unknown",
+      rewardTypes: rewardTypes.map((t) => ({
+        id: t.id,
+        name: t.name,
+        has_value: t.has_value ?? false,
+      })),
+      couponStats: {
+        total: coupons.length,
+        available: coupons.filter((c) => !c.is_used).length,
+      },
     });
   } catch (error) {
     console.error("Error fetching campaign:", error);

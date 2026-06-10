@@ -22,6 +22,16 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import Link from "next/link";
+import { RewardConfigFields } from "@/components/campaigns/reward-config-fields";
+import {
+  buildRewardPayload,
+  getRewardKind,
+  parseCouponCodes,
+  rewardFormValuesFromRecord,
+  validateRewardConfig,
+  type RewardFormValues,
+} from "@/lib/reward-types";
 
 interface CampaignData {
   id: number;
@@ -42,6 +52,17 @@ interface CampaignData {
   twoway_reward_notify_message: string | null;
   typeName: string;
   rewardTypeName: string;
+  reward: {
+    redirect_url?: string | null;
+    custom_message?: string | null;
+    cash_value?: number | null;
+    worth_value?: number | null;
+    token_symbol?: string | null;
+    token_address?: string | null;
+    token_amount?: string | null;
+  } | null;
+  rewardTypes: { id: number; name: string; has_value?: boolean }[];
+  couponStats?: { total: number; available: number };
 }
 
 export default function EditCampaignPage() {
@@ -54,12 +75,17 @@ export default function EditCampaignPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [campaign, setCampaign] = useState<CampaignData | null>(null);
+  const [rewardTypes, setRewardTypes] = useState<
+    { id: number; name: string; has_value?: boolean }[]
+  >([]);
+  const [couponStats, setCouponStats] = useState({ total: 0, available: 0 });
 
   const [formData, setFormData] = useState({
     name: "",
     goal_type: "signup",
     num_visits: "",
     num_signups: "",
+    reward_type: "",
     reward_notify_subject: "",
     reward_notify_message: "",
     campaign_entry_subject: "",
@@ -70,6 +96,9 @@ export default function EditCampaignPage() {
     twoway_reward_notify_subject: "",
     twoway_reward_notify_message: "",
   });
+  const [rewardValues, setRewardValues] = useState<RewardFormValues>(
+    rewardFormValuesFromRecord(null)
+  );
 
   useEffect(() => {
     async function fetchCampaign() {
@@ -79,11 +108,14 @@ export default function EditCampaignPage() {
 
         const data: CampaignData = await response.json();
         setCampaign(data);
+        setRewardTypes(data.rewardTypes || []);
+        setCouponStats(data.couponStats || { total: 0, available: 0 });
         setFormData({
           name: data.name || "",
           goal_type: data.goal_type || "signup",
           num_visits: data.num_visits?.toString() || "",
           num_signups: data.num_signups?.toString() || "",
+          reward_type: data.reward_type?.toString() || "",
           reward_notify_subject: data.reward_notify_subject || "",
           reward_notify_message: data.reward_notify_message || "",
           campaign_entry_subject: data.campaign_entry_subject || "",
@@ -96,6 +128,7 @@ export default function EditCampaignPage() {
           twoway_reward_notify_message:
             data.twoway_reward_notify_message || "",
         });
+        setRewardValues(rewardFormValuesFromRecord(data.reward));
       } catch {
         toast.error("Failed to load campaign");
         router.push(`/brands/${brandId}/campaigns`);
@@ -110,18 +143,42 @@ export default function EditCampaignPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   }
 
+  function updateRewardField(field: keyof RewardFormValues, value: string) {
+    setRewardValues((prev) => ({ ...prev, [field]: value }));
+  }
+
+  const selectedRewardType = rewardTypes.find(
+    (t) => t.id.toString() === formData.reward_type
+  );
+
   async function handleSave() {
     if (!formData.name.trim()) {
       toast.error("Campaign name is required");
       return;
     }
 
+    const kind = getRewardKind(selectedRewardType?.name);
+    const rewardError = validateRewardConfig(kind, rewardValues, {
+      requireCoupons: kind === "coupons" && couponStats.total === 0,
+    });
+    if (rewardError) {
+      toast.error(rewardError);
+      return;
+    }
+
+    const newCoupons = parseCouponCodes(rewardValues.coupon_codes);
+
     setSaving(true);
     try {
       const response = await fetch(`/api/campaigns/${campaignId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          reward_type: formData.reward_type,
+          reward: buildRewardPayload(kind, rewardValues),
+          ...(newCoupons.length > 0 ? { coupons: newCoupons } : {}),
+        }),
       });
 
       if (!response.ok) {
@@ -287,10 +344,68 @@ export default function EditCampaignPage() {
           </CardContent>
         </Card>
 
+        {/* Reward Configuration */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Reward</CardTitle>
+            <CardDescription>
+              What participants receive when they hit the goal. Coupon codes are stored separately
+              and appended when you add new lines below.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Reward type</Label>
+              <Select
+                value={formData.reward_type}
+                onValueChange={(val: string | null) =>
+                  updateField("reward_type", val || "")
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select reward type">
+                    {(value: string | null) =>
+                      rewardTypes.find((r) => r.id.toString() === value)?.name ??
+                      "Select reward type"
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {rewardTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id.toString()}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <RewardConfigFields
+              rewardTypeName={selectedRewardType?.name || ""}
+              values={rewardValues}
+              onChange={updateRewardField}
+              couponStats={couponStats}
+            />
+
+            {getRewardKind(selectedRewardType?.name) === "coupons" &&
+              couponStats.total > 0 && (
+                <p className="text-sm">
+                  <Link
+                    href={`/brands/${brandId}/campaigns/${campaignId}/rewards`}
+                    className="text-brand underline-offset-4 hover:underline"
+                  >
+                    View all coupons
+                  </Link>
+                </p>
+              )}
+          </CardContent>
+        </Card>
+
         {/* Reward Notifications */}
         <Card>
           <CardHeader>
             <CardTitle>Reward Notifications</CardTitle>
+            <CardDescription>Email copy sent when rewards are earned</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">

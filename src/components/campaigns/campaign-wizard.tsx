@@ -26,6 +26,13 @@ import { CampaignWizardPreview } from "@/components/campaigns/campaign-wizard-pr
 import { CampaignIntegrationPanel } from "@/components/campaigns/campaign-integration-panel";
 import { sanitizeWidgetHtml } from "@/lib/sanitize-widget-html";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RewardConfigFields } from "@/components/campaigns/reward-config-fields";
+import {
+  buildRewardPayload,
+  getRewardKind,
+  parseCouponCodes,
+  validateRewardConfig,
+} from "@/lib/reward-types";
 import {
   SparklesIcon,
   ImageIcon,
@@ -47,6 +54,7 @@ interface CampaignType {
 interface RewardType {
   id: number;
   name: string;
+  has_value?: boolean;
 }
 
 export interface CampaignWizardProps {
@@ -80,6 +88,14 @@ interface FormData {
   banner_image_url: string;
   widget_color: string;
   widget_button_color: string;
+  coupon_codes: string;
+  redirect_url: string;
+  custom_message: string;
+  cash_value: string;
+  worth_value: string;
+  token_symbol: string;
+  token_address: string;
+  token_amount: string;
 }
 
 const STEPS = [
@@ -130,6 +146,14 @@ export function CampaignWizard({
     banner_image_url: "",
     widget_color: "6366f1",
     widget_button_color: "6366f1",
+    coupon_codes: "",
+    redirect_url: "",
+    custom_message: "",
+    cash_value: "",
+    worth_value: "",
+    token_symbol: "",
+    token_address: "",
+    token_amount: "",
   });
 
   const stepOrder: StepId[] = ["basic", "goal", "rewards", "review"];
@@ -177,9 +201,37 @@ export function CampaignWizard({
     return true;
   }
 
+  function getSelectedRewardType() {
+    return rewardTypes.find((r) => r.id.toString() === formData.reward_type);
+  }
+
+  function validateRewards() {
+    const kind = getRewardKind(getSelectedRewardType()?.name);
+    const error = validateRewardConfig(
+      kind,
+      {
+        coupon_codes: formData.coupon_codes,
+        redirect_url: formData.redirect_url,
+        custom_message: formData.custom_message,
+        cash_value: formData.cash_value,
+        worth_value: formData.worth_value,
+        token_symbol: formData.token_symbol,
+        token_address: formData.token_address,
+        token_amount: formData.token_amount,
+      },
+      { requireCoupons: true }
+    );
+    if (error) {
+      toast.error(error);
+      return false;
+    }
+    return true;
+  }
+
   function handleNextStep() {
     if (currentStep === "basic" && !validateBasic()) return;
     if (currentStep === "goal" && !validateGoal()) return;
+    if (currentStep === "rewards" && !validateRewards()) return;
     goToNextStep();
   }
 
@@ -249,6 +301,17 @@ export function CampaignWizard({
           ...formData,
           body_text: formData.body_text ? sanitizeWidgetHtml(formData.body_text) : "",
           url_id: brandId,
+          reward: buildRewardPayload(getRewardKind(getSelectedRewardType()?.name), {
+            coupon_codes: formData.coupon_codes,
+            redirect_url: formData.redirect_url,
+            custom_message: formData.custom_message,
+            cash_value: formData.cash_value,
+            worth_value: formData.worth_value,
+            token_symbol: formData.token_symbol,
+            token_address: formData.token_address,
+            token_amount: formData.token_amount,
+          }),
+          coupons: parseCouponCodes(formData.coupon_codes),
         }),
       });
 
@@ -560,6 +623,21 @@ export function CampaignWizard({
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <RewardConfigFields
+                      rewardTypeName={selectedReward?.name || ""}
+                      values={{
+                        coupon_codes: formData.coupon_codes,
+                        redirect_url: formData.redirect_url,
+                        custom_message: formData.custom_message,
+                        cash_value: formData.cash_value,
+                        worth_value: formData.worth_value,
+                        token_symbol: formData.token_symbol,
+                        token_address: formData.token_address,
+                        token_amount: formData.token_amount,
+                      }}
+                      onChange={(field, value) => updateField(field, value)}
+                    />
                   </TabsContent>
 
                   <TabsContent value="emails" className="mt-0 space-y-4 rounded-xl border border-violet-100/80 bg-violet-50/20 p-4">
@@ -783,7 +861,31 @@ export function CampaignWizard({
 
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Reward type</h3>
-                  <p className="mt-1">{selectedReward?.name || "N/A"}</p>
+                  <p className="mt-1 capitalize">{selectedReward?.name || "N/A"}</p>
+                  {getRewardKind(selectedReward?.name) === "coupons" && (
+                    <p className="mt-1 text-sm text-slate-600">
+                      {parseCouponCodes(formData.coupon_codes).length} coupon code
+                      {parseCouponCodes(formData.coupon_codes).length === 1 ? "" : "s"}
+                    </p>
+                  )}
+                  {getRewardKind(selectedReward?.name) === "redirect" && formData.redirect_url && (
+                    <p className="mt-1 break-all text-sm text-slate-600">{formData.redirect_url}</p>
+                  )}
+                  {getRewardKind(selectedReward?.name) === "custom" && formData.custom_message && (
+                    <p className="mt-1 line-clamp-3 text-sm text-slate-600">
+                      {formData.custom_message}
+                    </p>
+                  )}
+                  {getRewardKind(selectedReward?.name) === "cash" && formData.cash_value && (
+                    <p className="mt-1 text-sm text-slate-600">${formData.cash_value}</p>
+                  )}
+                  {getRewardKind(selectedReward?.name) === "tokens" &&
+                    formData.token_symbol &&
+                    formData.token_amount && (
+                      <p className="mt-1 text-sm text-slate-600">
+                        {formData.token_amount} {formData.token_symbol}
+                      </p>
+                    )}
                 </div>
 
                 <div className="lg:hidden">

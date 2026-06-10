@@ -90,6 +90,8 @@ export async function POST(request: NextRequest) {
       banner_image_url,
       widget_color,
       widget_button_color,
+      reward,
+      coupons,
     } = body;
 
     if (!name || !type_id || !url_id) {
@@ -173,12 +175,58 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create default reward entry
-    await prisma.campaign_reward.create({
-      data: {
-        campaign_id: campaign.id,
-      },
-    });
+    const rewardData: {
+      campaign_id: number;
+      redirect_url?: string | null;
+      custom_message?: string | null;
+      cash_value?: number;
+      worth_value?: number | null;
+      token_symbol?: string | null;
+      token_address?: string | null;
+      token_amount?: string | null;
+    } = { campaign_id: campaign.id };
+
+    if (reward && typeof reward === "object") {
+      if (typeof reward.redirect_url === "string" && reward.redirect_url.trim()) {
+        rewardData.redirect_url = reward.redirect_url.trim().slice(0, 100);
+      }
+      if (typeof reward.custom_message === "string" && reward.custom_message.trim()) {
+        rewardData.custom_message = reward.custom_message.trim();
+      }
+      if (reward.cash_value != null && reward.cash_value !== "") {
+        const cash = parseFloat(String(reward.cash_value));
+        if (Number.isFinite(cash)) rewardData.cash_value = cash;
+      }
+      if (reward.worth_value != null && reward.worth_value !== "") {
+        const worth = parseFloat(String(reward.worth_value));
+        if (Number.isFinite(worth)) rewardData.worth_value = worth;
+      }
+      if (typeof reward.token_symbol === "string" && reward.token_symbol.trim()) {
+        rewardData.token_symbol = reward.token_symbol.trim().slice(0, 100);
+      }
+      if (typeof reward.token_address === "string" && reward.token_address.trim()) {
+        rewardData.token_address = reward.token_address.trim().slice(0, 100);
+      }
+      if (typeof reward.token_amount === "string" && reward.token_amount.trim()) {
+        rewardData.token_amount = reward.token_amount.trim().slice(0, 100);
+      }
+    }
+
+    await prisma.campaign_reward.create({ data: rewardData });
+
+    if (coupons && Array.isArray(coupons) && coupons.length > 0) {
+      const couponData = coupons
+        .map((code: unknown) => String(code).trim())
+        .filter(Boolean)
+        .map((code: string) => ({
+          campaign_id: campaign.id,
+          code: code.slice(0, 100),
+          is_used: false,
+        }));
+      if (couponData.length > 0) {
+        await prisma.campaign_coupons.createMany({ data: couponData });
+      }
+    }
 
     return NextResponse.json(campaign, { status: 201 });
   } catch (error) {

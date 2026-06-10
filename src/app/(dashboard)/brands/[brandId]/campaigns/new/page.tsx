@@ -51,7 +51,11 @@ export default async function NewCampaignPage({
         brandSlug={brand.slug}
         embedBaseUrl={embedBaseUrl}
         campaignTypes={campaignTypes.map((t) => ({ id: t.id, name: t.name }))}
-        rewardTypes={rewardTypes.map((t) => ({ id: t.id, name: t.name }))}
+        rewardTypes={rewardTypes.map((t) => ({
+          id: t.id,
+          name: t.name,
+          has_value: t.has_value ?? false,
+        }))}
         initialPublish={paid ? "public" : "private"}
       />
     </div>

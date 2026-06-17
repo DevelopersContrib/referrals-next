@@ -239,6 +239,33 @@ const sections: { title: string; endpoints: Endpoint[] }[] = [
     ],
   },
   {
+    title: "Lander",
+    endpoints: [
+      {
+        method: "GET",
+        path: "/api/v1/lander?campaign_id=123",
+        description:
+          "Get lander page configuration for a campaign. Returns template, header/footer text, background settings, brand info, and social URLs.",
+        auth: true,
+        response: `{ "success": true, "data": { "lander": { "template": "default", "header_text": "...", ... }, "brand": { "domain": "...", "logo_url": "..." }, "social_urls": [...] } }`,
+      },
+    ],
+  },
+  {
+    title: "Referral Signups",
+    endpoints: [
+      {
+        method: "POST",
+        path: "/api/v1/signups/referral",
+        description:
+          "Process a referral signup with a base64-encoded referral code. Tracks who referred whom and automatically processes rewards (coupon, cash, or custom message).",
+        auth: true,
+        body: `{ "referral_code": "base64_encoded_string", "email": "newuser@example.com", "name": "New User" }`,
+        response: `{ "success": true, "data": { "participant": { "id": 55, ... }, "reward": { "type": "coupon", "value": "SAVE20" } } }`,
+      },
+    ],
+  },
+  {
     title: "Billing",
     endpoints: [
       {

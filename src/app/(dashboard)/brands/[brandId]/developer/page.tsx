@@ -4,6 +4,17 @@ import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import { getBrandIfAccessible } from "@/lib/brand-access";
 import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { CopyToClipboardButton } from "@/components/ui/copy-to-clipboard-button";
+import { CodeBlock } from "@/components/developer/code-block";
+import { cn } from "@/lib/utils";
+import {
   HomeIcon,
   ChevronRightIcon,
   CodeIcon,
@@ -31,14 +42,19 @@ export default async function BrandDeveloperPage({ params }: PageProps) {
   const brand = await getBrandIfAccessible(id, memberId, isAdmin);
   if (!brand) notFound();
 
-  const apiKey = await prisma.member_keys.findFirst({
-    where: { userid: memberId },
-    orderBy: { date_generated: "desc" },
-  });
+  const [apiKey, campaignCount] = await Promise.all([
+    prisma.member_keys.findFirst({
+      where: { userid: memberId },
+      orderBy: { date_generated: "desc" },
+    }),
+    prisma.member_campaigns.count({
+      where: { url_id: id },
+    }),
+  ]);
 
-  const campaignCount = await prisma.member_campaigns.count({
-    where: { url_id: id },
-  });
+  const maskedKey = apiKey?.api_key
+    ? `${apiKey.api_key.substring(0, 12)}...`
+    : "ref_your_key";
 
   return (
     <div className="space-y-6">
@@ -66,8 +82,8 @@ export default async function BrandDeveloperPage({ params }: PageProps) {
         <span className="font-medium text-[#575962]">Developer</span>
       </nav>
 
-      {/* Header */}
-      <div className="subheader">
+      {/* Subheader */}
+      <div className="subheader flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-lg bg-white/20">
             <CodeIcon className="size-5 text-white" />
@@ -77,144 +93,152 @@ export default async function BrandDeveloperPage({ params }: PageProps) {
               Developer — {brand.domain}
             </h1>
             <p className="text-sm text-white/70">
-              API access and integration guides for this brand
+              API access and integration for this brand
             </p>
           </div>
         </div>
+        <Link href="/developer">
+          <Button className="gap-2 border border-white/20 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30">
+            <ExternalLinkIcon className="size-4" />
+            Developer Portal
+          </Button>
+        </Link>
       </div>
 
-      {/* API Key Card */}
-      <div className="rounded-xl border bg-[#1e1e2d] p-6 text-white">
-        <div className="flex items-center gap-2 mb-4">
-          <KeyIcon className="size-5 text-[#FF5C62]" />
-          <h2 className="text-lg font-semibold">Your API Key</h2>
-        </div>
-        {apiKey?.api_key ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 rounded-lg bg-white/10 p-3">
-              <code className="flex-1 text-sm font-mono text-green-400 break-all">
+      {/* API Key */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <KeyIcon className="size-5 text-brand" />
+            Your API Key
+          </CardTitle>
+          <CardDescription>
+            API keys are scoped to your account and work across all your brands.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {apiKey?.api_key ? (
+            <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
+              <code className="min-w-0 flex-1 break-all font-mono text-sm">
                 {apiKey.api_key}
               </code>
+              <CopyToClipboardButton
+                text={apiKey.api_key}
+                aria-label="Copy API key"
+              />
             </div>
-            <p className="text-xs text-white/50">
-              Generated{" "}
-              {new Date(apiKey.date_generated).toLocaleDateString()}. This
-              key works for all your brands.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-sm text-white/70">
-              You haven&apos;t generated an API key yet.
-            </p>
-            <Link
-              href="/api-keys"
-              className="inline-flex items-center gap-2 rounded-lg bg-[#FF5C62] px-4 py-2 text-sm font-medium text-white hover:bg-[#ff4f58] transition"
-            >
-              <KeyIcon className="size-4" />
-              Generate API Key
-            </Link>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                You haven&apos;t generated an API key yet.
+              </p>
+              <Link href="/api-keys">
+                <Button className="gap-2 bg-brand text-white hover:bg-brand-hover">
+                  <KeyIcon className="size-4" />
+                  Generate API Key
+                </Button>
+              </Link>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Quick Examples */}
-      <div className="rounded-xl border bg-white p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          Quick API Examples for {brand.domain}
-        </h2>
-
-        <div className="space-y-4">
+      {/* API Examples */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick API Examples for {brand.domain}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">
+            <p className="mb-2 text-sm font-medium">
               Get this brand&apos;s details
             </p>
-            <pre className="overflow-x-auto rounded-lg bg-gray-900 p-4 text-sm text-green-400">
-{`curl https://referrals.com/api/v1/brands/${brand.id} \\
-  -H "X-API-Key: ${apiKey?.api_key ? apiKey.api_key.substring(0, 12) + "..." : "ref_your_key"}"
-`}
-            </pre>
+            <CodeBlock
+              code={`curl https://referrals.com/api/v1/brands/${brand.id} \\\n  -H "X-API-Key: ${maskedKey}"`}
+            />
           </div>
-
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">
+            <p className="mb-2 text-sm font-medium">
               List campaigns for this brand
             </p>
-            <pre className="overflow-x-auto rounded-lg bg-gray-900 p-4 text-sm text-green-400">
-{`curl "https://referrals.com/api/v1/campaigns?brand_id=${brand.id}" \\
-  -H "X-API-Key: ${apiKey?.api_key ? apiKey.api_key.substring(0, 12) + "..." : "ref_your_key"}"
-`}
-            </pre>
+            <CodeBlock
+              code={`curl "https://referrals.com/api/v1/campaigns?brand_id=${brand.id}" \\\n  -H "X-API-Key: ${maskedKey}"`}
+            />
           </div>
-
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">
-              Get brand stats
-            </p>
-            <pre className="overflow-x-auto rounded-lg bg-gray-900 p-4 text-sm text-green-400">
-{`curl https://referrals.com/api/v1/brands/${brand.id}/stats \\
-  -H "X-API-Key: ${apiKey?.api_key ? apiKey.api_key.substring(0, 12) + "..." : "ref_your_key"}"
-`}
-            </pre>
+            <p className="mb-2 text-sm font-medium">Get brand stats</p>
+            <CodeBlock
+              code={`curl https://referrals.com/api/v1/brands/${brand.id}/stats \\\n  -H "X-API-Key: ${maskedKey}"`}
+            />
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Brand API Info */}
+      {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border bg-white p-5 text-center">
-          <p className="text-3xl font-bold text-[#FF5C62]">{brand.id}</p>
-          <p className="mt-1 text-sm text-gray-600">Brand ID (url_id)</p>
-        </div>
-        <div className="rounded-xl border bg-white p-5 text-center">
-          <p className="text-3xl font-bold text-[#FF5C62]">
-            {campaignCount}
+        <div className="stat-card text-center">
+          <p className="text-3xl font-bold text-brand">{brand.id}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Brand ID (url_id)
           </p>
-          <p className="mt-1 text-sm text-gray-600">Campaigns</p>
         </div>
-        <div className="rounded-xl border bg-white p-5 text-center">
-          <p className="truncate text-lg font-bold text-[#FF5C62]">
+        <div className="stat-card text-center">
+          <p className="text-3xl font-bold text-brand">{campaignCount}</p>
+          <p className="mt-1 text-sm text-muted-foreground">Campaigns</p>
+        </div>
+        <div className="stat-card text-center">
+          <p className="truncate text-lg font-bold text-brand">
             {brand.domain}
           </p>
-          <p className="mt-1 text-sm text-gray-600">Domain</p>
+          <p className="mt-1 text-sm text-muted-foreground">Domain</p>
         </div>
       </div>
 
-      {/* Links to Developer Portal */}
+      {/* Portal Links */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Link
-          href="/developer/docs"
-          className="flex items-center gap-3 rounded-xl border bg-white p-5 hover:shadow-md transition"
-        >
-          <CodeIcon className="size-6 text-blue-600" />
-          <div>
-            <p className="font-semibold text-gray-900">API Reference</p>
-            <p className="text-sm text-gray-500">Full endpoint docs</p>
-          </div>
-          <ExternalLinkIcon className="ml-auto size-4 text-gray-400" />
-        </Link>
-        <Link
-          href="/developer/playground"
-          className="flex items-center gap-3 rounded-xl border bg-white p-5 hover:shadow-md transition"
-        >
-          <PlayIcon className="size-6 text-emerald-600" />
-          <div>
-            <p className="font-semibold text-gray-900">Playground</p>
-            <p className="text-sm text-gray-500">Test API calls live</p>
-          </div>
-          <ExternalLinkIcon className="ml-auto size-4 text-gray-400" />
-        </Link>
-        <Link
-          href="/developer/knowledgebase"
-          className="flex items-center gap-3 rounded-xl border bg-white p-5 hover:shadow-md transition"
-        >
-          <BookOpenIcon className="size-6 text-purple-600" />
-          <div>
-            <p className="font-semibold text-gray-900">Knowledgebase</p>
-            <p className="text-sm text-gray-500">Guides &amp; tutorials</p>
-          </div>
-          <ExternalLinkIcon className="ml-auto size-4 text-gray-400" />
-        </Link>
+        {[
+          {
+            href: "/developer/docs",
+            icon: CodeIcon,
+            title: "API Reference",
+            desc: "Full endpoint docs",
+            color: "text-blue-600",
+          },
+          {
+            href: "/developer/playground",
+            icon: PlayIcon,
+            title: "Playground",
+            desc: "Test API calls live",
+            color: "text-emerald-600",
+          },
+          {
+            href: "/developer/knowledgebase",
+            icon: BookOpenIcon,
+            title: "Knowledgebase",
+            desc: "Guides & tutorials",
+            color: "text-purple-600",
+          },
+        ].map((link) => {
+          const Icon = link.icon;
+          return (
+            <Link key={link.href} href={link.href} className="group">
+              <Card className="h-full transition-all group-hover:-translate-y-0.5 group-hover:shadow-md">
+                <CardContent className="flex items-center gap-3">
+                  <Icon className={cn("size-6", link.color)} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold transition-colors group-hover:text-brand">
+                      {link.title}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {link.desc}
+                    </p>
+                  </div>
+                  <ExternalLinkIcon className="size-4 text-muted-foreground" />
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

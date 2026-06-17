@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
   MailIcon,
   MessageCircleIcon,
   BookOpenIcon,
   BugIcon,
-  ClockIcon,
   CheckCircleIcon,
 } from "lucide-react";
 
@@ -50,142 +56,159 @@ const FAQS = [
   },
 ];
 
+const CONTACTS = [
+  {
+    href: "/contact",
+    icon: MailIcon,
+    title: "Email Support",
+    desc: "support@referrals.com",
+  },
+  {
+    href: "/forum",
+    icon: MessageCircleIcon,
+    title: "Community Forum",
+    desc: "Ask the community and our team",
+  },
+  {
+    href: "/developer/knowledgebase",
+    icon: BookOpenIcon,
+    title: "Knowledgebase",
+    desc: "Guides and best practices",
+  },
+];
+
 export default function SupportPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Developer Support
-        </h1>
-        <p className="mt-1 text-gray-600">
+        <h1 className="font-heading text-2xl font-bold">Developer Support</h1>
+        <p className="mt-1 text-muted-foreground">
           Get help with your integration. Check our FAQ first, or reach out to
           the team.
         </p>
       </div>
 
       {/* Contact Options */}
-      <div className="grid gap-4 sm:grid-cols-3 mb-12">
-        <Link
-          href="/contact"
-          className="flex flex-col items-center gap-3 rounded-xl border bg-white p-6 text-center hover:shadow-md transition"
-        >
-          <MailIcon className="size-8 text-[#FF5C62]" />
-          <h3 className="font-semibold text-gray-900">Email Support</h3>
-          <p className="text-sm text-gray-600">
-            support@referrals.com
-          </p>
-        </Link>
-        <Link
-          href="/forum"
-          className="flex flex-col items-center gap-3 rounded-xl border bg-white p-6 text-center hover:shadow-md transition"
-        >
-          <MessageCircleIcon className="size-8 text-[#FF5C62]" />
-          <h3 className="font-semibold text-gray-900">Community Forum</h3>
-          <p className="text-sm text-gray-600">
-            Ask the community and our team
-          </p>
-        </Link>
-        <Link
-          href="/developer/knowledgebase"
-          className="flex flex-col items-center gap-3 rounded-xl border bg-white p-6 text-center hover:shadow-md transition"
-        >
-          <BookOpenIcon className="size-8 text-[#FF5C62]" />
-          <h3 className="font-semibold text-gray-900">Knowledgebase</h3>
-          <p className="text-sm text-gray-600">
-            Guides and best practices
-          </p>
-        </Link>
+      <div className="mb-10 grid gap-4 sm:grid-cols-3">
+        {CONTACTS.map((c) => {
+          const Icon = c.icon;
+          return (
+            <Link key={c.href} href={c.href} className="group">
+              <Card className="h-full text-center transition-all group-hover:-translate-y-0.5 group-hover:shadow-md">
+                <CardContent className="flex flex-col items-center gap-3 py-6">
+                  <Icon className="size-8 text-brand" />
+                  <h3 className="font-heading font-semibold">{c.title}</h3>
+                  <p className="text-sm text-muted-foreground">{c.desc}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
 
-      {/* Status */}
-      <div className="mb-12 rounded-xl border bg-white p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <CheckCircleIcon className="size-5 text-emerald-500" />
-          <h2 className="text-lg font-semibold text-gray-900">API Status</h2>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="flex items-center gap-2">
-            <span className="size-2.5 rounded-full bg-emerald-500" />
-            <span className="text-sm text-gray-700">API v1 — Operational</span>
+      {/* API Status */}
+      <Card className="mb-10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircleIcon className="size-5 text-emerald-500" />
+            API Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {["API v1", "Widget API", "Webhooks"].map((service) => (
+              <div key={service} className="flex items-center gap-2">
+                <span className="size-2.5 rounded-full bg-emerald-500" />
+                <span className="text-sm">
+                  {service} — Operational
+                </span>
+              </div>
+            ))}
           </div>
-          <div className="flex items-center gap-2">
-            <span className="size-2.5 rounded-full bg-emerald-500" />
-            <span className="text-sm text-gray-700">
-              Widget API — Operational
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="size-2.5 rounded-full bg-emerald-500" />
-            <span className="text-sm text-gray-700">
-              Webhooks — Operational
-            </span>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Troubleshooting */}
-      <div className="mb-12 rounded-xl border bg-white p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <BugIcon className="size-5 text-[#FF5C62]" />
-          <h2 className="text-lg font-semibold text-gray-900">
+      <Card className="mb-10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BugIcon className="size-5 text-brand" />
             Troubleshooting Checklist
-          </h2>
-        </div>
-        <ul className="space-y-2 text-sm text-gray-700">
-          <li className="flex items-start gap-2">
-            <ClockIcon className="mt-0.5 size-4 shrink-0 text-gray-400" />
-            Verify your API key is in the <code className="bg-gray-100 px-1 rounded">X-API-Key</code> header, not query params
-          </li>
-          <li className="flex items-start gap-2">
-            <ClockIcon className="mt-0.5 size-4 shrink-0 text-gray-400" />
-            Check Content-Type is <code className="bg-gray-100 px-1 rounded">application/json</code> for POST/PUT requests
-          </li>
-          <li className="flex items-start gap-2">
-            <ClockIcon className="mt-0.5 size-4 shrink-0 text-gray-400" />
-            Ensure IDs in URLs are integers, not strings
-          </li>
-          <li className="flex items-start gap-2">
-            <ClockIcon className="mt-0.5 size-4 shrink-0 text-gray-400" />
-            For 404 errors, verify the resource belongs to your account
-          </li>
-          <li className="flex items-start gap-2">
-            <ClockIcon className="mt-0.5 size-4 shrink-0 text-gray-400" />
-            For webhook failures, check that the URL is publicly reachable and returns a 2xx response
-          </li>
-        </ul>
-      </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-2 text-sm">
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand" />
+              <span>
+                Verify your API key is in the{" "}
+                <code className="rounded bg-muted px-1 font-mono text-xs">
+                  X-API-Key
+                </code>{" "}
+                header, not query params
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand" />
+              <span>
+                Check Content-Type is{" "}
+                <code className="rounded bg-muted px-1 font-mono text-xs">
+                  application/json
+                </code>{" "}
+                for POST/PUT requests
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand" />
+              <span>Ensure IDs in URLs are integers, not strings</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand" />
+              <span>
+                For 404 errors, verify the resource belongs to your account
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand" />
+              <span>
+                For webhook failures, check the URL is publicly reachable and
+                returns a 2xx response
+              </span>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
 
       {/* FAQs */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-6">
+        <h2 className="mb-6 font-heading text-xl font-bold">
           Frequently Asked Questions
         </h2>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {FAQS.map((faq, i) => (
-            <details
-              key={i}
-              className="group rounded-xl border bg-white overflow-hidden"
-            >
-              <summary className="flex cursor-pointer items-center justify-between px-6 py-4 font-medium text-gray-900 hover:bg-gray-50 transition">
-                {faq.q}
-                <svg
-                  className="size-5 shrink-0 text-gray-400 transition-transform group-open:rotate-180"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </summary>
-              <div className="border-t px-6 py-4 text-sm text-gray-600">
-                {faq.a}
-              </div>
-            </details>
+            <Card key={i} className="overflow-hidden">
+              <details className="group">
+                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 font-medium transition-colors hover:bg-muted/50">
+                  {faq.q}
+                  <svg
+                    className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </summary>
+                <div className="border-t px-4 py-3 text-sm text-muted-foreground">
+                  {faq.a}
+                </div>
+              </details>
+            </Card>
           ))}
         </div>
       </div>

@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
   KeyIcon,
   GlobeIcon,
   ZapIcon,
@@ -109,50 +116,53 @@ export default function KnowledgebasePage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="font-heading text-2xl font-bold">
           Developer Knowledgebase
         </h1>
-        <p className="mt-1 text-gray-600">
+        <p className="mt-1 text-muted-foreground">
           In-depth guides and best practices for every part of the API.
         </p>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-6">
         {GUIDES.map((guide) => {
           const Icon = guide.icon;
           return (
-            <section
+            <Card
               key={guide.title}
               id={guide.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}
-              className="rounded-xl border bg-white overflow-hidden"
             >
-              <div className="flex items-center gap-3 border-b bg-gray-50 px-6 py-4">
-                <Icon className="size-5 text-[#FF5C62]" />
-                <h2 className="text-lg font-semibold text-gray-900">
+              <CardHeader className="border-b bg-muted/50">
+                <CardTitle className="flex items-center gap-2">
+                  <Icon className="size-5 text-brand" />
                   {guide.title}
-                </h2>
-              </div>
-              <ul className="divide-y">
-                {guide.content.map((item, i) => (
-                  <li key={i} className="px-6 py-3 text-sm text-gray-700">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </section>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="divide-y divide-border">
+                  {guide.content.map((item, i) => (
+                    <p
+                      key={i}
+                      className="py-3 text-sm text-muted-foreground first:pt-0 last:pb-0"
+                    >
+                      {item}
+                    </p>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           );
         })}
       </div>
 
       <div className="mt-12 text-center">
-        <p className="text-gray-500 mb-4">
+        <p className="mb-4 text-muted-foreground">
           Can&apos;t find what you&apos;re looking for?
         </p>
-        <Link
-          href="/developer/support"
-          className="inline-flex items-center gap-2 rounded-lg bg-[#FF5C62] px-6 py-3 font-medium text-white hover:bg-[#ff4f58] transition"
-        >
-          Contact Developer Support
+        <Link href="/developer/support">
+          <Button className="gap-2 bg-brand text-white hover:bg-brand-hover">
+            Contact Developer Support
+          </Button>
         </Link>
       </div>
     </div>

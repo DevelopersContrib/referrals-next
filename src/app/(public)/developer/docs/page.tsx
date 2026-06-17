@@ -1,25 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CodeBlock } from "@/components/developer/code-block";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "API Documentation",
+  title: "API Reference | Referrals.com",
   description:
     "Complete API reference for Referrals.com. Endpoints for members, brands, campaigns, participants, webhooks, and billing.",
-  openGraph: {
-    title: "API Documentation | Referrals.com",
-    description:
-      "Complete API reference for Referrals.com. Endpoints for members, brands, campaigns, participants, webhooks, and billing.",
-    url: "https://referrals.com/developer/docs",
-    siteName: "Referrals.com",
-    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
-    type: "website",
-  },
-  twitter: {
-    card: "summary",
-    title: "API Documentation | Referrals.com",
-    description:
-      "Complete API reference for Referrals.com. Endpoints for members, brands, campaigns, participants, webhooks, and billing.",
-  },
 };
 
 interface Endpoint {
@@ -119,7 +107,8 @@ const sections: { title: string; endpoints: Endpoint[] }[] = [
       {
         method: "GET",
         path: "/api/v1/brands/:brandId/stats",
-        description: "Get brand analytics (campaigns, participants, shares, clicks, impressions).",
+        description:
+          "Get brand analytics (campaigns, participants, shares, clicks, impressions).",
         auth: true,
       },
     ],
@@ -130,7 +119,8 @@ const sections: { title: string; endpoints: Endpoint[] }[] = [
       {
         method: "GET",
         path: "/api/v1/campaigns",
-        description: "List campaigns. Filter with ?brand_id=5. Supports pagination.",
+        description:
+          "List campaigns. Filter with ?brand_id=5. Supports pagination.",
         auth: true,
       },
       {
@@ -143,7 +133,8 @@ const sections: { title: string; endpoints: Endpoint[] }[] = [
       {
         method: "GET",
         path: "/api/v1/campaigns/:campaignId",
-        description: "Get campaign details including widget, reward, and contest info.",
+        description:
+          "Get campaign details including widget, reward, and contest info.",
         auth: true,
       },
       {
@@ -162,7 +153,8 @@ const sections: { title: string; endpoints: Endpoint[] }[] = [
       {
         method: "GET",
         path: "/api/v1/campaigns/:campaignId/stats",
-        description: "Get campaign stats (participants, shares, clicks, impressions, daily signups).",
+        description:
+          "Get campaign stats (participants, shares, clicks, impressions, daily signups).",
         auth: true,
       },
     ],
@@ -173,13 +165,15 @@ const sections: { title: string; endpoints: Endpoint[] }[] = [
       {
         method: "GET",
         path: "/api/v1/participants",
-        description: "List participants across your campaigns. Filter with ?campaign_id=10.",
+        description:
+          "List participants across your campaigns. Filter with ?campaign_id=10.",
         auth: true,
       },
       {
         method: "GET",
         path: "/api/v1/participants/:participantId",
-        description: "Get participant detail with shares, rewards, and invited emails.",
+        description:
+          "Get participant detail with shares, rewards, and invited emails.",
         auth: true,
       },
       {
@@ -233,7 +227,8 @@ const sections: { title: string; endpoints: Endpoint[] }[] = [
       {
         method: "GET",
         path: "/api/v1/zapier/contacts",
-        description: "Get participants for Zapier polling trigger. Filter with ?campaign_id=10.",
+        description:
+          "Get participants for Zapier polling trigger. Filter with ?campaign_id=10.",
         auth: true,
       },
     ],
@@ -278,38 +273,28 @@ const sections: { title: string; endpoints: Endpoint[] }[] = [
   },
 ];
 
-const methodColors: Record<string, string> = {
-  GET: "bg-green-100 text-green-800",
-  POST: "bg-blue-100 text-blue-800",
-  PUT: "bg-yellow-100 text-yellow-800",
-  DELETE: "bg-red-100 text-red-800",
+const METHOD_STYLES: Record<string, string> = {
+  GET: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  POST: "border-blue-200 bg-blue-50 text-blue-700",
+  PUT: "border-amber-200 bg-amber-50 text-amber-700",
+  DELETE: "border-red-200 bg-red-50 text-red-700",
 };
 
 export default function DocsPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <Link href="/developer" className="text-blue-600 hover:underline text-sm">
-              &larr; Developer Portal
-            </Link>
-            <h1 className="text-xl font-bold text-gray-900 mt-1">
-              API Documentation v1
-            </h1>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-5xl mx-auto px-6 py-8 flex gap-8">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="flex gap-8">
         {/* Sidebar Navigation */}
-        <nav className="hidden md:block w-48 flex-shrink-0">
-          <div className="sticky top-24 space-y-2">
+        <nav className="hidden w-44 shrink-0 md:block">
+          <div className="sticky top-32 space-y-1">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Sections
+            </p>
             {sections.map((section) => (
               <a
                 key={section.title}
                 href={`#${section.title.toLowerCase().replace(/\s+/g, "-")}`}
-                className="block text-sm text-gray-600 hover:text-blue-600 py-1"
+                className="block rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 {section.title}
               </a>
@@ -318,63 +303,68 @@ export default function DocsPage() {
         </nav>
 
         {/* Content */}
-        <main className="flex-1 min-w-0 space-y-12">
+        <main className="min-w-0 flex-1 space-y-12">
+          <div>
+            <h1 className="font-heading text-2xl font-bold">API Reference</h1>
+            <p className="mt-1 text-muted-foreground">
+              Complete documentation for the Referrals.com REST API v1.
+            </p>
+          </div>
+
           {sections.map((section) => (
             <section
               key={section.title}
               id={section.title.toLowerCase().replace(/\s+/g, "-")}
             >
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6 pb-2 border-b">
+              <h2 className="mb-4 border-b pb-2 font-heading text-xl font-semibold">
                 {section.title}
               </h2>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {section.endpoints.map((ep, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-white rounded-lg border p-5 space-y-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
-                          methodColors[ep.method] || "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {ep.method}
-                      </span>
-                      <code className="text-sm font-mono text-gray-800">
-                        {ep.path}
-                      </code>
-                      {ep.auth && (
-                        <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded">
-                          Auth Required
-                        </span>
+                  <Card key={idx}>
+                    <CardContent className="space-y-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "font-mono",
+                            METHOD_STYLES[ep.method]
+                          )}
+                        >
+                          {ep.method}
+                        </Badge>
+                        <code className="font-mono text-sm">{ep.path}</code>
+                        {ep.auth && (
+                          <Badge variant="secondary" className="text-[10px]">
+                            Auth Required
+                          </Badge>
+                        )}
+                      </div>
+
+                      <p className="text-sm text-muted-foreground">
+                        {ep.description}
+                      </p>
+
+                      {ep.body && (
+                        <div>
+                          <p className="mb-1.5 text-xs font-semibold text-muted-foreground">
+                            Request Body
+                          </p>
+                          <CodeBlock code={ep.body} />
+                        </div>
                       )}
-                    </div>
-                    <p className="text-gray-600 text-sm">{ep.description}</p>
 
-                    {ep.body && (
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500 mb-1">
-                          Request Body
-                        </p>
-                        <pre className="bg-gray-900 text-green-400 rounded p-3 text-xs overflow-x-auto">
-                          {ep.body}
-                        </pre>
-                      </div>
-                    )}
-
-                    {ep.response && (
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500 mb-1">
-                          Response
-                        </p>
-                        <pre className="bg-gray-900 text-green-400 rounded p-3 text-xs overflow-x-auto">
-                          {ep.response}
-                        </pre>
-                      </div>
-                    )}
-                  </div>
+                      {ep.response && (
+                        <div>
+                          <p className="mb-1.5 text-xs font-semibold text-muted-foreground">
+                            Response
+                          </p>
+                          <CodeBlock code={ep.response} />
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </section>

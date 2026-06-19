@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { randomBytes } from "crypto";
 import { authenticateApiKey, apiSuccess, apiError, handleCors } from "@/lib/api/helpers";
 import { auth } from "@/lib/auth";
+import { createMemberApiKey } from "@/lib/member-api-key";
 
 export async function OPTIONS() {
   return handleCors();
@@ -59,15 +59,7 @@ export async function POST(req: NextRequest) {
       return apiError("Unauthorized", 401);
     }
 
-    const newApiKey = `ref_${randomBytes(24).toString("hex")}`;
-
-    const key = await prisma.member_keys.create({
-      data: {
-        api_key: newApiKey,
-        userid: memberId,
-        date_generated: new Date(),
-      },
-    });
+    const key = await createMemberApiKey(memberId);
 
     return apiSuccess(
       {

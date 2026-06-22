@@ -21,10 +21,29 @@ export async function POST(req: NextRequest) {
       const expiry = new Date(now);
       expiry.setDate(expiry.getDate() + (plan.days || 30));
 
+      const memberId = parseInt(session.user.id, 10);
+
       await prisma.members.update({
-        where: { id: parseInt(session.user.id, 10) },
+        where: { id: memberId },
         data: { plan_id: plan.id, plan_expiry: expiry },
       });
+
+      if (brandId) {
+        const parsedBrandId = parseInt(brandId, 10);
+        const brand = await prisma.member_urls.findFirst({
+          where: { id: parsedBrandId, member_id: memberId },
+        });
+        if (brand) {
+          await prisma.url_plan.create({
+            data: {
+              url_id: parsedBrandId,
+              member_id: memberId,
+              payment_id: plan.id,
+              date_added: now,
+            },
+          });
+        }
+      }
 
       return NextResponse.json({ free: true, redirectUrl: "/billing/success" });
     }
@@ -67,7 +86,8 @@ export async function POST(req: NextRequest) {
     const subscription = await createSubscription(
       paypalPlanId,
       returnUrl,
-      cancelUrl
+      cancelUrl,
+      brandId ? `brand:${brandId}` : undefined
     );
 
     const approvalUrl = subscription.links?.find(

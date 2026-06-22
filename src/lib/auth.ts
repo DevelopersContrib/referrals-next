@@ -120,11 +120,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               name: user.name || "",
               password: "", // OAuth users don't need password
               is_verified: true,
+              signedup_social: account.provider,
+              num_of_logins: 1,
               date_signedup: new Date(),
             },
           });
           user.id = String(newMember.id);
         } else {
+          await prisma.members.update({
+            where: { id: existingMember.id },
+            data: {
+              num_of_logins: { increment: 1 },
+              ...(!existingMember.is_verified ? { is_verified: true } : {}),
+            },
+          });
           user.id = String(existingMember.id);
         }
       }

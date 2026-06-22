@@ -1,33 +1,79 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { verifyWebhookSignature } from "@/lib/paypal";
+
+interface PayPalWebhookEvent {
+  event_type?: string;
+  resource?: {
+    id?: string;
+    billing_agreement_id?: string;
+    amount?: { total?: string; currency?: string };
+  };
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const rawBody = await req.text();
+    let body: PayPalWebhookEvent;
+    try {
+      body = JSON.parse(rawBody) as PayPalWebhookEvent;
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const transmissionId = req.headers.get("paypal-transmission-id");
+    const transmissionTime = req.headers.get("paypal-transmission-time");
+    const transmissionSig = req.headers.get("paypal-transmission-sig");
+    const certUrl = req.headers.get("paypal-cert-url");
+    const authAlgo = req.headers.get("paypal-auth-algo");
+
+    if (!transmissionId || !transmissionTime || !transmissionSig || !certUrl || !authAlgo) {
+      return NextResponse.json({ error: "Missing PayPal signature headers" }, { status: 401 });
+    }
+
+    const verified = await verifyWebhookSignature(
+      {
+        transmissionId,
+        transmissionTime,
+        transmissionSig,
+        certUrl,
+        authAlgo,
+      },
+      body
+    );
+
+    if (!verified) {
+      return NextResponse.json({ error: "Webhook signature verification failed" }, { status: 401 });
+    }
+
     const eventType = body.event_type;
     const resource = body.resource;
 
     switch (eventType) {
       case "BILLING.SUBSCRIPTION.CANCELLED": {
-        const agreementId = resource.id;
-        await prisma.member_plan.updateMany({
-          where: { paypal_agreement_id: agreementId },
-          data: { agreement_cancel: new Date().toISOString() },
-        });
+        const agreementId = resource?.id;
+        if (agreementId) {
+          await prisma.member_plan.updateMany({
+            where: { paypal_agreement_id: agreementId },
+            data: { agreement_cancel: new Date().toISOString() },
+          });
+        }
         break;
       }
 
       case "BILLING.SUBSCRIPTION.ACTIVATED": {
-        const agreementId = resource.id;
-        await prisma.member_plan.updateMany({
-          where: { paypal_agreement_id: agreementId },
-          data: { agreement_activate: new Date().toISOString() },
-        });
+        const agreementId = resource?.id;
+        if (agreementId) {
+          await prisma.member_plan.updateMany({
+            where: { paypal_agreement_id: agreementId },
+            data: { agreement_activate: new Date().toISOString() },
+          });
+        }
         break;
       }
 
       case "PAYMENT.SALE.COMPLETED": {
-        const agreementId = resource.billing_agreement_id;
+        const agreementId = resource?.billing_agreement_id;
         if (agreementId) {
           const plan = await prisma.member_plan.findFirst({
             where: { paypal_agreement_id: agreementId },

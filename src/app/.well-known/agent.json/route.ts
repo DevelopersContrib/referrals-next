@@ -21,7 +21,10 @@ export async function GET() {
     version: "1.0",
     capabilities: agentCapabilities,
     authentication: {
-      type: "none",
+      type: "apiKey",
+      header: "X-API-Key",
+      description:
+        "Generate an API key from your dashboard or via POST /api/v1/members/api-key",
     },
     provider: {
       name: "VNOC / VentureBuilder",

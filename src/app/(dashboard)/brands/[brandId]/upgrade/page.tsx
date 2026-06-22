@@ -36,7 +36,7 @@ export default async function UpgradeBrandPage({
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">Up to {plan.no_of_domains || "unlimited"} brands, {plan.campaigns_participants || "unlimited"} participants</p>
               <Link
-                href={`/billing/plan/${plan.id}`}
+                href={`/billing/plan/${plan.id}?brandId=${brandId}`}
                 className="inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
               >
                 Select Plan

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { encryptShareCode } from "@/lib/encryption";
+import { sendCampaignEntryEmail } from "@/lib/campaign-email";
+import { syncParticipantToMailchimp } from "@/lib/integrations/mailchimp-sync";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,7 +52,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    let isNewParticipant = false;
+
     if (!participant) {
+      isNewParticipant = true;
       // Find or create the global participant record
       let globalParticipant = await prisma.participants.findFirst({
         where: { email: email.toLowerCase().trim() },
@@ -111,6 +116,32 @@ export async function POST(request: NextRequest) {
       `${campaignId}:1:${participant.id}`
     );
     const shareUrl = `${appUrl}/t/${shareCode}`;
+
+    if (isNewParticipant) {
+      try {
+        const emailContent = await prisma.campaign_email_content.findFirst({
+          where: { campaign_id: campaignId },
+        });
+
+        await sendCampaignEntryEmail({
+          to: participant.email,
+          campaignName: campaign.name,
+          participantName: participant.name,
+          referralUrl: shareUrl,
+          entrySubject: campaign.campaign_entry_subject,
+          entryMessage: campaign.campaign_entry_message,
+          customTemplate: emailContent,
+        });
+      } catch (emailError) {
+        console.error("[widget/signup] Failed to send entry email:", emailError);
+      }
+
+      void syncParticipantToMailchimp(
+        campaignId,
+        participant.email,
+        participant.name
+      );
+    }
 
     // Get referral stats
     const referralCount = await prisma.campaign_participants.count({

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendCampaignRewardEmail } from "@/lib/campaign-email";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -155,6 +156,19 @@ export async function POST(request: NextRequest) {
         cash_value: rewardConfig.cash_value,
       },
     });
+
+    try {
+      await sendCampaignRewardEmail({
+        to: participant.email,
+        campaignName: campaign.name,
+        participantName: participant.name,
+        rewardSubject: campaign.reward_notify_subject,
+        rewardMessage: campaign.reward_notify_message,
+        reward: rewardRecord,
+      });
+    } catch (emailError) {
+      console.error("[widget/reward] Failed to send reward email:", emailError);
+    }
 
     return NextResponse.json(
       {

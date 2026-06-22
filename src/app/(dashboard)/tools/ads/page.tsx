@@ -1,56 +1,30 @@
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { AdsManager } from "@/components/tools/ads-manager";
 
 export default async function AdsToolPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/signin");
+	const session = await auth();
+	if (!session?.user?.id) redirect("/signin");
+	const memberId = parseInt(session.user.id, 10);
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Ads</h1>
-        <p className="mt-1 text-muted-foreground">
-          Create and manage advertising campaigns to drive traffic to your
-          referral programs.
-        </p>
-      </div>
+	const campaigns = await prisma.member_campaigns.findMany({
+		where: { member_id: memberId },
+		select: { id: true, name: true },
+		orderBy: { name: "asc" },
+	});
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="py-6 text-center">
-            <p className="text-3xl font-bold">0</p>
-            <p className="text-sm text-muted-foreground">Active Ads</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-6 text-center">
-            <p className="text-3xl font-bold">0</p>
-            <p className="text-sm text-muted-foreground">Impressions</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-6 text-center">
-            <p className="text-3xl font-bold">0</p>
-            <p className="text-sm text-muted-foreground">Clicks</p>
-          </CardContent>
-        </Card>
-      </div>
+	return (
+		<div className="space-y-6">
+			<div>
+				<h1 className="text-2xl font-bold">Ads</h1>
+				<p className="mt-1 text-muted-foreground">
+					Create and manage advertising campaigns to drive traffic to your
+					referral programs.
+				</p>
+			</div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Ad Campaigns</CardTitle>
-          <CardDescription>
-            Create ad campaigns to promote your referral program across the
-            Referrals.com network.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="py-8 text-center text-muted-foreground">
-            No ad campaigns yet. Ad creation will be available soon.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
+			<AdsManager campaigns={campaigns} />
+		</div>
+	);
 }

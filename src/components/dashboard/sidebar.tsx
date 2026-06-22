@@ -42,6 +42,9 @@ import {
   MailIcon,
   MonitorIcon,
   ShareIcon,
+  ShoppingCartIcon,
+  Share2Icon,
+  PlugIcon,
 } from "lucide-react";
 
 const DASHBOARD_LOGO_URL =
@@ -66,6 +69,12 @@ const toolsNav = [
   { title: "Promotions", href: "/promotions", icon: ShareIcon },
 ];
 
+const integrationsNav = [
+  { title: "Shopify", href: "/integrations/shopify", icon: ShoppingCartIcon },
+  { title: "Mailchimp", href: "/integrations/mailchimp", icon: MailIcon },
+  { title: "Facebook", href: "/tools/facebook", icon: Share2Icon },
+];
+
 const bottomNav = [
   { title: "Forum", href: "/forum", icon: MessageSquareIcon },
   { title: "Billing", href: "/billing", icon: CreditCardIcon },
@@ -76,7 +85,9 @@ const bottomNav = [
 export function DashboardSidebar() {
   const pathname = usePathname();
   const [toolsOpen, setToolsOpen] = useState(
-    pathname.startsWith("/tools") || pathname.startsWith("/promotions")
+    pathname.startsWith("/tools") ||
+      pathname.startsWith("/promotions") ||
+      pathname.startsWith("/integrations")
   );
 
   return (
@@ -168,6 +179,28 @@ export function DashboardSidebar() {
                           >
                             <Icon className="size-3.5" />
                             <span>{tool.title}</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      );
+                    })}
+                    <SidebarMenuSubItem>
+                      <div className="flex items-center gap-2 px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#a7abc3]">
+                        <PlugIcon className="size-3" />
+                        Integrations
+                      </div>
+                    </SidebarMenuSubItem>
+                    {integrationsNav.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = pathname === item.href;
+                      return (
+                        <SidebarMenuSubItem key={item.href}>
+                          <SidebarMenuSubButton
+                            isActive={isActive}
+                            render={<Link href={item.href} />}
+                            className={isActive ? "text-brand font-medium" : ""}
+                          >
+                            <Icon className="size-3.5" />
+                            <span>{item.title}</span>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       );

@@ -1,56 +1,29 @@
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { BannerManager } from "@/components/tools/banner-manager";
 
 export default async function BannersToolPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/signin");
+	const session = await auth();
+	if (!session?.user?.id) redirect("/signin");
+	const memberId = parseInt(session.user.id, 10);
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Banner Management</h1>
-        <p className="mt-1 text-muted-foreground">
-          Upload and manage promotional banners for your referral campaigns.
-        </p>
-      </div>
+	const campaigns = await prisma.member_campaigns.findMany({
+		where: { member_id: memberId },
+		select: { id: true, name: true },
+		orderBy: { name: "asc" },
+	});
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Upload Banner</CardTitle>
-          <CardDescription>
-            Upload a new banner image. Supported formats: JPG, PNG, GIF. Max
-            size: 5MB.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-48 items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                Drag and drop an image here, or click to browse
-              </p>
-              <Button variant="outline" size="sm" className="mt-3">
-                Choose File
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+	return (
+		<div className="space-y-6">
+			<div>
+				<h1 className="text-2xl font-bold">Banner Management</h1>
+				<p className="mt-1 text-muted-foreground">
+					Upload and manage promotional banners for your referral campaigns.
+				</p>
+			</div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Banners</CardTitle>
-          <CardDescription>
-            Manage your existing campaign banners.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="py-12 text-center text-muted-foreground">
-            No banners uploaded yet. Upload your first banner above.
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+			<BannerManager campaigns={campaigns} />
+		</div>
+	);
 }

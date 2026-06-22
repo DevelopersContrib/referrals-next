@@ -32,6 +32,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.72.0",
+    "recharts": "^3.8.1",
     "shadcn": "^4.1.2",
     "sonner": "^2.0.7",
     "swagger-ui-react": "^5.32.1",
@@ -40,8 +41,14 @@
     "zod": "^4.3.6"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["prisma", "@prisma/engines"],
-    "ignoredBuiltDependencies": ["sharp", "unrs-resolver"]
+    "onlyBuiltDependencies": [
+      "prisma",
+      "@prisma/engines"
+    ],
+    "ignoredBuiltDependencies": [
+      "sharp",
+      "unrs-resolver"
+    ]
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

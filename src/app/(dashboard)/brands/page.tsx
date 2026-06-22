@@ -54,15 +54,24 @@ export default async function BrandsPage() {
             {brands.length} brand{brands.length !== 1 ? "s" : ""} registered
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <a href="/api/brands/export">
-            <Button className="gap-2 bg-[#28a745] text-white hover:bg-[#218838]">
+            <Button className="min-h-11 gap-2 bg-[#28a745] text-white hover:bg-[#218838]">
               <DownloadIcon className="size-4" />
               Export CSV
             </Button>
           </a>
+          <Link href="/brands/bulk">
+            <Button
+              variant="outline"
+              className="min-h-11 gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20"
+            >
+              <DownloadIcon className="size-4" />
+              Bulk Import
+            </Button>
+          </Link>
           <Link href="/brands/new">
-            <Button className="gap-2 bg-white text-brand hover:bg-white/90 font-semibold">
+            <Button className="min-h-11 gap-2 bg-white font-semibold text-brand hover:bg-white/90">
               <PlusIcon className="size-4" />
               Create Brand
             </Button>
@@ -91,6 +100,7 @@ export default async function BrandsPage() {
             </Link>
           </div>
         ) : (
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="border-b border-[#ebeef0] bg-[#f7f8fa]">
@@ -198,6 +208,7 @@ export default async function BrandsPage() {
               ))}
             </TableBody>
           </Table>
+          </div>
         )}
       </div>
     </div>

@@ -47,31 +47,31 @@ export default async function BrandsPage() {
       </nav>
 
       {/* Subheader */}
-      <div className="subheader flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="subheader flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-xl font-bold text-white">Manage Brands</h1>
           <p className="mt-0.5 text-sm text-white/70">
             {brands.length} brand{brands.length !== 1 ? "s" : ""} registered
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <a href="/api/brands/export">
-            <Button className="min-h-11 gap-2 bg-[#28a745] text-white hover:bg-[#218838]">
+        <div className="flex w-full flex-col gap-2 lg:flex-row lg:flex-wrap lg:w-auto">
+          <a href="/api/brands/export" className="w-full sm:w-auto">
+            <Button className="min-h-11 w-full gap-2 bg-[#28a745] text-white hover:bg-[#218838] sm:w-auto">
               <DownloadIcon className="size-4" />
               Export CSV
             </Button>
           </a>
-          <Link href="/brands/bulk">
+          <Link href="/brands/bulk" className="w-full sm:w-auto">
             <Button
               variant="outline"
-              className="min-h-11 gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20"
+              className="min-h-11 w-full gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20 sm:w-auto"
             >
               <DownloadIcon className="size-4" />
               Bulk Import
             </Button>
           </Link>
-          <Link href="/brands/new">
-            <Button className="min-h-11 gap-2 bg-white font-semibold text-brand hover:bg-white/90">
+          <Link href="/brands/new" className="w-full sm:w-auto">
+            <Button className="min-h-11 w-full gap-2 bg-white font-semibold text-brand hover:bg-white/90 sm:w-auto">
               <PlusIcon className="size-4" />
               Create Brand
             </Button>
@@ -107,10 +107,10 @@ export default async function BrandsPage() {
                 <TableHead className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
                   Brand Name
                 </TableHead>
-                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
+                <TableHead className="hidden text-[11px] font-bold uppercase tracking-wider text-[#a7abc3] lg:table-cell">
                   Website
                 </TableHead>
-                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
+                <TableHead className="hidden text-[11px] font-bold uppercase tracking-wider text-[#a7abc3] xl:table-cell">
                   Date Added
                 </TableHead>
                 <TableHead className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
@@ -140,28 +140,37 @@ export default async function BrandsPage() {
                           {brand.domain.charAt(0)}
                         </div>
                       )}
-                      <div>
+                      <div className="min-w-0">
                         <Link
                           href={`/brands/${brand.id}`}
                           className="font-semibold text-[#575962] hover:text-brand transition-colors"
                         >
                           {brand.domain}
                         </Link>
+                        <a
+                          href={brand.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-0.5 flex items-center gap-1 truncate text-xs text-[#36a3f7] hover:underline lg:hidden"
+                        >
+                          {brand.url}
+                          <ExternalLinkIcon className="size-3 shrink-0" />
+                        </a>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     <a
                       href={brand.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-[#36a3f7] hover:underline"
+                      className="inline-flex max-w-[200px] items-center gap-1 truncate text-sm text-[#36a3f7] hover:underline"
                     >
                       {brand.url}
-                      <ExternalLinkIcon className="size-3" />
+                      <ExternalLinkIcon className="size-3 shrink-0" />
                     </a>
                   </TableCell>
-                  <TableCell className="text-sm text-[#a7abc3]">
+                  <TableCell className="hidden text-sm text-[#a7abc3] xl:table-cell">
                     {new Date(brand.date_added).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
@@ -181,12 +190,12 @@ export default async function BrandsPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-1.5">
+                    <div className="flex flex-col items-stretch gap-1.5 lg:flex-row lg:justify-end">
                       <Link href={`/brands/${brand.id}`}>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="gap-1.5 border-[#ebeef0] text-[#575962] hover:border-brand hover:text-brand"
+                          className="min-h-11 w-full gap-1.5 border-[#ebeef0] text-[#575962] hover:border-brand hover:text-brand sm:w-auto"
                         >
                           <LayoutDashboardIcon className="size-3.5" />
                           Dashboard
@@ -196,7 +205,7 @@ export default async function BrandsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="gap-1.5 text-[#a7abc3] hover:text-brand"
+                          className="min-h-11 w-full gap-1.5 text-[#a7abc3] hover:text-brand sm:w-auto"
                         >
                           <SettingsIcon className="size-3.5" />
                           Edit

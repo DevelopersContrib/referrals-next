@@ -18,27 +18,22 @@ export type StatsChartPoint = {
 type StatsChartProps = {
 	data: StatsChartPoint[];
 	color?: string;
-	height?: number;
 };
 
 export function StatsChart({
 	data,
 	color = "#ff5c62",
-	height = 280,
 }: StatsChartProps) {
 	if (data.length === 0) {
 		return (
-			<div
-				className="flex items-center justify-center rounded-lg bg-[#f7f8fa] text-sm text-[#a7abc3]"
-				style={{ height }}
-			>
+			<div className="flex h-[220px] items-center justify-center rounded-lg bg-[#f7f8fa] text-sm text-[#a7abc3] lg:h-[280px]">
 				No data for this period
 			</div>
 		);
 	}
 
 	return (
-		<div className="w-full" style={{ height }}>
+		<div className="w-full h-[220px] lg:h-[280px]">
 			<ResponsiveContainer width="100%" height="100%">
 				<AreaChart
 					data={data}

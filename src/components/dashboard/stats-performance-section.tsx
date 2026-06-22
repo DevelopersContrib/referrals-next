@@ -41,7 +41,7 @@ export function StatsPerformanceSection({
 
 	return (
 		<Card>
-			<CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+			<CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 				<CardTitle>Performance Over Time</CardTitle>
 				<StatsDateFilter value={range} onChange={setRange} />
 			</CardHeader>

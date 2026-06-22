@@ -80,7 +80,7 @@ export default async function ToolsPage() {
 
 			<div>
 				<h2 className="mb-4 text-lg font-semibold">Marketing Tools</h2>
-				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				<div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
 					{tools.map((tool) => (
 						<Link key={tool.href} href={tool.href}>
 							<Card className="h-full transition-colors hover:border-brand/40">
@@ -99,7 +99,7 @@ export default async function ToolsPage() {
 
 			<div>
 				<h2 className="mb-4 text-lg font-semibold">Integrations</h2>
-				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				<div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
 					{integrations.map((item) => (
 						<Link key={item.href} href={item.href}>
 							<Card className="h-full transition-colors hover:border-brand/40">

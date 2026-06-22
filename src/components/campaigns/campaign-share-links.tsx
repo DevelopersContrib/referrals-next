@@ -21,7 +21,7 @@ export function CampaignShareLinks({
 }) {
   const publicPath = pathnameFromAbsolute(publicPageUrl);
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <div>
         <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#a7abc3]">
           Referral link

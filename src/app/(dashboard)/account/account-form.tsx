@@ -151,7 +151,7 @@ export function AccountForm({
           )}
 
           <form onSubmit={handleProfileSubmit} className="space-y-5">
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid gap-5 lg:grid-cols-2">
               <div className="space-y-2">
                 <Label
                   htmlFor="name"
@@ -273,7 +273,7 @@ export function AccountForm({
                 required
               />
             </div>
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid gap-5 lg:grid-cols-2">
               <div className="space-y-2">
                 <Label
                   htmlFor="newPassword"

@@ -37,7 +37,7 @@ export default async function ForumCategoriesPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {categories.length === 0 ? (
           <p className="col-span-full text-center text-muted-foreground py-12">
             No categories yet.

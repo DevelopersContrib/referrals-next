@@ -184,7 +184,7 @@ export default async function CampaignDashboardPage({
       </nav>
 
       {/* Campaign Header */}
-      <div className="subheader flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="subheader flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-white">{campaign.name}</h1>
@@ -233,7 +233,7 @@ export default async function CampaignDashboardPage({
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -404,7 +404,7 @@ export default async function CampaignDashboardPage({
               Open install section
             </Link>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
             <Link
               href={`/brands/${brandId}/campaigns/${campaignId}/widget`}
               className="quick-link-card"

@@ -83,7 +83,7 @@ export default async function BrandDeveloperPage({ params }: PageProps) {
       </nav>
 
       {/* Subheader */}
-      <div className="subheader flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="subheader flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-lg bg-white/20">
             <CodeIcon className="size-5 text-white" />
@@ -175,7 +175,7 @@ export default async function BrandDeveloperPage({ params }: PageProps) {
       </Card>
 
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="stat-card text-center">
           <p className="text-3xl font-bold text-brand">{brand.id}</p>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -195,7 +195,7 @@ export default async function BrandDeveloperPage({ params }: PageProps) {
       </div>
 
       {/* Portal Links */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {[
           {
             href: "/developer/docs",

@@ -135,7 +135,7 @@ export function AdsManager({ campaigns }: AdsManagerProps) {
 				</Dialog>
 			</div>
 
-			<div className="grid gap-4 sm:grid-cols-3">
+			<div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
 				<Card>
 					<CardContent className="py-6 text-center">
 						<p className="text-3xl font-bold">0</p>
@@ -156,7 +156,7 @@ export function AdsManager({ campaigns }: AdsManagerProps) {
 				</Card>
 			</div>
 
-			<div className="grid gap-6 lg:grid-cols-2">
+			<div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
 				<Card>
 					<CardHeader>
 						<CardTitle>Your Ad Campaigns</CardTitle>

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatsPerformanceSection } from "@/components/dashboard/stats-performance-section";
+import { StatsCampaignMobileList } from "@/components/dashboard/stats-campaign-mobile-list";
 import {
 	getCampaignStatsForMember,
 	getMemberParticipantsSeries,
@@ -86,7 +87,7 @@ export default async function StatsPage() {
 				</p>
 			</div>
 
-			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			<div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
 				{statCards.map((stat) => (
 					<Card key={stat.title}>
 						<CardHeader className="pb-2">
@@ -110,8 +111,9 @@ export default async function StatsPage() {
 					<CardHeader>
 						<CardTitle>Per-Campaign Breakdown</CardTitle>
 					</CardHeader>
-					<CardContent>
-						<div className="overflow-x-auto">
+					<CardContent className="space-y-4">
+						<StatsCampaignMobileList campaigns={campaignStats} />
+						<div className="hidden overflow-x-auto lg:block">
 							<table className="w-full min-w-[540px] text-sm">
 								<thead>
 									<tr className="border-b border-[#ebeef0]">

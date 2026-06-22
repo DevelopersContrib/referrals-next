@@ -207,22 +207,22 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome Subheader Banner */}
-      <div className="subheader flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="subheader flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Dashboard</h1>
           <p className="mt-1 text-sm text-white/80">
             Welcome back, {userName}! Here is your referral program overview.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Link href="/promotions">
-            <Button className="gap-2 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 border border-white/20">
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap lg:w-auto">
+          <Link href="/promotions" className="w-full sm:w-auto">
+            <Button className="min-h-11 w-full gap-2 border border-white/20 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 sm:w-auto">
               <ShareIcon className="size-4" />
               Refer Us
             </Button>
           </Link>
-          <Link href="/brands/new">
-            <Button className="gap-2 bg-white text-brand hover:bg-white/90 font-semibold">
+          <Link href="/brands/new" className="w-full sm:w-auto">
+            <Button className="min-h-11 w-full gap-2 bg-white font-semibold text-brand hover:bg-white/90 sm:w-auto">
               <PlusIcon className="size-4" />
               New Brand
             </Button>
@@ -231,7 +231,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -270,7 +270,7 @@ export default async function DashboardPage() {
             </Link>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {brands.map((brand) => {
               const campaignCount = campaignCountByBrand.get(brand.id) || 0;
               return (
@@ -420,7 +420,7 @@ export default async function DashboardPage() {
             <h2 className="mb-3 text-lg font-semibold text-[#575962]">
               Quick Links
             </h2>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {quickLinks.map((link) => {
                 const Icon = link.icon;
                 const Wrapper = link.external ? "a" : Link;

@@ -96,7 +96,7 @@ export default async function BillingPage({
 
 			<div>
 				<h2 className="mb-4 text-lg font-semibold">Available Plans</h2>
-				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				<div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
 					{plans.map((plan) => (
 						<Card
 							key={plan.id}

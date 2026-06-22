@@ -99,9 +99,7 @@ export default function WalkthroughPage() {
 				{walkthroughSteps.map((item) => (
 					<div
 						key={item.step}
-						className={`flex flex-col gap-8 md:items-center ${
-							item.step % 2 === 0 ? "md:flex-row-reverse" : "md:flex-row"
-						}`}
+						className="flex flex-col gap-6 lg:gap-8 lg:items-center lg:flex-row even:lg:flex-row-reverse"
 					>
 						<div className="flex-1">
 							<WalkthroughStepImage

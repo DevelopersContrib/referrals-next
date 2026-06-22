@@ -96,7 +96,7 @@ export function PartnershipsBrowser({ brands }: PartnershipsBrowserProps) {
 							No brands found matching your search.
 						</p>
 					) : (
-						<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+						<div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
 							{filtered.map((brand) => (
 								<div
 									key={brand.id}
@@ -181,7 +181,7 @@ export function PartnershipsBrowser({ brands }: PartnershipsBrowserProps) {
 					<CardTitle>How Partnerships Work</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<div className="grid gap-6 sm:grid-cols-3">
+					<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
 						<div>
 							<h3 className="font-medium text-gray-900">1. Connect</h3>
 							<p className="mt-1 text-sm text-muted-foreground">

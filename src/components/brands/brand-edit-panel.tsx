@@ -324,7 +324,7 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <Link
             href={`/brands/${brandId}`}

@@ -21,7 +21,7 @@ export default function KnowledgebasePage() {
 				Everything you need to know about Referrals.com.
 			</p>
 
-			<div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+			<div className="mt-12 grid grid-cols-1 gap-8 lg:grid-cols-2 xl:grid-cols-3">
 				{knowledgebaseCategories.map((cat) => (
 					<div key={cat.title} className="rounded-xl border bg-white p-6">
 						<h2 className="mb-4 text-lg font-semibold">{cat.title}</h2>

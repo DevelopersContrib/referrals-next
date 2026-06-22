@@ -10,6 +10,7 @@ export function proxy(request: NextRequest) {
     "/api/v1",
     "/api/widget",
     "/api/cron",
+    "/api/billing/webhook",
     "/widget",
     "/t/",
     "/t2/",

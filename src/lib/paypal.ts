@@ -23,7 +23,7 @@ export { client, ordersController, ApiError };
 export async function createSubscriptionPlan(planName: string, amount: string, interval: "MONTH" | "YEAR" = "MONTH") {
   // PayPal Subscriptions API - create billing plan
   const response = await fetch(
-    `${process.env.PAYPAL_MODE === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com"}/v1/billing/plans`,
+    `${getPayPalApiBaseUrl()}/v1/billing/plans`,
     {
       method: "POST",
       headers: {
@@ -55,9 +55,14 @@ export async function createSubscriptionPlan(planName: string, amount: string, i
   return response.json();
 }
 
-export async function createSubscription(planId: string, returnUrl: string, cancelUrl: string) {
+export async function createSubscription(
+  planId: string,
+  returnUrl: string,
+  cancelUrl: string,
+  customId?: string
+) {
   const response = await fetch(
-    `${process.env.PAYPAL_MODE === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com"}/v1/billing/subscriptions`,
+    `${getPayPalApiBaseUrl()}/v1/billing/subscriptions`,
     {
       method: "POST",
       headers: {
@@ -66,6 +71,7 @@ export async function createSubscription(planId: string, returnUrl: string, canc
       },
       body: JSON.stringify({
         plan_id: planId,
+        ...(customId ? { custom_id: customId } : {}),
         application_context: {
           brand_name: "Referrals.com",
           return_url: returnUrl,
@@ -81,7 +87,7 @@ export async function createSubscription(planId: string, returnUrl: string, canc
 
 export async function cancelSubscription(subscriptionId: string, reason: string = "Customer requested cancellation") {
   const response = await fetch(
-    `${process.env.PAYPAL_MODE === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com"}/v1/billing/subscriptions/${subscriptionId}/cancel`,
+    `${getPayPalApiBaseUrl()}/v1/billing/subscriptions/${subscriptionId}/cancel`,
     {
       method: "POST",
       headers: {
@@ -98,7 +104,7 @@ export async function cancelSubscription(subscriptionId: string, reason: string 
 
 export async function getSubscription(subscriptionId: string) {
   const response = await fetch(
-    `${process.env.PAYPAL_MODE === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com"}/v1/billing/subscriptions/${subscriptionId}`,
+    `${getPayPalApiBaseUrl()}/v1/billing/subscriptions/${subscriptionId}`,
     {
       headers: {
         Authorization: `Bearer ${await getAccessToken()}`,
@@ -109,13 +115,70 @@ export async function getSubscription(subscriptionId: string) {
   return response.json();
 }
 
+function getPayPalApiBaseUrl(): string {
+  return process.env.PAYPAL_MODE === "live"
+    ? "https://api-m.paypal.com"
+    : "https://api-m.sandbox.paypal.com";
+}
+
+export interface PayPalWebhookHeaders {
+  transmissionId: string;
+  transmissionTime: string;
+  transmissionSig: string;
+  certUrl: string;
+  authAlgo: string;
+}
+
+export async function verifyWebhookSignature(
+  headers: PayPalWebhookHeaders,
+  webhookEvent: unknown
+): Promise<boolean> {
+  const webhookId = process.env.PAYPAL_WEBHOOK_ID;
+  if (!webhookId) {
+    console.error("PAYPAL_WEBHOOK_ID is not configured");
+    return false;
+  }
+
+  const response = await fetch(
+    `${getPayPalApiBaseUrl()}/v1/notifications/verify-webhook-signature`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${await getAccessToken()}`,
+      },
+      body: JSON.stringify({
+        auth_algo: headers.authAlgo,
+        cert_url: headers.certUrl,
+        transmission_id: headers.transmissionId,
+        transmission_sig: headers.transmissionSig,
+        transmission_time: headers.transmissionTime,
+        webhook_id: webhookId,
+        webhook_event: webhookEvent,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    console.error(
+      "PayPal webhook verification request failed:",
+      response.status,
+      await response.text()
+    );
+    return false;
+  }
+
+  const data = (await response.json()) as { verification_status?: string };
+  return data.verification_status === "SUCCESS";
+}
+
 async function getAccessToken(): Promise<string> {
   const auth = Buffer.from(
     `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
   ).toString("base64");
 
   const response = await fetch(
-    `${process.env.PAYPAL_MODE === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com"}/v1/oauth2/token`,
+    `${getPayPalApiBaseUrl()}/v1/oauth2/token`,
     {
       method: "POST",
       headers: {
@@ -136,7 +199,7 @@ async function getOrCreateProduct(): Promise<string> {
   if (productId) return productId;
 
   const response = await fetch(
-    `${process.env.PAYPAL_MODE === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com"}/v1/catalogs/products`,
+    `${getPayPalApiBaseUrl()}/v1/catalogs/products`,
     {
       method: "POST",
       headers: {

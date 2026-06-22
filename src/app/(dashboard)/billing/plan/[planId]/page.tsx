@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export default function PlanDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const brandId = searchParams.get("brandId");
   const [plan, setPlan] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +26,10 @@ export default function PlanDetailPage() {
       const res = await fetch("/api/billing/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId: parseInt(params.planId as string, 10) }),
+        body: JSON.stringify({
+          planId: parseInt(params.planId as string, 10),
+          ...(brandId ? { brandId: parseInt(brandId, 10) } : {}),
+        }),
       });
       const data = await res.json();
       if (data.free && data.redirectUrl) {

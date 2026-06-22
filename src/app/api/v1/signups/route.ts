@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticateApiKey, apiSuccess, apiError, handleCors } from "@/lib/api/helpers";
+import { syncParticipantToMailchimp } from "@/lib/integrations/mailchimp-sync";
 
 export async function OPTIONS() {
   return handleCors();
@@ -77,6 +78,12 @@ export async function POST(req: NextRequest) {
         console.error("Zapier webhook fire error:", e);
       }
     }
+
+    void syncParticipantToMailchimp(
+      campaign_id,
+      participant.email,
+      participant.name
+    );
 
     return apiSuccess(participant, 201);
   } catch (error) {

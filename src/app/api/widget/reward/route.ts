@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendCampaignRewardEmail } from "@/lib/campaign-email";
+import { ZapierIntegration } from "@/lib/integrations/zapier";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -169,6 +170,16 @@ export async function POST(request: NextRequest) {
     } catch (emailError) {
       console.error("[widget/reward] Failed to send reward email:", emailError);
     }
+
+    void ZapierIntegration.fireRewardEvent(campaign.member_id, {
+      participant_id: participantId,
+      campaign_id: campaignId,
+      reward_type: rewardRecord.reward_type,
+      coupon: rewardRecord.coupon || undefined,
+      cash_value: rewardRecord.cash_value || undefined,
+    }).catch((err) =>
+      console.error("[widget/reward] Zapier webhook error:", err)
+    );
 
     return NextResponse.json(
       {

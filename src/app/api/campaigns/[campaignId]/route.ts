@@ -30,7 +30,7 @@ export async function GET(
     }
 
     // Get related data
-    const [widget, reward, emailContent, socialContent, campaignType, rewardType, rewardTypes, coupons] =
+    const [widget, reward, emailContent, socialContent, campaignType, rewardType, rewardTypes, campaignTypes, coupons] =
       await Promise.all([
         prisma.campaign_widget.findFirst({ where: { campaign_id: id } }),
         prisma.campaign_reward.findFirst({ where: { campaign_id: id } }),
@@ -39,6 +39,10 @@ export async function GET(
         prisma.campaign_types.findFirst({ where: { id: campaign.type_id } }),
         prisma.reward_types.findFirst({ where: { id: campaign.reward_type } }),
         prisma.reward_types.findMany({ orderBy: { name: "asc" } }),
+        prisma.campaign_types.findMany({
+          select: { id: true, name: true },
+          orderBy: { id: "asc" },
+        }),
         prisma.campaign_coupons.findMany({
           where: { campaign_id: id },
           select: { is_used: true },
@@ -58,6 +62,7 @@ export async function GET(
         name: t.name,
         has_value: t.has_value ?? false,
       })),
+      campaignTypes: campaignTypes.map((t) => ({ id: t.id, name: t.name })),
       couponStats: {
         total: coupons.length,
         available: coupons.filter((c) => !c.is_used).length,
@@ -182,6 +187,31 @@ export async function PUT(
               campaign_id: id,
               subject: email.subject,
               template: email.template,
+            },
+          });
+        }
+      }
+    }
+
+    // Update social content if provided (Step 3 — Want to Share?)
+    if (body.socialContent) {
+      for (const social of body.socialContent) {
+        if (social.id) {
+          await prisma.campaign_social_content.update({
+            where: { id: social.id },
+            data: {
+              url: social.url,
+              description: social.description,
+              image_url: social.image_url ?? null,
+            },
+          });
+        } else if (social.url || social.description) {
+          await prisma.campaign_social_content.create({
+            data: {
+              campaign_id: id,
+              url: social.url ?? "",
+              description: social.description ?? "",
+              image_url: social.image_url ?? null,
             },
           });
         }

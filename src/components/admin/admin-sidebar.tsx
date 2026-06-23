@@ -32,7 +32,8 @@ const managementNav = [
 
 const billingNav = [
   { title: "Plans", href: "/admin/plans" },
-  { title: "Payments", href: "/admin/payments" },
+  { title: "Subscriptions", href: "/admin/subscriptions" },
+  { title: "Transactions", href: "/admin/payments" },
 ];
 
 const contentNav = [

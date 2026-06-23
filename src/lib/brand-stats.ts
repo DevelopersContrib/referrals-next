@@ -87,11 +87,12 @@ export async function getBrandOverviewStats(
 
   if (campaignIds.length > 0) {
     const [impressions, clicks, shares, participants] = await Promise.all([
-      prisma.campaign_widget_impressions.count({
-        where: {
-          campaign_id: { in: campaignIds },
-          date_viewed: { gte: fromDate, lte: toDate },
-        },
+      // Use the precomputed per-campaign impressions counter (all-time) instead
+      // of COUNT(*) over the raw impressions table — the raw count scans millions
+      // of rows (~17s). PHP doesn't display impressions either; this is fast.
+      prisma.campaign_widget_impressions_count.aggregate({
+        where: { campaign_id: { in: campaignIds } },
+        _sum: { views: true },
       }),
       prisma.participants_share.aggregate({
         where: {
@@ -114,7 +115,7 @@ export async function getBrandOverviewStats(
       }),
     ]);
 
-    totalImpressions = impressions;
+    totalImpressions = Number(impressions._sum.views || 0);
     totalClicks = clicks._sum.clicks || 0;
     totalShares = shares;
     totalParticipants = participants;

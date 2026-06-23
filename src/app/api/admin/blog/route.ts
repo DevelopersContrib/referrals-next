@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requirePlatformAdminApi } from "@/lib/require-platform-admin";
 import { auth } from "@/lib/auth";
 import { getAllPosts, savePost, deletePost, type BlogPost } from "@/lib/blog";
 
 // GET /api/admin/blog — list all posts
 export async function GET() {
+  const __adminGate = await requirePlatformAdminApi();
+  if (!__adminGate.ok)
+    return NextResponse.json(
+      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
+      { status: __adminGate.status }
+    );
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -23,6 +30,12 @@ export async function GET() {
 
 // POST /api/admin/blog — create a post manually
 export async function POST(req: NextRequest) {
+  const __adminGate = await requirePlatformAdminApi();
+  if (!__adminGate.ok)
+    return NextResponse.json(
+      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
+      { status: __adminGate.status }
+    );
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -68,6 +81,12 @@ export async function POST(req: NextRequest) {
 
 // DELETE /api/admin/blog?slug=... — delete a post
 export async function DELETE(req: NextRequest) {
+  const __adminGate = await requirePlatformAdminApi();
+  if (!__adminGate.ok)
+    return NextResponse.json(
+      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
+      { status: __adminGate.status }
+    );
   try {
     const session = await auth();
     if (!session?.user?.id) {

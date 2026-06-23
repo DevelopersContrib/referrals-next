@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface Subdomain {
   id: number;
@@ -50,10 +51,14 @@ export default function AdminSubdomainsPage() {
   async function handleDelete(id: number) {
     if (!confirm("Delete this subdomain?")) return;
     try {
-      await fetch(`/api/admin/subdomains?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/subdomains?id=${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+      toast.success("Subdomain deleted");
       loadSubdomains();
     } catch {
-      // ignore
+      toast.error("Failed to delete subdomain");
     }
   }
 
@@ -67,11 +72,16 @@ export default function AdminSubdomainsPage() {
 
   return (
     <div>
-      <div>
-        <h1 className="text-2xl font-bold">Subdomains</h1>
-        <p className="text-muted-foreground">
-          {subdomains.length} whitelabel subdomains configured
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Subdomains</h1>
+          <p className="text-muted-foreground">
+            {subdomains.length} whitelabel subdomains configured
+          </p>
+        </div>
+        <Link href="/admin/subdomains/new">
+          <Button>New Subdomain</Button>
+        </Link>
       </div>
 
       <Card className="mt-6">
@@ -85,7 +95,7 @@ export default function AdminSubdomainsPage() {
                 <TableHead>Created By</TableHead>
                 <TableHead>Google UA</TableHead>
                 <TableHead>Created</TableHead>
-                <TableHead className="w-20">Actions</TableHead>
+                <TableHead className="w-32">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -118,13 +128,20 @@ export default function AdminSubdomainsPage() {
                     {new Date(sub.date_created).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(sub.id)}
-                    >
-                      Delete
-                    </Button>
+                    <div className="flex gap-2">
+                      <Link href={`/admin/subdomains/${sub.id}/edit`}>
+                        <Button variant="outline" size="sm">
+                          Edit
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(sub.id)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

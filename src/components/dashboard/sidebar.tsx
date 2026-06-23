@@ -43,7 +43,6 @@ import {
   MailIcon,
   MonitorIcon,
   ShareIcon,
-  ShoppingCartIcon,
   Share2Icon,
   PlugIcon,
 } from "lucide-react";
@@ -79,7 +78,7 @@ const toolsNav = [
 ];
 
 const integrationsNav = [
-  { title: "Shopify", href: "/integrations/shopify", icon: ShoppingCartIcon },
+  // Shopify hidden for now — to be replaced by a dedicated Shopify app.
   { title: "Mailchimp", href: "/integrations/mailchimp", icon: MailIcon },
   { title: "Facebook", href: "/tools/facebook", icon: Share2Icon },
 ];

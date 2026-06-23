@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requirePlatformAdminApi } from "@/lib/require-platform-admin";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 type RouteParams = { params: Promise<{ campaignId: string }> };
 
 export async function GET(_req: NextRequest, { params }: RouteParams) {
+  const __adminGate = await requirePlatformAdminApi();
+  if (!__adminGate.ok)
+    return NextResponse.json(
+      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
+      { status: __adminGate.status }
+    );
   try {
     const session = await auth();
     if (!session?.user?.id)
@@ -30,6 +37,12 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 }
 
 export async function PUT(req: NextRequest, { params }: RouteParams) {
+  const __adminGate = await requirePlatformAdminApi();
+  if (!__adminGate.ok)
+    return NextResponse.json(
+      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
+      { status: __adminGate.status }
+    );
   try {
     const session = await auth();
     if (!session?.user?.id)
@@ -39,6 +52,10 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     const id = parseInt(campaignId, 10);
     if (isNaN(id))
       return NextResponse.json({ error: "Invalid campaign ID" }, { status: 400 });
+
+    const existing = await prisma.member_campaigns.findUnique({ where: { id } });
+    if (!existing)
+      return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
 
     const body = await req.json();
     const data: Record<string, unknown> = {};
@@ -68,6 +85,12 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: RouteParams) {
+  const __adminGate = await requirePlatformAdminApi();
+  if (!__adminGate.ok)
+    return NextResponse.json(
+      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
+      { status: __adminGate.status }
+    );
   try {
     const session = await auth();
     if (!session?.user?.id)

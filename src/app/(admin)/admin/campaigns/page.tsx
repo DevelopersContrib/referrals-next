@@ -75,11 +75,16 @@ export default async function AdminCampaignsPage({
 
   return (
     <div>
-      <div>
-        <h1 className="text-2xl font-bold">Campaigns</h1>
-        <p className="text-muted-foreground">
-          {total.toLocaleString()} total campaigns
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Campaigns</h1>
+          <p className="text-muted-foreground">
+            {total.toLocaleString()} total campaigns
+          </p>
+        </div>
+        <Link href="/admin/campaigns/new">
+          <Button>New Campaign</Button>
+        </Link>
       </div>
 
       <Card className="mt-6">

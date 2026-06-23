@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AdminDeleteButton } from "@/components/admin/admin-delete-button";
+import { AdminPagination } from "@/components/admin/admin-pagination";
 
 export default async function AdminParticipantsPage({
   searchParams,
@@ -95,6 +97,7 @@ export default async function AdminParticipantsPage({
                 <TableHead>Invited By</TableHead>
                 <TableHead>IP Address</TableHead>
                 <TableHead>Signed Up</TableHead>
+                <TableHead className="w-24 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -118,11 +121,14 @@ export default async function AdminParticipantsPage({
                   <TableCell className="text-sm text-muted-foreground">
                     {new Date(p.date_signedup).toLocaleDateString()}
                   </TableCell>
+                  <TableCell className="text-right">
+                    <AdminDeleteButton endpoint={`/api/admin/participants/${p.id}`} label="participant" />
+                  </TableCell>
                 </TableRow>
               ))}
               {participants.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                     No participants found.
                   </TableCell>
                 </TableRow>
@@ -132,27 +138,12 @@ export default async function AdminParticipantsPage({
         </CardContent>
       </Card>
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-center gap-2">
-          {page > 1 && (
-            <Link
-              href={`/admin/participants?page=${page - 1}${search ? `&search=${search}` : ""}`}
-            >
-              <Button variant="outline" size="sm">Previous</Button>
-            </Link>
-          )}
-          <span className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
-          </span>
-          {page < totalPages && (
-            <Link
-              href={`/admin/participants?page=${page + 1}${search ? `&search=${search}` : ""}`}
-            >
-              <Button variant="outline" size="sm">Next</Button>
-            </Link>
-          )}
-        </div>
-      )}
+      <AdminPagination
+        page={page}
+        totalPages={totalPages}
+        basePath="/admin/participants"
+        params={{ search }}
+      />
     </div>
   );
 }

@@ -19,6 +19,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { AdminDeleteButton } from "@/components/admin/admin-delete-button";
+import { AdminPagination } from "@/components/admin/admin-pagination";
 
 export default async function AdminCouponsPage({
   searchParams,
@@ -51,11 +53,16 @@ export default async function AdminCouponsPage({
 
   return (
     <div>
-      <div>
-        <h1 className="text-2xl font-bold">Coupons</h1>
-        <p className="text-muted-foreground">
-          {total.toLocaleString()} total coupons across all campaigns
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Coupons</h1>
+          <p className="text-muted-foreground">
+            {total.toLocaleString()} total coupons across all campaigns
+          </p>
+        </div>
+        <Link href="/admin/coupons/new">
+          <Button>New Coupon</Button>
+        </Link>
       </div>
 
       <Card className="mt-6">
@@ -90,6 +97,7 @@ export default async function AdminCouponsPage({
                 <TableHead>Code</TableHead>
                 <TableHead>Campaign ID</TableHead>
                 <TableHead>Used</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -118,11 +126,21 @@ export default async function AdminCouponsPage({
                       </Badge>
                     )}
                   </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Link href={`/admin/coupons/${coupon.id}/edit`}>
+                        <Button variant="outline" size="sm">
+                          Edit
+                        </Button>
+                      </Link>
+                      <AdminDeleteButton endpoint={`/api/admin/coupons/${coupon.id}`} label="coupon" />
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
               {coupons.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
                     No coupons found.
                   </TableCell>
                 </TableRow>
@@ -132,27 +150,12 @@ export default async function AdminCouponsPage({
         </CardContent>
       </Card>
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-center gap-2">
-          {page > 1 && (
-            <Link
-              href={`/admin/coupons?page=${page - 1}${campaign ? `&campaign=${campaign}` : ""}`}
-            >
-              <Button variant="outline" size="sm">Previous</Button>
-            </Link>
-          )}
-          <span className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
-          </span>
-          {page < totalPages && (
-            <Link
-              href={`/admin/coupons?page=${page + 1}${campaign ? `&campaign=${campaign}` : ""}`}
-            >
-              <Button variant="outline" size="sm">Next</Button>
-            </Link>
-          )}
-        </div>
-      )}
+      <AdminPagination
+        page={page}
+        totalPages={totalPages}
+        basePath="/admin/coupons"
+        params={{ campaign }}
+      />
     </div>
   );
 }

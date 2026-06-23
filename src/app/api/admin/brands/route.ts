@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requirePlatformAdminApi } from "@/lib/require-platform-admin";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
+  const __adminGate = await requirePlatformAdminApi();
+  if (!__adminGate.ok)
+    return NextResponse.json(
+      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
+      { status: __adminGate.status }
+    );
   try {
     const session = await auth();
     if (!session?.user?.id)
@@ -42,6 +49,63 @@ export async function GET(req: NextRequest) {
     console.error("Error fetching brands:", error);
     return NextResponse.json(
       { error: "Failed to fetch brands" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(req: NextRequest) {
+  const __adminGate = await requirePlatformAdminApi();
+  if (!__adminGate.ok)
+    return NextResponse.json(
+      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
+      { status: __adminGate.status }
+    );
+  try {
+    const session = await auth();
+    if (!session?.user?.id)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const body = await req.json();
+    const { url, member_id } = body;
+
+    if (!url) {
+      return NextResponse.json(
+        { error: "URL is required" },
+        { status: 400 }
+      );
+    }
+    if (member_id === undefined || member_id === null || member_id === "") {
+      return NextResponse.json(
+        { error: "Member is required" },
+        { status: 400 }
+      );
+    }
+
+    let domain: string;
+    try {
+      domain = new URL(url).hostname;
+    } catch {
+      domain = url.replace(/^https?:\/\//, "").split("/")[0];
+    }
+
+    const brand = await prisma.member_urls.create({
+      data: {
+        url,
+        domain,
+        member_id: parseInt(member_id, 10),
+        description: body.description ?? null,
+        logo_url: body.logo_url ?? null,
+        background_image: body.background_image ?? null,
+        slug: body.slug ?? null,
+      },
+    });
+
+    return NextResponse.json(brand, { status: 201 });
+  } catch (error) {
+    console.error("Error creating brand:", error);
+    return NextResponse.json(
+      { error: "Failed to create brand" },
       { status: 500 }
     );
   }

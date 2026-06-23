@@ -1,41 +1,42 @@
 import { prisma } from "@/lib/prisma";
-import { vnocPrisma } from "@/lib/vnoc-db";
 
-async function vnocMemberIsAdmin(email: string | null | undefined): Promise<boolean> {
-  if (!vnocPrisma || !email?.trim()) {
-    console.log("[isAdmin] skip VNOC check", {
-      hasVnocDb: Boolean(vnocPrisma),
-      email: email ?? null,
-    });
-    return false;
-  }
-
-  const rows = await vnocPrisma.$queryRaw<Array<{ is_admin: number }>>`
-    SELECT is_admin
-    FROM members
-    WHERE email = ${email.trim()}
-      AND is_admin = 1
-    LIMIT 1
-  `;
-
-  const isAdmin = rows.length > 0;
-  console.log("[isAdmin] VNOC lookup", { email: email.trim(), isAdmin, rowCount: rows.length });
-  return isAdmin;
+/**
+ * Platform admins are defined ONLY by the `ADMIN_EMAILS` env var
+ * (comma-separated; `ADMIN_EMAIL` is accepted as a single-value alias).
+ * No database flag grants admin — the env var is the single source of truth.
+ *
+ *   ADMIN_EMAILS=admin@vnoc.com,ops@vnoc.com
+ */
+function adminEmailSet(): Set<string> {
+  const raw = process.env.ADMIN_EMAILS ?? process.env.ADMIN_EMAIL ?? "";
+  return new Set(
+    raw
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean)
+  );
 }
 
-/** True when the member is an admin in the VNOC database (members.is_admin = 1). */
+/** True when `email` is listed in ADMIN_EMAILS. */
+export function emailIsPlatformAdmin(email: string | null | undefined): boolean {
+  const e = email?.trim().toLowerCase();
+  if (!e) return false;
+  return adminEmailSet().has(e);
+}
+
+/** True when the member's email is an admin email. */
 export async function memberRowIsPlatformAdmin(member: {
   id: number;
   email: string | null;
 }): Promise<boolean> {
-  return vnocMemberIsAdmin(member.email);
+  return emailIsPlatformAdmin(member.email);
 }
 
-/** Same as memberRowIsPlatformAdmin, for when you only have the referrals member id. */
+/** Same as memberRowIsPlatformAdmin, for when you only have the member id. */
 export async function memberIdIsPlatformAdmin(memberId: number): Promise<boolean> {
   const row = await prisma.members.findUnique({
     where: { id: memberId },
     select: { email: true },
   });
-  return vnocMemberIsAdmin(row?.email ?? null);
+  return emailIsPlatformAdmin(row?.email ?? null);
 }

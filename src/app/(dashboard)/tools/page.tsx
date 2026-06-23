@@ -48,11 +48,7 @@ const tools = [
 ];
 
 const integrations = [
-	{
-		title: "Shopify",
-		description: "Connect your Shopify store to embed referral widgets.",
-		href: "/integrations/shopify",
-	},
+	// Shopify hidden for now — to be replaced by a dedicated Shopify app.
 	{
 		title: "Mailchimp",
 		description: "Sync participants and automate email marketing.",

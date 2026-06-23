@@ -23,21 +23,35 @@ import { Input } from "@/components/ui/input";
 export default async function AdminPaymentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; status?: string }>;
+  searchParams: Promise<{ page?: string; status?: string; q?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin");
 
-  const { page: pageParam, status } = await searchParams;
+  const { page: pageParam, status, q } = await searchParams;
   const page = parseInt(pageParam || "1", 10);
   const limit = 20;
+  const search = q?.trim();
 
   const where: Record<string, unknown> = {};
   if (status) {
     where.status = status;
   }
+  if (search) {
+    const matches = await prisma.members.findMany({
+      where: {
+        OR: [{ email: { contains: search } }, { name: { contains: search } }],
+      },
+      select: { id: true },
+      take: 500,
+    });
+    where.member_id = { in: matches.map((m) => m.id) };
+  }
 
-  const [payments, total, revenueAgg] = await Promise.all([
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const [payments, total, revenueAgg, monthAgg] = await Promise.all([
     prisma.member_payment.findMany({
       where,
       orderBy: { datetime_created: "desc" },
@@ -48,6 +62,10 @@ export default async function AdminPaymentsPage({
     prisma.member_payment.aggregate({
       _sum: { amount: true },
       _count: { id: true },
+    }),
+    prisma.member_payment.aggregate({
+      _sum: { amount: true },
+      where: { datetime_created: { gte: monthStart } },
     }),
   ]);
 
@@ -63,12 +81,12 @@ export default async function AdminPaymentsPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Payments</h1>
+      <h1 className="text-2xl font-bold">Transactions</h1>
       <p className="text-muted-foreground">
-        {total.toLocaleString()} total payments
+        {total.toLocaleString()} total transactions
       </p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -113,6 +131,21 @@ export default async function AdminPaymentsPage({
             </p>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              This Month
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">
+              ${(monthAgg._sum.amount || 0).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="mt-6">
@@ -120,15 +153,21 @@ export default async function AdminPaymentsPage({
           <CardTitle className="text-lg">Filter</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="flex gap-2">
+          <form className="flex flex-wrap gap-2" action="/admin/payments">
+            <Input
+              name="q"
+              placeholder="Search member name or email"
+              defaultValue={q || ""}
+              className="max-w-xs"
+            />
             <Input
               name="status"
-              placeholder="Filter by status (e.g. completed)"
+              placeholder="Status (e.g. completed)"
               defaultValue={status || ""}
-              className="max-w-sm"
+              className="max-w-[12rem]"
             />
             <Button type="submit">Filter</Button>
-            {status && (
+            {(status || q) && (
               <Link href="/admin/payments">
                 <Button variant="outline">Clear</Button>
               </Link>
@@ -215,7 +254,7 @@ export default async function AdminPaymentsPage({
         <div className="mt-4 flex items-center justify-center gap-2">
           {page > 1 && (
             <Link
-              href={`/admin/payments?page=${page - 1}${status ? `&status=${status}` : ""}`}
+              href={`/admin/payments?page=${page - 1}${status ? `&status=${status}` : ""}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
             >
               <Button variant="outline" size="sm">Previous</Button>
             </Link>
@@ -225,7 +264,7 @@ export default async function AdminPaymentsPage({
           </span>
           {page < totalPages && (
             <Link
-              href={`/admin/payments?page=${page + 1}${status ? `&status=${status}` : ""}`}
+              href={`/admin/payments?page=${page + 1}${status ? `&status=${status}` : ""}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
             >
               <Button variant="outline" size="sm">Next</Button>
             </Link>

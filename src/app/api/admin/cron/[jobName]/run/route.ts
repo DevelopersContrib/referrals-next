@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requirePlatformAdminApi } from "@/lib/require-platform-admin";
 import { auth } from "@/lib/auth";
 
 type RouteParams = { params: Promise<{ jobName: string }> };
@@ -28,6 +29,12 @@ const CRON_JOBS: Record<string, { name: string; endpoint: string }> = {
 };
 
 export async function POST(req: NextRequest, { params }: RouteParams) {
+  const __adminGate = await requirePlatformAdminApi();
+  if (!__adminGate.ok)
+    return NextResponse.json(
+      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
+      { status: __adminGate.status }
+    );
   try {
     const session = await auth();
     if (!session?.user?.id)

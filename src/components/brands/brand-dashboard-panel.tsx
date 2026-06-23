@@ -25,6 +25,12 @@ import {
   Loader2Icon,
   CalendarIcon,
   ArrowRightIcon,
+  AwardIcon,
+  DollarSignIcon,
+  EyeIcon,
+  Users as UsersIcon,
+  Share2Icon,
+  MousePointerClickIcon,
 } from "lucide-react";
 
 export type BrandDashboardBrand = {
@@ -108,11 +114,28 @@ function DateRangeSearch({
   );
 }
 
-function OverviewStat({ label, value }: { label: string; value: string }) {
+function OverviewStat({
+  icon: Icon,
+  label,
+  value,
+  chip,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  chip: string;
+}) {
   return (
-    <div className="px-2 text-center">
-      <div className="text-2xl font-bold text-brand">{value}</div>
-      <div className="mt-1 text-xs font-semibold text-[#575962]">{label}</div>
+    <div className="flex flex-col items-center gap-2.5 rounded-xl border border-[#ebeef0] bg-white p-4 text-center transition-all hover:-translate-y-0.5 hover:shadow-md">
+      <div className={`flex size-10 items-center justify-center rounded-lg ${chip}`}>
+        <Icon className="size-5" />
+      </div>
+      <div>
+        <div className="text-xl font-bold leading-tight text-[#464457]">{value}</div>
+        <div className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#a7abc3]">
+          {label}
+        </div>
+      </div>
     </div>
   );
 }
@@ -244,14 +267,14 @@ export function BrandDashboardPanel({
               <Loader2Icon className="size-6 animate-spin text-brand" />
             </div>
           ) : overview ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
-              <OverviewStat label="Rewarded Referrals" value={overview.rewardedReferrals.toLocaleString()} />
-              <OverviewStat label="Rewards Value" value={`$${Math.round(overview.rewardsValue).toLocaleString()}`} />
-              <OverviewStat label="Campaigns" value={overview.totalCampaigns.toLocaleString()} />
-              <OverviewStat label="Impressions" value={overview.totalImpressions.toLocaleString()} />
-              <OverviewStat label="Referrals" value={overview.totalParticipants.toLocaleString()} />
-              <OverviewStat label="Shares" value={overview.totalShares.toLocaleString()} />
-              <OverviewStat label="Clicks" value={overview.totalClicks.toLocaleString()} />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+              <OverviewStat icon={AwardIcon} label="Rewarded Referrals" value={overview.rewardedReferrals.toLocaleString()} chip="bg-brand/10 text-brand" />
+              <OverviewStat icon={DollarSignIcon} label="Rewards Value" value={`$${Math.round(overview.rewardsValue).toLocaleString()}`} chip="bg-[#28a745]/10 text-[#28a745]" />
+              <OverviewStat icon={MegaphoneIcon} label="Campaigns" value={overview.totalCampaigns.toLocaleString()} chip="bg-[#36a3f7]/10 text-[#36a3f7]" />
+              <OverviewStat icon={EyeIcon} label="Impressions" value={overview.totalImpressions.toLocaleString()} chip="bg-[#8950fc]/10 text-[#8950fc]" />
+              <OverviewStat icon={UsersIcon} label="Referrals" value={overview.totalParticipants.toLocaleString()} chip="bg-[#ff9f29]/10 text-[#ff9f29]" />
+              <OverviewStat icon={Share2Icon} label="Shares" value={overview.totalShares.toLocaleString()} chip="bg-[#1dc9b7]/10 text-[#1dc9b7]" />
+              <OverviewStat icon={MousePointerClickIcon} label="Clicks" value={overview.totalClicks.toLocaleString()} chip="bg-[#fd397a]/10 text-[#fd397a]" />
             </div>
           ) : (
             <p className="py-8 text-center text-sm text-[#a7abc3]">

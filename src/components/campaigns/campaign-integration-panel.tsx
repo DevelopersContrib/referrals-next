@@ -87,8 +87,8 @@ export function CampaignIntegrationPanel({
                 </h2>
                 <p className="mt-1 max-w-2xl text-sm text-slate-600">
                   {isPostCreate
-                    ? "Use the snippets below on your marketing site, store, CMS, tag manager, or legacy PHP app. Placement comes from your "
-                    : "Copy embed snippets for your stack. Configure placement in "}
+                    ? "Copy a snippet below — a JavaScript loader, an iframe embed, or a Node.js example. Placement comes from your "
+                    : "Copy a snippet for your stack. Configure placement in "}
                   <Link
                     href={`/brands/${brandId}/campaigns/${id}/widget`}
                     className="font-medium text-brand underline-offset-2 hover:underline"
@@ -125,9 +125,8 @@ export function CampaignIntegrationPanel({
           </div>
           {isPostCreate && (
             <p className="mt-3 text-xs text-slate-500">
-              Classic Referrals.com (CodeIgniter) installs sometimes expose URLs like{" "}
-              <code className="rounded bg-slate-100 px-1">/public/your-site/campaign/{id}</code> —
-              same campaign id; widget endpoints below apply when this domain serves the widget API.
+              Same campaign id ({id}) works everywhere — the widget endpoints below apply wherever
+              this domain serves the widget API.
             </p>
           )}
         </div>
@@ -142,34 +141,10 @@ export function CampaignIntegrationPanel({
               JavaScript
             </TabsTrigger>
             <TabsTrigger value="iframe" className="text-xs sm:text-sm">
-              iframe
+              Embed
             </TabsTrigger>
-            <TabsTrigger value="nextjs" className="text-xs sm:text-sm">
-              Next.js
-            </TabsTrigger>
-            <TabsTrigger value="wordpress" className="text-xs sm:text-sm">
-              WordPress
-            </TabsTrigger>
-            <TabsTrigger value="shopify" className="text-xs sm:text-sm">
-              Shopify
-            </TabsTrigger>
-            <TabsTrigger value="wix" className="text-xs sm:text-sm">
-              Wix
-            </TabsTrigger>
-            <TabsTrigger value="codeigniter" className="text-xs sm:text-sm">
-              PHP / CI
-            </TabsTrigger>
-            <TabsTrigger value="react" className="text-xs sm:text-sm">
-              React (CRA/Vite)
-            </TabsTrigger>
-            <TabsTrigger value="webflow" className="text-xs sm:text-sm">
-              Webflow
-            </TabsTrigger>
-            <TabsTrigger value="squarespace" className="text-xs sm:text-sm">
-              Squarespace
-            </TabsTrigger>
-            <TabsTrigger value="gtm" className="text-xs sm:text-sm">
-              GTM
+            <TabsTrigger value="node" className="text-xs sm:text-sm">
+              Node.js
             </TabsTrigger>
           </TabsList>
 
@@ -195,7 +170,7 @@ export function CampaignIntegrationPanel({
           <TabsContent value="iframe" className="mt-0 space-y-3">
             <p className="text-sm text-muted-foreground">
               Paste anywhere HTML is accepted — landing pages, CMS blocks, email-safe pages (where
-              iframes are allowed).
+              iframes are allowed). No JavaScript required.
             </p>
             <CodeBlock
               code={snippets.iframe}
@@ -204,134 +179,19 @@ export function CampaignIntegrationPanel({
             />
           </TabsContent>
 
-          <TabsContent value="nextjs" className="mt-0 space-y-3">
+          <TabsContent value="node" className="mt-0 space-y-3">
             <p className="text-sm text-muted-foreground">
-              Use a client component so the iframe stays client-only, or wrap the snippet in{" "}
-              <code className="rounded bg-slate-100 px-1">dangerouslySetInnerHTML</code> for the outer
-              div + script if you prefer the loader.
+              Server-rendered apps (Express / Fastify / Koa): send a page that includes the loader
+              script. Run with{" "}
+              <code className="rounded bg-slate-100 px-1">node server.js</code> and open{" "}
+              <code className="rounded bg-slate-100 px-1">/refer</code>. For Next.js/React, use the{" "}
+              <strong className="font-medium text-foreground">JavaScript</strong> tab inside a client
+              component.
             </p>
             <CodeBlock
-              code={snippets.next}
-              onCopy={() => void copy(snippets.next, "next")}
-              copied={copiedKey === "next"}
-            />
-          </TabsContent>
-
-          <TabsContent value="wordpress" className="mt-0 space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Custom HTML block (Gutenberg), or enqueue in{" "}
-              <code className="rounded bg-slate-100 px-1">footer.php</code> with{" "}
-              <code className="rounded bg-slate-100 px-1">wp_enqueue_script</code> pointing at the
-              script URL if your policy blocks inline scripts.
-            </p>
-            <CodeBlock
-              code={snippets.wordpress}
-              onCopy={() => void copy(snippets.wordpress, "wp")}
-              copied={copiedKey === "wp"}
-            />
-          </TabsContent>
-
-          <TabsContent value="shopify" className="mt-0 space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Online Store → Themes → Edit code →{" "}
-              <code className="rounded bg-slate-100 px-1">theme.liquid</code> → before{" "}
-              <code className="rounded bg-slate-100 px-1">&lt;/body&gt;</code>. Test in a duplicate
-              theme first.
-            </p>
-            <CodeBlock
-              code={snippets.shopify}
-              onCopy={() => void copy(snippets.shopify, "shopify")}
-              copied={copiedKey === "shopify"}
-            />
-          </TabsContent>
-
-          <TabsContent value="wix" className="mt-0 space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Add an HTML iframe embed element (or Velo HTML component). Prefer the iframe snippet
-              if Velo strips inline scripts.
-            </p>
-            <CodeBlock
-              code={snippets.wix}
-              onCopy={() => void copy(snippets.wix, "wix")}
-              copied={copiedKey === "wix"}
-            />
-          </TabsContent>
-
-          <TabsContent value="codeigniter" className="mt-0 space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Original Referrals.com stack: drop the loader into your shared layout/footer view. Use
-              the absolute <code className="rounded bg-slate-100 px-1">script src</code> if your CI
-              app is on another host than the widget API.
-            </p>
-            <CodeBlock
-              code={snippets.codeigniter}
-              onCopy={() => void copy(snippets.codeigniter, "ci")}
-              copied={copiedKey === "ci"}
-            />
-          </TabsContent>
-
-          <TabsContent value="react" className="mt-0 space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Create React App, Vite + React, or any SPA: mount a small component wherever you want
-              the widget. For a global floating button, use the JavaScript tab instead and add the
-              snippet to <code className="rounded bg-slate-100 px-1">index.html</code>.
-            </p>
-            <CodeBlock
-              code={snippets.react}
-              onCopy={() => void copy(snippets.react, "react")}
-              copied={copiedKey === "react"}
-            />
-          </TabsContent>
-
-          <TabsContent value="webflow" className="mt-0 space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Designer: <strong className="font-medium text-foreground">Add</strong> →{" "}
-              <strong className="font-medium text-foreground">Embed</strong> →{" "}
-              <strong className="font-medium text-foreground">HTML embed</strong> → paste → Publish.
-              If Webflow strips <code className="rounded bg-slate-100 px-1">&lt;script&gt;</code>,
-              use only the iframe block from the snippet (delete the script block).
-            </p>
-            <CodeBlock
-              code={snippets.webflow}
-              onCopy={() => void copy(snippets.webflow, "webflow")}
-              copied={copiedKey === "webflow"}
-            />
-          </TabsContent>
-
-          <TabsContent value="squarespace" className="mt-0 space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Edit the page → <strong className="font-medium text-foreground">+</strong> →{" "}
-              <strong className="font-medium text-foreground">Code</strong> (not Markdown) → paste
-              the iframe. Code injection (Settings → Advanced) is another option for site-wide
-              footer embeds; duplicate the site before testing.
-            </p>
-            <CodeBlock
-              code={snippets.squarespace}
-              onCopy={() => void copy(snippets.squarespace, "sqsp")}
-              copied={copiedKey === "sqsp"}
-            />
-          </TabsContent>
-
-          <TabsContent value="gtm" className="mt-0 space-y-3">
-            <p className="text-sm text-muted-foreground">
-              <strong className="font-medium text-foreground">Tags</strong> →{" "}
-              <strong className="font-medium text-foreground">New</strong> →{" "}
-              <strong className="font-medium text-foreground">Tag Configuration</strong> →{" "}
-              <strong className="font-medium text-foreground">Custom HTML</strong> → paste → choose a
-              trigger (e.g. All Pages). Some workspaces restrict external{" "}
-              <code className="rounded bg-slate-100 px-1">script src</code>; if the tag fails
-              validation, use the iframe-only variant below.
-            </p>
-            <CodeBlock
-              code={snippets.gtm}
-              onCopy={() => void copy(snippets.gtm, "gtm")}
-              copied={copiedKey === "gtm"}
-            />
-            <p className="text-sm font-medium text-foreground">Iframe-only (stricter GTM policies)</p>
-            <CodeBlock
-              code={snippets.gtmIframeOnly}
-              onCopy={() => void copy(snippets.gtmIframeOnly, "gtm-if")}
-              copied={copiedKey === "gtm-if"}
+              code={snippets.node}
+              onCopy={() => void copy(snippets.node, "node")}
+              copied={copiedKey === "node"}
             />
           </TabsContent>
         </Tabs>

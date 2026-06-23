@@ -31,7 +31,17 @@ import {
   MonitorIcon,
   Rocket,
   CheckIcon,
+  HelpCircle as HelpCircleIcon,
+  Sparkles as SparklesIcon,
+  Loader2 as Loader2Icon,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { RewardConfigFields } from "@/components/campaigns/reward-config-fields";
 import {
   buildRewardPayload,
@@ -89,6 +99,25 @@ interface CampaignData {
   couponStats?: { total: number; available: number };
 }
 
+function FieldHelp({ text }: { text: string }) {
+  return (
+    <TooltipProvider delay={150}>
+      <Tooltip>
+        <TooltipTrigger
+          tabIndex={-1}
+          aria-label="Help"
+          className="inline-flex text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <HelpCircleIcon className="size-3.5" />
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs text-xs leading-relaxed">
+          {text}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 const STEPS = [
   { n: 1, title: "Campaign Type", desc: "Select campaign type", icon: MapPinIcon },
   { n: 2, title: "Reward", desc: "Setup reward for each successful referral", icon: GiftIcon },
@@ -106,6 +135,8 @@ export default function EditCampaignPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [shareAiLoading, setShareAiLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [campaign, setCampaign] = useState<CampaignData | null>(null);
   const [rewardTypes, setRewardTypes] = useState<
@@ -193,6 +224,85 @@ export default function EditCampaignPage() {
   const selectedRewardType = rewardTypes.find(
     (t) => t.id.toString() === formData.reward_type
   );
+
+  async function aiWriteEmails() {
+    setAiLoading(true);
+    try {
+      const goalSummary =
+        formData.goal_type === "visit"
+          ? `${formData.num_visits || "a number of"} visits`
+          : `${formData.num_signups || "a number of"} signups`;
+      const res = await fetch("/api/campaigns/ai/assist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "emails",
+          context: {
+            name: formData.name,
+            goalSummary,
+            rewardTypeName: selectedRewardType?.name,
+          },
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "AI request failed");
+      }
+      const data = await res.json();
+      setFormData((prev) => ({
+        ...prev,
+        reward_notify_subject: data.reward_notify_subject || prev.reward_notify_subject,
+        reward_notify_message: data.reward_notify_message || prev.reward_notify_message,
+        campaign_entry_subject: data.campaign_entry_subject || prev.campaign_entry_subject,
+        campaign_entry_message: data.campaign_entry_message || prev.campaign_entry_message,
+      }));
+      toast.success("AI drafted your reward & entry emails — review and tweak");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "AI request failed");
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  async function aiWriteInvite() {
+    setShareAiLoading(true);
+    try {
+      const goalSummary =
+        formData.goal_type === "visit"
+          ? `${formData.num_visits || "a number of"} visits`
+          : `${formData.num_signups || "a number of"} signups`;
+      const res = await fetch("/api/campaigns/ai/assist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "invite",
+          context: {
+            name: formData.name,
+            goalSummary,
+            rewardTypeName: selectedRewardType?.name,
+          },
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "AI request failed");
+      }
+      const data = await res.json();
+      setEmail((prev) => ({
+        ...prev,
+        subject: data.invite_subject || prev.subject,
+        template: data.invite_message || prev.template,
+      }));
+      if (data.social_description) {
+        setSocial((prev) => ({ ...prev, description: data.social_description }));
+      }
+      toast.success("AI drafted your invite email & social blurb — review and tweak");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "AI request failed");
+    } finally {
+      setShareAiLoading(false);
+    }
+  }
 
   async function handleSave() {
     if (!formData.name.trim()) {
@@ -367,7 +477,10 @@ export default function EditCampaignPage() {
             <CardHeader><CardTitle>Goal Settings</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Goal Type</Label>
+                <Label className="flex items-center gap-1.5">
+                  Goal Type
+                  <FieldHelp text="What a referred person must do for the referrer to earn the reward — visit the site, or sign up. Set the target count below." />
+                </Label>
                 <Select value={formData.goal_type} onValueChange={(val: string | null) => updateField("goal_type", val || "")}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -400,7 +513,10 @@ export default function EditCampaignPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Reward type</Label>
+                <Label className="flex items-center gap-1.5">
+                  Reward type
+                  <FieldHelp text="What participants get when they hit the goal: a coupon code, a redirect URL, a custom thank-you message, cash, or tokens. The fields below adapt to your choice." />
+                </Label>
                 <Select value={formData.reward_type} onValueChange={(val: string | null) => updateField("reward_type", val || "")}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select reward type">
@@ -432,35 +548,81 @@ export default function EditCampaignPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Reward Notifications</CardTitle>
-              <CardDescription>Email copy sent when rewards are earned</CardDescription>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <CardTitle>Reward Notifications</CardTitle>
+                  <CardDescription>Email copy sent when rewards are earned</CardDescription>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={aiWriteEmails}
+                  disabled={aiLoading}
+                  className="shrink-0 gap-1.5"
+                >
+                  {aiLoading ? (
+                    <Loader2Icon className="size-4 animate-spin" />
+                  ) : (
+                    <SparklesIcon className="size-4 text-brand" />
+                  )}
+                  {aiLoading ? "Writing…" : "AI write emails"}
+                </Button>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Tip: set the campaign name, goal, and reward type above, then let AI draft these — you can tweak after.
+              </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="reward_subject">Reward Email Subject</Label>
+                <Label htmlFor="reward_subject" className="flex items-center gap-1.5">
+                  Reward Email Subject
+                  <FieldHelp text="Subject line of the email a participant gets the moment they earn their reward. Keep it celebratory and specific." />
+                </Label>
                 <Input id="reward_subject" value={formData.reward_notify_subject} onChange={(e) => updateField("reward_notify_subject", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reward_message">Reward Email Message</Label>
-                <Textarea id="reward_message" rows={4} value={formData.reward_notify_message} onChange={(e) => updateField("reward_notify_message", e.target.value)} />
+                <Label>Reward Email Message</Label>
+                <RichTextEditor
+                  ariaLabel="Reward email message"
+                  value={formData.reward_notify_message || ""}
+                  onChange={(html) => updateField("reward_notify_message", html)}
+                  minHeight={140}
+                />
               </div>
               <Separator />
               <div className="space-y-2">
-                <Label htmlFor="entry_subject">Entry Email Subject</Label>
+                <Label htmlFor="entry_subject" className="flex items-center gap-1.5">
+                  Entry Email Subject
+                  <FieldHelp text="Sent when someone first joins the campaign (before earning anything) — a warm welcome that explains how to refer and what they'll get." />
+                </Label>
                 <Input id="entry_subject" value={formData.campaign_entry_subject} onChange={(e) => updateField("campaign_entry_subject", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="entry_message">Entry Email Message</Label>
-                <Textarea id="entry_message" rows={4} value={formData.campaign_entry_message} onChange={(e) => updateField("campaign_entry_message", e.target.value)} />
+                <Label>Entry Email Message</Label>
+                <RichTextEditor
+                  ariaLabel="Entry email message"
+                  value={formData.campaign_entry_message || ""}
+                  onChange={(html) => updateField("campaign_entry_message", html)}
+                  minHeight={140}
+                />
               </div>
               <Separator />
               <div className="space-y-2">
-                <Label htmlFor="twoway_subject">Two-Way Reward Notification Subject</Label>
+                <Label htmlFor="twoway_subject" className="flex items-center gap-1.5">
+                  Two-Way Reward Notification Subject
+                  <FieldHelp text="Optional: for two-way rewards, this email goes to the person who was invited (the referee) when they also earn — so both sides get notified." />
+                </Label>
                 <Input id="twoway_subject" value={formData.twoway_reward_notify_subject} onChange={(e) => updateField("twoway_reward_notify_subject", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="twoway_message">Two-Way Reward Notification Message</Label>
-                <Textarea id="twoway_message" rows={4} value={formData.twoway_reward_notify_message} onChange={(e) => updateField("twoway_reward_notify_message", e.target.value)} />
+                <Label>Two-Way Reward Notification Message</Label>
+                <RichTextEditor
+                  ariaLabel="Two-way reward notification message"
+                  value={formData.twoway_reward_notify_message || ""}
+                  onChange={(html) => updateField("twoway_reward_notify_message", html)}
+                  minHeight={140}
+                />
               </div>
             </CardContent>
           </Card>
@@ -470,36 +632,98 @@ export default function EditCampaignPage() {
       {/* Step 3 — Want to Share? */}
       {step === 3 && (
         <div className="space-y-6">
+          <div className="flex flex-col gap-3 rounded-lg border border-brand/20 bg-brand/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">
+                <Share2Icon className="size-4" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-[#464457]">What participants share</p>
+                <p className="text-xs text-muted-foreground">
+                  Set up the social blurb and the invite email your participants send to friends. Let AI draft it for you.
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={aiWriteInvite}
+              disabled={shareAiLoading}
+              className="shrink-0 gap-1.5 border-brand/30 text-brand hover:bg-brand/10"
+            >
+              {shareAiLoading ? (
+                <Loader2Icon className="size-4 animate-spin" />
+              ) : (
+                <SparklesIcon className="size-4" />
+              )}
+              {shareAiLoading ? "Writing…" : "AI write share content"}
+            </Button>
+          </div>
+
           <Card>
             <CardHeader>
               <CardTitle>Social Content</CardTitle>
-              <CardDescription>Configure what gets shared on social sites.</CardDescription>
+              <CardDescription>What shows up when the campaign link is shared on social sites.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="share_url">URL To Share *</Label>
-                <Input id="share_url" placeholder="https://..." value={social.url} onChange={(e) => setSocial((p) => ({ ...p, url: e.target.value }))} />
+            <CardContent className="grid gap-5 md:grid-cols-2">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="share_url" className="flex items-center gap-1.5">
+                    URL To Share <span className="text-destructive">*</span>
+                    <FieldHelp text="The destination link people land on when they click a share. Usually your brand site or campaign landing page." />
+                  </Label>
+                  <Input id="share_url" placeholder="https://..." value={social.url} onChange={(e) => setSocial((p) => ({ ...p, url: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="share_desc" className="flex items-center gap-1.5">
+                    Description
+                    <FieldHelp text="The short blurb shown alongside the link on Facebook, X, LinkedIn, etc. Keep it under ~200 characters." />
+                  </Label>
+                  <Textarea id="share_desc" rows={3} value={social.description} onChange={(e) => setSocial((p) => ({ ...p, description: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="share_img" className="flex items-center gap-1.5">
+                    Image URL
+                    <FieldHelp text="The preview image used when the link is shared. Recommended 1200×630px for best results." />
+                  </Label>
+                  <Input id="share_img" placeholder="https://.../image.png" value={social.image_url || ""} onChange={(e) => setSocial((p) => ({ ...p, image_url: e.target.value }))} />
+                </div>
               </div>
+
+              {/* Live share preview */}
               <div className="space-y-2">
-                <Label htmlFor="share_desc">Description</Label>
-                <Textarea id="share_desc" rows={3} value={social.description} onChange={(e) => setSocial((p) => ({ ...p, description: e.target.value }))} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="share_img">Image URL</Label>
-                <Input id="share_img" placeholder="https://.../image.png" value={social.image_url || ""} onChange={(e) => setSocial((p) => ({ ...p, image_url: e.target.value }))} />
-                {social.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={social.image_url} alt="Share preview" className="mt-2 h-24 w-auto rounded border object-cover" />
-                ) : null}
+                <Label className="text-muted-foreground">Preview</Label>
+                <div className="overflow-hidden rounded-lg border border-[#ebeef0] bg-white">
+                  {social.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={social.image_url} alt="Share preview" className="h-36 w-full bg-[#f7f8fa] object-cover" />
+                  ) : (
+                    <div className="flex h-36 w-full items-center justify-center bg-[#f7f8fa] text-xs text-muted-foreground">
+                      No image set
+                    </div>
+                  )}
+                  <div className="space-y-1 p-3">
+                    <p className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
+                      {social.url ? social.url.replace(/^https?:\/\//, "").split("/")[0] : "your-site.com"}
+                    </p>
+                    <p className="line-clamp-2 text-sm text-[#464457]">
+                      {social.description || "Your share description will appear here."}
+                    </p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Invite By Email Content</CardTitle>
+              <CardTitle className="flex items-center gap-1.5">
+                Invite By Email Content
+                <FieldHelp text="The email a participant sends to invite a friend. Use the placeholder chips below to personalize — they're filled in automatically when the email is sent." />
+              </CardTitle>
               <CardDescription>
-                Placeholders: <code>[name]</code>, <code>[invited_by_name]</code>, <code>[brand]</code>, <code>[link]</code>
+                Use the placeholder chips in the editor toolbar to personalize each email.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -508,8 +732,17 @@ export default function EditCampaignPage() {
                 <Input id="email_subject" value={email.subject} onChange={(e) => setEmail((p) => ({ ...p, subject: e.target.value }))} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email_template">Email Content</Label>
-                <Textarea id="email_template" rows={8} value={email.template || ""} onChange={(e) => setEmail((p) => ({ ...p, template: e.target.value }))} />
+                <Label>Email Content</Label>
+                <RichTextEditor
+                  ariaLabel="Invite email content"
+                  value={email.template || ""}
+                  onChange={(html) => setEmail((p) => ({ ...p, template: html }))}
+                  placeholders={["[name]", "[invited_by_name]", "[brand]", "[link]"]}
+                  minHeight={200}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Formatting (bold, lists, links) is preserved in the email your participants send.
+                </p>
               </div>
             </CardContent>
           </Card>

@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AdminDeleteButton } from "@/components/admin/admin-delete-button";
+import { AdminPagination } from "@/components/admin/admin-pagination";
 
 export default async function AdminContestsPage({
   searchParams,
@@ -42,11 +44,16 @@ export default async function AdminContestsPage({
 
   return (
     <div>
-      <div>
-        <h1 className="text-2xl font-bold">Contests</h1>
-        <p className="text-muted-foreground">
-          {total.toLocaleString()} total contests across all campaigns
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Contests</h1>
+          <p className="text-muted-foreground">
+            {total.toLocaleString()} total contests across all campaigns
+          </p>
+        </div>
+        <Link href="/admin/contests/new">
+          <Button>New Contest</Button>
+        </Link>
       </div>
 
       <Card className="mt-6">
@@ -63,6 +70,7 @@ export default async function AdminContestsPage({
                 <TableHead>Start</TableHead>
                 <TableHead>End</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead className="w-32">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -100,11 +108,21 @@ export default async function AdminContestsPage({
                   <TableCell className="text-sm text-muted-foreground">
                     {new Date(contest.date_added).toLocaleDateString()}
                   </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Link href={`/admin/contests/${contest.id}/edit`}>
+                        <Button variant="outline" size="sm">
+                          Edit
+                        </Button>
+                      </Link>
+                      <AdminDeleteButton endpoint={`/api/admin/contests/${contest.id}`} label="contest" />
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
               {contests.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
                     No contests found.
                   </TableCell>
                 </TableRow>
@@ -114,23 +132,11 @@ export default async function AdminContestsPage({
         </CardContent>
       </Card>
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-center gap-2">
-          {page > 1 && (
-            <Link href={`/admin/contests?page=${page - 1}`}>
-              <Button variant="outline" size="sm">Previous</Button>
-            </Link>
-          )}
-          <span className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
-          </span>
-          {page < totalPages && (
-            <Link href={`/admin/contests?page=${page + 1}`}>
-              <Button variant="outline" size="sm">Next</Button>
-            </Link>
-          )}
-        </div>
-      )}
+      <AdminPagination
+        page={page}
+        totalPages={totalPages}
+        basePath="/admin/contests"
+      />
     </div>
   );
 }

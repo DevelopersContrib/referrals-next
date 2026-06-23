@@ -3,7 +3,12 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sanitizeWidgetHtml } from "@/lib/sanitize-widget-html";
 
-type AssistAction = "emails" | "bannerHtml" | "bannerImage" | "widgetTheme";
+type AssistAction =
+  | "emails"
+  | "invite"
+  | "bannerHtml"
+  | "bannerImage"
+  | "widgetTheme";
 
 const OPENAI_CHAT = "https://api.openai.com/v1/chat/completions";
 const OPENAI_IMAGE = "https://api.openai.com/v1/images/generations";
@@ -88,6 +93,64 @@ Tone: friendly, clear, trustworthy. No placeholder brackets like [name] unless e
         reward_notify_message: String(parsed.reward_notify_message || "").slice(0, 2000),
         campaign_entry_subject: String(parsed.campaign_entry_subject || "").slice(0, 200),
         campaign_entry_message: String(parsed.campaign_entry_message || "").slice(0, 2000),
+      });
+    }
+
+    if (action === "invite") {
+      const prompt = `You write the share/invite content for a referral campaign. Return ONLY valid JSON with keys:
+invite_subject (string, max 120 chars) — the subject line of the email a participant sends to invite a friend,
+invite_message (string, simple HTML using <p>, <strong>, <br> only, max 800 chars) — warm, personal invite email body,
+social_description (string, max 200 chars, no HTML) — the blurb shown when the campaign link is shared on social.
+
+You MAY use these placeholders where natural: [name] (the recipient), [invited_by_name] (the sender), [brand], [link].
+
+Context:
+- Campaign name: ${ctx.name || "Untitled"}
+- Goal: ${ctx.goalSummary || "referrals"}
+- Reward type: ${ctx.rewardTypeName || "reward"}
+- Brand: ${ctx.brandUrl || "our brand"}
+
+Tone: friendly, personal, trustworthy — like a recommendation from a friend.`;
+
+      const res = await fetch(OPENAI_CHAT, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          temperature: 0.7,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: "You only output valid JSON objects. No markdown." },
+            { role: "user", content: prompt },
+          ],
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        console.error("OpenAI invite error", err);
+        return NextResponse.json({ error: "AI request failed" }, { status: 502 });
+      }
+
+      const data = (await res.json()) as {
+        choices?: { message?: { content?: string } }[];
+      };
+      const text = data.choices?.[0]?.message?.content;
+      if (!text) return NextResponse.json({ error: "Empty AI response" }, { status: 502 });
+
+      let parsed: Record<string, string>;
+      try {
+        parsed = JSON.parse(text) as Record<string, string>;
+      } catch {
+        return NextResponse.json({ error: "AI returned invalid JSON" }, { status: 502 });
+      }
+      return NextResponse.json({
+        invite_subject: String(parsed.invite_subject || "").slice(0, 200),
+        invite_message: String(parsed.invite_message || "").slice(0, 2000),
+        social_description: String(parsed.social_description || "").slice(0, 300),
       });
     }
 

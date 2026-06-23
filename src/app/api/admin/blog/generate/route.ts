@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
+import { requirePlatformAdminApi } from "@/lib/require-platform-admin";
 import { auth } from "@/lib/auth";
 import { savePost } from "@/lib/blog";
 
 // POST /api/admin/blog/generate — trigger on-demand blog post generation
 export async function POST() {
+  const __adminGate = await requirePlatformAdminApi();
+  if (!__adminGate.ok)
+    return NextResponse.json(
+      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
+      { status: __adminGate.status }
+    );
   try {
     const session = await auth();
     if (!session?.user?.id) {

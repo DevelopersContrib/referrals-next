@@ -394,8 +394,8 @@ export default async function CampaignDashboardPage({
           <div className="mb-6 rounded-xl border border-brand/20 bg-brand/5 p-4 sm:p-5">
             <h3 className="text-sm font-semibold text-[#575962]">Installation and embed codes</h3>
             <p className="mt-1 text-xs text-[#a7abc3] sm:text-sm">
-              Step-by-step snippets for JavaScript, Shopify, WordPress, Next.js, GTM, and more live on
-              the widget page (scroll to &quot;Add to your site&quot;).
+              Step-by-step snippets for JavaScript, Embed (iframe), and Node.js live on the widget
+              page (scroll to &quot;Add to your site&quot;).
             </p>
             <Link
               href={`/brands/${brandId}/campaigns/${campaignId}/widget#install`}

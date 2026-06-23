@@ -86,92 +86,22 @@ export function IntegrationEmbedSections({
       },
       {
         id: "iframe",
-        title: "iframe embed",
-        description: "Paste anywhere HTML is accepted — landing pages, CMS blocks, and static pages.",
+        title: "Embed (iframe)",
+        description:
+          "Paste anywhere HTML is accepted — landing pages, CMS blocks, and static pages. No JavaScript required.",
         code: snippets.iframe,
       },
       {
-        id: "nextjs",
-        title: "Next.js",
+        id: "node",
+        title: "Node.js",
         description: (
           <>
-            Client component with an iframe. Alternatively use the JavaScript tab and{" "}
-            <code className="rounded bg-slate-100 px-1">next/script</code> for the loader.
+            Server-rendered apps (Express / Fastify / Koa): send a page that includes the loader
+            script. Run with <code className="rounded bg-slate-100 px-1">node server.js</code> and
+            open <code className="rounded bg-slate-100 px-1">/refer</code>.
           </>
         ),
-        code: snippets.next,
-      },
-      {
-        id: "wordpress",
-        title: "WordPress",
-        description: (
-          <>
-            Custom HTML block or <code className="rounded bg-slate-100 px-1">footer.php</code>; use{" "}
-            <code className="rounded bg-slate-100 px-1">wp_enqueue_script</code> if inline scripts are blocked.
-          </>
-        ),
-        code: snippets.wordpress,
-      },
-      {
-        id: "shopify",
-        title: "Shopify",
-        description: (
-          <>
-            Online Store → Themes → Edit code → <code className="rounded bg-slate-100 px-1">theme.liquid</code> →
-            before <code className="rounded bg-slate-100 px-1">&lt;/body&gt;</code>.
-          </>
-        ),
-        code: snippets.shopify,
-      },
-      {
-        id: "wix",
-        title: "Wix",
-        description: "Embed HTML element; prefer iframe if Velo strips external script tags.",
-        code: snippets.wix,
-      },
-      {
-        id: "codeigniter",
-        title: "PHP (CodeIgniter)",
-        description: (
-          <>
-            Add to your layout footer before <code className="rounded bg-slate-100 px-1">&lt;/body&gt;</code>. Use an
-            absolute <code className="rounded bg-slate-100 px-1">script src</code> if the app host differs from the
-            widget API host.
-          </>
-        ),
-        code: snippets.codeigniter,
-      },
-      {
-        id: "react",
-        title: "React (CRA / Vite)",
-        description: "Mount the component where you want the widget; use the JavaScript tab for a global floating CTA.",
-        code: snippets.react,
-      },
-      {
-        id: "webflow",
-        title: "Webflow",
-        description: (
-          <>
-            Add → Embed → HTML embed. Remove the <code className="rounded bg-slate-100 px-1">&lt;script&gt;</code> block
-            if the Designer strips it; keep the iframe.
-          </>
-        ),
-        code: snippets.webflow,
-      },
-      {
-        id: "squarespace",
-        title: "Squarespace",
-        description: "Page editor → + → Code (not Markdown). Code injection for site-wide footers — test on a duplicate first.",
-        code: snippets.squarespace,
-      },
-      {
-        id: "gtm",
-        title: "Google Tag Manager",
-        description: "Custom HTML tag; trigger All Pages or DOM Ready. If external scripts fail validation, use the iframe-only block.",
-        code: [
-          { label: "Loader script", code: snippets.gtm },
-          { label: "iframe only", code: snippets.gtmIframeOnly },
-        ],
+        code: snippets.node,
       },
     ],
     [snippets, widgetHref]

@@ -74,11 +74,16 @@ export default async function AdminBrandsPage({
 
   return (
     <div>
-      <div>
-        <h1 className="text-2xl font-bold">Brands</h1>
-        <p className="text-muted-foreground">
-          {total.toLocaleString()} total brands
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Brands</h1>
+          <p className="text-muted-foreground">
+            {total.toLocaleString()} total brands
+          </p>
+        </div>
+        <Link href="/admin/brands/new">
+          <Button>New Brand</Button>
+        </Link>
       </div>
 
       <Card className="mt-6">

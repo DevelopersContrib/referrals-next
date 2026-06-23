@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AdminDeleteButton } from "@/components/admin/admin-delete-button";
+import { AdminPagination } from "@/components/admin/admin-pagination";
 
 export default async function AdminEmailTemplatesPage({
   searchParams,
@@ -89,6 +91,7 @@ export default async function AdminEmailTemplatesPage({
                 <TableHead>Subject</TableHead>
                 <TableHead>Campaign ID</TableHead>
                 <TableHead>Template Preview</TableHead>
+                <TableHead className="w-40 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -111,11 +114,21 @@ export default async function AdminEmailTemplatesPage({
                       ? t.template.replace(/<[^>]*>/g, "").substring(0, 100)
                       : "No template"}
                   </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Link href={`/admin/email-templates/${t.id}/edit`}>
+                        <Button variant="outline" size="sm">
+                          Edit
+                        </Button>
+                      </Link>
+                      <AdminDeleteButton endpoint={`/api/admin/email-templates/${t.id}`} label="email template" />
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
               {templates.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
                     No email templates found.
                   </TableCell>
                 </TableRow>
@@ -125,27 +138,12 @@ export default async function AdminEmailTemplatesPage({
         </CardContent>
       </Card>
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-center gap-2">
-          {page > 1 && (
-            <Link
-              href={`/admin/email-templates?page=${page - 1}${campaign ? `&campaign=${campaign}` : ""}`}
-            >
-              <Button variant="outline" size="sm">Previous</Button>
-            </Link>
-          )}
-          <span className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
-          </span>
-          {page < totalPages && (
-            <Link
-              href={`/admin/email-templates?page=${page + 1}${campaign ? `&campaign=${campaign}` : ""}`}
-            >
-              <Button variant="outline" size="sm">Next</Button>
-            </Link>
-          )}
-        </div>
-      )}
+      <AdminPagination
+        page={page}
+        totalPages={totalPages}
+        basePath="/admin/email-templates"
+        params={{ campaign }}
+      />
     </div>
   );
 }

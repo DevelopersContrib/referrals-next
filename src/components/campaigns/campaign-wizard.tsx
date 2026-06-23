@@ -816,9 +816,8 @@ export function CampaignWizard({
                   Review &amp; create
                 </CardTitle>
                 <CardDescription>
-                  After you create, you&apos;ll get install snippets: JavaScript, iframe, Next.js,
-                  WordPress, Shopify, Wix, PHP (CodeIgniter), React (CRA/Vite), Webflow, Squarespace,
-                  and Google Tag Manager.
+                  After you create, you&apos;ll get install snippets: JavaScript, Embed (iframe),
+                  and Node.js.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">

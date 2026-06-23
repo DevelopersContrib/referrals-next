@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { encryptShareCode } from "@/lib/encryption";
 import { sendCampaignEntryEmail } from "@/lib/campaign-email";
 import { syncParticipantToMailchimp } from "@/lib/integrations/mailchimp-sync";
+import { ZapierIntegration } from "@/lib/integrations/zapier";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -140,6 +141,16 @@ export async function POST(request: NextRequest) {
         campaignId,
         participant.email,
         participant.name
+      );
+
+      void ZapierIntegration.fireSignupEvent(campaign.member_id, {
+        id: participant.id,
+        email: participant.email,
+        name: participant.name,
+        campaign_id: participant.campaign_id,
+        date_signedup: participant.date_signedup,
+      }).catch((err) =>
+        console.error("[widget/signup] Zapier webhook error:", err)
       );
     }
 

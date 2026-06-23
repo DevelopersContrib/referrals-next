@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticateApiKey, apiSuccess, apiError, handleCors } from "@/lib/api/helpers";
 import { syncParticipantToMailchimp } from "@/lib/integrations/mailchimp-sync";
+import { ZapierIntegration } from "@/lib/integrations/zapier";
 
 export async function OPTIONS() {
   return handleCors();
@@ -50,34 +51,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Fire Zapier webhook if configured
-    const zapierHook = await prisma.member_zapier.findFirst({
-      where: {
-        member_id: memberId,
-        campaign_id,
-      },
-    });
-
-    if (zapierHook) {
-      try {
-        await fetch(zapierHook.link, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            event: "participant.signup",
-            participant: {
-              id: participant.id,
-              email: participant.email,
-              name: participant.name,
-              campaign_id: participant.campaign_id,
-              date_signedup: participant.date_signedup,
-            },
-          }),
-        });
-      } catch (e) {
-        console.error("Zapier webhook fire error:", e);
-      }
-    }
+    void ZapierIntegration.fireSignupEvent(memberId, {
+      id: participant.id,
+      email: participant.email,
+      name: participant.name,
+      campaign_id: participant.campaign_id,
+      date_signedup: participant.date_signedup,
+    }).catch((e) => console.error("Zapier webhook fire error:", e));
 
     void syncParticipantToMailchimp(
       campaign_id,

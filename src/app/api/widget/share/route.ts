@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { encryptShareCode } from "@/lib/encryption";
+import { ZapierIntegration } from "@/lib/integrations/zapier";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -74,6 +75,22 @@ export async function POST(request: NextRequest) {
           url: shareUrl,
         },
       });
+    }
+
+    const campaign = await prisma.member_campaigns.findUnique({
+      where: { id: campaignId },
+      select: { member_id: true },
+    });
+
+    if (campaign) {
+      void ZapierIntegration.fireShareEvent(campaign.member_id, {
+        participant_id: participantId,
+        campaign_id: campaignId,
+        social_type: socialTypeId,
+        url: shareUrl,
+      }).catch((err) =>
+        console.error("[widget/share] Zapier webhook error:", err)
+      );
     }
 
     return NextResponse.json(

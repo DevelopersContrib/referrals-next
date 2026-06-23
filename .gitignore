@@ -45,3 +45,5 @@ next-env.d.ts
 # Cursor local config & agent state (skills, settings, permissions)
 .cursor/*
 .claude/
+
+.claude/*

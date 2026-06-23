@@ -33,6 +33,7 @@ interface Member {
   plan_id: number | null;
   is_verified: boolean | null;
   is_partner: boolean | null;
+  is_admin: boolean | null;
   date_signedup: string;
   num_of_logins: number | null;
   signedup_social: string | null;
@@ -58,6 +59,7 @@ export default function AdminEditMemberPage({
     plan_id: "0",
     is_verified: false,
     is_partner: false,
+    is_admin: false,
   });
 
   useEffect(() => {
@@ -75,6 +77,7 @@ export default function AdminEditMemberPage({
           plan_id: String(memberData.plan_id || 0),
           is_verified: memberData.is_verified || false,
           is_partner: memberData.is_partner || false,
+          is_admin: memberData.is_admin || false,
         });
       })
       .catch(() => setError("Failed to load member"))
@@ -94,6 +97,7 @@ export default function AdminEditMemberPage({
         plan_id: form.plan_id,
         is_verified: form.is_verified,
         is_partner: form.is_partner,
+        is_admin: form.is_admin,
       };
       if (form.password) payload.password = form.password;
 
@@ -254,6 +258,18 @@ export default function AdminEditMemberPage({
                 />
                 <Label htmlFor="is_partner">Partner</Label>
               </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="is_admin"
+                  checked={form.is_admin}
+                  onChange={(e) =>
+                    setForm({ ...form, is_admin: e.target.checked })
+                  }
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="is_admin">Is Admin</Label>
+              </div>
             </div>
             <div className="flex gap-2 pt-4">
               <Button type="submit" disabled={saving}>
@@ -283,6 +299,7 @@ export default function AdminEditMemberPage({
           <Badge variant={member.is_verified ? "default" : "destructive"}>
             {member.is_verified ? "Verified" : "Unverified"}
           </Badge>
+          {form.is_admin && <Badge variant="default">Admin</Badge>}
         </CardContent>
       </Card>
     </div>

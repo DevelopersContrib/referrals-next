@@ -1,22 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requirePlatformAdminApi } from "@/lib/require-platform-admin";
-import { auth } from "@/lib/auth";
+import { adminApiGuard } from "@/lib/require-platform-admin";
 import { prisma } from "@/lib/prisma";
 
 type RouteParams = { params: Promise<{ couponId: string }> };
 
 export async function GET(_req: NextRequest, { params }: RouteParams) {
-  const __adminGate = await requirePlatformAdminApi();
-  if (!__adminGate.ok)
-    return NextResponse.json(
-      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
-      { status: __adminGate.status }
-    );
+  const denied = await adminApiGuard();
+  if (denied) return denied;
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
     const { couponId } = await params;
     const id = parseInt(couponId, 10);
     if (isNaN(id))
@@ -37,17 +28,9 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 }
 
 export async function PUT(req: NextRequest, { params }: RouteParams) {
-  const __adminGate = await requirePlatformAdminApi();
-  if (!__adminGate.ok)
-    return NextResponse.json(
-      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
-      { status: __adminGate.status }
-    );
+  const denied = await adminApiGuard();
+  if (denied) return denied;
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
     const { couponId } = await params;
     const id = parseInt(couponId, 10);
     if (isNaN(id))
@@ -89,17 +72,9 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: RouteParams) {
-  const __adminGate = await requirePlatformAdminApi();
-  if (!__adminGate.ok)
-    return NextResponse.json(
-      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
-      { status: __adminGate.status }
-    );
+  const denied = await adminApiGuard();
+  if (denied) return denied;
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
     const { couponId } = await params;
     const id = parseInt(couponId, 10);
     if (isNaN(id))

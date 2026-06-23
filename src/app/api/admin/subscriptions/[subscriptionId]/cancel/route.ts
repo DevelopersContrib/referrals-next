@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { cancelSubscription } from "@/lib/paypal";
-import { requirePlatformAdminApi } from "@/lib/require-platform-admin";
+import { adminApiGuard } from "@/lib/require-platform-admin";
 
 type RouteParams = { params: Promise<{ subscriptionId: string }> };
 
@@ -12,12 +12,8 @@ type RouteParams = { params: Promise<{ subscriptionId: string }> };
  * but keyed by member_plan id and restricted to platform admins.
  */
 export async function POST(req: NextRequest, { params }: RouteParams) {
-  const gate = await requirePlatformAdminApi();
-  if (!gate.ok)
-    return NextResponse.json(
-      { error: gate.status === 401 ? "Unauthorized" : "Forbidden" },
-      { status: gate.status }
-    );
+  const denied = await adminApiGuard();
+  if (denied) return denied;
 
   const { subscriptionId } = await params;
   const id = parseInt(subscriptionId, 10);

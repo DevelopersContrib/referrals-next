@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getAdminPlatformStats } from "@/lib/admin-stats";
+import { fmtNumber as fmt, fmtMoney as money } from "@/lib/admin-format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Users,
@@ -21,17 +22,6 @@ import {
 
 // Always render fresh — admin stats should never be statically cached.
 export const dynamic = "force-dynamic";
-
-function fmt(n: number) {
-  return n.toLocaleString("en-US");
-}
-function money(n: number) {
-  return n.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  });
-}
 
 export default async function AdminDashboardPage() {
   const stats = await getAdminPlatformStats();

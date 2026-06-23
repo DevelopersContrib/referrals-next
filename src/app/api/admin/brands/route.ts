@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requirePlatformAdminApi } from "@/lib/require-platform-admin";
-import { auth } from "@/lib/auth";
+import { adminApiGuard } from "@/lib/require-platform-admin";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
-  const __adminGate = await requirePlatformAdminApi();
-  if (!__adminGate.ok)
-    return NextResponse.json(
-      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
-      { status: __adminGate.status }
-    );
+  const denied = await adminApiGuard();
+  if (denied) return denied;
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "20", 10);
@@ -55,17 +46,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const __adminGate = await requirePlatformAdminApi();
-  if (!__adminGate.ok)
-    return NextResponse.json(
-      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
-      { status: __adminGate.status }
-    );
+  const denied = await adminApiGuard();
+  if (denied) return denied;
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
     const body = await req.json();
     const { url, member_id } = body;
 

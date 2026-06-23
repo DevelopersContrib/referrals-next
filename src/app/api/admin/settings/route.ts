@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requirePlatformAdminApi } from "@/lib/require-platform-admin";
-import { auth } from "@/lib/auth";
+import { adminApiGuard } from "@/lib/require-platform-admin";
 import { readFile, writeFile } from "fs/promises";
 import { join } from "path";
 
@@ -43,17 +42,9 @@ async function saveSettings(settings: PlatformSettings): Promise<void> {
 }
 
 export async function GET() {
-  const __adminGate = await requirePlatformAdminApi();
-  if (!__adminGate.ok)
-    return NextResponse.json(
-      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
-      { status: __adminGate.status }
-    );
+  const denied = await adminApiGuard();
+  if (denied) return denied;
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
     const settings = await loadSettings();
     return NextResponse.json(settings);
   } catch (error) {
@@ -66,17 +57,9 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
-  const __adminGate = await requirePlatformAdminApi();
-  if (!__adminGate.ok)
-    return NextResponse.json(
-      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
-      { status: __adminGate.status }
-    );
+  const denied = await adminApiGuard();
+  if (denied) return denied;
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
     const body = await req.json();
     const current = await loadSettings();
     const updated = { ...current, ...body };

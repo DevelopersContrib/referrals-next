@@ -68,10 +68,22 @@ user-submitted).
   Restored on all 5 pages; `pnpm build` green. (tsc/eslint passed it because the
   empty template literal is valid syntax — the build gate + a manual grep caught it.)
 
-### Remaining optimization opportunities (deferred — low risk to ship without)
-- [ ] **Admin gate boilerplate** repeated in 48 handlers — could become a
-  `withAdminApi()` wrapper. Currently consistent (codemod-generated); refactoring all
-  48 right before submission is churn. Leave for a follow-up.
+### Dedup pass 2 (done)
+- [x] **Admin gate boilerplate** — the repeated 6-line gate + redundant `auth()` check
+  across 34 route files → single `adminApiGuard()` helper in `require-platform-admin.ts`
+  (~380 lines of boilerplate removed). `auth()` kept only where `session` is actually
+  used (blog, impersonate). Every handler still gated (verified).
+- [x] **Formatters** — duplicate `money`/`fmt` in admin dashboard + subscriptions →
+  `src/lib/admin-format.ts` (`fmtNumber`, `fmtMoney`).
+- [x] **Dead code** — removed the redundant `deals` collection `DELETE` (the UI uses the
+  `[dealId]` route).
+
+### Remaining optimization opportunities (deferred — pre-existing patterns, low risk)
+- [ ] **Identical `?id=` collection DELETE handlers** (reviews/testimonials/api-keys/
+  subdomains/forum) — pre-existing; could become an `adminDeleteByQueryId()` factory.
+  (forum cascades, so it stays bespoke.)
+- [ ] **"batch-load members into a Map"** pattern repeated across ~5 list pages — could
+  be a `batchLoadMembers()` helper.
 - [ ] **`take: 200` collection routes** (coupons/contests/deals/subdomains/email-templates)
   — accept `page`/`limit` instead of a hard cap.
 - [ ] **`subdomains` list page** is client-side and loads all rows via the

@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requirePlatformAdminApi } from "@/lib/require-platform-admin";
-import { auth } from "@/lib/auth";
+import { adminApiGuard } from "@/lib/require-platform-admin";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const __adminGate = await requirePlatformAdminApi();
-  if (!__adminGate.ok)
-    return NextResponse.json(
-      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
-      { status: __adminGate.status }
-    );
+  const denied = await adminApiGuard();
+  if (denied) return denied;
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
     const deals = await prisma.brand_deals.findMany({
       orderBy: { date_created: "desc" },
       take: 200,
@@ -31,17 +22,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const __adminGate = await requirePlatformAdminApi();
-  if (!__adminGate.ok)
-    return NextResponse.json(
-      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
-      { status: __adminGate.status }
-    );
+  const denied = await adminApiGuard();
+  if (denied) return denied;
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
     const body = await req.json();
     const {
       category_id,
@@ -87,33 +70,5 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
-export async function DELETE(req: NextRequest) {
-  const __adminGate = await requirePlatformAdminApi();
-  if (!__adminGate.ok)
-    return NextResponse.json(
-      { error: __adminGate.status === 401 ? "Unauthorized" : "Forbidden" },
-      { status: __adminGate.status }
-    );
-  try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const { searchParams } = new URL(req.url);
-    const id = parseInt(searchParams.get("id") || "0", 10);
-
-    if (!id)
-      return NextResponse.json({ error: "ID required" }, { status: 400 });
-
-    await prisma.brand_deals.delete({ where: { id } });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error deleting deal:", error);
-    return NextResponse.json(
-      { error: "Failed to delete deal" },
-      { status: 500 }
-    );
-  }
-}
+// Deletion is handled by the per-id route (DELETE /api/admin/deals/[dealId]),
+// which the admin UI uses — no redundant collection-level DELETE here.

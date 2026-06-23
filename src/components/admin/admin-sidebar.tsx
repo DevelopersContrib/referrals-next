@@ -16,6 +16,10 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 
+// Official Referrals.com logo (same asset as the main dashboard sidebar/header).
+const REFERRALS_LOGO_URL =
+  "https://d1p6j71028fbjm.cloudfront.net/logos/logo-new-referral-1.png";
+
 const overviewNav = [
   { title: "Admin Dashboard", href: "/admin" },
 ];
@@ -86,10 +90,12 @@ export function AdminSidebar() {
       <SidebarHeader className="border-b px-6 py-4">
         <Link href="/admin">
           <Image
-            src="/images/logo/logo2.png"
+            src={REFERRALS_LOGO_URL}
             alt="Referrals.com"
             width={142}
             height={45}
+            className="h-[36px] w-auto"
+            unoptimized
           />
         </Link>
         <span className="text-xs font-semibold text-red-600 mt-1">Admin Panel</span>

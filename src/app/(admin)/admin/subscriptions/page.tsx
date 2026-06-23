@@ -17,15 +17,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { CancelSubscriptionButton } from "@/components/admin/cancel-subscription-button";
+import { fmtMoney } from "@/lib/admin-format";
 
 export const dynamic = "force-dynamic";
 
-function money(n: number | null | undefined, currency?: string | null) {
-  if (n == null) return "—";
-  return `${n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 })}${
-    currency && currency !== "USD" ? ` ${currency}` : ""
-  }`;
-}
+const money = (n: number | null | undefined, currency?: string | null) =>
+  fmtMoney(n, { currency, fractionDigits: 2 });
 
 const STATUS_STYLES: Record<SubStatus, string> = {
   active: "bg-emerald-50 text-emerald-700 border-emerald-200",

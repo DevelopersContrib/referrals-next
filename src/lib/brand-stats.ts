@@ -8,6 +8,8 @@ export type TimeSeriesPoint = {
 };
 
 export type BrandOverviewStats = {
+  rewardedReferrals: number;
+  rewardsValue: number;
   totalCampaigns: number;
   totalImpressions: number;
   totalClicks: number;
@@ -118,7 +120,32 @@ export async function getBrandOverviewStats(
     totalParticipants = participants;
   }
 
+  // Rewarded Referrals + Rewards Value (mirror PHP BrandajaxController:
+  // gettotalrewarded + Ini::campaignrewardworthbrand) — scoped by brand url_id.
+  let rewardedReferrals = 0;
+  let rewardsValue = 0;
+  const [rewardedRows, worthRows] = await Promise.all([
+    prisma.$queryRaw<{ total: bigint }[]>`
+      SELECT COUNT(DISTINCT pr.participant_id) AS total
+      FROM participants_rewards pr
+      JOIN member_campaigns mc ON mc.id = pr.campaign_id
+      WHERE mc.url_id = ${brandId}
+        AND pr.date_sent >= ${fromDate} AND pr.date_sent <= ${toDate}`,
+    prisma.$queryRaw<{ total: number | null }[]>`
+      SELECT COALESCE(SUM(cr.worth_value), 0) + COALESCE(SUM(cr.cash_value), 0) AS total
+      FROM participants_rewards pr
+      JOIN campaign_participants cp ON cp.id = pr.participant_id
+      JOIN campaign_reward cr ON cr.campaign_id = pr.campaign_id
+      JOIN member_campaigns mc ON mc.id = pr.campaign_id
+      WHERE mc.url_id = ${brandId}
+        AND pr.date_sent >= ${fromDate} AND pr.date_sent <= ${toDate}`,
+  ]);
+  rewardedReferrals = Number(rewardedRows[0]?.total ?? 0);
+  rewardsValue = Number(worthRows[0]?.total ?? 0);
+
   return {
+    rewardedReferrals,
+    rewardsValue,
     totalCampaigns,
     totalImpressions,
     totalClicks,

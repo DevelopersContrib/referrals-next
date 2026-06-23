@@ -25,11 +25,6 @@ import {
   Loader2Icon,
   CalendarIcon,
   ArrowRightIcon,
-  MousePointerClickIcon,
-  ShareIcon,
-  UsersIcon,
-  EyeIcon,
-  FolderIcon,
 } from "lucide-react";
 
 export type BrandDashboardBrand = {
@@ -54,6 +49,8 @@ export type CampaignRow = {
 };
 
 type OverviewStats = {
+  rewardedReferrals: number;
+  rewardsValue: number;
   totalCampaigns: number;
   totalImpressions: number;
   totalClicks: number;
@@ -111,26 +108,11 @@ function DateRangeSearch({
   );
 }
 
-function OverviewStatRow({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: number;
-  color: string;
-}) {
+function OverviewStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between border-b border-[#ebeef0] py-3 last:border-0">
-      <div className="flex items-center gap-3">
-        <Icon className={`size-5 ${color}`} />
-        <span className="text-sm text-[#575962]">{label}</span>
-      </div>
-      <span className={`text-lg font-bold ${color}`}>
-        {value.toLocaleString()}
-      </span>
+    <div className="px-2 text-center">
+      <div className="text-2xl font-bold text-brand">{value}</div>
+      <div className="mt-1 text-xs font-semibold text-[#575962]">{label}</div>
     </div>
   );
 }
@@ -163,18 +145,19 @@ export function BrandDashboardPanel({
   const [createOpen, setCreateOpen] = useState(false);
 
   const fetchOverview = useCallback(async () => {
-    if (!overviewFrom || !overviewTo) return;
     setLoadingOverview(true);
     try {
-      const params = new URLSearchParams({
-        graph: "1",
-        from: overviewFrom,
-        to: overviewTo,
-      });
+      // Default to all-time (matches PHP, which shows lifetime totals up front);
+      // the date pickers narrow it.
+      const from = overviewFrom || "2010-01-01";
+      const to = overviewTo || new Date().toISOString().slice(0, 10);
+      const params = new URLSearchParams({ graph: "1", from, to });
       const res = await fetch(`/api/brands/${brand.id}/stats?${params}`);
       if (!res.ok) throw new Error("Failed");
       const data = await res.json();
       setOverview({
+        rewardedReferrals: data.rewardedReferrals ?? 0,
+        rewardsValue: data.rewardsValue ?? 0,
         totalCampaigns: data.totalCampaigns,
         totalImpressions: data.totalImpressions,
         totalClicks: data.totalClicks,
@@ -231,6 +214,12 @@ export function BrandDashboardPanel({
     fetchShares();
   }, [fetchReferrals, fetchShares]);
 
+  // Load overview totals once on mount (all-time), like the PHP dashboard.
+  useEffect(() => {
+    fetchOverview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (campaigns.length === 0) {
       setCreateOpen(true);
@@ -255,41 +244,18 @@ export function BrandDashboardPanel({
               <Loader2Icon className="size-6 animate-spin text-brand" />
             </div>
           ) : overview ? (
-            <div>
-              <OverviewStatRow
-                icon={FolderIcon}
-                label="Number of campaigns"
-                value={overview.totalCampaigns}
-                color="text-brand"
-              />
-              <OverviewStatRow
-                icon={EyeIcon}
-                label="Total impressions"
-                value={overview.totalImpressions}
-                color="text-[#28a745]"
-              />
-              <OverviewStatRow
-                icon={MousePointerClickIcon}
-                label="Total Clicks"
-                value={overview.totalClicks}
-                color="text-[#ffc107]"
-              />
-              <OverviewStatRow
-                icon={ShareIcon}
-                label="Total Shares"
-                value={overview.totalShares}
-                color="text-[#36a3f7]"
-              />
-              <OverviewStatRow
-                icon={UsersIcon}
-                label="Total Participants"
-                value={overview.totalParticipants}
-                color="text-brand"
-              />
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
+              <OverviewStat label="Rewarded Referrals" value={overview.rewardedReferrals.toLocaleString()} />
+              <OverviewStat label="Rewards Value" value={`$${Math.round(overview.rewardsValue).toLocaleString()}`} />
+              <OverviewStat label="Campaigns" value={overview.totalCampaigns.toLocaleString()} />
+              <OverviewStat label="Impressions" value={overview.totalImpressions.toLocaleString()} />
+              <OverviewStat label="Referrals" value={overview.totalParticipants.toLocaleString()} />
+              <OverviewStat label="Shares" value={overview.totalShares.toLocaleString()} />
+              <OverviewStat label="Clicks" value={overview.totalClicks.toLocaleString()} />
             </div>
           ) : (
             <p className="py-8 text-center text-sm text-[#a7abc3]">
-              Select a date range and click Search to load overview stats.
+              No stats available for this range.
             </p>
           )}
         </div>

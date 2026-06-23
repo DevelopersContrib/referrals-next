@@ -26,7 +26,7 @@ export default async function UpgradeBrandPage({
         <h1 className="text-2xl font-bold">Upgrade — {brand.domain}</h1>
         <p className="text-muted-foreground">Choose a plan to unlock more features for this brand.</p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {plans.map((plan) => (
           <Card key={plan.id}>
             <CardHeader>

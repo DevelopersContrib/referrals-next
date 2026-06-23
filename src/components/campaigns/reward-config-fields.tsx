@@ -76,7 +76,7 @@ export function RewardConfigFields({
 
   if (kind === "cash") {
     return (
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="cash_value">Cash amount (USD)</Label>
           <Input
@@ -107,7 +107,7 @@ export function RewardConfigFields({
 
   if (kind === "tokens") {
     return (
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="token_symbol">Token symbol</Label>
           <Input

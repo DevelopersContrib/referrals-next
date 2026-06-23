@@ -41,3 +41,10 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# Zipsite local config & centrally-managed Cursor skills
+.cursor/*
+.zipsite/
+.cursor/skills/commit-and-push/
+.cursor/skills/web-design/
+.claude/

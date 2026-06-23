@@ -86,7 +86,7 @@ function DateRangeSearch({
   loading: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+    <div className="flex flex-col gap-2 lg:flex-row lg:items-end">
       <div className="flex-1">
         <label className="mb-1 block text-xs text-[#a7abc3]">From</label>
         <Input type="date" value={from} onChange={(e) => onFromChange(e.target.value)} />
@@ -98,7 +98,7 @@ function DateRangeSearch({
       <Button
         onClick={onSearch}
         disabled={loading}
-        className="gap-2 bg-brand hover:bg-brand-hover"
+        className="gap-2 bg-brand hover:bg-brand-hover min-h-11 w-full lg:w-auto"
       >
         {loading ? (
           <Loader2Icon className="size-4 animate-spin" />

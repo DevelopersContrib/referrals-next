@@ -214,7 +214,7 @@ export default function WidgetCustomizerPage() {
 
   return (
     <div className="space-y-10 pb-16">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Widget studio</h1>
           <p className="mt-1 text-muted-foreground">
@@ -311,7 +311,7 @@ export default function WidgetCustomizerPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="field_label_1">Field 1 label</Label>
                   <Input
@@ -356,7 +356,7 @@ export default function WidgetCustomizerPage() {
               <CardTitle>Styling</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="color">Primary color</Label>
                   <div className="flex gap-2">
@@ -391,7 +391,7 @@ export default function WidgetCustomizerPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="text_color">Text color</Label>
                   <div className="flex gap-2">

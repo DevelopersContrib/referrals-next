@@ -72,7 +72,7 @@ export default async function BrandDashboardPage({ params }: PageProps) {
         <span className="font-medium text-[#575962]">{brand.domain}</span>
       </nav>
 
-      <div className="subheader flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="subheader flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">
           {logo ? (
             <img

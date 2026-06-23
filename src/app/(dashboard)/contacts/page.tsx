@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ContactsMobileList } from "@/components/dashboard/contacts-mobile-list";
 
 interface Participant {
   id: number;
@@ -62,7 +63,7 @@ export default function ContactsPage() {
         </p>
       </div>
 
-      <div className="max-w-sm">
+      <div className="w-full max-w-sm">
         <Input
           placeholder="Search by name or email..."
           value={search}
@@ -87,7 +88,9 @@ export default function ContactsPage() {
               No contacts found.
             </p>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+              <ContactsMobileList contacts={contacts} />
+              <div className="hidden overflow-x-auto lg:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -112,7 +115,8 @@ export default function ContactsPage() {
                   ))}
                 </TableBody>
               </Table>
-            </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

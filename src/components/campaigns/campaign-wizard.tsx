@@ -354,15 +354,15 @@ export function CampaignWizard({
   }
 
   return (
-    <div className="mx-auto max-w-6xl rounded-2xl border border-slate-200/70 bg-gradient-to-b from-slate-50/90 via-white to-rose-50/20 p-4 shadow-sm sm:p-6 md:p-8">
+    <div className="mx-auto max-w-6xl rounded-2xl border border-slate-200/70 bg-gradient-to-b from-slate-50/90 via-white to-rose-50/20 p-4 shadow-sm lg:p-6 xl:p-8">
       {/* Step header */}
-      <div className="mb-6 rounded-xl border border-slate-200/80 bg-white/95 p-4 shadow-sm sm:mb-8">
-        <ol className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+      <div className="mb-6 rounded-xl border border-slate-200/80 bg-white/95 p-4 shadow-sm lg:mb-8">
+        <ol className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:gap-2">
           {STEPS.map((s, i) => {
             const active = s.id === currentStep;
             const done = i < currentIndex;
             return (
-              <li key={s.id} className="flex min-w-0 flex-1 items-start gap-2 sm:flex-initial">
+              <li key={s.id} className="flex min-w-0 flex-1 items-start gap-2 lg:flex-initial">
                 <span
                   className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
                     active
@@ -695,7 +695,7 @@ export function CampaignWizard({
                     <p className="text-sm text-slate-600">
                       This is what visitors see in the embed — headline area, CTA, and brand colors.
                     </p>
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="widget_desc">Short description under the title</Label>
                         <Textarea
@@ -712,7 +712,7 @@ export function CampaignWizard({
                           value={formData.widget_button_text}
                           onChange={(e) => updateField("widget_button_text", e.target.value)}
                         />
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
                           <div>
                             <Label className="text-xs text-muted-foreground">Accent (#hex)</Label>
                             <Input

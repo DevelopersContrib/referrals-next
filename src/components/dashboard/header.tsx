@@ -63,8 +63,8 @@ export function DashboardHeader() {
     <header className="sticky top-0 z-30 flex h-[60px] items-center justify-between border-b border-[#ebeef0] bg-white px-4 lg:px-6">
       {/* Left: Logo + Sidebar trigger */}
       <div className="flex items-center gap-3">
-        <SidebarTrigger className="lg:hidden" />
-        <Link href="/dashboard" className="flex items-center gap-2.5 md:hidden">
+        <SidebarTrigger className="min-h-11 min-w-11 lg:hidden" />
+        <Link href="/dashboard" className="flex items-center gap-2.5 lg:hidden">
           <Image
             src={DASHBOARD_LOGO_URL}
             alt="Referrals.com"
@@ -156,7 +156,7 @@ export function DashboardHeader() {
       {/* Right: Search + User */}
       <div className="flex items-center gap-2">
         {/* Search */}
-        <div className="relative hidden md:block">
+        <div className="relative hidden lg:block">
           <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-[#a7abc3]" />
           <Input
             type="search"

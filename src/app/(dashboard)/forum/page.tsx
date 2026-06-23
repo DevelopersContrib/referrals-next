@@ -41,31 +41,31 @@ export default async function ForumPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Forum</h1>
           <p className="mt-1 text-muted-foreground">
             Discuss referral marketing, ask questions, and share insights.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link href="/forum/categories">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="min-h-11">
               Categories
             </Button>
           </Link>
           <Link href="/forum/unanswered">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="min-h-11">
               Unanswered
             </Button>
           </Link>
           <Link href="/forum/activity">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="min-h-11">
               Activity
             </Button>
           </Link>
           <Link href="/forum/new">
-            <Button size="sm">New Topic</Button>
+            <Button size="sm" className="min-h-11">New Topic</Button>
           </Link>
         </div>
       </div>
@@ -87,7 +87,8 @@ export default async function ForumPage() {
 
             return (
               <Card key={topic.id}>
-                <CardContent className="flex items-center gap-4 py-4">
+                <CardContent className="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:gap-4">
+                  <div className="flex gap-6 lg:gap-4">
                   <div className="flex flex-col items-center gap-1 text-center min-w-[60px]">
                     <span className="text-lg font-bold">{votes}</span>
                     <span className="text-xs text-muted-foreground">votes</span>
@@ -97,6 +98,7 @@ export default async function ForumPage() {
                     <span className="text-xs text-muted-foreground">
                       replies
                     </span>
+                  </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <Link

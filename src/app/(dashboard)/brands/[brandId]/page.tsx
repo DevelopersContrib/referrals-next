@@ -8,6 +8,7 @@ import {
   getInviteLeaders,
 } from "@/lib/brand-stats";
 import { BrandDashboardPanel } from "@/components/brands/brand-dashboard-panel";
+import { BrandLogo } from "@/components/brands/brand-logo";
 import { Button } from "@/components/ui/button";
 import {
   PlusIcon,
@@ -74,17 +75,12 @@ export default async function BrandDashboardPage({ params }: PageProps) {
 
       <div className="subheader flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">
-          {logo ? (
-            <img
-              src={logo}
-              alt={brand.domain}
-              className="size-12 rounded-lg border border-white/20 bg-white/10 object-contain p-1"
-            />
-          ) : (
-            <div className="flex size-12 items-center justify-center rounded-lg bg-white/20 text-xl font-bold text-white">
-              {brand.domain.charAt(0).toUpperCase()}
-            </div>
-          )}
+          <BrandLogo
+            domain={brand.domain}
+            logoUrl={brand.logo_url}
+            imgClassName="size-12 rounded-lg border border-white/20 bg-white/10 object-contain p-1"
+            fallbackClassName="flex size-12 items-center justify-center rounded-lg bg-white/20 text-xl font-bold text-white"
+          />
           <div>
             <h1 className="text-xl font-bold text-white">
               {brand.domain} Dashboard

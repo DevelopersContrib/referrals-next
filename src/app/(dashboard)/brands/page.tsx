@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/brands/brand-logo";
 import {
   Table,
   TableBody,
@@ -55,8 +56,11 @@ export default async function BrandsPage() {
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 lg:flex-row lg:flex-wrap lg:w-auto">
+          {/* CSV download from an API route — not a page, so a plain anchor is correct. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/api/brands/export" className="w-full sm:w-auto">
             <Button className="min-h-11 w-full gap-2 bg-[#28a745] text-white hover:bg-[#218838] sm:w-auto">
+
               <DownloadIcon className="size-4" />
               Export CSV
             </Button>
@@ -129,17 +133,12 @@ export default async function BrandsPage() {
                 >
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      {brand.logo_url ? (
-                        <img
-                          src={brand.logo_url}
-                          alt={brand.domain}
-                          className="size-9 rounded-md border border-[#ebeef0] object-contain p-1"
-                        />
-                      ) : (
-                        <div className="flex size-9 items-center justify-center rounded-md bg-brand/10 text-sm font-bold uppercase text-brand">
-                          {brand.domain.charAt(0)}
-                        </div>
-                      )}
+                      <BrandLogo
+                        domain={brand.domain}
+                        logoUrl={brand.logo_url}
+                        imgClassName="size-9 rounded-md border border-[#ebeef0] object-contain p-1"
+                        fallbackClassName="flex size-9 items-center justify-center rounded-md bg-brand/10 text-sm font-bold uppercase text-brand"
+                      />
                       <div className="min-w-0">
                         <Link
                           href={`/brands/${brand.id}`}

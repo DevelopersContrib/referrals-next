@@ -506,6 +506,7 @@ model members {
   signedup_social   String?   @db.VarChar(100)
   plan_expiry       DateTime? @db.DateTime(0)
   is_partner        Boolean?  @default(false)
+  is_admin          Boolean?  @default(false)
   in_blog           Boolean?  @default(false)
   referred_by       Int?
 }

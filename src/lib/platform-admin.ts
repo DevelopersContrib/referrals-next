@@ -1,41 +1,23 @@
 import { prisma } from "@/lib/prisma";
-import { vnocPrisma } from "@/lib/vnoc-db";
 
-async function vnocMemberIsAdmin(email: string | null | undefined): Promise<boolean> {
-  if (!vnocPrisma || !email?.trim()) {
-    console.log("[isAdmin] skip VNOC check", {
-      hasVnocDb: Boolean(vnocPrisma),
-      email: email ?? null,
-    });
-    return false;
-  }
-
-  const rows = await vnocPrisma.$queryRaw<Array<{ is_admin: number }>>`
-    SELECT is_admin
-    FROM members
-    WHERE email = ${email.trim()}
-      AND is_admin = 1
-    LIMIT 1
-  `;
-
-  const isAdmin = rows.length > 0;
-  console.log("[isAdmin] VNOC lookup", { email: email.trim(), isAdmin, rowCount: rows.length });
-  return isAdmin;
-}
-
-/** True when the member is an admin in the VNOC database (members.is_admin = 1). */
-export async function memberRowIsPlatformAdmin(member: {
-  id: number;
-  email: string | null;
-}): Promise<boolean> {
-  return vnocMemberIsAdmin(member.email);
-}
-
-/** Same as memberRowIsPlatformAdmin, for when you only have the referrals member id. */
+/**
+ * True when the member is a platform admin, based on the main (DATABASE_URL)
+ * members.is_admin flag (tinyint(1) -> Boolean, 1 = admin).
+ */
 export async function memberIdIsPlatformAdmin(memberId: number): Promise<boolean> {
+  if (!Number.isFinite(memberId)) return false;
   const row = await prisma.members.findUnique({
     where: { id: memberId },
-    select: { email: true },
+    select: { is_admin: true },
   });
-  return vnocMemberIsAdmin(row?.email ?? null);
+  return row?.is_admin === true;
+}
+
+/** Same check for when you already have the member row (avoids a re-query). */
+export async function memberRowIsPlatformAdmin(member: {
+  id: number;
+  is_admin?: boolean | null;
+}): Promise<boolean> {
+  if (typeof member.is_admin === "boolean") return member.is_admin;
+  return memberIdIsPlatformAdmin(member.id);
 }

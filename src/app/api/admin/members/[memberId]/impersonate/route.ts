@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requirePlatformAdminApi } from "@/lib/require-platform-admin";
 import { prisma } from "@/lib/prisma";
 import { randomBytes } from "crypto";
 
@@ -7,9 +7,12 @@ type RouteParams = { params: Promise<{ memberId: string }> };
 
 export async function POST(_req: NextRequest, { params }: RouteParams) {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const guard = await requirePlatformAdminApi();
+    if (!guard.ok)
+      return NextResponse.json(
+        { error: guard.status === 401 ? "Unauthorized" : "Forbidden" },
+        { status: guard.status }
+      );
 
     const { memberId } = await params;
     const id = parseInt(memberId, 10);

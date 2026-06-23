@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requirePlatformAdminApi } from "@/lib/require-platform-admin";
 import { readFile, writeFile } from "fs/promises";
 import { join } from "path";
 
@@ -43,9 +43,12 @@ async function saveSettings(settings: PlatformSettings): Promise<void> {
 
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const guard = await requirePlatformAdminApi();
+    if (!guard.ok)
+      return NextResponse.json(
+        { error: guard.status === 401 ? "Unauthorized" : "Forbidden" },
+        { status: guard.status }
+      );
 
     const settings = await loadSettings();
     return NextResponse.json(settings);
@@ -60,9 +63,12 @@ export async function GET() {
 
 export async function PUT(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const guard = await requirePlatformAdminApi();
+    if (!guard.ok)
+      return NextResponse.json(
+        { error: guard.status === 401 ? "Unauthorized" : "Forbidden" },
+        { status: guard.status }
+      );
 
     const body = await req.json();
     const current = await loadSettings();

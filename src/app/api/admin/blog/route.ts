@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requirePlatformAdminApi } from "@/lib/require-platform-admin";
 import { getAllPosts, savePost, deletePost, type BlogPost } from "@/lib/blog";
 
 // GET /api/admin/blog — list all posts
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const guard = await requirePlatformAdminApi();
+    if (!guard.ok) {
+      return NextResponse.json(
+        { error: guard.status === 401 ? "Unauthorized" : "Forbidden" },
+        { status: guard.status }
+      );
     }
 
     const posts = getAllPosts();
@@ -24,9 +27,12 @@ export async function GET() {
 // POST /api/admin/blog — create a post manually
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const guard = await requirePlatformAdminApi();
+    if (!guard.ok) {
+      return NextResponse.json(
+        { error: guard.status === 401 ? "Unauthorized" : "Forbidden" },
+        { status: guard.status }
+      );
     }
 
     const body = (await req.json()) as Partial<BlogPost>;
@@ -69,9 +75,12 @@ export async function POST(req: NextRequest) {
 // DELETE /api/admin/blog?slug=... — delete a post
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const guard = await requirePlatformAdminApi();
+    if (!guard.ok) {
+      return NextResponse.json(
+        { error: guard.status === 401 ? "Unauthorized" : "Forbidden" },
+        { status: guard.status }
+      );
     }
 
     const { searchParams } = new URL(req.url);

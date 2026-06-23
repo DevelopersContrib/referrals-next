@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requirePlatformAdminApi } from "@/lib/require-platform-admin";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const guard = await requirePlatformAdminApi();
+    if (!guard.ok)
+      return NextResponse.json(
+        { error: guard.status === 401 ? "Unauthorized" : "Forbidden" },
+        { status: guard.status }
+      );
 
     const reviews = await prisma.reviews.findMany({
       orderBy: { date_updated: "desc" },
@@ -25,9 +28,12 @@ export async function GET() {
 
 export async function PUT(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const guard = await requirePlatformAdminApi();
+    if (!guard.ok)
+      return NextResponse.json(
+        { error: guard.status === 401 ? "Unauthorized" : "Forbidden" },
+        { status: guard.status }
+      );
 
     const body = await req.json();
     const { id, approved } = body;
@@ -49,9 +55,12 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const guard = await requirePlatformAdminApi();
+    if (!guard.ok)
+      return NextResponse.json(
+        { error: guard.status === 401 ? "Unauthorized" : "Forbidden" },
+        { status: guard.status }
+      );
 
     const { searchParams } = new URL(req.url);
     const id = parseInt(searchParams.get("id") || "0", 10);

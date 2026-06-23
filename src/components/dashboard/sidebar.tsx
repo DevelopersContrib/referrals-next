@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
 import {
   Sidebar,
@@ -52,9 +53,17 @@ const DASHBOARD_LOGO_URL =
 
 const mainNav = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboardIcon },
-  { title: "Brands", href: "/brands", icon: GlobeIcon },
   { title: "Stats", href: "/stats", icon: BarChart3Icon },
   { title: "Contacts", href: "/contacts", icon: UsersIcon },
+];
+
+const brandsNav = [
+  {
+    title: "All Brands",
+    href: "/brands/allbrands",
+    adminOnly: true,
+  },
+  { title: "View All Brands", href: "/brands" },
 ];
 
 const toolsNav = [
@@ -84,6 +93,9 @@ const bottomNav = [
 
 export function DashboardSidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const isAdmin = Boolean((session?.user as { isAdmin?: boolean })?.isAdmin);
+  const [brandsOpen, setBrandsOpen] = useState(pathname.startsWith("/brands"));
   const [toolsOpen, setToolsOpen] = useState(
     pathname.startsWith("/tools") ||
       pathname.startsWith("/promotions") ||
@@ -123,7 +135,84 @@ export function DashboardSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNav.map((item) => {
+              {mainNav.slice(0, 1).map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      isActive={isActive}
+                      render={<Link href={item.href} />}
+                      className={isActive ? "bg-brand/5 text-brand font-medium" : "text-[#575962]"}
+                    >
+                      <Icon className="size-4" />
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => setBrandsOpen(!brandsOpen)}
+                  isActive={pathname.startsWith("/brands")}
+                  className={
+                    pathname.startsWith("/brands")
+                      ? "bg-brand/5 text-brand font-medium"
+                      : "text-[#575962]"
+                  }
+                >
+                  <GlobeIcon className="size-4" />
+                  <span>My Brands</span>
+                  {brandsOpen ? (
+                    <ChevronDownIcon className="ml-auto size-3.5 text-[#a7abc3]" />
+                  ) : (
+                    <ChevronRightIcon className="ml-auto size-3.5 text-[#a7abc3]" />
+                  )}
+                </SidebarMenuButton>
+                {brandsOpen && (
+                  <SidebarMenuSub>
+                    {brandsNav
+                      .filter((item) => !item.adminOnly || isAdmin)
+                      .map((item) => {
+                      const isActive =
+                        item.href === "/brands/allbrands"
+                          ? pathname === item.href ||
+                            pathname.startsWith(item.href + "/")
+                          : pathname === item.href ||
+                            (pathname.startsWith(item.href + "/") &&
+                              !pathname.startsWith("/brands/allbrands") &&
+                              !pathname.startsWith("/brands/new"));
+                      return (
+                        <SidebarMenuSubItem key={item.href}>
+                          <SidebarMenuSubButton
+                            isActive={isActive}
+                            render={<Link href={item.href} />}
+                            className={isActive ? "text-brand font-medium" : ""}
+                          >
+                            <span
+                              aria-hidden
+                              className="flex size-3.5 shrink-0 items-center justify-center text-base leading-none text-[#a7abc3]"
+                            >
+                              ·
+                            </span>
+                            <span className="flex min-w-0 items-center gap-1.5">
+                              <span className="truncate">{item.title}</span>
+                              {item.adminOnly && (
+                                <span className="shrink-0 rounded bg-brand px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none text-white">
+                                  Admin
+                                </span>
+                              )}
+                            </span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      );
+                    })}
+                  </SidebarMenuSub>
+                )}
+              </SidebarMenuItem>
+
+              {mainNav.slice(1).map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
                 return (

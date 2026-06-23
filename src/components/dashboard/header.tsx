@@ -6,14 +6,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,9 +23,6 @@ import {
   CreditCardIcon,
   HelpCircleIcon,
   LogOutIcon,
-  LayoutDashboardIcon,
-  GlobeIcon,
-  PlusIcon,
   WrenchIcon,
   MessageSquareIcon,
   LifeBuoyIcon,
@@ -60,9 +52,9 @@ export function DashboardHeader() {
   const userName = session?.user?.name || session?.user?.email || "User";
 
   return (
-    <header className="sticky top-0 z-30 flex h-[60px] items-center justify-between border-b border-[#ebeef0] bg-white px-4 lg:px-6">
-      {/* Left: Logo + Sidebar trigger */}
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-30 flex h-[60px] items-center border-b border-[#ebeef0] bg-white px-4 lg:px-6">
+      {/* Left: Mobile logo/trigger + desktop navigation */}
+      <div className="flex min-w-0 items-center gap-3">
         <SidebarTrigger className="min-h-11 min-w-11 lg:hidden" />
         <Link href="/dashboard" className="flex items-center gap-2.5 lg:hidden">
           <Image
@@ -75,86 +67,44 @@ export function DashboardHeader() {
             unoptimized
           />
         </Link>
+
+        <nav className="hidden items-center gap-1 lg:flex">
+          {/* Resources Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-[#575962] transition-colors hover:bg-[#f2f3f8] hover:text-brand">
+              <BookOpenIcon className="size-4" />
+              Resources
+              <ChevronDownIcon className="size-3.5 opacity-50" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" sideOffset={8}>
+              <DropdownMenuItem render={<Link href="/tools" />}>
+                <WrenchIcon className="size-4" />
+                Tools
+              </DropdownMenuItem>
+              <DropdownMenuItem render={<Link href="/forum" />}>
+                <MessageSquareIcon className="size-4" />
+                Discussions
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem render={<Link href="/promotions" />}>
+                <ShareIcon className="size-4" />
+                Refer Us
+              </DropdownMenuItem>
+              <DropdownMenuItem render={<a href="https://referrals.com/support" target="_blank" rel="noopener noreferrer" />}>
+                <LifeBuoyIcon className="size-4" />
+                Support
+              </DropdownMenuItem>
+              <DropdownMenuItem render={<a href="https://referrals.com/blog" target="_blank" rel="noopener noreferrer" />}>
+                <BookOpenIcon className="size-4" />
+                Blog
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </nav>
       </div>
 
-      {/* Center: Navigation */}
-      <nav className="hidden items-center gap-1 lg:flex">
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-[#575962] transition-colors hover:bg-[#f2f3f8] hover:text-brand"
-        >
-          <LayoutDashboardIcon className="size-4" />
-          Dashboard
-        </Link>
-
-        {/* My Brands Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-[#575962] transition-colors hover:bg-[#f2f3f8] hover:text-brand">
-            <GlobeIcon className="size-4" />
-            My Brands
-            <ChevronDownIcon className="size-3.5 opacity-50" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" sideOffset={8}>
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>My Brands</DropdownMenuLabel>
-              <DropdownMenuItem render={<Link href="/brands" />}>
-                <GlobeIcon className="size-4" />
-                View All Brands
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem render={<Link href="/brands/new" />}>
-              <PlusIcon className="size-4" />
-              Create New Brand
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {(session?.user as { isAdmin?: boolean })?.isAdmin && (
-          <Link
-            href="/brands/allbrands"
-            className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-[#575962] transition-colors hover:bg-[#f2f3f8] hover:text-brand"
-          >
-            <GlobeIcon className="size-4" />
-            All Brands (Admin)
-          </Link>
-        )}
-
-        {/* Resources Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-[#575962] transition-colors hover:bg-[#f2f3f8] hover:text-brand">
-            <BookOpenIcon className="size-4" />
-            Resources
-            <ChevronDownIcon className="size-3.5 opacity-50" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" sideOffset={8}>
-            <DropdownMenuItem render={<Link href="/tools" />}>
-              <WrenchIcon className="size-4" />
-              Tools
-            </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/forum" />}>
-              <MessageSquareIcon className="size-4" />
-              Discussions
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem render={<Link href="/promotions" />}>
-              <ShareIcon className="size-4" />
-              Refer Us
-            </DropdownMenuItem>
-            <DropdownMenuItem render={<a href="https://referrals.com/support" target="_blank" rel="noopener noreferrer" />}>
-              <LifeBuoyIcon className="size-4" />
-              Support
-            </DropdownMenuItem>
-            <DropdownMenuItem render={<a href="https://referrals.com/blog" target="_blank" rel="noopener noreferrer" />}>
-              <BookOpenIcon className="size-4" />
-              Blog
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </nav>
-
       {/* Right: Search + User */}
-      <div className="flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2">
         {/* Search */}
         <div className="relative hidden lg:block">
           <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-[#a7abc3]" />

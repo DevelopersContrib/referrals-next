@@ -11,17 +11,9 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Authorization gate for the entire /admin area. proxy.ts already blocks
-  // anonymous users (redirect to /signin); here we enforce that the signed-in
-  // user is a platform admin (ADMIN_EMAILS). Non-admins are bounced to their
-  // own dashboard. This is the single chokepoint for admin *pages*; admin API
-  // routes enforce the same via requirePlatformAdminApi().
   const session = await auth();
-  if (!session?.user?.id) redirect("/signin?callbackUrl=/admin");
-  const isAdmin = await sessionIsPlatformAdmin(
-    session.user as { id?: string; isAdmin?: boolean }
-  );
-  if (!isAdmin) redirect("/dashboard");
+  if (!session?.user?.id) redirect("/signin");
+  if (!(await sessionIsPlatformAdmin(session.user))) redirect("/dashboard");
 
   return (
     <SessionProvider>

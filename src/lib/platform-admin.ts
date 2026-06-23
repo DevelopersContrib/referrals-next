@@ -1,42 +1,23 @@
 import { prisma } from "@/lib/prisma";
 
 /**
- * Platform admins are defined ONLY by the `ADMIN_EMAILS` env var
- * (comma-separated; `ADMIN_EMAIL` is accepted as a single-value alias).
- * No database flag grants admin — the env var is the single source of truth.
- *
- *   ADMIN_EMAILS=admin@vnoc.com,ops@vnoc.com
+ * True when the member is a platform admin, based on the main (DATABASE_URL)
+ * members.is_admin flag (tinyint(1) -> Boolean, 1 = admin).
  */
-function adminEmailSet(): Set<string> {
-  const raw = process.env.ADMIN_EMAILS ?? process.env.ADMIN_EMAIL ?? "";
-  return new Set(
-    raw
-      .split(",")
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean)
-  );
-}
-
-/** True when `email` is listed in ADMIN_EMAILS. */
-export function emailIsPlatformAdmin(email: string | null | undefined): boolean {
-  const e = email?.trim().toLowerCase();
-  if (!e) return false;
-  return adminEmailSet().has(e);
-}
-
-/** True when the member's email is an admin email. */
-export async function memberRowIsPlatformAdmin(member: {
-  id: number;
-  email: string | null;
-}): Promise<boolean> {
-  return emailIsPlatformAdmin(member.email);
-}
-
-/** Same as memberRowIsPlatformAdmin, for when you only have the member id. */
 export async function memberIdIsPlatformAdmin(memberId: number): Promise<boolean> {
+  if (!Number.isFinite(memberId)) return false;
   const row = await prisma.members.findUnique({
     where: { id: memberId },
-    select: { email: true },
+    select: { is_admin: true },
   });
-  return emailIsPlatformAdmin(row?.email ?? null);
+  return row?.is_admin === true;
+}
+
+/** Same check for when you already have the member row (avoids a re-query). */
+export async function memberRowIsPlatformAdmin(member: {
+  id: number;
+  is_admin?: boolean | null;
+}): Promise<boolean> {
+  if (typeof member.is_admin === "boolean") return member.is_admin;
+  return memberIdIsPlatformAdmin(member.id);
 }

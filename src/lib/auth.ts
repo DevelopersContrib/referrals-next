@@ -43,7 +43,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const isAdmin = await memberRowIsPlatformAdmin({
           id: member.id,
-          email: member.email,
+          is_admin: member.is_admin,
         });
         console.log("[isAdmin] credentials login", {
           memberId: member.id,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,6 +35,9 @@ export function AccountForm({
   const [profileError, setProfileError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   async function handleProfileSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -101,6 +105,28 @@ export function AccountForm({
       setPasswordError("Something went wrong.");
     } finally {
       setPasswordLoading(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setDeleteError("");
+    setDeleteLoading(true);
+
+    try {
+      const res = await fetch("/api/account", { method: "DELETE" });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setDeleteError(data.error || "Failed to delete account.");
+        setDeleteLoading(false);
+        return;
+      }
+
+      // Account is gone — clear the session and leave the app.
+      await signOut({ callbackUrl: "/" });
+    } catch {
+      setDeleteError("Something went wrong.");
+      setDeleteLoading(false);
     }
   }
 
@@ -351,18 +377,46 @@ export function AccountForm({
                   campaigns, participants, and referral data. This cannot be
                   undone.
                 </p>
+
+                {deleteError && (
+                  <div className="mt-3 flex items-center gap-2 rounded-lg border border-[#dc3545]/20 bg-white p-3 text-sm text-[#dc3545]">
+                    <AlertCircleIcon className="size-4 shrink-0" />
+                    {deleteError}
+                  </div>
+                )}
+
+                <div className="mt-4 space-y-2">
+                  <Label
+                    htmlFor="deleteConfirm"
+                    className="text-xs font-bold uppercase tracking-wider text-[#a7abc3]"
+                  >
+                    Type <span className="text-[#dc3545]">DELETE</span> to
+                    confirm
+                  </Label>
+                  <Input
+                    id="deleteConfirm"
+                    value={deleteConfirm}
+                    onChange={(e) => setDeleteConfirm(e.target.value)}
+                    placeholder="DELETE"
+                    autoComplete="off"
+                    className="max-w-xs border-[#dc3545]/30 bg-white focus:border-[#dc3545]"
+                  />
+                </div>
+
                 <Button
                   variant="destructive"
                   size="sm"
                   className="mt-3 gap-2"
-                  disabled
+                  disabled={deleteConfirm !== "DELETE" || deleteLoading}
+                  onClick={handleDeleteAccount}
                 >
-                  <Trash2Icon className="size-4" />
-                  Delete My Account
+                  {deleteLoading ? (
+                    <Loader2Icon className="size-4 animate-spin" />
+                  ) : (
+                    <Trash2Icon className="size-4" />
+                  )}
+                  {deleteLoading ? "Deleting..." : "Delete My Account"}
                 </Button>
-                <p className="mt-2 text-xs text-[#a7abc3]">
-                  Contact support@referrals.com to delete your account.
-                </p>
               </div>
             </div>
           </div>

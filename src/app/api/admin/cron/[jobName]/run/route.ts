@@ -3,27 +3,27 @@ import { adminApiGuard } from "@/lib/require-platform-admin";
 
 type RouteParams = { params: Promise<{ jobName: string }> };
 
-// Known cron jobs in the system
+// Known cron jobs in the system, keyed by their route name under /api/cron
 const CRON_JOBS: Record<string, { name: string; endpoint: string }> = {
-  "expire-plans": {
-    name: "Expire Plans",
-    endpoint: "/api/cron/expire-plans",
+  "contest-winners": {
+    name: "Contest Winners",
+    endpoint: "/api/cron/contest-winners",
   },
-  "send-reminders": {
-    name: "Send Reminders",
-    endpoint: "/api/cron/send-reminders",
+  "plan-expiry": {
+    name: "Plan Expiry Reminders",
+    endpoint: "/api/cron/plan-expiry",
   },
-  "cleanup-tokens": {
-    name: "Cleanup Tokens",
-    endpoint: "/api/cron/cleanup-tokens",
+  "update-payments": {
+    name: "Update Payments",
+    endpoint: "/api/cron/update-payments",
   },
-  "sync-analytics": {
-    name: "Sync Analytics",
-    endpoint: "/api/cron/sync-analytics",
+  "update-impressions": {
+    name: "Update Impressions",
+    endpoint: "/api/cron/update-impressions",
   },
-  "process-payments": {
-    name: "Process Payments",
-    endpoint: "/api/cron/process-payments",
+  "update-feeds": {
+    name: "Update Feeds",
+    endpoint: "/api/cron/update-feeds",
   },
 };
 

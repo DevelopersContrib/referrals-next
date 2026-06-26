@@ -290,6 +290,18 @@ export default function DocsPage() {
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Sections
             </p>
+            <a
+              href="#base-url"
+              className="block rounded-md px-2 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              Base URL
+            </a>
+            <a
+              href="#widget-embed"
+              className="block rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              Widget Embed
+            </a>
             {sections.map((section) => (
               <a
                 key={section.title}
@@ -310,6 +322,60 @@ export default function DocsPage() {
               Complete documentation for the Referrals.com REST API v1.
             </p>
           </div>
+
+          {/* Base URL + Auth */}
+          <section id="base-url">
+            <h2 className="mb-4 border-b pb-2 font-heading text-xl font-semibold">
+              Base URL &amp; Authentication
+            </h2>
+            <div className="space-y-3 text-sm">
+              <p className="text-muted-foreground">
+                All API endpoints are available under two base URLs:
+              </p>
+              <div className="space-y-1.5">
+                <CodeBlock code="https://referrals.com/api/v1" />
+                <CodeBlock code="https://api.referrals.com/v1" />
+              </div>
+              <p className="text-muted-foreground">
+                Both are identical — use whichever you prefer. Authenticate by
+                including your API key in the <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">X-API-Key</code> header,
+                or pass a JWT Bearer token from <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">POST /v1/auth/token</code>.
+              </p>
+              <CodeBlock
+                code={`curl https://api.referrals.com/v1/members/profile \\
+  -H "X-API-Key: ref_your_api_key_here"`}
+              />
+            </div>
+          </section>
+
+          {/* Widget embed */}
+          <section id="widget-embed">
+            <h2 className="mb-4 border-b pb-2 font-heading text-xl font-semibold">
+              Widget Embed
+            </h2>
+            <div className="space-y-3 text-sm">
+              <p className="text-muted-foreground">
+                Add a referral widget to any website with a single script tag.
+                Replace <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">123</code> with your campaign ID.
+              </p>
+              <CodeBlock
+                code={`<div id="referrals-widget"></div>
+<script src="https://referrals.com/widget.js?campaign=123" async></script>`}
+              />
+              <p className="text-muted-foreground">
+                Or embed directly via iframe:
+              </p>
+              <CodeBlock
+                code={`<iframe src="https://referrals.com/widget/123/embed"
+  width="100%" height="560" style="border:0"
+  allow="clipboard-write"></iframe>`}
+              />
+              <p className="text-muted-foreground">
+                The widget supports three modes — <strong>embed</strong> (inline), <strong>popup</strong> (button + modal),
+                and <strong>floating</strong> (corner bubble) — configured in your campaign&apos;s widget settings.
+              </p>
+            </div>
+          </section>
 
           {sections.map((section) => (
             <section

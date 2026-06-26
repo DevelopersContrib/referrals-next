@@ -22,7 +22,7 @@ export function buildCampaignEmbedSnippets(
   const id = campaignId;
 
   const js = `<div id="referrals-widget"></div>
-<script src="${root}/api/widget/js/${id}" async></script>`;
+<script src="${root}/widget.js?campaign=${id}" async></script>`;
 
   const iframe = `<iframe
   src="${root}/widget/${id}/embed"
@@ -40,7 +40,7 @@ export function buildCampaignEmbedSnippets(
 import express from "express";
 
 const app = express();
-const WIDGET_JS = "${root}/api/widget/js/${id}";
+const WIDGET_JS = "${root}/widget.js?campaign=${id}";
 
 app.get("/refer", (_req, res) => {
   res.type("html").send(\`<!doctype html>
@@ -69,12 +69,11 @@ export function publicCampaignUrl(
   root: string,
   slugOrId: string | number,
   campaignId: number,
-  variant: "public" | "p"
+  variant: "public" | "p" = "p"
 ) {
   const seg = encodeURIComponent(String(slugOrId).trim());
   const base = trimEmbedBase(root);
-  if (variant === "public") {
-    return `${base}/public/${seg}/campaign/${campaignId}`;
-  }
+  // Canonical URL is always /p/ — /public/ redirects there via next.config.ts
+  void variant;
   return `${base}/p/${seg}/campaign/${campaignId}`;
 }

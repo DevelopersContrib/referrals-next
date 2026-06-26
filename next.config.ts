@@ -124,6 +124,21 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // CORS for api.referrals.com legacy /v1/* paths (rewritten to /api/v1/*)
+      {
+        source: "/v1/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "GET, POST, PUT, DELETE, OPTIONS",
+          },
+          {
+            key: "Access-Control-Allow-Headers",
+            value: "Content-Type, X-API-Key, Authorization",
+          },
+        ],
+      },
       // CORS for legacy /widget/* paths (rewritten to /api/widget/*)
       {
         source: "/widget/:action(signup|share|click|impression|invite|reward|vote)",

@@ -8,6 +8,7 @@ export function proxy(request: NextRequest) {
   const publicPrefixes = [
     "/api/auth",
     "/api/v1",
+    "/v1/",
     "/api/widget",
     "/api/legacy",
     "/api/cron",

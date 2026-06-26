@@ -239,13 +239,13 @@ export default function ContactPage() {
                       href="/support"
                       className="text-sm text-[#ff646c] hover:underline"
                     >
-                      Visit Support Center
+                      Search Help Articles
                     </Link>
                     <Link
-                      href="/knowledgebase"
+                      href="/developer/docs"
                       className="text-sm text-[#ff646c] hover:underline"
                     >
-                      Browse Knowledgebase
+                      Developer Docs
                     </Link>
                     <Link
                       href="/forum"

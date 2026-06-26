@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getAllArticleSlugs } from "@/lib/knowledgebase-articles";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -15,8 +16,15 @@ export async function GET() {
     { url: "/pricing", priority: "0.8", changefreq: "weekly" },
     { url: "/developer", priority: "0.7", changefreq: "weekly" },
     { url: "/developer/docs", priority: "0.7", changefreq: "weekly" },
+    { url: "/support", priority: "0.8", changefreq: "weekly" },
     { url: "/.well-known/agent.json", priority: "0.5", changefreq: "monthly" },
   ];
+
+  const supportArticlePages = getAllArticleSlugs().map((slug) => ({
+    url: `/support/${slug}`,
+    priority: "0.6",
+    changefreq: "monthly" as const,
+  }));
 
   // Dynamic pages: public brand pages
   let brandUrls: { url: string; date_added: Date }[] = [];
@@ -69,7 +77,7 @@ export async function GET() {
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${staticPages
+${[...staticPages, ...supportArticlePages]
   .map(
     (page) => `  <url>
     <loc>${baseUrl}${page.url}</loc>

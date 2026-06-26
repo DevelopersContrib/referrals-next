@@ -86,6 +86,17 @@ const nextConfig: NextConfig = {
         destination: "/pricing",
         permanent: true,
       },
+      // ── /knowledgebase → /support ──
+      {
+        source: "/knowledgebase",
+        destination: "/support",
+        permanent: true,
+      },
+      {
+        source: "/knowledgebase/:slug",
+        destination: "/support/:slug",
+        permanent: true,
+      },
     ];
   },
 

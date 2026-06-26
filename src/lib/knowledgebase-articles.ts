@@ -20,6 +20,9 @@ export const knowledgebaseCategories = [
 		title: "Campaigns",
 		articles: [
 			{ title: "Campaign types explained", slug: "campaign-types" },
+			{ title: "Using campaign templates", slug: "campaign-templates" },
+			{ title: "Contests and voting campaigns", slug: "contests-and-voting" },
+			{ title: "Two-way rewards", slug: "two-way-rewards" },
 			{ title: "Setting goals (visits vs signups)", slug: "goals" },
 			{ title: "Configuring rewards", slug: "rewards" },
 			{ title: "Managing coupons", slug: "coupons" },
@@ -61,6 +64,14 @@ export const knowledgebaseCategories = [
 			{ title: "Click and share tracking", slug: "tracking" },
 			{ title: "Exporting participant data", slug: "exporting" },
 			{ title: "Share link tracking (/t/ URLs)", slug: "share-links" },
+		],
+	},
+	{
+		title: "Whitelabel & Branding",
+		articles: [
+			{ title: "Custom domains", slug: "custom-domains" },
+			{ title: "Brand subdomains", slug: "brand-subdomains" },
+			{ title: "Branded email templates", slug: "branded-emails" },
 		],
 	},
 ];
@@ -163,6 +174,39 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
 			"The referral widget includes built-in share buttons for email, Facebook, Twitter/X, and copy-link. Participants can share their unique referral link with one click.",
 			"Each share generates a tracked link (/t/ URL) that attributes clicks and conversions back to the participant. Customize the default share message in the widget editor.",
 			"For Facebook-specific campaigns, use the Facebook tool at /tools/facebook to configure Open Graph metadata and track social referrals separately.",
+		],
+	},
+	{
+		slug: "campaign-templates",
+		title: "Using campaign templates",
+		category: "Campaigns",
+		description: "Start quickly with pre-built campaign templates.",
+		paragraphs: [
+			"Referrals.com offers pre-built templates for common referral mechanics — social rewards, invite-a-friend, token giveaways, photo voting, polls, and more. Browse templates at /campaign-templates.",
+			"When creating a campaign, choose a template to pre-fill widget layout, default copy, and reward settings. You can customize every element before publishing.",
+			"Templates marked Premium require a paid plan. Free templates include social reward and basic invite flows suitable for most small businesses.",
+		],
+	},
+	{
+		slug: "contests-and-voting",
+		title: "Contests and voting campaigns",
+		category: "Campaigns",
+		description: "Run contests, polls, and voting to drive engagement.",
+		paragraphs: [
+			"Contest and voting campaign types let participants compete for rewards based on referrals, votes, or poll responses. These mechanics create urgency and social proof.",
+			"Photo voting campaigns allow participants to submit entries and invite friends to vote. Poll campaigns collect opinions while tracking who referred each respondent.",
+			"Configure contest end dates, winner selection rules, and prize tiers in the campaign wizard. Leaderboards in the widget show top performers in real time.",
+		],
+	},
+	{
+		slug: "two-way-rewards",
+		title: "Two-way rewards",
+		category: "Campaigns",
+		description: "Reward both the referrer and the person they invite.",
+		paragraphs: [
+			"Two-way reward campaigns give incentives to both parties — the person who shares and the friend who signs up or visits. This increases conversion rates compared to referrer-only rewards.",
+			"Configure separate rewards for each side in the campaign rewards panel. Common setups include a discount for the referee and a larger coupon or cash reward for the referrer.",
+			"Both parties receive email notifications when goals are met. Customize each message to explain what the recipient earned and how to redeem their reward.",
 		],
 	},
 	{
@@ -352,6 +396,39 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
 			"Participants copy their tracking link from the widget. You can also retrieve share links via the API for custom distribution channels.",
 		],
 	},
+	{
+		slug: "custom-domains",
+		title: "Custom domains",
+		category: "Whitelabel & Branding",
+		description: "Use your own domain for referral landing pages.",
+		paragraphs: [
+			"Enterprise and whitelabel plans support custom domains for brand pages and campaign landers. Instead of referrals.com/p/yourbrand, visitors see yourbrand.com or referrals.yourbrand.com.",
+			"To set up a custom domain, add a CNAME record pointing to proxy.referrals.com in your DNS provider. Then contact support or use the subdomain settings page to request verification.",
+			"Once verified, SSL is provisioned automatically. Custom domains apply to public brand pages, campaign landers, and share link redirects.",
+		],
+	},
+	{
+		slug: "brand-subdomains",
+		title: "Brand subdomains",
+		category: "Whitelabel & Branding",
+		description: "Host referral pages on a referrals.com subdomain.",
+		paragraphs: [
+			"Each brand can use a branded subdomain such as yourbrand.referrals.com for public pages and campaign landers. Configure this in your brand settings under Subdomain.",
+			"Subdomains are available on Premium and Enterprise plans. Choose a unique slug that matches your brand name — it must be available and follow naming guidelines.",
+			"Subdomain pages inherit your brand logo, colors, and widget styling. Share links can use the subdomain for a more professional appearance than the default /p/ path.",
+		],
+	},
+	{
+		slug: "branded-emails",
+		title: "Branded email templates",
+		category: "Whitelabel & Branding",
+		description: "Customize reward and notification emails to match your brand.",
+		paragraphs: [
+			"Referrals.com sends transactional emails for reward notifications, invite confirmations, and campaign updates. Customize subject lines and body copy per campaign in the rewards settings.",
+			"Whitelabel plans allow custom sender names and reply-to addresses. Enterprise plans support fully custom email templates with your logo, colors, and footer links.",
+			"Preview email content in the campaign editor before publishing. Test sends go to your account email so you can verify formatting across clients.",
+		],
+	},
 ];
 
 const articleMap = new Map(
@@ -375,4 +452,36 @@ export function getRelatedArticles(
 
 export function getAllArticleSlugs(): string[] {
 	return knowledgebaseArticles.map((a) => a.slug);
+}
+
+function articleSearchText(article: KnowledgebaseArticle): string {
+	return [
+		article.title,
+		article.category,
+		article.description,
+		...article.paragraphs,
+	]
+		.join(" ")
+		.toLowerCase();
+}
+
+export function searchArticles(query: string): KnowledgebaseArticle[] {
+	const q = query.trim().toLowerCase();
+	if (!q) return knowledgebaseArticles;
+	return knowledgebaseArticles.filter((article) =>
+		articleSearchText(article).includes(q)
+	);
+}
+
+export type KnowledgebaseCategory = (typeof knowledgebaseCategories)[number];
+
+export function filterCategoriesBySlugs(
+	slugs: Set<string>
+): KnowledgebaseCategory[] {
+	return knowledgebaseCategories
+		.map((cat) => ({
+			...cat,
+			articles: cat.articles.filter((a) => slugs.has(a.slug)),
+		}))
+		.filter((cat) => cat.articles.length > 0);
 }

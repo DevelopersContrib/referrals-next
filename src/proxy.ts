@@ -19,6 +19,7 @@ export function proxy(request: NextRequest) {
     "/public/",
     "/extension",
     "/developer",
+    "/support/",
     "/topbar",
     "/invitepublic",
     "/sendinvite",

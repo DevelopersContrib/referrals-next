@@ -135,6 +135,7 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
               items={[
                 { href: "/blog", label: "Blog" },
                 { href: "/support", label: "Support" },
+                { href: "/developer/docs", label: "Developer Docs" },
                 { href: "/contact", label: "Contact" },
                 { href: "/forum", label: "Forum" },
                 { href: "/feedback", label: "Feedback" },
@@ -303,6 +304,7 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
                     {[
                       { href: "/blog", label: "Blog" },
                       { href: "/support", label: "Support" },
+                      { href: "/developer/docs", label: "Developer Docs" },
                       { href: "/contact", label: "Contact" },
                       { href: "/forum", label: "Forum" },
                       { href: "/feedback", label: "Feedback" },
@@ -485,8 +487,8 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
                 {[
                   { href: "/about", label: "About" },
                   { href: "/blog", label: "Blog" },
-                  { href: "/support", label: "Support" },
-                  { href: "/knowledgebase", label: "Knowledgebase" },
+                  { href: "/support", label: "Help Center" },
+                  { href: "/developer/docs", label: "Developer Docs" },
                   { href: "/contact", label: "Contact" },
                   { href: "/feedback", label: "Feedback" },
                 ].map((item) => (

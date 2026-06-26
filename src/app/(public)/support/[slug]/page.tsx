@@ -26,14 +26,14 @@ export async function generateMetadata({
 		title: article.title,
 		description: article.description,
 		openGraph: {
-			title: `${article.title} | Referrals.com Knowledgebase`,
+			title: `${article.title} | Referrals.com Support`,
 			description: article.description,
-			url: `https://referrals.com/knowledgebase/${slug}`,
+			url: `https://referrals.com/support/${slug}`,
 		},
 	};
 }
 
-export default async function KnowledgebaseArticlePage({ params }: PageProps) {
+export default async function SupportArticlePage({ params }: PageProps) {
 	const { slug } = await params;
 	const article = getArticleBySlug(slug);
 	if (!article) notFound();
@@ -47,8 +47,8 @@ export default async function KnowledgebaseArticlePage({ params }: PageProps) {
 					Home
 				</Link>
 				<span>/</span>
-				<Link href="/knowledgebase" className="hover:text-brand">
-					Knowledgebase
+				<Link href="/support" className="hover:text-brand">
+					Support
 				</Link>
 				<span>/</span>
 				<span className="text-gray-400">{article.category}</span>
@@ -69,10 +69,10 @@ export default async function KnowledgebaseArticlePage({ params }: PageProps) {
 					</div>
 					<div className="mt-10 border-t pt-6">
 						<Link
-							href="/knowledgebase"
+							href="/support"
 							className="text-sm font-medium text-brand hover:underline"
 						>
-							&larr; Back to Knowledgebase
+							&larr; Back to Support
 						</Link>
 					</div>
 				</article>
@@ -86,7 +86,7 @@ export default async function KnowledgebaseArticlePage({ params }: PageProps) {
 							{related.map((rel) => (
 								<li key={rel.slug}>
 									<Link
-										href={`/knowledgebase/${rel.slug}`}
+										href={`/support/${rel.slug}`}
 										className="text-sm text-gray-600 hover:text-brand hover:underline"
 									>
 										{rel.title}

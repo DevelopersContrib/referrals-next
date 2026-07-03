@@ -2,38 +2,51 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   async rewrites() {
-    return [
-      // ── PHP-compat: /widget/signup → /api/widget/signup (etc.) ──
-      // The PHP site exposed widget endpoints without the /api prefix.
-      // Existing embeds POST to /widget/signup, /widget/share, etc.
-      ...[
-        "signup",
-        "share",
-        "click",
-        "impression",
-        "invite",
-        "reward",
-        "vote",
-      ].map((action) => ({
-        source: `/widget/${action}`,
-        destination: `/api/widget/${action}`,
-      })),
+    return {
+      // beforeFiles runs *before* the filesystem/public check, so this wins
+      // over the static public/widget.js. That makes /widget.js?campaign=ID
+      // serve the template-aware loader (popup / embed / floating resolved
+      // from the campaign's stored widget template) — identical to
+      // /extension/widget.js?key=ID and /api/widget/js/ID.
+      beforeFiles: [
+        { source: "/widget.js", destination: "/api/legacy/widget-js" },
+      ],
+      afterFiles: [
+        // ── PHP-compat: /widget/signup → /api/widget/signup (etc.) ──
+        // The PHP site exposed widget endpoints without the /api prefix.
+        // Existing embeds POST to /widget/signup, /widget/share, etc.
+        ...[
+          "signup",
+          "share",
+          "click",
+          "impression",
+          "invite",
+          "reward",
+          "vote",
+        ].map((action) => ({
+          source: `/widget/${action}`,
+          destination: `/api/widget/${action}`,
+        })),
 
-      // ── PHP-compat: /widget.js?campaign=123 → /api/widget/js/123 ──
-      // Legacy embed scripts use <script src="/widget.js?campaign=ID">
-      { source: "/widget.js", destination: "/api/legacy/widget-js" },
+        // ── PHP-compat: /extension/widget.js?key=123 (legacy embeds) ──
+        {
+          source: "/extension/widget.js",
+          destination: "/api/legacy/widget-js",
+        },
 
-      // ── PHP-compat: /extension/widget.js?id=123 ──
-      {
-        source: "/extension/widget.js",
-        destination: "/api/legacy/widget-js",
-      },
+        // ── PHP-compat: /extension/signup.js?name=&email=&code= ──
+        // Conversion pixel placed on the customer's post-signup page.
+        {
+          source: "/extension/signup.js",
+          destination: "/api/legacy/signup-js",
+        },
 
-      // ── api.referrals.com compat: /v1/* → /api/v1/* ──
-      // When api.referrals.com is added as a Vercel domain,
-      // requests arrive as /v1/campaigns → rewrite to /api/v1/campaigns
-      { source: "/v1/:path*", destination: "/api/v1/:path*" },
-    ];
+        // ── api.referrals.com compat: /v1/* → /api/v1/* ──
+        // When api.referrals.com is added as a Vercel domain,
+        // requests arrive as /v1/campaigns → rewrite to /api/v1/campaigns
+        { source: "/v1/:path*", destination: "/api/v1/:path*" },
+      ],
+    };
   },
 
   async redirects() {
@@ -148,11 +161,13 @@ const nextConfig: NextConfig = {
           { key: "Access-Control-Allow-Headers", value: "Content-Type" },
         ],
       },
+      // /widget.js is served by the dynamic loader (see beforeFiles rewrite),
+      // which sets its own Content-Type. Only CORS is needed here.
       {
         source: "/widget.js",
         headers: [
           { key: "Access-Control-Allow-Origin", value: "*" },
-          { key: "Content-Type", value: "application/javascript" },
+          { key: "Access-Control-Allow-Methods", value: "GET, OPTIONS" },
         ],
       },
     ];

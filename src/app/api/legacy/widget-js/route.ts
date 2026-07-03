@@ -1,43 +1,59 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { buildCampaignWidgetJs } from "@/lib/widget-js";
 
 /**
- * PHP-compat: /widget.js?campaign=123  or  /extension/widget.js?id=123
+ * PHP-compat widget loader. Serves:
+ *   /widget.js?campaign=123           (new embeds)
+ *   /extension/widget.js?key=123      (legacy PHP embeds)
+ *   /widget.js?id=123                 (alt param)
  *
- * Internally redirects to the canonical /api/widget/js/{id} handler
- * so we don't duplicate the JS generation logic.
+ * All shapes resolve to the same generated loader via buildCampaignWidgetJs.
  */
+const jsHeaders = {
+  "Content-Type": "application/javascript",
+  "Access-Control-Allow-Origin": "*",
+};
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const campaignId = searchParams.get("campaign") || searchParams.get("id");
+  // Legacy PHP embeds use ?key=; newer embeds use ?campaign= or ?id=.
+  const raw =
+    searchParams.get("campaign") ||
+    searchParams.get("id") ||
+    searchParams.get("key");
+  const campaignId = raw ? parseInt(raw, 10) : NaN;
 
-  if (!campaignId) {
-    return new NextResponse("// Missing ?campaign= or ?id= parameter", {
-      status: 400,
-      headers: {
-        "Content-Type": "application/javascript",
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
+  if (!raw || Number.isNaN(campaignId)) {
+    return new NextResponse(
+      "// Missing or invalid ?campaign= / ?id= / ?key= parameter",
+      { status: 400, headers: jsHeaders },
+    );
   }
 
-  const origin =
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ||
-    `${request.nextUrl.protocol}//${request.nextUrl.host}`;
-  const target = `${origin}/api/widget/js/${encodeURIComponent(campaignId)}`;
+  try {
+    const result = await buildCampaignWidgetJs(campaignId);
 
-  const upstream = await fetch(target, {
-    headers: { "User-Agent": "legacy-widget-js-proxy" },
-  });
+    if (!result.ok) {
+      return new NextResponse(result.message, {
+        status: result.status,
+        headers: jsHeaders,
+      });
+    }
 
-  const body = await upstream.text();
-  return new NextResponse(body, {
-    status: upstream.status,
-    headers: {
-      "Content-Type": "application/javascript",
-      "Cache-Control": "public, max-age=300, s-maxage=600",
-      "Access-Control-Allow-Origin": "*",
-    },
-  });
+    return new NextResponse(result.js, {
+      status: 200,
+      headers: {
+        ...jsHeaders,
+        "Cache-Control": "public, max-age=300, s-maxage=600",
+      },
+    });
+  } catch (error) {
+    console.error("[legacy/widget-js] Error:", error);
+    return new NextResponse("// Internal error", {
+      status: 500,
+      headers: jsHeaders,
+    });
+  }
 }
 
 export async function OPTIONS() {

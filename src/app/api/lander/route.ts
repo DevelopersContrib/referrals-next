@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getCampaignByIdIfAccessible } from "@/lib/brand-access";
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,6 +17,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: "campaignId query param is required" },
         { status: 400 }
+      );
+    }
+
+    // Requester must own the campaign — or be a platform admin. Prevents
+    // reading arbitrary campaigns' lander config via IDOR.
+    const campaign = await getCampaignByIdIfAccessible(
+      parseInt(campaignId, 10),
+      parseInt(session.user.id, 10),
+      Boolean((session.user as { isAdmin?: boolean }).isAdmin)
+    );
+    if (!campaign) {
+      return NextResponse.json(
+        { error: "Campaign not found or access denied" },
+        { status: 404 }
       );
     }
 

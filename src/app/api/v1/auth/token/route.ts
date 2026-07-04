@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { compareSync } from "bcryptjs";
 import { createHmac } from "crypto";
 import { apiSuccess, apiError, handleCors } from "@/lib/api/helpers";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 function base64url(input: string | Buffer): string {
   const buf = typeof input === "string" ? Buffer.from(input) : input;
@@ -40,6 +41,11 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
+    // Throttle credential attempts per IP to blunt brute-force / stuffing.
+    if (!rateLimit(`token:${clientIp(req)}`, 10, 60_000)) {
+      return apiError("Too many attempts. Please try again shortly.", 429);
+    }
+
     const body = await req.json();
     const { email, password } = body;
 
@@ -69,8 +75,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate JWT token
-    const secret = process.env.NEXTAUTH_SECRET || "fallback-secret";
+    // Generate JWT token. Never fall back to a publicly-known secret — that
+    // would let anyone forge valid tokens.
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      console.error("NEXTAUTH_SECRET is not set; cannot issue API tokens");
+      return apiError("Server misconfiguration", 500);
+    }
     const token = signJwt(
       {
         sub: String(member.id),

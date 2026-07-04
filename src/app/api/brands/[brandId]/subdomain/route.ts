@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { userCanAccessBrand } from "@/lib/brand-access";
 
 export async function GET(
   req: NextRequest,
@@ -11,8 +12,20 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { brandId } = await params;
+  const parsedBrandId = parseInt(brandId, 10);
+
+  // Requester must own the brand — or be a platform admin (admins manage all
+  // brands/domains). Prevents reading arbitrary brands' config via IDOR.
+  const canAccess = await userCanAccessBrand(
+    parsedBrandId,
+    parseInt(session.user.id, 10),
+    Boolean((session.user as { isAdmin?: boolean }).isAdmin)
+  );
+  if (!canAccess)
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   const subdomain = await prisma.brand_subdomains.findFirst({
-    where: { url_id: parseInt(brandId, 10) },
+    where: { url_id: parsedBrandId },
   });
 
   return NextResponse.json({ subdomain });

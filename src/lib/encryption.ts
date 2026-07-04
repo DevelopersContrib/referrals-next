@@ -1,7 +1,25 @@
 import crypto from "crypto";
 
 const ALGORITHM = "aes-256-cbc";
-const KEY = process.env.WIDGET_ENCRYPTION_KEY || "referrals-default-encryption-key-32b";
+
+// Legacy key that was hardcoded in source. Share links generated before a
+// proper WIDGET_ENCRYPTION_KEY was configured were encrypted with this, so we
+// must keep it available for decryption (backward compatibility).
+const LEGACY_KEY = "referrals-default-encryption-key-32b";
+
+// Active key used for all NEW encryption. Set WIDGET_ENCRYPTION_KEY in the
+// environment to rotate to a strong secret.
+const PRIMARY_KEY = process.env.WIDGET_ENCRYPTION_KEY || LEGACY_KEY;
+
+// Derive scrypt keys once (scryptSync is intentionally expensive). Decryption
+// tries the primary key first, then the legacy key so in-flight links from
+// before rotation still resolve. Once the primary === legacy (no env set),
+// there's only one distinct key to try.
+const PRIMARY_DERIVED = crypto.scryptSync(PRIMARY_KEY, "salt", 32);
+const DECRYPT_KEYS =
+  PRIMARY_KEY === LEGACY_KEY
+    ? [PRIMARY_DERIVED]
+    : [PRIMARY_DERIVED, crypto.scryptSync(LEGACY_KEY, "salt", 32)];
 
 /**
  * Encrypt a share code for widget tracking.
@@ -10,8 +28,7 @@ const KEY = process.env.WIDGET_ENCRYPTION_KEY || "referrals-default-encryption-k
  */
 export function encryptShareCode(data: string): string {
   const iv = crypto.randomBytes(16);
-  const key = crypto.scryptSync(KEY, "salt", 32);
-  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+  const cipher = crypto.createCipheriv(ALGORITHM, PRIMARY_DERIVED, iv);
 
   let encrypted = cipher.update(data, "utf8", "base64");
   encrypted += cipher.final("base64");
@@ -23,19 +40,30 @@ export function encryptShareCode(data: string): string {
 
 /**
  * Decrypt a share code back to its components.
+ *
+ * Tries the active key first, then the legacy key, so links created before a
+ * key rotation continue to work. Throws only if no configured key can decode.
  */
 export function decryptShareCode(encoded: string): string {
   const combined = Buffer.from(encoded, "base64url");
   const iv = combined.subarray(0, 16);
   const encrypted = combined.subarray(16);
 
-  const key = crypto.scryptSync(KEY, "salt", 32);
-  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+  let lastError: unknown;
+  for (const key of DECRYPT_KEYS) {
+    try {
+      const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+      let decrypted = decipher.update(encrypted);
+      decrypted = Buffer.concat([decrypted, decipher.final()]);
+      return decrypted.toString("utf8");
+    } catch (err) {
+      lastError = err;
+    }
+  }
 
-  let decrypted = decipher.update(encrypted);
-  decrypted = Buffer.concat([decrypted, decipher.final()]);
-
-  return decrypted.toString("utf8");
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Failed to decrypt share code");
 }
 
 /**

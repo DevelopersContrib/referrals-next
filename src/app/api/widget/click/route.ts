@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { decryptShareCode, parseShareCode } from "@/lib/encryption";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,6 +22,14 @@ export async function OPTIONS() {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Generous per-IP cap to curb automated click inflation. Fails open.
+    if (!rateLimit(`click:${clientIp(request)}`, 100, 60_000)) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded" },
+        { status: 429, headers: corsHeaders }
+      );
+    }
+
     const body = await request.json();
 
     let campaignId: number;

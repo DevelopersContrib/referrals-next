@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import Script from "next/script";
 import { SessionProvider, useSession, signOut } from "next-auth/react";
 
 const LOGO_URL =
@@ -71,6 +72,13 @@ export default function PublicLayout({
 }) {
   return (
     <SessionProvider>
+      {/* VNOC Analytics — public pages only. Auto-tracks pageviews + SPA
+          route changes; exposes window.vnoc.track() for conversion events. */}
+      <Script
+        src="https://analytics.vnoc.com/tracker.js"
+        data-domain="referrals.com"
+        strategy="afterInteractive"
+      />
       <PublicLayoutInner>{children}</PublicLayoutInner>
     </SessionProvider>
   );

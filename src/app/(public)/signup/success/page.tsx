@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { VnocTrack } from "@/components/analytics/vnoc-track";
 
 export const metadata: Metadata = {
   title: "Account Created",
@@ -33,6 +34,7 @@ export default async function SignupSuccessPage({
 
   return (
     <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-12">
+      <VnocTrack name="signup" category="conversion" />
       <Card className="w-full max-w-md">
         <CardContent className="p-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">

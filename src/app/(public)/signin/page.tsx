@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { GoogleIcon } from "@/components/auth/google-icon";
 
 export default function SignInPage() {
   return (
@@ -87,30 +85,6 @@ function SignInForm() {
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-
-          <div className="my-6 flex items-center gap-4">
-            <Separator className="flex-1" />
-            <span className="text-xs text-muted-foreground">OR</span>
-            <Separator className="flex-1" />
-          </div>
-
-          <div className="space-y-3">
-            <Button
-              variant="outline"
-              className="w-full gap-2"
-              onClick={() => signIn("google", { callbackUrl })}
-            >
-              <GoogleIcon className="size-5 shrink-0" />
-              Continue with Google
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => signIn("facebook", { callbackUrl })}
-            >
-              Continue with Facebook
-            </Button>
-          </div>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}

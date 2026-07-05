@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { writeFile, mkdir } from "fs/promises";
+import { uploadToS3 } from "@/lib/s3";
 import path from "path";
 
 export async function POST(req: NextRequest) {
@@ -11,38 +11,41 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    const type = formData.get("type") as string || "general";
+    const type = (formData.get("type") as string) || "general";
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: "File too large (max 5MB)" }, { status: 400 });
+      return NextResponse.json(
+        { error: "File too large (max 5MB)" },
+        { status: 400 }
+      );
     }
 
-    // Validate file type
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "text/csv"];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "text/csv",
+    ];
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid file type" },
+        { status: 400 }
+      );
     }
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Create upload directory
-    const uploadDir = path.join(process.cwd(), "public", "uploads", type);
-    await mkdir(uploadDir, { recursive: true });
-
-    // Generate unique filename
-    const ext = path.extname(file.name);
+    const ext = path.extname(file.name) || ".bin";
     const filename = `${session.user.id}_${Date.now()}${ext}`;
-    const filepath = path.join(uploadDir, filename);
+    const key = `uploads/${type}/${filename}`;
 
-    await writeFile(filepath, buffer);
-
-    const url = `/uploads/${type}/${filename}`;
+    const url = await uploadToS3(key, buffer, file.type);
 
     return NextResponse.json({ url, filename });
   } catch (error) {

@@ -524,7 +524,7 @@ export function ReferralWidget({
         >
           Powered by{" "}
           <a
-            href="https://referrals.com"
+            href="https://referrals.com/?utm_source=widget&utm_medium=powered_by&utm_campaign=referral_widget"
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: "#9CA3AF", textDecoration: "underline" }}

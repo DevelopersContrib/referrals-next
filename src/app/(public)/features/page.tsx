@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Features",
   description:
     "Explore all Referrals.com features — referral campaigns, embeddable widgets, reward systems, analytics, integrations, and more.",
+  alternates: { canonical: "https://referrals.com/features" },
   openGraph: {
     title: "Features | Referrals.com",
     description:

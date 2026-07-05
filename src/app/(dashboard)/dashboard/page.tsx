@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { countMemberBrands } from "@/lib/member-subscription";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,11 @@ export default async function DashboardPage() {
 
   const memberId = parseInt(session.user.id, 10);
   const userName = session.user.name || session.user.email || "User";
+
+  // First-run activation: send brand-less users into guided onboarding.
+  if ((await countMemberBrands(memberId)) === 0) {
+    redirect("/onboarding");
+  }
 
   let data;
   try {

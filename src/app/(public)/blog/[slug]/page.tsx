@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllPosts, getPostBySlug, getRelatedPosts } from "@/lib/blog";
+import { JsonLd } from "@/components/seo/json-ld";
 import type { Metadata } from "next";
 
 interface Props {
@@ -20,6 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${post.title} | Referrals.com Blog`,
     description: post.excerpt,
+    alternates: { canonical: `https://referrals.com/blog/${slug}` },
     openGraph: {
       title: `${post.title} | Referrals.com Blog`,
       description: post.excerpt,
@@ -120,8 +122,32 @@ export default async function BlogPostPage({ params }: Props) {
   const shareUrl = encodeURIComponent(`https://referrals.com/blog/${slug}`);
   const shareTitle = encodeURIComponent(post.title);
 
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.excerpt,
+    image: post.featuredImage ? [post.featuredImage] : undefined,
+    datePublished: post.date,
+    dateModified: post.date,
+    author: { "@type": "Person", name: post.author },
+    publisher: {
+      "@type": "Organization",
+      name: "Referrals.com",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://referrals.com/images/logo/logo.png",
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://referrals.com/blog/${slug}`,
+    },
+  };
+
   return (
     <div className="bg-[#fafafa] pb-20 pt-6 sm:pt-10">
+      <JsonLd data={articleJsonLd} />
       <article className="mx-auto max-w-[680px] px-5 sm:px-6">
         <nav className="mb-10 font-sans text-sm text-gray-500">
           <Link

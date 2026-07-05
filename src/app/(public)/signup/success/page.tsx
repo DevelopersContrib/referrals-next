@@ -35,11 +35,12 @@ export default async function SignupSuccessPage({
   return (
     <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-12">
       <VnocTrack name="signup" category="conversion" />
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md overflow-hidden border-rose-100 shadow-lg shadow-rose-100/50">
+        <div className="h-1.5 w-full bg-gradient-to-r from-[#FF5C62] to-[#926efb]" />
         <CardContent className="p-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#FF5C62]/15 to-[#926efb]/15">
             <svg
-              className="h-8 w-8 text-blue-600"
+              className="h-8 w-8 text-[#FF5C62]"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -52,38 +53,72 @@ export default async function SignupSuccessPage({
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Check Your Email
+          <h1
+            className="text-2xl font-bold text-gray-900"
+            style={{ fontFamily: "var(--font-dosis), sans-serif" }}
+          >
+            You&apos;re in — check your email
           </h1>
           <p className="mt-3 text-gray-600">
             We&apos;ve sent a verification link to{" "}
-            <strong className="text-gray-900">{email}</strong>. Please click the
-            link in the email to activate your account.
+            <strong className="text-gray-900">{email}</strong>. Click the link to
+            activate your account and launch your first campaign.
           </p>
           <p className="mt-4 text-sm text-gray-500">
             Didn&apos;t receive an email? Check your spam folder or try signing
             up again.
           </p>
-          <p className="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-left text-sm text-gray-700">
-            <span className="font-medium text-gray-900">Next:</span> verify your
-            email, sign in, then open{" "}
-            <span className="font-medium text-gray-900">Billing</span> in the
-            dashboard to choose a plan so you can publish referral programs and add
-            extra brands.
-          </p>
+          <div className="mt-5 rounded-xl border border-rose-100 bg-rose-50/60 px-4 py-3 text-left text-sm text-gray-700">
+            <p className="font-medium text-gray-900">What&apos;s next</p>
+            <ol className="mt-2 space-y-1.5 text-gray-600">
+              <li>1. Verify your email</li>
+              <li>2. Sign in and add your website</li>
+              <li>3. Launch your first free campaign</li>
+            </ol>
+          </div>
           <div className="mt-6 flex flex-col gap-2">
             <Link
               href="/signin"
-              className="inline-block rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+              className="inline-block rounded-xl bg-[#FF5C62] px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-[#ff4f58] hover:shadow-lg hover:shadow-[#FF5C62]/25"
             >
-              Go to Sign In
+              Go to sign in
             </Link>
             <Link
               href="/signup"
-              className="text-sm text-blue-600 hover:underline"
+              className="text-sm text-[#FF5C62] hover:underline"
             >
-              Back to Sign Up
+              Back to sign up
             </Link>
+          </div>
+
+          <div className="mt-6 border-t border-rose-100 pt-5">
+            <p className="text-xs text-gray-500">
+              Know a business that would love this?
+            </p>
+            <div className="mt-2 flex justify-center gap-2">
+              <a
+                href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
+                  "https://referrals.com"
+                )}&text=${encodeURIComponent(
+                  "I just joined Referrals.com to grow with word-of-mouth — check it out:"
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-rose-50"
+              >
+                Share on X
+              </a>
+              <a
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+                  "https://referrals.com"
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-rose-50"
+              >
+                Share on LinkedIn
+              </a>
+            </div>
           </div>
         </CardContent>
       </Card>

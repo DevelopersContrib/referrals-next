@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "How It Works",
   description:
     "Create a campaign, embed a widget, track referrals, and reward your participants. See how Referrals.com works in 3 simple steps.",
+  alternates: { canonical: "https://referrals.com/how-it-works" },
   openGraph: {
     title: "How It Works | Referrals.com",
     description:

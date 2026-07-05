@@ -8,9 +8,9 @@ export async function POST(req: NextRequest) {
   try {
     const { name, email, password, website } = await req.json();
 
-    if (!name || !email || !password || !website) {
+    if (!name || !email || !password) {
       return NextResponse.json(
-        { error: "All fields are required" },
+        { error: "Name, email, and password are required" },
         { status: 400 }
       );
     }
@@ -38,14 +38,6 @@ export async function POST(req: NextRequest) {
     const verificationCode = randomBytes(32).toString("hex");
     const hashedPassword = hashSync(password, 12);
 
-    // Extract domain from website URL
-    let domain = "";
-    try {
-      domain = new URL(website).hostname;
-    } catch {
-      domain = website.replace(/^https?:\/\//, "").split("/")[0];
-    }
-
     const member = await prisma.members.create({
       data: {
         name,
@@ -58,14 +50,24 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Create first brand
-    await prisma.member_urls.create({
-      data: {
-        url: website,
-        member_id: member.id,
-        domain,
-      },
-    });
+    // Optionally create the first brand if a website was provided.
+    // (Website is collected during post-signup onboarding, not at signup.)
+    if (website) {
+      let domain = "";
+      try {
+        domain = new URL(website).hostname;
+      } catch {
+        domain = website.replace(/^https?:\/\//, "").split("/")[0];
+      }
+
+      await prisma.member_urls.create({
+        data: {
+          url: website,
+          member_id: member.id,
+          domain,
+        },
+      });
+    }
 
     // Send verification email
     try {

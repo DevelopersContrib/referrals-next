@@ -1,99 +1,38 @@
-"use client";
+import type { Metadata } from "next";
+import { getSocialProofStats } from "@/lib/social-proof";
+import { AuthHeroPanel } from "@/components/auth/auth-hero-panel";
+import { SignInForm } from "@/components/auth/signin-form";
 
-import { Suspense, useState } from "react";
-import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+export const metadata: Metadata = {
+  title: "Sign in — Referrals.com",
+  description:
+    "Sign in to your Referrals.com account to manage campaigns, track referrals, and grow your business.",
+  openGraph: {
+    title: "Sign in — Referrals.com",
+    description:
+      "Sign in to your Referrals.com account and keep your referral programs growing.",
+    url: "https://referrals.com/signin",
+    siteName: "Referrals.com",
+    images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sign in — Referrals.com",
+    description:
+      "Sign in to your Referrals.com account and keep your referral programs growing.",
+  },
+};
 
-export default function SignInPage() {
-  return (
-    <Suspense>
-      <SignInForm />
-    </Suspense>
-  );
-}
-
-function SignInForm() {
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-  const error = searchParams.get("error");
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    await signIn("credentials", {
-      email,
-      password,
-      callbackUrl,
-    });
-    setLoading(false);
-  }
+export default async function SignInPage() {
+  const stats = await getSocialProofStats();
 
   return (
-    <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your Referrals.com account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-              Invalid email or password. Please try again.
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
-            </Button>
-          </form>
-
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-blue-600 hover:underline">
-              Sign up
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
+    <div className="grid min-h-[calc(100vh-4rem)] lg:grid-cols-2">
+      <div className="flex items-center justify-center px-4 py-12 sm:px-8">
+        <SignInForm />
+      </div>
+      <AuthHeroPanel stats={stats} variant="signin" />
     </div>
   );
 }

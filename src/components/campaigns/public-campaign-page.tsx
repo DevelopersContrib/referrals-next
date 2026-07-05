@@ -125,7 +125,7 @@ export function PublicCampaignPageView({ data }: { data: PublicCampaignViewPaylo
           </span>
           <span>Powered by </span>
           <a
-            href="https://referrals.com"
+            href="https://referrals.com/?utm_source=campaign&utm_medium=powered_by&utm_campaign=public_campaign"
             className="font-medium text-[#FF5C62] underline-offset-2 hover:underline"
           >
             Referrals.com

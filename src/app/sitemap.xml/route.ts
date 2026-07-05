@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAllArticleSlugs } from "@/lib/knowledgebase-articles";
+import { getAllPosts } from "@/lib/blog";
+import { useCases } from "@/lib/use-cases";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -13,7 +15,16 @@ export async function GET() {
     { url: "/", priority: "1.0", changefreq: "daily" },
     { url: "/signin", priority: "0.6", changefreq: "monthly" },
     { url: "/signup", priority: "0.7", changefreq: "monthly" },
-    { url: "/pricing", priority: "0.8", changefreq: "weekly" },
+    { url: "/pricing", priority: "0.9", changefreq: "weekly" },
+    { url: "/features", priority: "0.9", changefreq: "weekly" },
+    { url: "/how-it-works", priority: "0.8", changefreq: "monthly" },
+    { url: "/campaign-templates", priority: "0.8", changefreq: "weekly" },
+    { url: "/whitelabel", priority: "0.7", changefreq: "monthly" },
+    { url: "/services", priority: "0.7", changefreq: "monthly" },
+    { url: "/about", priority: "0.6", changefreq: "monthly" },
+    { url: "/contact", priority: "0.6", changefreq: "monthly" },
+    { url: "/resources", priority: "0.8", changefreq: "weekly" },
+    { url: "/blog", priority: "0.8", changefreq: "daily" },
     { url: "/developer", priority: "0.7", changefreq: "weekly" },
     { url: "/developer/docs", priority: "0.7", changefreq: "weekly" },
     { url: "/support", priority: "0.8", changefreq: "weekly" },
@@ -25,6 +36,25 @@ export async function GET() {
     priority: "0.6",
     changefreq: "monthly" as const,
   }));
+
+  // Programmatic industry pages
+  const useCasePages = useCases.map((u) => ({
+    url: `/referral-program-for/${u.slug}`,
+    priority: "0.7",
+    changefreq: "monthly" as const,
+  }));
+
+  // Blog posts
+  let blogPages: { url: string; priority: string; changefreq: "monthly" }[] = [];
+  try {
+    blogPages = getAllPosts().map((post) => ({
+      url: `/blog/${post.slug}`,
+      priority: "0.6",
+      changefreq: "monthly" as const,
+    }));
+  } catch {
+    // Continue without blog posts if content dir is unavailable
+  }
 
   // Dynamic pages: public brand pages
   let brandUrls: { url: string; date_added: Date }[] = [];
@@ -77,7 +107,7 @@ export async function GET() {
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${[...staticPages, ...supportArticlePages]
+${[...staticPages, ...supportArticlePages, ...useCasePages, ...blogPages]
   .map(
     (page) => `  <url>
     <loc>${baseUrl}${page.url}</loc>

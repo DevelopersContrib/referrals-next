@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Blog — Referral Marketing Insights",
   description:
     "Tips, strategies, and insights on referral marketing, growth hacking, and word-of-mouth strategies.",
+  alternates: { canonical: "https://referrals.com/blog" },
   openGraph: {
     title: "Blog — Referral Marketing Insights | Referrals.com",
     description:

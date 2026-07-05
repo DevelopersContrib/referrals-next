@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   title: "Campaign Templates",
   description:
     "Explore our ready-made referral campaign templates. Social rewards, voting, gamification, and more — launch in minutes.",
+  alternates: { canonical: "https://referrals.com/campaign-templates" },
   openGraph: {
     title: "Campaign Templates | Referrals.com",
     description: "Ready-made referral campaign templates.",

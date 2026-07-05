@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "Referral Marketing Services | Referrals.com",
   description:
     "Browse our referral marketing services including reviews, social sharing, backlinks, video reviews, and more. Affordable per-action pricing.",
+  alternates: { canonical: "https://referrals.com/services" },
   openGraph: {
     title: "Referral Marketing Services | Referrals.com",
     description:

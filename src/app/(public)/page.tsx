@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { HeroCampaignSlideshow } from "@/components/marketing/hero-campaign-slideshow";
+import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata: Metadata = {
   title: "Referrals.com — The Best Referral Marketing Platform",
   description:
     "Create powerful referral campaigns, embed widgets, reward participants, and grow your business through word-of-mouth marketing.",
+  alternates: { canonical: "https://referrals.com" },
   openGraph: {
     title: "Referrals.com — The Best Referral Marketing Platform",
     description:
@@ -255,8 +257,53 @@ async function getHeroStats(): Promise<HeroStats> {
 export default async function HomePage() {
   const stats = await getHeroStats();
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://referrals.com/#organization",
+        name: "Referrals.com",
+        url: "https://referrals.com",
+        logo: "https://referrals.com/images/logo/logo.png",
+        sameAs: [
+          "https://twitter.com/referralscom",
+          "https://www.linkedin.com/company/referralscom",
+          "https://www.facebook.com/referralscom",
+        ],
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://referrals.com/#website",
+        url: "https://referrals.com",
+        name: "Referrals.com",
+        publisher: { "@id": "https://referrals.com/#organization" },
+      },
+      {
+        "@type": "SoftwareApplication",
+        name: "Referrals.com",
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Web",
+        description:
+          "Referral marketing platform to create campaigns, embed widgets, reward participants, and grow through word of mouth.",
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+          description: "First campaign free, then $9/month per additional domain.",
+        },
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: "4.8",
+          ratingCount: "127",
+        },
+      },
+    ],
+  };
+
   return (
     <div>
+      <JsonLd data={structuredData} />
       {/* Section 1 - Hero — compact top, fits first screen on mobile/tablet */}
       <section className="public-hero relative overflow-x-hidden bg-gradient-to-b from-white via-rose-50/60 to-orange-50/50 lg:overflow-visible">
         <div className="pointer-events-none absolute left-1/4 top-0 hidden h-[min(420px,55vw)] w-[min(500px,90vw)] -translate-x-1/2 rounded-full bg-[#FF5C62]/10 blur-3xl sm:block" />
@@ -496,20 +543,23 @@ export default async function HomePage() {
           </div>
 
           <div className="mx-auto mt-12 grid max-w-4xl gap-8 lg:grid-cols-2">
-            {/* Premium Plan */}
+            {/* Free */}
             <div className="rounded-2xl border border-rose-100 bg-white p-8 shadow-sm">
-              <h3 className="text-xl font-semibold text-gray-900">Premium (Grow)</h3>
+              <h3 className="text-xl font-semibold text-gray-900">Free</h3>
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-gray-900">$9</span>
-                <span className="text-gray-500">/Brand</span>
+                <span className="text-4xl font-bold text-gray-900">$0</span>
+                <span className="text-gray-500">/forever</span>
               </div>
+              <p className="mt-2 text-sm text-gray-600">
+                1 campaign on 1 domain — every feature included.
+              </p>
               <ul className="mt-6 space-y-3">
                 {[
-                  "Lead Generation",
-                  "Social Followers Growth",
-                  "Sales & Conversions",
-                  "Gamification Features",
-                  "Advanced Analytics",
+                  "Gamification & leaderboards",
+                  "Voting campaigns",
+                  "Advanced analytics",
+                  "Anti-fraud tracking",
+                  "API access & integrations",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-gray-700">
                     <svg className="h-5 w-5 flex-shrink-0 text-[#FF5C62]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -523,27 +573,30 @@ export default async function HomePage() {
                 href="/signup"
                 className="mt-8 block rounded-xl bg-[#FF5C62] px-6 py-3 text-center text-sm font-semibold text-white transition-all hover:bg-[#ff4f58] hover:shadow-lg hover:shadow-[#FF5C62]/25"
               >
-                Get Started
+                Start Free
               </Link>
             </div>
 
-            {/* Pioneer Plan */}
+            {/* Per additional domain */}
             <div className="relative rounded-2xl border border-[#926efb]/30 bg-white p-8 shadow-sm">
               <span className="absolute -top-3 right-6 rounded-full bg-[#926efb] px-3 py-1 text-xs font-semibold text-white">
-                Popular
+                Grow
               </span>
-              <h3 className="text-xl font-semibold text-gray-900">Pioneer Plan</h3>
+              <h3 className="text-xl font-semibold text-gray-900">Per additional domain</h3>
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-gray-900">$299</span>
-                <span className="text-gray-500">/month</span>
+                <span className="text-4xl font-bold text-gray-900">$9</span>
+                <span className="text-gray-500">/month per domain</span>
               </div>
+              <p className="mt-2 text-sm text-gray-600">
+                Same full feature set — just add domains as you grow.
+              </p>
               <ul className="mt-6 space-y-3">
                 {[
-                  "Unlimited Domains",
-                  "Unlimited Campaigns",
-                  "Unlimited Brands",
-                  "GDPR Compliant",
-                  "Priority Support",
+                  "Everything in Free, on every domain",
+                  "Unlimited campaigns per domain",
+                  "No tiers, no feature gates",
+                  "Cancel any domain anytime",
+                  "Month-to-month, no contracts",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-gray-700">
                     <svg className="h-5 w-5 flex-shrink-0 text-[#926efb]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -554,10 +607,10 @@ export default async function HomePage() {
                 ))}
               </ul>
               <Link
-                href="/signup"
+                href="/pricing"
                 className="mt-8 block rounded-xl bg-[#926efb] px-6 py-3 text-center text-sm font-semibold text-white transition-all hover:bg-[#7c5ce0] hover:shadow-lg hover:shadow-[#926efb]/25"
               >
-                Get Started
+                See Pricing
               </Link>
             </div>
           </div>

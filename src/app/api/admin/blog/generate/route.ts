@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminApiGuard } from "@/lib/require-platform-admin";
 import { auth } from "@/lib/auth";
 import { savePost } from "@/lib/blog";
+import { chatJSON, hasOpenAI, OpenAIError } from "@/lib/openai";
 
 // POST /api/admin/blog/generate — trigger on-demand blog post generation
 export async function POST() {
@@ -13,10 +14,9 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const openaiKey = process.env.OPENAI_API_KEY;
     const pexelsKey = process.env.PEXELS_API_KEY;
 
-    if (!openaiKey) {
+    if (!hasOpenAI()) {
       return NextResponse.json(
         { error: "OPENAI_API_KEY not configured" },
         { status: 500 }
@@ -49,23 +49,15 @@ export async function POST() {
     const topic = topics[Math.floor(Math.random() * topics.length)];
 
     // --- Generate content via OpenAI ---
-    const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${openaiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are an expert content writer specializing in referral marketing. Write professional, actionable blog posts for Referrals.com. Do not use emojis.",
-          },
-          {
-            role: "user",
-            content: `Write a detailed blog post about: "${topic}"
+    const generated = await chatJSON<{
+      title: string;
+      excerpt?: string;
+      content?: string;
+      tags?: string[];
+    }>({
+      system:
+        "You are an expert content writer specializing in referral marketing. Write professional, actionable blog posts for Referrals.com. Do not use emojis.",
+      prompt: `Write a detailed blog post about: "${topic}"
 
 Return valid JSON:
 {
@@ -76,25 +68,9 @@ Return valid JSON:
 }
 
 Return ONLY the JSON object.`,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 3000,
-      }),
+      temperature: 0.7,
+      maxTokens: 3000,
     });
-
-    if (!aiRes.ok) {
-      const errText = await aiRes.text();
-      return NextResponse.json(
-        { error: `OpenAI error: ${errText}` },
-        { status: 502 }
-      );
-    }
-
-    const aiData = await aiRes.json();
-    const raw = aiData.choices?.[0]?.message?.content?.trim() || "";
-    const cleaned = raw.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
-    const generated = JSON.parse(cleaned);
 
     // --- Fetch Pexels image ---
     let featuredImage =
@@ -148,6 +124,9 @@ Return ONLY the JSON object.`,
 
     return NextResponse.json({ success: true, post }, { status: 201 });
   } catch (error) {
+    if (error instanceof OpenAIError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Blog generate error:", error);
     return NextResponse.json(
       { error: "Failed to generate post" },

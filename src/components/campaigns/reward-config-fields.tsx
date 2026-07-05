@@ -1,9 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { getRewardKind, type RewardFormValues } from "@/lib/reward-types";
+import { Button } from "@/components/ui/button";
+import { SparklesIcon } from "lucide-react";
+import {
+  getRewardKind,
+  parseCouponCodes,
+  type RewardFormValues,
+} from "@/lib/reward-types";
+import { generateCouponCodes } from "@/lib/coupon-generator";
 
 interface RewardConfigFieldsProps {
   rewardTypeName: string;
@@ -40,6 +48,10 @@ export function RewardConfigFields({
           onChange={(e) => onChange("coupon_codes", e.target.value)}
         />
         <p className="text-xs text-muted-foreground">One code per line.</p>
+        <CouponGenerator
+          currentValue={values.coupon_codes}
+          onAppend={(next) => onChange("coupon_codes", next)}
+        />
       </div>
     );
   }
@@ -140,4 +152,89 @@ export function RewardConfigFields({
   }
 
   return null;
+}
+
+function CouponGenerator({
+  currentValue,
+  onAppend,
+}: {
+  currentValue: string;
+  onAppend: (nextValue: string) => void;
+}) {
+  const [count, setCount] = useState("10");
+  const [prefix, setPrefix] = useState("");
+  const [length, setLength] = useState("8");
+
+  function handleGenerate() {
+    const existing = parseCouponCodes(currentValue);
+    const generated = generateCouponCodes({
+      count: parseInt(count, 10) || 0,
+      length: parseInt(length, 10) || 8,
+      prefix,
+      exclude: existing,
+    });
+    if (generated.length === 0) return;
+    const merged = [...existing, ...generated].join("\n");
+    onAppend(merged);
+  }
+
+  return (
+    <div className="rounded-lg border border-dashed border-brand/30 bg-brand/5 p-3">
+      <div className="mb-2 flex items-center gap-1.5 text-sm font-medium text-[#575962]">
+        <SparklesIcon className="size-4 text-brand" />
+        Generate codes
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-[1fr_1.4fr_1fr_auto] sm:items-end">
+        <div className="space-y-1">
+          <Label htmlFor="gen_count" className="text-xs">
+            How many
+          </Label>
+          <Input
+            id="gen_count"
+            type="number"
+            min={1}
+            max={1000}
+            value={count}
+            onChange={(e) => setCount(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="gen_prefix" className="text-xs">
+            Prefix (optional)
+          </Label>
+          <Input
+            id="gen_prefix"
+            placeholder="SAVE-"
+            value={prefix}
+            onChange={(e) => setPrefix(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="gen_length" className="text-xs">
+            Length
+          </Label>
+          <Input
+            id="gen_length"
+            type="number"
+            min={3}
+            max={32}
+            value={length}
+            onChange={(e) => setLength(e.target.value)}
+          />
+        </div>
+        <Button
+          type="button"
+          onClick={handleGenerate}
+          className="col-span-2 gap-1.5 sm:col-span-1"
+        >
+          <SparklesIcon className="size-4" />
+          Generate
+        </Button>
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">
+        Creates unique codes (excludes ambiguous characters) and appends them to
+        the list above. They&apos;re saved when you save the reward.
+      </p>
+    </div>
+  );
 }

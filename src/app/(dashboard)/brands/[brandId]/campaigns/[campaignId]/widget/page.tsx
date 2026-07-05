@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,12 +21,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { SparklesIcon, LayoutTemplateIcon } from "lucide-react";
-import { buildCampaignEmbedSnippets } from "@/lib/campaign-embed-snippets";
-import { IntegrationEmbedSections } from "@/components/campaigns/integration-embed-sections";
-import { CopyToClipboardButton } from "@/components/ui/copy-to-clipboard-button";
 import { sanitizeWidgetHtml } from "@/lib/sanitize-widget-html";
 
 export default function WidgetCustomizerPage() {
@@ -38,7 +35,6 @@ export default function WidgetCustomizerPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [campaignName, setCampaignName] = useState("");
-  const [siteOrigin, setSiteOrigin] = useState("");
   const [aiLoading, setAiLoading] = useState<null | "widget" | "bannerHtml">(null);
   const [vibe, setVibe] = useState("");
 
@@ -58,26 +54,6 @@ export default function WidgetCustomizerPage() {
     body_text: "",
     stats_on: true,
   });
-
-  useEffect(() => {
-    setSiteOrigin(
-      typeof window !== "undefined"
-        ? window.location.origin
-        : (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/+$/, "") ||
-            "https://referrals.com"
-    );
-  }, []);
-
-  const snippets = useMemo(
-    () =>
-      buildCampaignEmbedSnippets(
-        siteOrigin || process.env.NEXT_PUBLIC_APP_URL || "https://referrals.com",
-        cid
-      ),
-    [siteOrigin, cid]
-  );
-
-  const iframePreviewUrl = `/widget/${campaignId}/embed`;
 
   useEffect(() => {
     async function fetchData() {
@@ -212,13 +188,76 @@ export default function WidgetCustomizerPage() {
     );
   }
 
+  const isPopup = formData.placement === "popup";
+
+  // The widget exactly as a visitor sees it — reused for both embed & popup previews.
+  const widgetCard = (
+    <div
+      className="w-full rounded-xl border border-black/5 p-5 shadow-lg"
+      style={{
+        backgroundColor: `#${formData.background_color}`,
+        color: `#${formData.text_color}`,
+      }}
+    >
+      <h3 className="text-lg font-bold leading-snug" style={{ color: `#${formData.color}` }}>
+        {formData.header_title || "Your headline goes here"}
+      </h3>
+      <p className="mt-1.5 text-sm opacity-80">
+        {formData.description || "A short line explaining the reward and why to join."}
+      </p>
+      {formData.body_text ? (
+        <div
+          className="prose prose-sm mt-3 max-w-none"
+          dangerouslySetInnerHTML={{ __html: sanitizeWidgetHtml(formData.body_text) }}
+        />
+      ) : null}
+
+      <div className="mt-4 space-y-3">
+        <div>
+          <span className="text-xs font-medium opacity-90">{formData.field_label_1 || "Full name"}</span>
+          <div className="mt-1 rounded-md border border-black/10 bg-white/95 px-3 py-2 text-sm text-gray-400">
+            Jane Doe
+          </div>
+        </div>
+        <div>
+          <span className="text-xs font-medium opacity-90">{formData.field_label_2 || "Email"}</span>
+          <div className="mt-1 rounded-md border border-black/10 bg-white/95 px-3 py-2 text-sm text-gray-400">
+            jane@example.com
+          </div>
+        </div>
+        <button
+          type="button"
+          className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.01]"
+          style={{ backgroundColor: `#${formData.button_color}` }}
+        >
+          {formData.button_text || "Join now"}
+        </button>
+      </div>
+
+      {formData.stats_on ? (
+        <p className="mt-3 text-center text-[11px] opacity-70">
+          🎉 Join 1,200+ others already earning rewards
+        </p>
+      ) : null}
+      <p className="mt-2 text-center text-[10px] opacity-50">Powered by Referrals.com</p>
+    </div>
+  );
+
   return (
     <div className="space-y-10 pb-16">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Widget studio</h1>
           <p className="mt-1 text-muted-foreground">
-            Use AI to draft copy and colors, fine-tune fields, save — then copy install snippets below.
+            Use AI to draft copy and colors, fine-tune fields, and save. All install
+            and embed code lives in the{" "}
+            <Link
+              href={`/brands/${brandId}/campaigns/${campaignId}#integrations`}
+              className="font-medium text-brand underline-offset-2 hover:underline"
+            >
+              Integrations tab
+            </Link>
+            .
           </p>
         </div>
         <Button
@@ -451,101 +490,83 @@ export default function WidgetCustomizerPage() {
           </Button>
         </div>
 
-        <div className="space-y-6 lg:sticky lg:top-24">
-          <Card>
-            <CardHeader>
-              <CardTitle>Live draft preview</CardTitle>
-              <CardDescription>
-                Reflects the form on the left. The real embed below uses saved settings after you
-                click Save.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div
-                className="rounded-xl border p-5 shadow-inner"
-                style={{
-                  backgroundColor: `#${formData.background_color}`,
-                  color: `#${formData.text_color}`,
-                }}
-              >
-                <h2
-                  className="text-xl font-bold"
-                  style={{ color: `#${formData.color}` }}
-                >
-                  {formData.header_title || "Campaign title"}
-                </h2>
-                <p className="mt-2 text-sm opacity-90">
-                  {formData.description || "Description appears here."}
-                </p>
-                {formData.body_text ? (
-                  <div
-                    className="prose prose-sm mt-3 max-w-none dark:prose-invert"
-                    dangerouslySetInnerHTML={{
-                      __html: sanitizeWidgetHtml(formData.body_text),
-                    }}
-                  />
-                ) : null}
+        <div className="space-y-4 lg:sticky lg:top-24">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Live preview</h2>
+              <p className="text-sm text-muted-foreground">
+                Exactly what visitors see. Updates as you type —{" "}
+                <span className="font-medium text-foreground">Save</span> to publish.
+              </p>
+            </div>
+            <span
+              className="rounded-full border px-2.5 py-1 text-xs font-medium capitalize text-muted-foreground"
+              title="Change this under Styling → Placement"
+            >
+              {isPopup ? "Popup" : "Inline"} placement
+            </span>
+          </div>
 
-                <div className="mt-4 space-y-3">
-                  <div>
-                    <span className="text-xs font-medium">{formData.field_label_1}</span>
-                    <div className="mt-1 rounded-md border bg-white/90 px-3 py-2 text-sm text-muted-foreground">
-                      Sample name
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-xs font-medium">{formData.field_label_2}</span>
-                    <div className="mt-1 rounded-md border bg-white/90 px-3 py-2 text-sm text-muted-foreground">
-                      you@example.com
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm"
-                    style={{ backgroundColor: `#${formData.button_color}` }}
-                  >
-                    {formData.button_text || "Join now"}
-                  </button>
-                </div>
+          {/* Mock browser window showing the widget in context */}
+          <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
+            {/* browser chrome */}
+            <div className="flex items-center gap-2 border-b bg-muted/40 px-3 py-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+              <div className="ml-2 flex-1 truncate rounded-md bg-white px-3 py-1 text-xs text-muted-foreground">
+                {(campaignName || "yourbrand.com").toLowerCase().replace(/\s+/g, "")}.com
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Saved widget embed</CardTitle>
-              <CardDescription>iframe pointing at the live widget route (updates after Save).</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <iframe
-                src={iframePreviewUrl}
-                className="min-h-[380px] w-full rounded-lg border bg-muted/30"
-                title="Widget embed preview"
-                allow="clipboard-write; clipboard-read"
-              />
-              <div className="flex items-center gap-2">
-                <div className="min-w-0 flex-1 truncate rounded-md border bg-muted/40 px-2 py-1.5 font-mono text-xs">
-                  {snippets.iframe.split("\n")[0]}
+            {/* faux page + widget */}
+            <div className="relative bg-gradient-to-b from-gray-50 to-white p-4">
+              {/* faux site content for context */}
+              <div className={isPopup ? "pointer-events-none blur-[1px]" : ""}>
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="h-4 w-20 rounded bg-gray-200" />
+                  <div className="ml-auto flex gap-2">
+                    <div className="h-3 w-10 rounded bg-gray-100" />
+                    <div className="h-3 w-10 rounded bg-gray-100" />
+                    <div className="h-3 w-10 rounded bg-gray-100" />
+                  </div>
                 </div>
-                <CopyToClipboardButton text={snippets.iframe} aria-label="Copy iframe code" />
+                <div className="h-3 w-2/3 rounded bg-gray-200" />
+                <div className="mt-2 h-3 w-1/2 rounded bg-gray-100" />
+
+                {!isPopup && <div className="mx-auto mt-5 max-w-sm">{widgetCard}</div>}
+
+                {isPopup && (
+                  <div className="mt-3 space-y-2">
+                    <div className="h-3 w-full rounded bg-gray-100" />
+                    <div className="h-3 w-5/6 rounded bg-gray-100" />
+                    <div className="h-3 w-3/4 rounded bg-gray-100" />
+                    <div className="h-24 w-full rounded bg-gray-100" />
+                  </div>
+                )}
               </div>
-            </CardContent>
-          </Card>
+
+              {/* popup overlay */}
+              {isPopup && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 p-4">
+                  <div className="relative w-full max-w-sm">
+                    <span className="absolute -right-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white text-gray-500 shadow">
+                      ×
+                    </span>
+                    {widgetCard}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {formData.success_message ? (
+            <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+              <span className="font-semibold">After signup:</span> {formData.success_message}
+            </div>
+          ) : null}
         </div>
       </div>
-
-      <Separator className="my-2" />
-
-      <section id="install" className="scroll-mt-24 space-y-4">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight">Add to your site</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Platform-specific install steps and copy buttons. Placement (inline, popup, floating)
-            still comes from the form above once saved.
-          </p>
-        </div>
-        <IntegrationEmbedSections snippets={snippets} brandId={brandId} campaignId={cid} />
-      </section>
     </div>
   );
 }

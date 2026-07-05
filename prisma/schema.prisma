@@ -207,7 +207,7 @@ model campaign_social_content {
   campaign_id Int
   url         String  @db.VarChar(200)
   description String  @db.Text
-  image_url   String? @db.VarChar(100)
+  image_url   String? @db.VarChar(500)
 }
 
 model campaign_socials_allowed {
@@ -482,6 +482,7 @@ model member_urls {
   background_image String?   @db.VarChar(200)
   slug             String?   @db.VarChar(100)
   plan_expiry      DateTime? @db.DateTime(0)
+  brand_colors     Json?
 }
 
 model member_zapier {
@@ -784,4 +785,131 @@ enum campaign_widget_header_background_type {
   color
   image
   transparent
+}
+
+// ── AI Brand Intelligence onboarding pipeline (see prisma/sql/brand_analysis.sql) ──
+
+model brand_analysis {
+  id             Int       @id @default(autoincrement())
+  member_id      Int
+  url_id         Int?
+  input_url      String    @db.VarChar(255)
+  domain         String    @db.VarChar(191)
+  status         String    @default("pending") @db.VarChar(20)
+  in_vnoc        Boolean   @default(false)
+  vnoc_id        Int?
+  overall_health Int?
+  website_score  Int?
+  social_score   Int?
+  referral_score Int?
+  error          String?   @db.Text
+  started_at     DateTime? @db.Timestamp(0)
+  completed_at   DateTime? @db.Timestamp(0)
+  date_added     DateTime  @default(now()) @db.Timestamp(0)
+
+  @@index([member_id], map: "idx_ba_member")
+  @@index([domain], map: "idx_ba_domain")
+  @@index([url_id], map: "idx_ba_url")
+}
+
+model brand_analysis_module {
+  id           Int       @id @default(autoincrement())
+  analysis_id  Int
+  module       String    @db.VarChar(40)
+  status       String    @default("pending") @db.VarChar(20)
+  attempts     Int       @default(0)
+  depends_on   String?   @db.VarChar(120)
+  error        String?   @db.Text
+  started_at   DateTime? @db.Timestamp(0)
+  completed_at DateTime? @db.Timestamp(0)
+
+  @@index([analysis_id], map: "idx_bam_analysis")
+  @@index([status], map: "idx_bam_status")
+}
+
+model brand_vnoc {
+  id             Int     @id @default(autoincrement())
+  analysis_id    Int
+  matched        Boolean @default(false)
+  vnoc_domain_id Int?
+  name           String? @db.VarChar(255)
+  logo_url       String? @db.VarChar(500)
+  description    String? @db.Text
+  tagline        String? @db.VarChar(1024)
+  socials        Json?
+  raw            Json?
+
+  @@index([analysis_id], map: "idx_bv_analysis")
+}
+
+model brand_crawl {
+  id               Int     @id @default(autoincrement())
+  analysis_id      Int
+  name             String? @db.VarChar(255)
+  logo_url         String? @db.VarChar(500)
+  favicon_url      String? @db.VarChar(500)
+  title            String? @db.VarChar(255)
+  meta_description String? @db.Text
+  primary_cta      String? @db.VarChar(255)
+  colors           Json?
+  fonts            Json?
+  products         Json?
+  services         Json?
+  pricing          Json?
+  emails           Json?
+  phones           Json?
+  addresses        Json?
+  languages        Json?
+  currencies       Json?
+  pages_crawled    Int?
+  raw              Json?
+
+  @@index([analysis_id], map: "idx_bc_analysis")
+}
+
+model brand_social {
+  id          Int     @id @default(autoincrement())
+  analysis_id Int
+  platform    String  @db.VarChar(40)
+  url         String  @db.VarChar(500)
+  verified    Boolean @default(false)
+  source      String  @default("crawl") @db.VarChar(20)
+
+  @@index([analysis_id], map: "idx_bs_analysis")
+}
+
+model brand_intelligence {
+  id              Int     @id @default(autoincrement())
+  analysis_id     Int
+  summary         String? @db.Text
+  industry        String? @db.VarChar(255)
+  icp             String? @db.Text
+  target_audience String? @db.Text
+  products        String? @db.Text
+  usp             String? @db.Text
+  brand_voice     String? @db.VarChar(255)
+  advantages      Json?
+  weaknesses      Json?
+  opportunities   Json?
+  readiness_score Int?
+  raw             Json?
+
+  @@index([analysis_id], map: "idx_bi_analysis")
+}
+
+model brand_campaign_suggestion {
+  id                   Int     @id @default(autoincrement())
+  analysis_id          Int
+  kind                 String  @db.VarChar(30)
+  name                 String? @db.VarChar(255)
+  reward_type          String? @db.VarChar(60)
+  headline             String? @db.VarChar(500)
+  description          String? @db.Text
+  payload              Json?
+  predicted_conversion String? @db.VarChar(30)
+  predicted_referrals  String? @db.VarChar(30)
+  estimated_roi        String? @db.VarChar(60)
+  sort_order           Int     @default(0)
+
+  @@index([analysis_id], map: "idx_bcs_analysis")
 }

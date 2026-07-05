@@ -6,6 +6,7 @@ import {
   isMemberOnPaidPlan,
   subscriptionRequiredResponse,
 } from "@/lib/member-subscription";
+import { sanitizeRewardInput } from "@/lib/reward-types";
 
 export async function GET(
   _request: NextRequest,
@@ -45,7 +46,8 @@ export async function GET(
         }),
         prisma.campaign_coupons.findMany({
           where: { campaign_id: id },
-          select: { is_used: true },
+          select: { id: true, code: true, is_used: true },
+          orderBy: { id: "desc" },
         }),
       ]);
 
@@ -67,6 +69,11 @@ export async function GET(
         total: coupons.length,
         available: coupons.filter((c) => !c.is_used).length,
       },
+      couponList: coupons.map((c) => ({
+        id: c.id,
+        code: c.code,
+        is_used: Boolean(c.is_used),
+      })),
     });
   } catch (error) {
     console.error("Error fetching campaign:", error);
@@ -165,12 +172,24 @@ export async function PUT(
       });
     }
 
-    // Update reward if provided
-    if (body.reward) {
-      await prisma.campaign_reward.updateMany({
+    // Update reward if provided — upsert so a row is created when missing
+    // (mirrors the PHP CampaignReward save, which creates the row on first edit).
+    if (body.reward && typeof body.reward === "object") {
+      const rewardInput = sanitizeRewardInput(body.reward);
+      const existing = await prisma.campaign_reward.findFirst({
         where: { campaign_id: id },
-        data: body.reward,
+        select: { id: true },
       });
+      if (existing) {
+        await prisma.campaign_reward.update({
+          where: { id: existing.id },
+          data: rewardInput,
+        });
+      } else {
+        await prisma.campaign_reward.create({
+          data: { campaign_id: id, ...rewardInput },
+        });
+      }
     }
 
     // Update email content if provided
@@ -218,14 +237,28 @@ export async function PUT(
       }
     }
 
-    // Add coupons if provided
+    // Add coupons if provided (skip blanks and codes already on file)
     if (body.coupons && Array.isArray(body.coupons)) {
-      const couponData = body.coupons.map((code: string) => ({
-        campaign_id: id,
-        code,
-        is_used: false,
-      }));
-      await prisma.campaign_coupons.createMany({ data: couponData });
+      const incoming = Array.from(
+        new Set(
+          body.coupons
+            .map((code: unknown) => String(code).trim().slice(0, 100))
+            .filter(Boolean)
+        )
+      ) as string[];
+      if (incoming.length > 0) {
+        const existingCodes = await prisma.campaign_coupons.findMany({
+          where: { campaign_id: id, code: { in: incoming } },
+          select: { code: true },
+        });
+        const existingSet = new Set(existingCodes.map((c) => c.code));
+        const couponData = incoming
+          .filter((code) => !existingSet.has(code))
+          .map((code) => ({ campaign_id: id, code, is_used: false }));
+        if (couponData.length > 0) {
+          await prisma.campaign_coupons.createMany({ data: couponData });
+        }
+      }
     }
 
     return NextResponse.json(updated);

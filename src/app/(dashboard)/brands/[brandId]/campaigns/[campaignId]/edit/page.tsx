@@ -42,6 +42,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { ImageInput } from "@/components/media/image-input";
 import { RewardConfigFields } from "@/components/campaigns/reward-config-fields";
 import {
   buildRewardPayload,
@@ -683,11 +684,24 @@ export default function EditCampaignPage() {
                   <Textarea id="share_desc" rows={3} value={social.description} onChange={(e) => setSocial((p) => ({ ...p, description: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="share_img" className="flex items-center gap-1.5">
-                    Image URL
-                    <FieldHelp text="The preview image used when the link is shared. Recommended 1200×630px for best results." />
+                  <Label className="flex items-center gap-1.5">
+                    Campaign image
+                    <FieldHelp text="Used as the campaign image and the preview when the link is shared. Generate one with AI (matched to your brand colors & voice), upload your own, or paste a URL. Recommended 1200×630px." />
                   </Label>
-                  <Input id="share_img" placeholder="https://.../image.png" value={social.image_url || ""} onChange={(e) => setSocial((p) => ({ ...p, image_url: e.target.value }))} />
+                  <ImageInput
+                    value={social.image_url || ""}
+                    onChange={(url) => setSocial((p) => ({ ...p, image_url: url }))}
+                    uploadType="campaigns"
+                    ai={{
+                      action: "campaignImage",
+                      context: {
+                        campaignId,
+                        name: formData.name,
+                        rewardTypeName: selectedRewardType?.name,
+                      },
+                      maxRegenerations: 2,
+                    }}
+                  />
                 </div>
               </div>
 

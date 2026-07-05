@@ -64,7 +64,24 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     }
 
     const body = await req.json();
-    const { url, description, logo_url, background_image, slug } = body;
+    const { url, description, logo_url, background_image, slug, brand_colors } = body;
+
+    // Sanitize brand_colors: only known roles, only valid #rrggbb hex values.
+    let brandColors: Record<string, string> | null | undefined;
+    if (brand_colors === null) {
+      brandColors = null;
+    } else if (brand_colors && typeof brand_colors === "object") {
+      const roles = ["primary", "secondary", "accent", "background", "text"];
+      const clean: Record<string, string> = {};
+      for (const role of roles) {
+        const v = (brand_colors as Record<string, unknown>)[role];
+        if (typeof v === "string") {
+          const s = v.trim().replace(/^#/, "");
+          if (/^[0-9a-fA-F]{6}$/.test(s)) clean[role] = `#${s.toLowerCase()}`;
+        }
+      }
+      brandColors = Object.keys(clean).length > 0 ? clean : null;
+    }
 
     let domain = existing.domain;
     if (url && url !== existing.url) {
@@ -101,6 +118,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
         ...(logo_url !== undefined && { logo_url }),
         ...(background_image !== undefined && { background_image }),
         ...(slug !== undefined && { slug }),
+        ...(brandColors && { brand_colors: brandColors }),
       },
     });
 

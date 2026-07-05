@@ -5,7 +5,7 @@ const globalForVnoc = globalThis as unknown as {
 };
 
 function createVnocPrisma() {
-  const url = process.env.DATABASE_URL_VNOC;
+  const url = process.env.VNOC_DATABASE_URL;
   if (!url) return null;
   return new PrismaClient({
     datasources: { db: { url } },

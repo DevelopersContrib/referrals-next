@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -18,17 +18,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { slugify } from "@/lib/brand-access";
+import { ImageInput } from "@/components/media/image-input";
 import {
   ArrowLeftIcon,
   Trash2Icon,
-  UploadIcon,
   ExternalLinkIcon,
   LayoutDashboardIcon,
   PlusIcon,
   BarChart3Icon,
   CreditCardIcon,
   Loader2Icon,
+  SparklesIcon,
 } from "lucide-react";
+
+const COLOR_ROLES: Array<{ key: string; label: string }> = [
+  { key: "primary", label: "Primary" },
+  { key: "secondary", label: "Secondary" },
+  { key: "accent", label: "Accent" },
+  { key: "background", label: "Background" },
+  { key: "text", label: "Text" },
+];
 
 const DEFAULT_BACKGROUND =
   "https://cdn.vnoc.com/background/bgdefault.jpg";
@@ -41,6 +50,7 @@ export type BrandEditData = {
   logo_url: string | null;
   background_image: string | null;
   slug: string | null;
+  brand_colors: Record<string, string> | null;
 };
 
 type SocialForm = {
@@ -88,8 +98,9 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
   const [domainStatus, setDomainStatus] = useState("");
   const [domainLink, setDomainLink] = useState("");
   const [slugStatus, setSlugStatus] = useState("");
-  const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [uploadingBg, setUploadingBg] = useState(false);
+  const [brandColors, setBrandColors] = useState<Record<string, string>>({});
+  const [colorsLoading, setColorsLoading] = useState(false);
+  const [colorsMood, setColorsMood] = useState("");
 
   const [form, setForm] = useState({
     url: "",
@@ -98,6 +109,10 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
     background_image: DEFAULT_BACKGROUND,
     slug: "",
   });
+
+  const formRef = useRef(form);
+  formRef.current = form;
+  const autoColorsTried = useRef(false);
 
   const [socials, setSocials] = useState<SocialForm>({
     facebook: "",
@@ -130,6 +145,11 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
         background_image: data.background_image || DEFAULT_BACKGROUND,
         slug: data.slug || "",
       });
+      setBrandColors(
+        data.brand_colors && typeof data.brand_colors === "object"
+          ? data.brand_colors
+          : {}
+      );
 
       if (socialsRes.ok) {
         setSocials(await socialsRes.json());
@@ -199,30 +219,59 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
     if (slug) checkSlug(slug);
   }
 
-  async function uploadImage(
-    file: File,
-    field: "logo_url" | "background_image"
-  ) {
-    const setUploading =
-      field === "logo_url" ? setUploadingLogo : setUploadingBg;
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("type", "brands");
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      if (!res.ok) throw new Error("Upload failed");
-      const { url } = await res.json();
-      const absolute =
-        url.startsWith("http") ? url : `${window.location.origin}${url}`;
-      setForm((prev) => ({ ...prev, [field]: absolute }));
-      toast.success("Image uploaded");
-    } catch {
-      toast.error("Image upload failed");
-    } finally {
-      setUploading(false);
-    }
-  }
+  const generateColors = useCallback(
+    async (
+      source: "auto" | "logo" | "website" | "surprise" = "auto",
+      opts: { silent?: boolean } = {}
+    ) => {
+      const website = formRef.current.url;
+      const logo = formRef.current.logo_url;
+      if (source === "logo" && !logo.trim()) {
+        if (!opts.silent) toast.error("Add a logo first");
+        return;
+      }
+      if ((source === "website" || source === "auto") && !website.trim() && !logo.trim()) {
+        if (!opts.silent) toast.error("Add a website URL or logo first");
+        return;
+      }
+      setColorsLoading(true);
+      try {
+        const res = await fetch("/api/campaigns/ai/assist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "brandColors",
+            context: { website, logoUrl: logo, source },
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Failed to generate colors");
+        if (data.colors && typeof data.colors === "object") {
+          setBrandColors((prev) => ({ ...prev, ...data.colors }));
+        }
+        setColorsMood(typeof data.mood === "string" ? data.mood : "");
+        if (!opts.silent) {
+          toast.success("Brand colors generated — tweak and save");
+        }
+      } catch (e) {
+        if (!opts.silent) {
+          toast.error(e instanceof Error ? e.message : "Failed to generate colors");
+        }
+      } finally {
+        setColorsLoading(false);
+      }
+    },
+    []
+  );
+
+  // Automate: if a brand has no palette yet, generate one from its logo/website.
+  useEffect(() => {
+    if (loading || autoColorsTried.current) return;
+    if (Object.keys(brandColors).length > 0) return;
+    if (!form.url.trim() && !form.logo_url.trim()) return;
+    autoColorsTried.current = true;
+    void generateColors("auto", { silent: true });
+  }, [loading, brandColors, form.url, form.logo_url, generateColors]);
 
   async function handleBrandSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -246,6 +295,8 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
           logo_url: form.logo_url || null,
           background_image: form.background_image || null,
           slug: form.slug,
+          brand_colors:
+            Object.keys(brandColors).length > 0 ? brandColors : null,
         }),
       });
 
@@ -399,76 +450,118 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="logo">Upload Logo</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="logo"
-                      value={form.logo_url}
-                      onChange={(e) =>
-                        setForm((p) => ({ ...p, logo_url: e.target.value }))
-                      }
-                      placeholder="Upload URL or upload photo file..."
-                      disabled={saving}
-                    />
-                    <label className="inline-flex cursor-pointer">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        disabled={uploadingLogo}
-                        onChange={(e) => {
-                          const f = e.target.files?.[0];
-                          if (f) uploadImage(f, "logo_url");
-                        }}
-                      />
-                      <Button type="button" variant="outline" className="gap-1.5" disabled={uploadingLogo}>
-                        {uploadingLogo ? (
-                          <Loader2Icon className="size-4 animate-spin" />
-                        ) : (
-                          <UploadIcon className="size-4" />
-                        )}
-                        Add photo
-                      </Button>
-                    </label>
-                  </div>
+                  <Label>Logo</Label>
+                  <ImageInput
+                    value={form.logo_url}
+                    onChange={(url) => setForm((p) => ({ ...p, logo_url: url }))}
+                    uploadType="brands"
+                    previewClass="h-32"
+                    urlPlaceholder="https://.../logo.png"
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="background">Upload Background</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="background"
-                      value={form.background_image}
-                      onChange={(e) =>
-                        setForm((p) => ({
-                          ...p,
-                          background_image: e.target.value,
-                        }))
-                      }
-                      placeholder="Upload URL or upload photo file..."
-                      disabled={saving}
-                    />
-                    <label className="inline-flex cursor-pointer">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        disabled={uploadingBg}
-                        onChange={(e) => {
-                          const f = e.target.files?.[0];
-                          if (f) uploadImage(f, "background_image");
-                        }}
-                      />
-                      <Button type="button" variant="outline" className="gap-1.5" disabled={uploadingBg}>
-                        {uploadingBg ? (
-                          <Loader2Icon className="size-4 animate-spin" />
-                        ) : (
-                          <UploadIcon className="size-4" />
-                        )}
-                        Add photo
+                  <Label>Background</Label>
+                  <ImageInput
+                    value={form.background_image}
+                    onChange={(url) =>
+                      setForm((p) => ({ ...p, background_image: url }))
+                    }
+                    uploadType="brands"
+                    urlPlaceholder="https://.../background.jpg"
+                  />
+                </div>
+
+                <div className="space-y-3 rounded-lg border border-[#ebeef0] p-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label>Brand Colors</Label>
+                      {colorsLoading && (
+                        <span className="inline-flex items-center gap-1 text-xs text-brand">
+                          <Loader2Icon className="size-3.5 animate-spin" />
+                          Analyzing…
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[#a7abc3]">
+                      Auto-generated from your logo or website. Regenerate any
+                      time, then fine-tune. Used to theme campaigns and
+                      AI-generated images.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => generateColors("logo")}
+                        disabled={colorsLoading || saving || !form.logo_url.trim()}
+                        className="gap-1.5"
+                      >
+                        <SparklesIcon className="size-4 text-brand" />
+                        From logo
                       </Button>
-                    </label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => generateColors("website")}
+                        disabled={colorsLoading || saving || !form.url.trim()}
+                        className="gap-1.5"
+                      >
+                        <SparklesIcon className="size-4 text-brand" />
+                        From website
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => generateColors("surprise")}
+                        disabled={colorsLoading || saving}
+                        className="gap-1.5"
+                      >
+                        <SparklesIcon className="size-4 text-brand" />
+                        Surprise me
+                      </Button>
+                    </div>
                   </div>
+
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                    {COLOR_ROLES.map(({ key, label }) => {
+                      const val = brandColors[key] || "";
+                      return (
+                        <div key={key} className="space-y-1.5">
+                          <span className="block text-xs font-medium text-[#575962]">
+                            {label}
+                          </span>
+                          <div className="flex items-center gap-2 rounded-md border border-[#ebeef0] p-1.5">
+                            <input
+                              type="color"
+                              value={/^#[0-9a-fA-F]{6}$/.test(val) ? val : "#ffffff"}
+                              onChange={(e) =>
+                                setBrandColors((p) => ({ ...p, [key]: e.target.value }))
+                              }
+                              className="size-8 shrink-0 cursor-pointer rounded border-0 bg-transparent p-0"
+                              aria-label={`${label} color`}
+                              disabled={saving}
+                            />
+                            <input
+                              value={val}
+                              onChange={(e) =>
+                                setBrandColors((p) => ({ ...p, [key]: e.target.value }))
+                              }
+                              placeholder="#000000"
+                              className="w-full min-w-0 bg-transparent text-xs uppercase text-[#575962] outline-none"
+                              disabled={saving}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {colorsMood && (
+                    <p className="text-xs text-[#a7abc3]">Mood: {colorsMood}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">

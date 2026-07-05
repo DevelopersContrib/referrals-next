@@ -113,6 +113,53 @@ export function buildRewardPayload(
   return cleared;
 }
 
+/** Whitelisted reward columns accepted from client input (mirrors PHP CampaignReward save). */
+export interface SanitizedRewardInput {
+  redirect_url?: string;
+  custom_message?: string;
+  cash_value?: number;
+  worth_value?: number;
+  token_symbol?: string;
+  token_address?: string;
+  token_amount?: string;
+}
+
+/**
+ * Server-safe sanitizer for a reward payload coming from the client.
+ * Only known columns pass through; strings are trimmed/length-capped and
+ * numeric fields are parsed. Used by both create and update campaign flows.
+ */
+export function sanitizeRewardInput(reward: unknown): SanitizedRewardInput {
+  const out: SanitizedRewardInput = {};
+  if (!reward || typeof reward !== "object") return out;
+  const r = reward as Record<string, unknown>;
+
+  if (typeof r.redirect_url === "string" && r.redirect_url.trim()) {
+    out.redirect_url = r.redirect_url.trim().slice(0, 100);
+  }
+  if (typeof r.custom_message === "string" && r.custom_message.trim()) {
+    out.custom_message = r.custom_message.trim();
+  }
+  if (r.cash_value != null && r.cash_value !== "") {
+    const cash = parseFloat(String(r.cash_value));
+    if (Number.isFinite(cash)) out.cash_value = cash;
+  }
+  if (r.worth_value != null && r.worth_value !== "") {
+    const worth = parseFloat(String(r.worth_value));
+    if (Number.isFinite(worth)) out.worth_value = worth;
+  }
+  if (typeof r.token_symbol === "string" && r.token_symbol.trim()) {
+    out.token_symbol = r.token_symbol.trim().slice(0, 100);
+  }
+  if (typeof r.token_address === "string" && r.token_address.trim()) {
+    out.token_address = r.token_address.trim().slice(0, 100);
+  }
+  if (typeof r.token_amount === "string" && r.token_amount.trim()) {
+    out.token_amount = r.token_amount.trim().slice(0, 100);
+  }
+  return out;
+}
+
 export function parseCouponCodes(raw: string): string[] {
   return raw
     .split("\n")

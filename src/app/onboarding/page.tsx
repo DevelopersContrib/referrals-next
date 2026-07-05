@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { countMemberBrands } from "@/lib/member-subscription";
-import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
+import { BrandAnalyzer } from "@/components/onboarding/brand-analyzer";
 
 export const metadata: Metadata = {
   title: "Get started — Referrals.com",
@@ -17,9 +17,11 @@ export default async function OnboardingPage() {
   const brandCount = await countMemberBrands(memberId);
   if (brandCount > 0) redirect("/dashboard");
 
+  const firstName = (session.user.name || session.user.email || "").split(/[\s@]+/)[0] || undefined;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-rose-50/40 to-orange-50/40">
-      <OnboardingFlow userName={session.user.name || session.user.email || "there"} />
+      <BrandAnalyzer firstName={firstName} />
     </div>
   );
 }

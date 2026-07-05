@@ -8,17 +8,12 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ParticipantTable } from "@/components/campaigns/participant-table";
 import { CampaignShareLinks } from "@/components/campaigns/campaign-share-links";
+import { CampaignTabs } from "@/components/campaigns/campaign-tabs";
+import { CampaignRewardSettings } from "@/components/campaigns/campaign-reward-settings";
+import { CampaignEmailsEditor } from "@/components/campaigns/campaign-emails-editor";
+import { IntegrationGuide } from "@/components/campaigns/integration-guide";
 import {
   HomeIcon,
   ChevronRightIcon,
@@ -27,13 +22,11 @@ import {
   MousePointerClickIcon,
   EyeIcon,
   SettingsIcon,
-  BarChart3Icon,
   TrophyIcon,
-  GiftIcon,
-  CodeIcon,
-  ZapIcon,
+  MegaphoneIcon,
   LayoutDashboardIcon,
   PuzzleIcon,
+  TargetIcon,
 } from "lucide-react";
 
 interface CampaignDashboardPageProps {
@@ -131,6 +124,7 @@ export default async function CampaignDashboardPage({
       icon: UsersIcon,
       color: "text-[#28a745]",
       bg: "bg-[#28a745]/10",
+      bar: "from-[#28a745] to-[#5fd07d]",
     },
     {
       title: "Shares",
@@ -138,6 +132,7 @@ export default async function CampaignDashboardPage({
       icon: ShareIcon,
       color: "text-brand",
       bg: "bg-brand/10",
+      bar: "from-brand to-[#ff9a7a]",
     },
     {
       title: "Clicks",
@@ -145,6 +140,7 @@ export default async function CampaignDashboardPage({
       icon: MousePointerClickIcon,
       color: "text-[#dc3545]",
       bg: "bg-[#dc3545]/10",
+      bar: "from-[#dc3545] to-[#ff7b93]",
     },
     {
       title: "Impressions",
@@ -152,6 +148,7 @@ export default async function CampaignDashboardPage({
       icon: EyeIcon,
       color: "text-[#ffc107]",
       bg: "bg-[#ffc107]/10",
+      bar: "from-[#ffc107] to-[#ffe08a]",
     },
   ];
 
@@ -184,46 +181,71 @@ export default async function CampaignDashboardPage({
       </nav>
 
       {/* Campaign Header */}
-      <div className="subheader flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-white">{campaign.name}</h1>
-            <Badge
-              className={
-                campaign.publish === "public"
-                  ? "border-0 bg-white/20 text-white font-medium"
-                  : "border-0 bg-white/10 text-white/70 font-medium"
-              }
-            >
-              {campaign.publish || "public"}
-            </Badge>
+      <div className="subheader relative overflow-hidden">
+        {/* decorative glow */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-16 -top-24 size-64 rounded-full bg-white/15 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-28 left-1/4 size-56 rounded-full bg-black/10 blur-3xl"
+        />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-2xl font-black text-white shadow-lg ring-1 ring-white/25 backdrop-blur-sm sm:size-16">
+              {campaign.name.trim().charAt(0).toUpperCase() || "R"}
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h1 className="text-2xl font-black capitalize leading-tight tracking-tight text-white drop-shadow-sm sm:text-3xl lg:text-4xl">
+                  {campaign.name}
+                </h1>
+                <Badge
+                  className={
+                    campaign.publish === "public"
+                      ? "border-0 bg-white/25 text-white font-semibold uppercase tracking-wide backdrop-blur-sm"
+                      : "border-0 bg-white/10 text-white/70 font-semibold uppercase tracking-wide backdrop-blur-sm"
+                  }
+                >
+                  {campaign.publish || "public"}
+                </Badge>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 font-medium text-white backdrop-blur-sm">
+                  <MegaphoneIcon className="size-3.5" />
+                  {campaignType?.name || "Campaign"}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 font-medium text-white backdrop-blur-sm">
+                  <TargetIcon className="size-3.5" />
+                  Goal:{" "}
+                  {campaign.goal_type === "visit"
+                    ? `${campaign.num_visits} visits`
+                    : `${campaign.num_signups} signups`}
+                </span>
+              </div>
+            </div>
           </div>
-          <p className="mt-1 text-sm text-white/70">
-            {campaignType?.name || "Campaign"} &middot; Goal:{" "}
-            {campaign.goal_type === "visit"
-              ? `${campaign.num_visits} visits`
-              : `${campaign.num_signups} signups`}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link href={`/brands/${brandId}/campaigns/${campaignId}/widget#install`}>
-            <Button className="gap-2 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 border border-white/20">
-              <PuzzleIcon className="size-4" />
-              Install / embed
-            </Button>
-          </Link>
-          <Link href={`/brands/${brandId}/campaigns/${campaignId}/edit`}>
-            <Button className="gap-2 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 border border-white/20">
-              <SettingsIcon className="size-4" />
-              Edit
-            </Button>
-          </Link>
-          <Link href={`/brands/${brandId}/campaigns`}>
-            <Button className="gap-2 bg-white text-brand hover:bg-white/90 font-semibold">
-              <LayoutDashboardIcon className="size-4" />
-              All Campaigns
-            </Button>
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href="#integrations" scroll={false}>
+              <Button className="gap-2 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 border border-white/20">
+                <PuzzleIcon className="size-4" />
+                Install / embed
+              </Button>
+            </Link>
+            <Link href={`/brands/${brandId}/campaigns/${campaignId}/edit`}>
+              <Button className="gap-2 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 border border-white/20">
+                <SettingsIcon className="size-4" />
+                Edit
+              </Button>
+            </Link>
+            <Link href={`/brands/${brandId}/campaigns`}>
+              <Button className="gap-2 bg-white text-brand hover:bg-white/90 font-semibold shadow-md">
+                <LayoutDashboardIcon className="size-4" />
+                All Campaigns
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -237,18 +259,25 @@ export default async function CampaignDashboardPage({
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.title} className="stat-card">
+            <div
+              key={stat.title}
+              className="stat-card group relative overflow-hidden"
+            >
+              <div
+                aria-hidden
+                className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${stat.bar}`}
+              />
               <div className="flex items-center gap-3">
                 <div
-                  className={`flex size-10 items-center justify-center rounded-lg ${stat.bg}`}
+                  className={`flex size-11 items-center justify-center rounded-xl ${stat.bg} transition-transform duration-200 group-hover:-rotate-6 group-hover:scale-110`}
                 >
                   <Icon className={`size-5 ${stat.color}`} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-[#575962]">
+                  <p className="text-3xl font-extrabold tracking-tight text-[#464457]">
                     {stat.value.toLocaleString()}
                   </p>
-                  <p className="text-xs font-medium uppercase tracking-wider text-[#a7abc3]">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-[#a7abc3]">
                     {stat.title}
                   </p>
                 </div>
@@ -259,24 +288,8 @@ export default async function CampaignDashboardPage({
       </div>
 
       {/* Tabbed Interface */}
-      <Tabs defaultValue="analytics">
-        <TabsList variant="line" className="border-b border-[#ebeef0] pb-0">
-          <TabsTrigger value="analytics" className="gap-1.5">
-            <BarChart3Icon className="size-4" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="referrals" className="gap-1.5">
-            <UsersIcon className="size-4" />
-            Referrals
-          </TabsTrigger>
-          <TabsTrigger value="integrations" className="gap-1.5">
-            <CodeIcon className="size-4" />
-            Integrations
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Analytics Tab */}
-        <TabsContent value="analytics" className="mt-6">
+      <CampaignTabs
+        analytics={
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Top Referrers */}
             <div className="portlet">
@@ -358,10 +371,8 @@ export default async function CampaignDashboardPage({
               )}
             </div>
           </div>
-        </TabsContent>
-
-        {/* Referrals Tab */}
-        <TabsContent value="referrals" className="mt-6">
+        }
+        referrals={
           <div className="portlet">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-semibold text-[#575962]">All Participants</h3>
@@ -387,57 +398,18 @@ export default async function CampaignDashboardPage({
               showExport={false}
             />
           </div>
-        </TabsContent>
-
-        {/* Integrations Tab */}
-        <TabsContent value="integrations" className="mt-6">
-          <div className="mb-6 rounded-xl border border-brand/20 bg-brand/5 p-4 sm:p-5">
-            <h3 className="text-sm font-semibold text-[#575962]">Installation and embed codes</h3>
-            <p className="mt-1 text-xs text-[#a7abc3] sm:text-sm">
-              Step-by-step snippets for JavaScript, Embed (iframe), and Node.js live on the widget
-              page (scroll to &quot;Add to your site&quot;).
-            </p>
-            <Link
-              href={`/brands/${brandId}/campaigns/${campaignId}/widget#install`}
-              className="mt-3 inline-flex text-sm font-semibold text-brand underline-offset-2 hover:underline"
-            >
-              Open install section
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
-            <Link
-              href={`/brands/${brandId}/campaigns/${campaignId}/widget`}
-              className="quick-link-card"
-            >
-              <div className="flex size-10 items-center justify-center rounded-lg bg-brand/10">
-                <CodeIcon className="size-5 text-brand" />
-              </div>
-              <h4 className="text-sm font-semibold text-[#575962]">Widget</h4>
-              <p className="text-xs text-[#a7abc3]">Embed on your site</p>
-            </Link>
-            <Link
-              href={`/brands/${brandId}/campaigns/${campaignId}/emails`}
-              className="quick-link-card"
-            >
-              <div className="flex size-10 items-center justify-center rounded-lg bg-[#28a745]/10">
-                <ZapIcon className="size-5 text-[#28a745]" />
-              </div>
-              <h4 className="text-sm font-semibold text-[#575962]">Emails</h4>
-              <p className="text-xs text-[#a7abc3]">Configure email flows</p>
-            </Link>
-            <Link
-              href={`/brands/${brandId}/campaigns/${campaignId}/rewards`}
-              className="quick-link-card"
-            >
-              <div className="flex size-10 items-center justify-center rounded-lg bg-[#ffc107]/10">
-                <GiftIcon className="size-5 text-[#ffc107]" />
-              </div>
-              <h4 className="text-sm font-semibold text-[#575962]">Rewards</h4>
-              <p className="text-xs text-[#a7abc3]">Manage incentives</p>
-            </Link>
-          </div>
-        </TabsContent>
-      </Tabs>
+        }
+        rewards={<CampaignRewardSettings campaignId={campaignId} />}
+        emails={<CampaignEmailsEditor campaignId={campaignId} />}
+        integrations={
+          <IntegrationGuide
+            brandId={brandId}
+            campaignId={campaign.id}
+            baseUrl={siteOrigin}
+            publicUrl={publicPageLink}
+          />
+        }
+      />
     </div>
   );
 }

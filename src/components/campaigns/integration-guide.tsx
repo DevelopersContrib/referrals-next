@@ -1,0 +1,345 @@
+"use client";
+
+import { useCallback, useMemo, useState, type ReactNode } from "react";
+import Link from "next/link";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { buildCampaignEmbedSnippets } from "@/lib/campaign-embed-snippets";
+import {
+  Code2Icon,
+  SquareCodeIcon,
+  ServerIcon,
+  ShoppingBagIcon,
+  GlobeIcon,
+  Share2Icon,
+  CopyIcon,
+  CheckIcon,
+  ExternalLinkIcon,
+  SlidersHorizontalIcon,
+  type LucideIcon,
+} from "lucide-react";
+
+interface IntegrationGuideProps {
+  brandId: string;
+  campaignId: number;
+  baseUrl: string;
+  publicUrl: string;
+}
+
+type IntegrationDef = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  tint: string;
+  tagline: string;
+  recommended?: boolean;
+  blurb: ReactNode;
+  steps: ReactNode[];
+  code?: string;
+  codeLabel?: string;
+  copyLabel?: string;
+  docHref?: string;
+};
+
+export function IntegrationGuide({
+  brandId,
+  campaignId,
+  baseUrl,
+  publicUrl,
+}: IntegrationGuideProps) {
+  const snippets = useMemo(
+    () => buildCampaignEmbedSnippets(baseUrl, campaignId),
+    [baseUrl, campaignId]
+  );
+  const widgetHref = `/brands/${brandId}/campaigns/${campaignId}/widget`;
+
+  const integrations = useMemo<IntegrationDef[]>(
+    () => [
+      {
+        id: "javascript",
+        label: "JavaScript",
+        icon: Code2Icon,
+        tint: "text-amber-500 bg-amber-500/10",
+        tagline: "One script tag",
+        recommended: true,
+        blurb: (
+          <>
+            The recommended install. One script tag loads your configuration and
+            injects the widget (embed, popup, or floating) based on your{" "}
+            <Link href={widgetHref} className="font-medium text-brand underline-offset-2 hover:underline">
+              widget settings
+            </Link>
+            .
+          </>
+        ),
+        steps: [
+          "Copy the snippet below.",
+          "Paste it into your site where you want the widget to appear (or anywhere in the page for popup / floating placements).",
+          "Publish. The widget updates automatically whenever you change your widget settings — no re-embedding needed.",
+        ],
+        code: snippets.js,
+        codeLabel: "HTML",
+      },
+      {
+        id: "iframe",
+        label: "Embed (iframe)",
+        icon: SquareCodeIcon,
+        tint: "text-sky-500 bg-sky-500/10",
+        tagline: "No JavaScript",
+        blurb:
+          "Paste anywhere HTML is accepted — landing pages, CMS blocks, and static pages. No JavaScript required.",
+        steps: [
+          "Copy the iframe snippet below.",
+          "Paste it into any HTML block on your page.",
+          "Adjust the height attribute if your widget needs more room.",
+        ],
+        code: snippets.iframe,
+        codeLabel: "HTML",
+      },
+      {
+        id: "node",
+        label: "Node.js",
+        icon: ServerIcon,
+        tint: "text-emerald-500 bg-emerald-500/10",
+        tagline: "Server-rendered",
+        blurb: (
+          <>
+            Server-rendered apps (Express / Fastify / Koa): serve a page that
+            includes the loader script. For Next.js / React, use the{" "}
+            <strong className="font-medium text-foreground">JavaScript</strong>{" "}
+            snippet inside a client component.
+          </>
+        ),
+        steps: [
+          "Add the route below to your Express app.",
+          "Run node server.js and open /refer.",
+          "The widget renders per your widget settings.",
+        ],
+        code: snippets.node,
+        codeLabel: "server.js",
+      },
+      {
+        id: "shopify",
+        label: "Shopify",
+        icon: ShoppingBagIcon,
+        tint: "text-lime-600 bg-lime-500/10",
+        tagline: "Theme editor",
+        blurb:
+          "Add the referral widget to your storefront using a Custom Liquid section — no theme code editing required.",
+        steps: [
+          "In Shopify admin, go to Online Store → Themes → Customize.",
+          "Choose the page (e.g. your homepage or a dedicated 'Refer a friend' page) and click Add section → Custom Liquid.",
+          "Paste the JavaScript snippet below into the Custom Liquid box.",
+          "Save. For a popup or floating widget, place the same snippet in Theme settings → theme.liquid before </body>.",
+        ],
+        code: snippets.js,
+        codeLabel: "Custom Liquid",
+        docHref: "https://help.shopify.com/en/manual/online-store/themes/theme-structure/extend/edit-theme-code",
+      },
+      {
+        id: "wordpress",
+        label: "WordPress",
+        icon: GlobeIcon,
+        tint: "text-blue-600 bg-blue-500/10",
+        tagline: "Block or plugin",
+        blurb:
+          "Drop the widget into any page or post with a Custom HTML block, or load it site-wide with a headers/footers plugin.",
+        steps: [
+          "Edit the page or post where you want the widget.",
+          "Add a Custom HTML block (Gutenberg) or switch the Classic editor to the Text tab.",
+          "Paste the JavaScript snippet below and update.",
+          "To show it site-wide (popup / floating), use a plugin like 'WPCode' or 'Insert Headers and Footers' and paste the snippet in the footer.",
+        ],
+        code: snippets.js,
+        codeLabel: "Custom HTML",
+      },
+      {
+        id: "facebook",
+        label: "Facebook",
+        icon: Share2Icon,
+        tint: "text-[#1877f2] bg-[#1877f2]/10",
+        tagline: "Share the link",
+        blurb:
+          "Facebook blocks custom scripts on Pages, so promote your public campaign page link instead — it works great as a button, pinned post, or bio link.",
+        steps: [
+          "Copy your public campaign link below.",
+          "On your Facebook Page, click the action button (e.g. 'Sign Up' / 'Learn More') and paste the link.",
+          "Create a post announcing your referral program with the link, then pin it to the top of your Page.",
+          "Add the link to your Page's About / bio section for lasting visibility.",
+        ],
+        code: publicUrl,
+        codeLabel: "Public campaign link",
+        copyLabel: "Copy link",
+      },
+    ],
+    [snippets, widgetHref, publicUrl]
+  );
+
+  const [activeId, setActiveId] = useState(integrations[0].id);
+  const [copied, setCopied] = useState(false);
+  const active = integrations.find((i) => i.id === activeId) ?? integrations[0];
+  const ActiveIcon = active.icon;
+
+  const copy = useCallback(async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast.success("Copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Could not copy — select the text manually");
+    }
+  }, []);
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
+      {/* Left rail — integration types */}
+      <nav
+        aria-label="Integration types"
+        className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0"
+      >
+        {integrations.map((item) => {
+          const Icon = item.icon;
+          const isActive = item.id === activeId;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => {
+                setActiveId(item.id);
+                setCopied(false);
+              }}
+              aria-pressed={isActive}
+              className={cn(
+                "group flex shrink-0 items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all lg:w-full",
+                isActive
+                  ? "border-brand/40 bg-brand/5 shadow-sm"
+                  : "border-[#ebeef0] bg-white hover:border-brand/30 hover:bg-brand/5"
+              )}
+            >
+              <span
+                className={cn(
+                  "flex size-9 shrink-0 items-center justify-center rounded-lg transition-transform group-hover:scale-105",
+                  item.tint
+                )}
+              >
+                <Icon className="size-5" />
+              </span>
+              <span className="min-w-0">
+                <span
+                  className={cn(
+                    "flex items-center gap-1.5 text-sm font-semibold",
+                    isActive ? "text-brand" : "text-[#575962]"
+                  )}
+                >
+                  {item.label}
+                  {item.recommended && (
+                    <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
+                      Best
+                    </span>
+                  )}
+                </span>
+                <span className="block truncate text-xs text-[#a7abc3]">
+                  {item.tagline}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Right panel — how-to */}
+      <div className="portlet">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span
+              className={cn(
+                "flex size-11 items-center justify-center rounded-xl",
+                active.tint
+              )}
+            >
+              <ActiveIcon className="size-5" />
+            </span>
+            <div>
+              <h3 className="flex items-center gap-2 text-lg font-bold text-[#464457]">
+                {active.label}
+                {active.recommended && (
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                    Recommended
+                  </span>
+                )}
+              </h3>
+              <p className="text-xs text-[#a7abc3]">{active.tagline}</p>
+            </div>
+          </div>
+          <Link
+            href={widgetHref}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[#ebeef0] px-3 py-1.5 text-xs font-semibold text-[#575962] transition-colors hover:border-brand/30 hover:text-brand"
+          >
+            <SlidersHorizontalIcon className="size-3.5" />
+            Widget settings
+          </Link>
+        </div>
+
+        <p className="mt-3 text-sm leading-relaxed text-[#6b6e82] [&_a]:text-brand">
+          {active.blurb}
+        </p>
+
+        {/* Steps */}
+        <ol className="mt-5 space-y-3">
+          {active.steps.map((step, i) => (
+            <li key={i} className="flex gap-3">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand/10 text-xs font-bold text-brand">
+                {i + 1}
+              </span>
+              <span className="pt-0.5 text-sm text-[#575962]">{step}</span>
+            </li>
+          ))}
+        </ol>
+
+        {/* Code / link */}
+        {active.code && (
+          <div className="mt-5">
+            {active.codeLabel && (
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#a7abc3]">
+                {active.codeLabel}
+              </p>
+            )}
+            <div className="relative rounded-xl border border-slate-200 bg-slate-950 text-slate-100 shadow-inner">
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                className="absolute right-2 top-2 z-[1] h-8 gap-1 border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700"
+                onClick={() => copy(active.code!)}
+              >
+                {copied ? (
+                  <CheckIcon className="size-3.5" />
+                ) : (
+                  <CopyIcon className="size-3.5" />
+                )}
+                {copied ? "Copied" : active.copyLabel ?? "Copy"}
+              </Button>
+              <pre className="max-h-[min(60vh,400px)] overflow-auto p-4 pr-24 text-xs leading-relaxed sm:text-sm">
+                <code>{active.code}</code>
+              </pre>
+            </div>
+          </div>
+        )}
+
+        {active.docHref && (
+          <a
+            href={active.docHref}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand underline-offset-2 hover:underline"
+          >
+            View official docs
+            <ExternalLinkIcon className="size-3.5" />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}

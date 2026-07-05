@@ -52,4 +52,31 @@ export async function uploadToS3(
   return s3PublicUrl(key);
 }
 
+/**
+ * Persist an image that lives at a `data:` URI or a remote URL into S3 and
+ * return the stable public URL. Used to capture AI-generated images (whose
+ * hosted URLs are temporary) so they survive long-term.
+ */
+export async function persistImageToS3(
+  source: string,
+  key: string
+): Promise<string> {
+  let buffer: Buffer;
+  let contentType = "image/png";
+
+  if (source.startsWith("data:")) {
+    const match = source.match(/^data:([^;]+);base64,(.*)$/s);
+    if (!match) throw new Error("Invalid data URI");
+    contentType = match[1] || "image/png";
+    buffer = Buffer.from(match[2], "base64");
+  } else {
+    const res = await fetch(source);
+    if (!res.ok) throw new Error(`Failed to fetch image (${res.status})`);
+    contentType = res.headers.get("content-type") || "image/png";
+    buffer = Buffer.from(await res.arrayBuffer());
+  }
+
+  return uploadToS3(key, buffer, contentType);
+}
+
 export { BUCKET, REGION };

@@ -12,6 +12,7 @@ export function proxy(request: NextRequest) {
     "/api/widget",
     "/api/legacy",
     "/api/cron",
+    "/api/domain-refer",
     // Brand-analysis routes self-enforce auth (session / owner / internal secret).
     // The internal fan-out + cron sweeper reach /run without a session cookie.
     "/api/brands/analyze",

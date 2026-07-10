@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ExternalLinkIcon } from "lucide-react";
+import { BrandLogo } from "@/components/brands/brand-logo";
 
 const LOGO_URL =
   "https://d1p6j71028fbjm.cloudfront.net/logos/logo-new-referral-1.png";
@@ -64,25 +65,34 @@ export default async function PublicBrandPage({
       </div>
 
       <header className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          {brandWebsite ? (
-            <a
-              href={brandWebsite}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-center gap-1.5"
-            >
-              <h1 className="text-2xl font-bold capitalize group-hover:text-brand">
-                {brand.domain}
-              </h1>
-              <ExternalLinkIcon className="size-4 text-gray-400 transition-colors group-hover:text-brand" />
-            </a>
-          ) : (
-            <h1 className="text-2xl font-bold capitalize">{brand.domain}</h1>
-          )}
-          {brand.description && (
-            <p className="mt-1 text-gray-600">{brand.description}</p>
-          )}
+        <div className="max-w-4xl mx-auto px-4 py-6 flex items-center gap-4">
+          {/* Brand logo from brandidentity.com/logo/<domain> (with graceful fallback chain) */}
+          <BrandLogo
+            domain={brand.domain}
+            logoUrl={brand.logo_url}
+            imgClassName="h-14 w-14 shrink-0 rounded-xl border bg-white object-contain p-1"
+            fallbackClassName="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border bg-gray-100 text-2xl font-bold text-gray-500"
+          />
+          <div className="min-w-0">
+            {brandWebsite ? (
+              <a
+                href={brandWebsite}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-1.5"
+              >
+                <h1 className="text-2xl font-bold capitalize group-hover:text-brand">
+                  {brand.domain}
+                </h1>
+                <ExternalLinkIcon className="size-4 text-gray-400 transition-colors group-hover:text-brand" />
+              </a>
+            ) : (
+              <h1 className="text-2xl font-bold capitalize">{brand.domain}</h1>
+            )}
+            {brand.description && (
+              <p className="mt-1 text-gray-600">{brand.description}</p>
+            )}
+          </div>
         </div>
       </header>
       <main className="max-w-4xl mx-auto px-4 py-8">

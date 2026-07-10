@@ -236,6 +236,28 @@ async function processReward(
       return { type: "custom", message: rewardConfig.custom_message };
     }
 
+    case 4: {
+      // Token reward — ledger now (token_transaction stays NULL = unminted),
+      // mint/transfer later. token_amount = count of tokens; the $ value lives
+      // on campaign_reward.worth_value.
+      const amount = rewardConfig.token_amount
+        ? parseFloat(rewardConfig.token_amount)
+        : null;
+      await prisma.participants_rewards.create({
+        data: {
+          participant_id: participantId,
+          campaign_id: campaignId,
+          reward_type: rewardType,
+          social_type: socialType,
+          token_address: rewardConfig.token_address,
+          token_symbol: rewardConfig.token_symbol,
+          token_amount: amount,
+        },
+      });
+
+      return { type: "token", symbol: rewardConfig.token_symbol, amount };
+    }
+
     case 5: {
       // Cash reward
       await prisma.participants_rewards.create({

@@ -77,20 +77,22 @@ export async function POST(req: NextRequest) {
       const rrefRaw = req.cookies.get("rref")?.value || "";
       const rref = /^\d+$/.test(rrefRaw) ? parseInt(rrefRaw, 10) : NaN;
       if (Number.isFinite(rref)) {
-        const CAMPAIGN = Number(process.env.REFERRALS_SIGNUP_CAMPAIGN || 77);
-        const referrer = await prisma.campaign_participants.findFirst({
-          where: { id: rref, campaign_id: CAMPAIGN },
-        });
-        const already = await prisma.campaign_participants.findFirst({
-          where: { campaign_id: CAMPAIGN, email },
-        });
-        if (referrer && !already) {
-          await prisma.campaign_participants.create({
-            data: { campaign_id: CAMPAIGN, email, name, participant_id: member.id, invited_by: rref },
+        // Credit in whatever campaign the referrer participant belongs to
+        // (the brand's designated referral campaign, set via /go/<domain>).
+        const referrer = await prisma.campaign_participants.findFirst({ where: { id: rref } });
+        if (referrer) {
+          const CAMPAIGN = referrer.campaign_id;
+          const already = await prisma.campaign_participants.findFirst({
+            where: { campaign_id: CAMPAIGN, email },
           });
-          await prisma.participants_rewards.create({
-            data: { campaign_id: CAMPAIGN, participant_id: rref, reward_type: 4, social_type: 1, token_symbol: "ADAO" },
-          });
+          if (!already) {
+            await prisma.campaign_participants.create({
+              data: { campaign_id: CAMPAIGN, email, name, participant_id: member.id, invited_by: rref },
+            });
+            await prisma.participants_rewards.create({
+              data: { campaign_id: CAMPAIGN, participant_id: rref, reward_type: 4, social_type: 1, token_symbol: "ADAO" },
+            });
+          }
         }
       }
     } catch (refErr) {

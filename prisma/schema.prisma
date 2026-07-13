@@ -483,6 +483,7 @@ model member_urls {
   slug             String?   @db.VarChar(100)
   plan_expiry      DateTime? @db.DateTime(0)
   brand_colors     Json?
+  referral_campaign_id Int?  // the ONE campaign this brand's /go/<domain> link attributes to
 }
 
 model member_zapier {

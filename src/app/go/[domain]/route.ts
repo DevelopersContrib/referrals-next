@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { normalizeDomain } from "@/lib/domain-brand";
 import { getOrCreateDomainReferrer } from "@/lib/domain-referrer";
 
@@ -24,7 +25,14 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ domain:
 
   let participantId: number | null = null;
   try {
-    const link = await getOrCreateDomainReferrer(referrer, REFERRALS_SIGNUP_CAMPAIGN);
+    // The brand designates its referral campaign in Brand Settings; fall back to
+    // the platform signup-referral campaign if unset.
+    const brand = await prisma.member_urls.findFirst({
+      where: { domain: referrer },
+      select: { referral_campaign_id: true },
+    });
+    const campaignId = brand?.referral_campaign_id || REFERRALS_SIGNUP_CAMPAIGN;
+    const link = await getOrCreateDomainReferrer(referrer, campaignId);
     participantId = link.participantId;
   } catch {
     /* fall through — still send them to signup, just unattributed */

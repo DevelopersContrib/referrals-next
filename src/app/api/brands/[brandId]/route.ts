@@ -64,7 +64,16 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     }
 
     const body = await req.json();
-    const { url, description, logo_url, background_image, slug, brand_colors } = body;
+    const { url, description, logo_url, background_image, slug, brand_colors, referral_campaign_id } = body;
+
+    // Normalize the referral campaign choice: a positive int, or null to clear.
+    let referralCampaignId: number | null | undefined;
+    if (referral_campaign_id === null || referral_campaign_id === "") {
+      referralCampaignId = null;
+    } else if (referral_campaign_id !== undefined) {
+      const n = Number(referral_campaign_id);
+      referralCampaignId = Number.isFinite(n) && n > 0 ? n : null;
+    }
 
     // Sanitize brand_colors: only known roles, only valid #rrggbb hex values.
     let brandColors: Record<string, string> | null | undefined;
@@ -119,6 +128,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
         ...(background_image !== undefined && { background_image }),
         ...(slug !== undefined && { slug }),
         ...(brandColors && { brand_colors: brandColors }),
+        ...(referralCampaignId !== undefined && { referral_campaign_id: referralCampaignId }),
       },
     });
 

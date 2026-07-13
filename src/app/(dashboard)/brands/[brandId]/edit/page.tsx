@@ -4,6 +4,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { isMemberOnPaidPlan } from "@/lib/member-subscription";
 import { BrandEditPanel } from "@/components/brands/brand-edit-panel";
+import { BrandReferralLink } from "@/components/brands/brand-referral-link";
 import { ChevronRightIcon, HomeIcon } from "lucide-react";
 
 interface EditBrandPageProps {
@@ -41,6 +42,8 @@ export default async function EditBrandPage({ params }: EditBrandPageProps) {
       >
         <BrandEditPanel brandId={brandId} isPremium={isPremium} />
       </Suspense>
+
+      <BrandReferralLink brandId={brandId} />
     </div>
   );
 }

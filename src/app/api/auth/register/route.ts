@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
             data: { campaign_id: CAMPAIGN, email, name, participant_id: member.id, invited_by: rref },
           });
           await prisma.participants_rewards.create({
-            data: { campaign_id: CAMPAIGN, participant_id: rref, reward_type: 4, token_symbol: "ADAO" },
+            data: { campaign_id: CAMPAIGN, participant_id: rref, reward_type: 4, social_type: 1, token_symbol: "ADAO" },
           });
         }
       }

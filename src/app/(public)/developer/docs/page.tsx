@@ -261,6 +261,19 @@ const sections: { title: string; endpoints: Endpoint[] }[] = [
     ],
   },
   {
+    title: "Referral Tracking API",
+    endpoints: [
+      {
+        method: "GET",
+        path: "/api/click?from=garagechannel.com&to=handyman.com",
+        description:
+          "Log a whole-domain referral click (used by referral.js, also POST via sendBeacon with a JSON body or query params). Resolves `from` to its own referral campaign and increments that campaign's click count. Public, rate-limited, and fails open so it never blocks navigation.",
+        auth: false,
+        response: `{ "ok": true, "campaignId": 16046, "participantId": 13720, "to": "handyman.com" }`,
+      },
+    ],
+  },
+  {
     title: "Billing",
     endpoints: [
       {
@@ -301,6 +314,12 @@ export default function DocsPage() {
               className="block rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               Widget Embed
+            </a>
+            <a
+              href="#referral-tracker"
+              className="block rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              Referral Tracker
             </a>
             {sections.map((section) => (
               <a
@@ -374,6 +393,43 @@ export default function DocsPage() {
                 The widget supports three modes — <strong>embed</strong> (inline), <strong>popup</strong> (button + modal),
                 and <strong>floating</strong> (corner bubble) — configured in your campaign&apos;s widget settings.
               </p>
+            </div>
+          </section>
+
+          {/* Whole-domain referral tracker */}
+          <section id="referral-tracker">
+            <h2 className="mb-4 border-b pb-2 font-heading text-xl font-semibold">
+              Referral Tracker (whole domain)
+            </h2>
+            <div className="space-y-3 text-sm">
+              <p className="text-muted-foreground">
+                Track referrals across an <strong>entire site</strong> with one script —
+                no per-link edits. Add the tag to any page and set{" "}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">data-domain</code>{" "}
+                to the brand domain that should earn the credit (defaults to the current
+                hostname).
+              </p>
+              <CodeBlock
+                code={`<script src="https://www.referrals.com/referral.js"
+  data-domain="garagechannel.com" async></script>`}
+              />
+              <p className="text-muted-foreground">
+                On load it appends{" "}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">?ref=&lt;data-domain&gt;</code>{" "}
+                to every outbound link so the destination brand attributes the referral. On
+                each outbound click it beacons{" "}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">/api/click</code>,
+                which logs the click against that domain&apos;s own referral campaign — so
+                clicks <em>and</em> signups both show on its dashboard. Links go straight to
+                the destination brand; no redirect hop.
+              </p>
+              <p className="text-muted-foreground">
+                Prefer to build the link yourself? Link straight to the brand and pass the
+                referrer as{" "}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">ref</code>{" "}
+                (attributes the signup, but won&apos;t log the click):
+              </p>
+              <CodeBlock code={`https://www.handyman.com/?ref=garagechannel.com`} />
             </div>
           </section>
 

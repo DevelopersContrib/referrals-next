@@ -14,6 +14,7 @@ export function proxy(request: NextRequest) {
     "/api/cron",
     "/api/domain-refer",
     "/api/brand",
+    "/api/click",
     // Brand-analysis routes self-enforce auth (session / owner / internal secret).
     // The internal fan-out + cron sweeper reach /run without a session cookie.
     "/api/brands/analyze",
@@ -103,5 +104,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|images|widget.js).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|images|widget.js|referral.js).*)"],
 };

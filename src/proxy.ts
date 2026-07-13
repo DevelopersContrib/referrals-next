@@ -23,6 +23,7 @@ export function proxy(request: NextRequest) {
     "/lander",
     "/t/",
     "/t2/",
+    "/go/",
     "/p/",
     "/public/",
     "/extension",

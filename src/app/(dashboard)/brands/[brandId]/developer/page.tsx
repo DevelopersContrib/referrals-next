@@ -22,6 +22,7 @@ import {
   ExternalLinkIcon,
   BookOpenIcon,
   PlayIcon,
+  LinkIcon,
 } from "lucide-react";
 
 interface PageProps {
@@ -171,6 +172,43 @@ export default async function BrandDeveloperPage({ params }: PageProps) {
               code={`curl https://referrals.com/api/v1/brands/${brand.id}/stats \\\n  -H "X-API-Key: ${maskedKey}"`}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Referral Tracker */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <LinkIcon className="size-5 text-brand" />
+            Referral Tracker
+          </CardTitle>
+          <CardDescription>
+            Drop this one tag on {brand.domain} to attribute every outbound link
+            and log referral clicks to this brand&apos;s campaign — no per-link
+            edits, no redirect hop.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <CodeBlock
+            code={`<script src="https://www.referrals.com/referral.js"\n  data-domain="${brand.domain}" async></script>`}
+          />
+          <p className="text-sm text-muted-foreground">
+            It appends{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">
+              ?ref={brand.domain}
+            </code>{" "}
+            to outbound links and beacons each click to{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">
+              /api/click
+            </code>
+            , so clicks and signups both show on this brand&apos;s dashboard.{" "}
+            <Link
+              href="/developer/docs#referral-tracker"
+              className="text-brand hover:underline"
+            >
+              Full docs →
+            </Link>
+          </p>
         </CardContent>
       </Card>
 

@@ -62,6 +62,17 @@ interface ReferralWidgetProps {
   isEmbed?: boolean;
 }
 
+/**
+ * Auto-provisioned network campaigns use the bare domain as the widget title
+ * (e.g. "englishstream.com"). Capitalize it for display — "Englishstream.com".
+ * Anything that isn't a bare domain is returned untouched.
+ */
+function displayTitle(title: string): string {
+  const t = title.trim();
+  if (!/^[a-z0-9][a-z0-9-]*(\.[a-z0-9-]+)+$/.test(t)) return title;
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
 export function ReferralWidget({
   config,
   reward = null,
@@ -77,7 +88,8 @@ export function ReferralWidget({
   const [linkCopied, setLinkCopied] = useState(false);
 
   const accentColor = config.color ? `#${config.color.replace("#", "")}` : "#3B82F6";
-  const btnColor = config.buttonColor ? `#${config.buttonColor.replace("#", "")}` : accentColor;
+  // Default button is black; a campaign's explicit button color always wins.
+  const btnColor = config.buttonColor ? `#${config.buttonColor.replace("#", "")}` : "#111111";
   const textColor = config.textColor ? `#${config.textColor.replace("#", "")}` : "#1F2937";
   const headerColor = config.headerFontColor ? `#${config.headerFontColor.replace("#", "")}` : textColor;
   const descColor = config.headerDescriptionColor ? `#${config.headerDescriptionColor.replace("#", "")}` : "#6B7280";
@@ -240,7 +252,7 @@ export function ReferralWidget({
               lineHeight: 1.3,
             }}
           >
-            {config.headerTitle}
+            {displayTitle(config.headerTitle)}
           </h2>
         )}
         {config.description && (

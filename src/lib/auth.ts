@@ -6,7 +6,18 @@ import { compareSync } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { memberIdIsPlatformAdmin, memberRowIsPlatformAdmin } from "@/lib/platform-admin";
 
+const googleReady =
+  Boolean(process.env.GOOGLE_CLIENT_ID?.trim()) &&
+  Boolean(process.env.GOOGLE_CLIENT_SECRET?.trim());
+const facebookReady =
+  Boolean(process.env.FACEBOOK_CLIENT_ID?.trim()) &&
+  Boolean(process.env.FACEBOOK_CLIENT_SECRET?.trim());
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  // Prevent UntrustedHost / HTML error pages when host ≠ NEXTAUTH_URL
+  // (www vs apex, LAN IP, Vercel preview, etc.)
+  trustHost: true,
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   providers: [
     Credentials({
       name: "credentials",
@@ -54,14 +65,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       },
     }),
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    Facebook({
-      clientId: process.env.FACEBOOK_CLIENT_ID!,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
-    }),
+    ...(googleReady
+      ? [
+          Google({
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+          }),
+        ]
+      : []),
+    ...(facebookReady
+      ? [
+          Facebook({
+            clientId: process.env.FACEBOOK_CLIENT_ID!,
+            clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+          }),
+        ]
+      : []),
   ],
   pages: {
     signIn: "/signin",

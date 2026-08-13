@@ -17,6 +17,7 @@ import {
   Crown,
   ArrowUpRight,
   ArrowDownRight,
+  LifeBuoy,
   type LucideIcon,
 } from "lucide-react";
 
@@ -25,7 +26,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
   const stats = await getAdminPlatformStats();
-  const { totals, members, revenue } = stats;
+  const { totals, members, revenue, support } = stats;
 
   const primary: {
     label: string;
@@ -147,6 +148,79 @@ export default async function AdminDashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* Support inbox */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0 pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <LifeBuoy className="size-4 text-brand" />
+            Support inbox
+          </CardTitle>
+          <Link
+            href="/admin/support"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:underline"
+          >
+            Open inbox
+            <ArrowUpRight className="size-3.5" />
+          </Link>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <Link
+              href="/admin/support?status=waiting_on_staff"
+              className="rounded-xl border border-rose-200 bg-rose-50/60 p-3 transition hover:border-rose-300 hover:bg-rose-50"
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-rose-700">
+                Needs human
+              </p>
+              <p className="mt-1 text-2xl font-bold tabular-nums text-rose-900">
+                {fmt(support.needsHuman)}
+              </p>
+            </Link>
+            <Link
+              href="/admin/support?status=open"
+              className="rounded-xl border bg-card p-3 transition hover:bg-muted/50"
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Open (AI)
+              </p>
+              <p className="mt-1 text-2xl font-bold tabular-nums">{fmt(support.open)}</p>
+            </Link>
+            <Link
+              href="/admin/support?status=waiting_on_contractor"
+              className="rounded-xl border bg-card p-3 transition hover:bg-muted/50"
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Awaiting reply
+              </p>
+              <p className="mt-1 text-2xl font-bold tabular-nums">
+                {fmt(support.waitingOnCustomer)}
+              </p>
+            </Link>
+            <div className="rounded-xl border bg-card p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                AI handling
+              </p>
+              <p className="mt-1 text-2xl font-bold tabular-nums">{fmt(support.aiHandling)}</p>
+            </div>
+            <div className="rounded-xl border bg-card p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                New this month
+              </p>
+              <p className="mt-1 text-2xl font-bold tabular-nums">{fmt(support.newThisMonth)}</p>
+            </div>
+            <Link
+              href="/admin/support"
+              className="rounded-xl border bg-card p-3 transition hover:bg-muted/50"
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                All tickets
+              </p>
+              <p className="mt-1 text-2xl font-bold tabular-nums">{fmt(support.total)}</p>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Member growth (last 12 months) */}

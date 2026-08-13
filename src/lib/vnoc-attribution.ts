@@ -16,8 +16,7 @@
  * - Idempotent by (event_type, ref_external_id): VNOC de-dupes re-posts, so
  *   retrying with a stable id (member id, transaction id) is safe.
  *
- * This module intentionally does NO route wiring — it's the reusable transport
- * + config layer. Wire it into register/billing handlers separately.
+ * Transport + helpers. Wired into register/billing and support ticket create/resolve.
  */
 
 /** Products configured on referrals.com (domain 971). Env keys are slug-prefixed. */
@@ -292,4 +291,28 @@ export async function putVnocBaseline(
       error: err instanceof Error ? err.message : "unknown error",
     };
   }
+}
+
+/** New support ticket opened (contact form, dashboard, or inbound email). */
+export function postVnocSupportCase(
+  ticketRef: string,
+  product: VnocProduct = "referrals"
+): Promise<VnocResult> {
+  return postVnocAttribution({
+    product,
+    eventType: "support_case",
+    refExternalId: ticketRef,
+  });
+}
+
+/** Ticket marked resolved or closed. */
+export function postVnocSupportResolved(
+  ticketRef: string,
+  product: VnocProduct = "referrals"
+): Promise<VnocResult> {
+  return postVnocAttribution({
+    product,
+    eventType: "support_resolved",
+    refExternalId: ticketRef,
+  });
 }

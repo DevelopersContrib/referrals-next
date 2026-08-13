@@ -3,6 +3,7 @@ import { queueSupportAutoresponder } from "@/lib/support-autoresponder";
 import { sendAppEmail, rfDefaultFromEmail } from "@/lib/mail-send";
 import { AI_TURN_CAP, RF_SITE } from "@/lib/support-types";
 import { queueAiTurn } from "@/lib/support-tickets";
+import { postVnocSupportCase } from "@/lib/vnoc-attribution";
 
 export { RF_SITE };
 
@@ -111,6 +112,8 @@ export async function createContactFormTicket(input: {
     message: body,
     reference: publicId,
   });
+
+  void postVnocSupportCase(`ticket:${publicId}`);
 
   if (useAi) queueAiTurn(ticket.id);
 
@@ -265,6 +268,8 @@ export async function ingestInboundSupportEmail(input: {
     message: body,
     reference: publicId,
   });
+
+  void postVnocSupportCase(`ticket:${publicId}`);
 
   if (useAi) queueAiTurn(ticket.id);
 

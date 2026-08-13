@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getExcludedMemberIds } from "@/lib/platform-admin";
 import { getPlatformRevenue, getMrrEstimate } from "@/lib/revenue";
+import { RF_SITE } from "@/lib/support-types";
 
 /**
  * Platform-wide admin statistics. Every number here is computed from a real
@@ -40,6 +41,14 @@ export type AdminPlatformStats = {
   };
   campaignsNewThisMonth: number;
   participantsNewThisMonth: number;
+  support: {
+    needsHuman: number;
+    open: number;
+    waitingOnCustomer: number;
+    aiHandling: number;
+    newThisMonth: number;
+    total: number;
+  };
   recentSignups: { id: number; name: string; email: string; date: string }[];
   topBrands: { id: number; domain: string; campaigns: number }[];
   topCampaigns: { id: number; name: string; impressions: number }[];
@@ -128,6 +137,12 @@ export async function getAdminPlatformStats(): Promise<AdminPlatformStats> {
     topBrandsRows,
     topCampaignsRows,
     memberSeriesRows,
+    supportNeedsHuman,
+    supportOpen,
+    supportWaitingCustomer,
+    supportAiHandling,
+    supportNewThisMonth,
+    supportTotal,
   ] = await Promise.all([
     safe(() => prisma.members.count({ where: idNotIn }), 0),
     safe(() => prisma.member_urls.count(), 0),
@@ -266,6 +281,42 @@ export async function getAdminPlatformStats(): Promise<AdminPlatformStats> {
           ORDER BY y ASC, m ASC`,
       []
     ),
+    safe(
+      () =>
+        prisma.support_tickets.count({
+          where: { site: RF_SITE, status: "waiting_on_staff" },
+        }),
+      0
+    ),
+    safe(
+      () =>
+        prisma.support_tickets.count({
+          where: { site: RF_SITE, status: "open" },
+        }),
+      0
+    ),
+    safe(
+      () =>
+        prisma.support_tickets.count({
+          where: { site: RF_SITE, status: "waiting_on_contractor" },
+        }),
+      0
+    ),
+    safe(
+      () =>
+        prisma.support_tickets.count({
+          where: { site: RF_SITE, ai_handling: true, status: { notIn: ["closed", "resolved"] } },
+        }),
+      0
+    ),
+    safe(
+      () =>
+        prisma.support_tickets.count({
+          where: { site: RF_SITE, created_at: { gte: thisMonthStart } },
+        }),
+      0
+    ),
+    safe(() => prisma.support_tickets.count({ where: { site: RF_SITE } }), 0),
   ]);
 
   const growthPct =
@@ -305,6 +356,14 @@ export async function getAdminPlatformStats(): Promise<AdminPlatformStats> {
     },
     campaignsNewThisMonth,
     participantsNewThisMonth,
+    support: {
+      needsHuman: supportNeedsHuman,
+      open: supportOpen,
+      waitingOnCustomer: supportWaitingCustomer,
+      aiHandling: supportAiHandling,
+      newThisMonth: supportNewThisMonth,
+      total: supportTotal,
+    },
     recentSignups: recentSignupsRows.map((m) => ({
       id: m.id,
       name: m.name,

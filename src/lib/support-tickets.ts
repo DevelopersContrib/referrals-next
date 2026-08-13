@@ -13,6 +13,7 @@ import {
   AI_TURN_CAP,
   type SupportStatus,
 } from "@/lib/support-types";
+import { postVnocSupportCase, postVnocSupportResolved } from "@/lib/vnoc-attribution";
 
 export { SupportTicketError, AI_TURN_CAP };
 
@@ -75,7 +76,7 @@ export async function updatePanelTicket(
 ) {
   const existing = await prisma.support_tickets.findFirst({
     where: { id, ...siteWhere() },
-    select: { id: true },
+    select: { id: true, public_id: true, status: true },
   });
   if (!existing) throw new SupportTicketError("Ticket not found", "not_found");
 
@@ -86,6 +87,15 @@ export async function updatePanelTicket(
   if (data.status && data.status !== "waiting_on_staff") patch.ai_handling = false;
 
   await prisma.support_tickets.update({ where: { id }, data: patch });
+
+  if (
+    existing.status !== "resolved" &&
+    existing.status !== "closed" &&
+    (data.status === "resolved" || data.status === "closed")
+  ) {
+    void postVnocSupportResolved(`ticket:${existing.public_id}`);
+  }
+
   return getPanelTicket(id);
 }
 
@@ -434,6 +444,8 @@ export async function createMemberSupportTicket(input: {
     reference: publicId,
   });
 
+  void postVnocSupportCase(`ticket:${publicId}`);
+
   if (useAi) queueAiTurn(ticket.id);
 
   return getMemberTicket(member.id, publicId);
@@ -504,6 +516,11 @@ export async function markTicketResolvedByMember(memberId: number, publicId: str
     where: { id: ticket.id },
     data: { status: "resolved", ai_handling: false },
   });
+
+  if (ticket.status !== "resolved" && ticket.status !== "closed") {
+    void postVnocSupportResolved(`ticket:${publicId}`);
+  }
+
   return getMemberTicket(memberId, publicId);
 }
 

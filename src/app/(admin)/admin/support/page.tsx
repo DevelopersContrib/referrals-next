@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { LifeBuoy, Mail, Clock, User, Search } from "lucide-react";
 
 type Ticket = {
@@ -16,11 +17,23 @@ type Ticket = {
   last_message_at: string;
 };
 
+const STATUS_FILTERS = new Set([
+  "open",
+  "waiting_on_staff",
+  "waiting_on_contractor",
+  "resolved",
+  "closed",
+]);
+
 export default function AdminSupportPage() {
+  const searchParams = useSearchParams();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState(() => {
+    const fromUrl = searchParams.get("status") || "";
+    return STATUS_FILTERS.has(fromUrl) ? fromUrl : "";
+  });
   const [source, setSource] = useState("");
   const [q, setQ] = useState("");
 
@@ -43,8 +56,15 @@ export default function AdminSupportPage() {
     }
   }
 
+  // Dashboard deep-links (?status=…) — only react when the URL changes
   useEffect(() => {
-    load();
+    const fromUrl = searchParams.get("status") || "";
+    setStatus(STATUS_FILTERS.has(fromUrl) ? fromUrl : "");
+  }, [searchParams]);
+
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload when filters change
   }, [status, source]);
 
   return (

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { queueSupportAutoresponder } from "@/lib/support-autoresponder";
 import { sendAppEmail, rfDefaultFromEmail } from "@/lib/mail-send";
-import { RF_SITE } from "@/lib/support-types";
+import { AI_TURN_CAP, RF_SITE } from "@/lib/support-types";
 import { queueAiTurn } from "@/lib/support-tickets";
 
 export { RF_SITE };
@@ -117,6 +117,63 @@ export async function createContactFormTicket(input: {
   return { publicId, ticketId: ticket.id };
 }
 
+/** Append inbound email to an open ticket; keep AI on until escalate / turn cap. */
+async function appendInboundToTicket(input: {
+  ticket: {
+    id: number;
+    public_id: string;
+    ai_handling: boolean;
+    ai_turn_count: number;
+    escalated_at: Date | null;
+    member_id: number | null;
+    requester_email: string | null;
+    requester_name: string | null;
+  };
+  memberId: number | null;
+  fromEmail: string;
+  fromName: string | null;
+  body: string;
+}): Promise<{ publicId: string; created: boolean; ticketId: number }> {
+  const { ticket, memberId, fromEmail, fromName, body } = input;
+  const keepAi =
+    aiEnabled() &&
+    !ticket.escalated_at &&
+    ticket.ai_handling &&
+    ticket.ai_turn_count < AI_TURN_CAP;
+
+  await prisma.$transaction([
+    prisma.support_ticket_messages.create({
+      data: {
+        ticket_id: ticket.id,
+        author_type: "email",
+        author_id: memberId,
+        body,
+        is_internal: false,
+      },
+    }),
+    prisma.support_tickets.update({
+      where: { id: ticket.id },
+      data: {
+        status: keepAi ? "open" : "waiting_on_staff",
+        ai_handling: keepAi,
+        last_message_at: new Date(),
+        requester_email: ticket.requester_email || fromEmail,
+        requester_name: ticket.requester_name || fromName,
+        member_id: ticket.member_id ?? memberId,
+      },
+    }),
+  ]);
+
+  if (keepAi) {
+    queueAiTurn(ticket.id);
+  } else {
+    const { notifySupportCustomerReply } = await import("@/lib/support-ticket-notify");
+    void notifySupportCustomerReply(ticket.id).catch(() => {});
+  }
+
+  return { publicId: ticket.public_id, created: false, ticketId: ticket.id };
+}
+
 export async function ingestInboundSupportEmail(input: {
   fromEmail: string;
   fromName?: string;
@@ -142,31 +199,13 @@ export async function ingestInboundSupportEmail(input: {
       where: { public_id: matchedId, site: RF_SITE },
     });
     if (existing && existing.status !== "closed") {
-      await prisma.$transaction([
-        prisma.support_ticket_messages.create({
-          data: {
-            ticket_id: existing.id,
-            author_type: "email",
-            author_id: member?.id ?? null,
-            body,
-            is_internal: false,
-          },
-        }),
-        prisma.support_tickets.update({
-          where: { id: existing.id },
-          data: {
-            status: "waiting_on_staff",
-            ai_handling: false,
-            last_message_at: new Date(),
-            requester_email: existing.requester_email || fromEmail,
-            requester_name: existing.requester_name || fromName,
-            member_id: existing.member_id ?? member?.id ?? null,
-          },
-        }),
-      ]);
-      const { notifySupportCustomerReply } = await import("@/lib/support-ticket-notify");
-      void notifySupportCustomerReply(existing.id).catch(() => {});
-      return { publicId: existing.public_id, created: false, ticketId: existing.id };
+      return appendInboundToTicket({
+        ticket: existing,
+        memberId: member?.id ?? null,
+        fromEmail,
+        fromName,
+        body,
+      });
     }
   }
 
@@ -181,28 +220,18 @@ export async function ingestInboundSupportEmail(input: {
   });
 
   if (recent) {
-    await prisma.$transaction([
-      prisma.support_ticket_messages.create({
-        data: {
-          ticket_id: recent.id,
-          author_type: "email",
-          author_id: member?.id ?? null,
-          body,
-          is_internal: false,
-        },
-      }),
-      prisma.support_tickets.update({
-        where: { id: recent.id },
-        data: { status: "waiting_on_staff", ai_handling: false, last_message_at: new Date() },
-      }),
-    ]);
-    const { notifySupportCustomerReply } = await import("@/lib/support-ticket-notify");
-    void notifySupportCustomerReply(recent.id).catch(() => {});
-    return { publicId: recent.public_id, created: false, ticketId: recent.id };
+    return appendInboundToTicket({
+      ticket: recent,
+      memberId: member?.id ?? null,
+      fromEmail,
+      fromName,
+      body,
+    });
   }
 
   const publicId = await allocateSupportPublicId();
   const now = new Date();
+  const useAi = aiEnabled();
   const ticket = await prisma.support_tickets.create({
     data: {
       public_id: publicId,
@@ -214,8 +243,9 @@ export async function ingestInboundSupportEmail(input: {
       subject: subject.replace(/^Re:\s*/i, "").slice(0, 200) || "Inbound email",
       category: "other",
       priority: "normal",
-      status: "waiting_on_staff",
-      ai_handling: false,
+      status: useAi ? "open" : "waiting_on_staff",
+      ai_handling: useAi,
+      ai_turn_count: 0,
       last_message_at: now,
       messages: {
         create: {
@@ -227,6 +257,16 @@ export async function ingestInboundSupportEmail(input: {
       },
     },
   });
+
+  queueSupportAutoresponder({
+    name: fromName || "there",
+    email: fromEmail,
+    subject: ticket.subject,
+    message: body,
+    reference: publicId,
+  });
+
+  if (useAi) queueAiTurn(ticket.id);
 
   return { publicId, created: true, ticketId: ticket.id };
 }

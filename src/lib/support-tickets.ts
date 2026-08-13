@@ -205,6 +205,11 @@ async function escalateTicket(ticketId: number, reason: string, postPublicHandof
     });
   });
 
+  if (postPublicHandoff) {
+    void notifySupportStaffReply(ticketId, {
+      staffName: "Referrals.com Support Assistant",
+    }).catch(() => {});
+  }
   void notifySupportEscalated(ticketId).catch(() => {});
 }
 
@@ -260,17 +265,20 @@ async function handleAiTurn(ticketId: number) {
       where: { id: ticketId },
       data: { ai_turn_count: { increment: 1 }, last_message_at: now },
     });
+    // Email the AI handoff reply, then mark for staff
+    void notifySupportStaffReply(ticketId, {
+      staffName: "Referrals.com Support Assistant",
+    }).catch(() => {});
     await escalateTicket(ticketId, decision.internal_note || decision.reply, false);
     return;
   }
 
-  const status: SupportStatus =
-    decision.action === "resolve" ? "waiting_on_contractor" : "waiting_on_contractor";
   const agentBody =
     decision.action === "resolve"
       ? `${reply}\n\n— Did this help? Reply if you still need assistance.`
       : reply;
 
+  // Keep ai_handling true so follow-up replies can get another AI turn until escalate/cap
   await prisma.$transaction([
     prisma.support_ticket_messages.create({
       data: { ticket_id: ticketId, author_type: "agent", body: agentBody, is_internal: false },
@@ -278,19 +286,16 @@ async function handleAiTurn(ticketId: number) {
     prisma.support_tickets.update({
       where: { id: ticketId },
       data: {
-        status,
+        status: "waiting_on_contractor",
         ai_turn_count: { increment: 1 },
         last_message_at: now,
       },
     }),
   ]);
 
-  if (decision.action === "resolve") {
-    await prisma.support_tickets.update({
-      where: { id: ticketId },
-      data: { ai_handling: false },
-    });
-  }
+  void notifySupportStaffReply(ticketId, {
+    staffName: "Referrals.com Support Assistant",
+  }).catch(() => {});
 }
 
 export function queueAiTurn(ticketId: number) {

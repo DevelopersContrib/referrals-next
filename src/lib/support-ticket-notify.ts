@@ -25,10 +25,14 @@ async function loadTicket(ticketId: number) {
     where: { id: ticketId },
     include: {
       messages: {
-        where: { is_internal: false, author_type: "staff" },
+        // Staff + AI agent public replies (email these to the requester)
+        where: {
+          is_internal: false,
+          author_type: { in: ["staff", "agent"] },
+        },
         orderBy: { created_at: "desc" },
         take: 1,
-        select: { body: true },
+        select: { body: true, author_type: true },
       },
     },
   });
@@ -70,10 +74,13 @@ export async function notifySupportStaffReply(
     const name = ticket.requester_name?.trim() || "there";
     const replyBody = ticket.messages[0]?.body?.trim() || "";
     const subject = `Re: [${ticket.public_id}] ${ticket.subject}`.slice(0, 200);
-    const staffLabel = opts?.staffName?.trim() || "Referrals.com Support";
+    const fromAgent = ticket.messages[0]?.author_type === "agent";
+    const staffLabel =
+      opts?.staffName?.trim() ||
+      (fromAgent ? "Referrals.com Support Assistant" : "Referrals.com Support");
 
     const html = replyBody
-      ? `<p>Hi ${esc(name)},</p>${plainToHtml(replyBody)}<p style="font-size:12px;color:#666">Ref ${esc(ticket.public_id)} · Reply to continue.</p>`
+      ? `<p>Hi ${esc(name)},</p>${plainToHtml(replyBody)}<p style="font-size:12px;color:#666">Ref ${esc(ticket.public_id)} · Reply to this email to continue.</p>`
       : `<p>Hi ${esc(name)},</p><p>Our team replied to ticket <strong>${esc(ticket.public_id)}</strong>.</p>`;
 
     const text = replyBody
@@ -82,7 +89,7 @@ export async function notifySupportStaffReply(
 
     await sendAppEmail({
       from,
-      fromName: "Referrals.com Support",
+      fromName: fromAgent ? "Referrals.com Support Assistant" : "Referrals.com Support",
       to: email,
       replyTo: from,
       subject,

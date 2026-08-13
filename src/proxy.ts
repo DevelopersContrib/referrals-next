@@ -19,6 +19,10 @@ export function proxy(request: NextRequest) {
     // The internal fan-out + cron sweeper reach /run without a session cookie.
     "/api/brands/analyze",
     "/api/billing/webhook",
+    // Support inbound (Cloudflare Email Worker → Bearer secret; no session)
+    "/api/webhooks/",
+    // Public contact form → support ticket
+    "/api/contacts",
     "/widget",
     "/blog/",
     "/lander",

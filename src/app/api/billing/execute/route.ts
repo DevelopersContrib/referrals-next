@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getSubscription } from "@/lib/paypal";
+import { postVnocAttribution, resolveVnocPlan } from "@/lib/vnoc-attribution";
 
 /**
  * PayPal subscription return handler.
@@ -152,6 +153,23 @@ export async function GET(req: NextRequest) {
         plan_expiry: expiry,
       },
     });
+
+    // Report the paid subscription to VNOC (after response; idempotent by
+    // subscription id, which matches the replay guard above so the PayPal
+    // webhook duplicate won't double-count).
+    const priceUsd = plan.price ?? 0;
+    const billing = (plan.days || 30) >= 365 ? "year" : "month";
+    const mapped = resolveVnocPlan(priceUsd, billing);
+    after(() =>
+      postVnocAttribution({
+        product: mapped?.product ?? "referrals",
+        eventType: "paid",
+        eventValueUsd: priceUsd,
+        refExternalId: subscriptionId,
+        planSlug: mapped?.planSlug,
+        paymentMethod: "paypal",
+      })
+    );
 
     return NextResponse.redirect(new URL("/billing/success", req.url));
   } catch (error) {

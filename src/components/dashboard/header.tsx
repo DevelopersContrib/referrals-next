@@ -21,7 +21,6 @@ import {
   UserIcon,
   SettingsIcon,
   CreditCardIcon,
-  HelpCircleIcon,
   LogOutIcon,
   WrenchIcon,
   MessageSquareIcon,
@@ -90,7 +89,7 @@ export function DashboardHeader() {
                 <ShareIcon className="size-4" />
                 Refer Us
               </DropdownMenuItem>
-              <DropdownMenuItem render={<a href="https://referrals.com/support" target="_blank" rel="noopener noreferrer" />}>
+              <DropdownMenuItem render={<Link href="/dashboard/support" />}>
                 <LifeBuoyIcon className="size-4" />
                 Support
               </DropdownMenuItem>
@@ -154,9 +153,9 @@ export function DashboardHeader() {
               <CreditCardIcon className="size-4 text-[#28a745]" />
               Billing
             </DropdownMenuItem>
-            <DropdownMenuItem render={<a href="https://referrals.com/support" target="_blank" rel="noopener noreferrer" />} className="gap-2.5 px-3 py-2">
-              <HelpCircleIcon className="size-4 text-[#ffc107]" />
-              FAQ & Support
+            <DropdownMenuItem render={<Link href="/dashboard/support" />} className="gap-2.5 px-3 py-2">
+              <LifeBuoyIcon className="size-4 text-[#ffc107]" />
+              Support
             </DropdownMenuItem>
             {(session?.user as any)?.isAdmin && (
               <>

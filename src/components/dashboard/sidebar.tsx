@@ -45,6 +45,7 @@ import {
   ShareIcon,
   Share2Icon,
   PlugIcon,
+  LifeBuoyIcon,
 } from "lucide-react";
 
 const DASHBOARD_LOGO_URL =
@@ -85,6 +86,7 @@ const integrationsNav = [
 
 const bottomNav = [
   { title: "Forum", href: "/forum", icon: MessageSquareIcon },
+  { title: "Support", href: "/dashboard/support", icon: LifeBuoyIcon },
   { title: "Billing", href: "/billing", icon: CreditCardIcon },
   { title: "API Keys", href: "/api-keys", icon: KeyIcon },
   { title: "Account", href: "/account", icon: UserIcon },
@@ -136,7 +138,8 @@ export function DashboardSidebar() {
             <SidebarMenu>
               {mainNav.slice(0, 1).map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                // Exact /dashboard only — /dashboard/support is its own nav item
+                const isActive = pathname === item.href;
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton

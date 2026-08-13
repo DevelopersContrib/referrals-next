@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { hashSync } from "bcryptjs";
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendVerificationEmail } from "@/lib/ses";
+import { postVnocAttribution } from "@/lib/vnoc-attribution";
 
 export async function POST(req: NextRequest) {
   try {
@@ -98,6 +99,16 @@ export async function POST(req: NextRequest) {
     } catch (refErr) {
       console.error("[register] referral credit failed (non-fatal):", refErr);
     }
+
+    // Report the free signup to VNOC attribution (after the response; non-fatal).
+    after(() =>
+      postVnocAttribution({
+        product: "referrals",
+        eventType: "signup",
+        refExternalId: String(member.id),
+        payerEmail: email,
+      })
+    );
 
     // Send verification email
     try {

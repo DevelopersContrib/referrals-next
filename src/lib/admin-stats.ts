@@ -1,4 +1,7 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getExcludedMemberIds } from "@/lib/platform-admin";
+import { getPlatformRevenue, getMrrEstimate } from "@/lib/revenue";
 
 /**
  * Platform-wide admin statistics. Every number here is computed from a real
@@ -27,7 +30,14 @@ export type AdminPlatformStats = {
     newLastMonth: number;
     growthPct: number;
   };
-  revenue: { total: number; thisMonth: number; lastMonth: number };
+  revenue: {
+    total: number;
+    thisYear: number;
+    thisMonth: number;
+    lastMonth: number;
+    mrr: number;
+    paidCountThisYear: number;
+  };
   campaignsNewThisMonth: number;
   participantsNewThisMonth: number;
   recentSignups: { id: number; name: string; email: string; date: string }[];
@@ -49,6 +59,37 @@ function startOfMonth(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), 1);
 }
 
+/**
+ * Build a continuous month-by-month series from `start` through the current
+ * month, filling gaps with 0 so the chart never drops or misaligns months.
+ * January is labelled with a 2-digit year for cross-year clarity.
+ */
+function buildMonthlySeries(
+  rows: { y: number; m: number; total: bigint }[],
+  start: Date,
+  now: Date
+): { label: string; value: number }[] {
+  const counts = new Map<string, number>();
+  for (const r of rows) {
+    counts.set(`${Number(r.y)}-${Number(r.m)}`, Number(r.total));
+  }
+
+  const series: { label: string; value: number }[] = [];
+  const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth(), 1);
+  while (cursor <= end) {
+    const key = `${cursor.getFullYear()}-${cursor.getMonth() + 1}`;
+    const month = cursor.toLocaleDateString("en-US", { month: "short" });
+    const label =
+      cursor.getMonth() === 0
+        ? `${month} '${String(cursor.getFullYear()).slice(2)}`
+        : month;
+    series.push({ label, value: counts.get(key) || 0 });
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+  return series;
+}
+
 export async function getAdminPlatformStats(): Promise<AdminPlatformStats> {
   const now = new Date();
   const thisMonthStart = startOfMonth(now);
@@ -56,6 +97,14 @@ export async function getAdminPlatformStats(): Promise<AdminPlatformStats> {
     new Date(now.getFullYear(), now.getMonth() - 1, 1)
   );
   const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+
+  // Team (admins/ADMIN_EMAILS) + test accounts are excluded from every
+  // member-based stat so the dashboard reflects real customers only.
+  const excludedIds = await safe(() => getExcludedMemberIds(), [] as number[]);
+  const idNotIn = excludedIds.length ? { id: { notIn: excludedIds } } : {};
+  const notInSql = excludedIds.length
+    ? Prisma.sql`AND id NOT IN (${Prisma.join(excludedIds)})`
+    : Prisma.empty;
 
   const [
     members,
@@ -67,9 +116,8 @@ export async function getAdminPlatformStats(): Promise<AdminPlatformStats> {
     impressions,
     rewardedReferrals,
     rewardsValue,
-    revenueTotal,
-    revenueThis,
-    revenueLast,
+    revenue,
+    mrr,
     verified,
     activeSubscribers,
     newThisMonth,
@@ -81,7 +129,7 @@ export async function getAdminPlatformStats(): Promise<AdminPlatformStats> {
     topCampaignsRows,
     memberSeriesRows,
   ] = await Promise.all([
-    safe(() => prisma.members.count(), 0),
+    safe(() => prisma.members.count({ where: idNotIn }), 0),
     safe(() => prisma.member_urls.count(), 0),
     safe(() => prisma.member_campaigns.count(), 0),
     safe(() => prisma.campaign_participants.count(), 0),
@@ -121,51 +169,25 @@ export async function getAdminPlatformStats(): Promise<AdminPlatformStats> {
       0
     ),
     safe(
-      async () =>
-        Number(
-          (await prisma.member_payment.aggregate({ _sum: { amount: true } }))
-            ._sum.amount || 0
-        ),
-      0
+      () => getPlatformRevenue({ excludeMemberIds: excludedIds, now }),
+      { thisYear: 0, thisMonth: 0, lastMonth: 0, allTime: 0, paidCountThisYear: 0 }
     ),
+    safe(() => getMrrEstimate({ excludeMemberIds: excludedIds, now }), 0),
     safe(
-      async () =>
-        Number(
-          (
-            await prisma.member_payment.aggregate({
-              _sum: { amount: true },
-              where: { datetime_created: { gte: thisMonthStart } },
-            })
-          )._sum.amount || 0
-        ),
+      () => prisma.members.count({ where: { is_verified: true, ...idNotIn } }),
       0
     ),
-    safe(
-      async () =>
-        Number(
-          (
-            await prisma.member_payment.aggregate({
-              _sum: { amount: true },
-              where: {
-                datetime_created: { gte: lastMonthStart, lt: thisMonthStart },
-              },
-            })
-          )._sum.amount || 0
-        ),
-      0
-    ),
-    safe(() => prisma.members.count({ where: { is_verified: true } }), 0),
     safe(
       () =>
         prisma.members.count({
-          where: { plan_id: { gt: 0 }, plan_expiry: { gt: now } },
+          where: { plan_id: { gt: 0 }, plan_expiry: { gt: now }, ...idNotIn },
         }),
       0
     ),
     safe(
       () =>
         prisma.members.count({
-          where: { date_signedup: { gte: thisMonthStart } },
+          where: { date_signedup: { gte: thisMonthStart }, ...idNotIn },
         }),
       0
     ),
@@ -174,6 +196,7 @@ export async function getAdminPlatformStats(): Promise<AdminPlatformStats> {
         prisma.members.count({
           where: {
             date_signedup: { gte: lastMonthStart, lt: thisMonthStart },
+            ...idNotIn,
           },
         }),
       0
@@ -195,6 +218,7 @@ export async function getAdminPlatformStats(): Promise<AdminPlatformStats> {
     safe(
       () =>
         prisma.members.findMany({
+          where: idNotIn,
           orderBy: { date_signedup: "desc" },
           take: 8,
           select: {
@@ -237,7 +261,7 @@ export async function getAdminPlatformStats(): Promise<AdminPlatformStats> {
         prisma.$queryRaw<{ y: number; m: number; total: bigint }[]>`
           SELECT YEAR(date_signedup) AS y, MONTH(date_signedup) AS m, COUNT(*) AS total
           FROM members
-          WHERE date_signedup >= ${twelveMonthsAgo}
+          WHERE date_signedup >= ${twelveMonthsAgo} ${notInSql}
           GROUP BY YEAR(date_signedup), MONTH(date_signedup)
           ORDER BY y ASC, m ASC`,
       []
@@ -262,7 +286,7 @@ export async function getAdminPlatformStats(): Promise<AdminPlatformStats> {
       impressions,
       rewardedReferrals,
       rewardsValue,
-      revenue: revenueTotal,
+      revenue: revenue.thisYear,
     },
     members: {
       verified,
@@ -271,7 +295,14 @@ export async function getAdminPlatformStats(): Promise<AdminPlatformStats> {
       newLastMonth,
       growthPct,
     },
-    revenue: { total: revenueTotal, thisMonth: revenueThis, lastMonth: revenueLast },
+    revenue: {
+      total: revenue.allTime,
+      thisYear: revenue.thisYear,
+      thisMonth: revenue.thisMonth,
+      lastMonth: revenue.lastMonth,
+      mrr,
+      paidCountThisYear: revenue.paidCountThisYear,
+    },
     campaignsNewThisMonth,
     participantsNewThisMonth,
     recentSignups: recentSignupsRows.map((m) => ({
@@ -290,12 +321,6 @@ export async function getAdminPlatformStats(): Promise<AdminPlatformStats> {
       name: c.name,
       impressions: Number(c.impressions),
     })),
-    memberSeries: memberSeriesRows.map((r) => ({
-      label: new Date(Number(r.y), Number(r.m) - 1, 1).toLocaleDateString(
-        "en-US",
-        { month: "short" }
-      ),
-      value: Number(r.total),
-    })),
+    memberSeries: buildMonthlySeries(memberSeriesRows, twelveMonthsAgo, now),
   };
 }

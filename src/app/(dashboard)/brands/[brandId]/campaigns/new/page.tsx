@@ -3,7 +3,7 @@ import { getBrandIfAccessible } from "@/lib/brand-access";
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { isMemberOnPaidPlan } from "@/lib/member-subscription";
-import { CampaignWizard } from "@/components/campaigns/campaign-wizard";
+import { CampaignCreateFlow } from "@/components/campaigns/campaign-create-flow";
 
 interface NewCampaignPageProps {
   params: Promise<{ brandId: string }>;
@@ -35,20 +35,28 @@ export default async function NewCampaignPage({
     isMemberOnPaidPlan(memberId),
   ]);
 
+  const brandColors =
+    brand.brand_colors && typeof brand.brand_colors === "object" && !Array.isArray(brand.brand_colors)
+      ? (brand.brand_colors as Record<string, string>)
+      : null;
+
   return (
     <div>
       <div className="mb-6 rounded-xl border border-[#ebeef0] bg-gradient-to-r from-white to-rose-50/30 px-4 py-4 sm:px-5">
         <h1 className="text-2xl font-bold text-[#575962]">Create new campaign</h1>
         <p className="mt-1 text-sm text-[#a7abc3]">
-          Step through basics, goal, and creative — then copy embed code for{" "}
+          Pick a use-case template to start fast, or build from scratch — everything
+          is prefilled for{" "}
           <span className="font-medium text-[#575962]">{brand.url || "your brand"}</span>.
         </p>
       </div>
 
-      <CampaignWizard
+      <CampaignCreateFlow
         brandId={brandId}
         brandUrl={brand.url}
         brandSlug={brand.slug}
+        brandName={brand.url}
+        brandColors={brandColors}
         embedBaseUrl={embedBaseUrl}
         campaignTypes={campaignTypes.map((t) => ({ id: t.id, name: t.name }))}
         rewardTypes={rewardTypes.map((t) => ({

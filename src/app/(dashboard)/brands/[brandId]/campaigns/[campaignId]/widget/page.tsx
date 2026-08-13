@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner";
 import { SparklesIcon, LayoutTemplateIcon } from "lucide-react";
 import { sanitizeWidgetHtml } from "@/lib/sanitize-widget-html";
+import { ImageInput } from "@/components/media/image-input";
 
 export default function WidgetCustomizerPage() {
   const router = useRouter();
@@ -53,6 +54,8 @@ export default function WidgetCustomizerPage() {
     field_label_2: "Email Address",
     body_text: "",
     stats_on: true,
+    banner_image_url: "",
+    background_image: "",
   });
 
   useEffect(() => {
@@ -79,6 +82,8 @@ export default function WidgetCustomizerPage() {
             field_label_2: data.widget.field_label_2 || "Email Address",
             body_text: data.widget.body_text || "",
             stats_on: data.widget.stats_on ?? true,
+            banner_image_url: data.widget.banner_image_url || "",
+            background_image: data.widget.background_image || "",
           });
         }
       } catch {
@@ -481,6 +486,40 @@ export default function WidgetCustomizerPage() {
                     <SelectItem value="popup">Popup</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Images</CardTitle>
+              <CardDescription>
+                Add a banner and background. Generate a brand-aware banner with AI, upload,
+                or paste a URL.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label>Banner image</Label>
+                <ImageInput
+                  value={formData.banner_image_url}
+                  onChange={(url) => updateField("banner_image_url", url)}
+                  uploadType="banner"
+                  ai={{
+                    action: "campaignImage",
+                    context: { campaignId },
+                    maxRegenerations: 2,
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Background image</Label>
+                <ImageInput
+                  value={formData.background_image}
+                  onChange={(url) => updateField("background_image", url)}
+                  uploadType="widget"
+                  previewClass="h-32"
+                />
               </div>
             </CardContent>
           </Card>

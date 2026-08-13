@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyWebhookSignature } from "@/lib/paypal";
+import { postVnocAttribution, resolveVnocPlan } from "@/lib/vnoc-attribution";
 
 interface PayPalWebhookEvent {
   event_type?: string;
@@ -57,6 +58,24 @@ export async function POST(req: NextRequest) {
             where: { paypal_agreement_id: agreementId },
             data: { agreement_cancel: new Date().toISOString() },
           });
+
+          // Report cancellation to VNOC (idempotent by agreement id).
+          const cancelledPlan = await prisma.member_plan.findFirst({
+            where: { paypal_agreement_id: agreementId },
+            orderBy: { id: "desc" },
+          });
+          const planRow = cancelledPlan?.payment_id
+            ? await prisma.plans.findUnique({ where: { id: cancelledPlan.payment_id } })
+            : null;
+          const mapped = planRow ? resolveVnocPlan(planRow.price ?? 0) : null;
+          after(() =>
+            postVnocAttribution({
+              product: mapped?.product ?? "referrals",
+              eventType: "cancel",
+              refExternalId: agreementId,
+              planSlug: mapped?.planSlug,
+            })
+          );
         }
         break;
       }
@@ -100,7 +119,43 @@ export async function POST(req: NextRequest) {
               where: { id: plan.member_id },
               data: { plan_expiry: newExpiry },
             });
+
+            // Report the paid charge to VNOC (idempotent by transaction id).
+            const amountUsd = parseFloat(resource.amount?.total || "0");
+            const mapped = resolveVnocPlan(amountUsd);
+            const txId = resource.id;
+            after(() =>
+              postVnocAttribution({
+                product: mapped?.product ?? "referrals",
+                eventType: "paid",
+                eventValueUsd: amountUsd,
+                refExternalId: txId,
+                planSlug: mapped?.planSlug,
+                paymentMethod: "paypal",
+              })
+            );
           }
+        }
+        break;
+      }
+
+      case "PAYMENT.SALE.REFUNDED":
+      case "PAYMENT.SALE.REVERSED": {
+        // Report the refund/chargeback to VNOC as a negative event.
+        const amountUsd = parseFloat(resource?.amount?.total || "0");
+        const mapped = amountUsd ? resolveVnocPlan(amountUsd) : null;
+        const txId = resource?.id;
+        if (txId) {
+          after(() =>
+            postVnocAttribution({
+              product: mapped?.product ?? "referrals",
+              eventType: "refund",
+              eventValueUsd: amountUsd ? -Math.abs(amountUsd) : undefined,
+              refExternalId: txId,
+              planSlug: mapped?.planSlug,
+              paymentMethod: "paypal",
+            })
+          );
         }
         break;
       }

@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { cancelSubscription } from "@/lib/paypal";
+import { postVnocAttribution, resolveVnocPlan } from "@/lib/vnoc-attribution";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -27,6 +28,21 @@ export async function POST(req: NextRequest) {
       where: { id: activePlan.id },
       data: { agreement_cancel: new Date().toISOString() },
     });
+
+    // Report the cancellation to VNOC (after response; non-fatal).
+    const cancelledPlan = activePlan.payment_id
+      ? await prisma.plans.findUnique({ where: { id: activePlan.payment_id } })
+      : null;
+    const mapped = cancelledPlan ? resolveVnocPlan(cancelledPlan.price ?? 0) : null;
+    const agreementId = activePlan.paypal_agreement_id;
+    after(() =>
+      postVnocAttribution({
+        product: mapped?.product ?? "referrals",
+        eventType: "cancel",
+        refExternalId: agreementId,
+        planSlug: mapped?.planSlug,
+      })
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

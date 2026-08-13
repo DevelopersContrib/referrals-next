@@ -50,6 +50,8 @@ const contentNav = [
 
 const systemNav = [
   { title: "Integrations", href: "/admin/integrations" },
+  { title: "Support Inbox", href: "/admin/support" },
+  { title: "Emails & AI", href: "/admin/engagement" },
   { title: "API Keys", href: "/admin/api-keys" },
   { title: "Subdomains", href: "/admin/subdomains" },
   { title: "Cron Jobs", href: "/admin/cron" },

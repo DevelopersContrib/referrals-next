@@ -7,6 +7,7 @@ import {
   subscriptionRequiredResponse,
 } from "@/lib/member-subscription";
 import { sanitizeRewardInput } from "@/lib/reward-types";
+import { sanitizeWidgetSettings } from "@/lib/widget-settings";
 
 export async function GET(
   _request: NextRequest,
@@ -164,12 +165,15 @@ export async function PUT(
       },
     });
 
-    // Update widget if provided
+    // Update widget if provided (whitelisted + sanitized to prevent mass-assignment)
     if (body.widget) {
-      await prisma.campaign_widget.updateMany({
-        where: { campaign_id: id },
-        data: body.widget,
-      });
+      const widgetData = sanitizeWidgetSettings(body.widget);
+      if (Object.keys(widgetData).length > 0) {
+        await prisma.campaign_widget.updateMany({
+          where: { campaign_id: id },
+          data: widgetData,
+        });
+      }
     }
 
     // Update reward if provided — upsert so a row is created when missing

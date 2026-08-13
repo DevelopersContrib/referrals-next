@@ -485,3 +485,15 @@ export function filterCategoriesBySlugs(
 		}))
 		.filter((cat) => cat.articles.length > 0);
 }
+
+/** Allowlisted help URLs for the support AI agent. */
+export function helpArticlesCatalogForAi(): string {
+	const base = (
+		process.env.NEXT_PUBLIC_APP_URL ||
+		process.env.NEXTAUTH_URL ||
+		"https://www.referrals.com"
+	).replace(/\/$/, "");
+	return knowledgebaseArticles
+		.map((a) => `- ${a.title}: ${base}/support/${a.slug}`)
+		.join("\n");
+}

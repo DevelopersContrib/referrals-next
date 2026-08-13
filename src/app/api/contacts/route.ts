@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { createContactFormTicket } from "@/lib/support-email-tickets";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,7 +14,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get("q")?.trim() || "";
 
-    // Get all campaign IDs for this member
     const campaigns = await prisma.member_campaigns.findMany({
       where: { member_id: memberId },
       select: { id: true, name: true },
@@ -30,10 +30,7 @@ export async function GET(request: NextRequest) {
     };
 
     if (q) {
-      where.OR = [
-        { name: { contains: q } },
-        { email: { contains: q } },
-      ];
+      where.OR = [{ name: { contains: q } }, { email: { contains: q } }];
     }
 
     const participants = await prisma.campaign_participants.findMany({
@@ -53,10 +50,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ participants: result });
   } catch (error) {
     console.error("Contacts GET error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -72,21 +66,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Store as a visitor/contact form submission
-    await prisma.visitors.create({
-      data: {
-        name,
-        email,
-        date_signedup: new Date(),
-      },
+    const ticket = await createContactFormTicket({
+      name: String(name),
+      email: String(email),
+      message: String(message),
     });
 
-    return NextResponse.json({ success: true }, { status: 201 });
+    void prisma.visitors
+      .create({
+        data: {
+          name: String(name),
+          email: String(email),
+          date_signedup: new Date(),
+        },
+      })
+      .catch(() => {});
+
+    return NextResponse.json(
+      { success: true, ticketId: ticket.publicId },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Contacts POST error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

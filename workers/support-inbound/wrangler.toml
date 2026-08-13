@@ -1,0 +1,13 @@
+name = "referrals-support-inbound"
+main = "src/index.ts"
+compatibility_date = "2025-06-01"
+account_id = "8cff55b678de16d75a95167d112e7831"
+
+# Public Next.js webhook (production). Override in dashboard or [env.preview] if needed.
+[vars]
+WEBHOOK_URL = "https://www.referrals.com/api/webhooks/support-inbound"
+
+# Set secret (do not commit):
+#   cd workers/support-inbound
+#   npx wrangler secret put SUPPORT_INBOUND_WEBHOOK_SECRET
+# Must match SUPPORT_INBOUND_WEBHOOK_SECRET in referrals-next .env / Vercel.

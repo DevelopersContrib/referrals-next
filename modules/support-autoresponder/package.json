@@ -1,0 +1,20 @@
+{
+  "name": "@contrib/support-autoresponder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Portable support-ticket autoresponder for any domain (HomeManager, Handyman, etc.). SES-backed by default; inject your own sendEmail for other providers.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-ses": ">=3"
+  },
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-ses": {
+      "optional": true
+    }
+  },
+  "license": "UNLICENSED"
+}

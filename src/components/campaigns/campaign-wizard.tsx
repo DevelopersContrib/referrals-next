@@ -33,6 +33,7 @@ import {
   parseCouponCodes,
   validateRewardConfig,
 } from "@/lib/reward-types";
+import type { WidgetSettings } from "@/lib/widget-settings";
 import {
   SparklesIcon,
   ImageIcon,
@@ -46,12 +47,12 @@ import {
   RocketIcon,
 } from "lucide-react";
 
-interface CampaignType {
+export interface CampaignType {
   id: number;
   name: string;
 }
 
-interface RewardType {
+export interface RewardType {
   id: number;
   name: string;
   has_value?: boolean;
@@ -68,9 +69,13 @@ export interface CampaignWizardProps {
   rewardTypes: RewardType[];
   /** Default visibility; unpaid members should use "private" so saves are not blocked by the API. */
   initialPublish?: "public" | "private";
+  /** Prefill from a use-case preset (merged over defaults). */
+  initialForm?: Partial<CampaignWizardFormData>;
+  /** Preset widget settings forwarded to POST /api/campaigns as `widget`. */
+  initialWidget?: WidgetSettings;
 }
 
-interface FormData {
+export interface CampaignWizardFormData {
   name: string;
   type_id: string;
   goal_type: "visit" | "signup";
@@ -119,13 +124,15 @@ export function CampaignWizard({
   campaignTypes,
   rewardTypes,
   initialPublish = "private",
+  initialForm,
+  initialWidget,
 }: CampaignWizardProps) {
   const [currentStep, setCurrentStep] = useState<StepId>("basic");
   const [createdCampaignId, setCreatedCampaignId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [aiLoading, setAiLoading] = useState<null | "emails" | "bannerHtml" | "bannerImage">(null);
 
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<CampaignWizardFormData>({
     name: "",
     type_id: campaignTypes[0]?.id?.toString() || "1",
     goal_type: "signup",
@@ -154,12 +161,13 @@ export function CampaignWizard({
     token_symbol: "",
     token_address: "",
     token_amount: "",
+    ...initialForm,
   });
 
   const stepOrder: StepId[] = ["basic", "goal", "rewards", "review"];
   const currentIndex = stepOrder.indexOf(currentStep);
 
-  function updateField(field: keyof FormData, value: string) {
+  function updateField(field: keyof CampaignWizardFormData, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }));
   }
 
@@ -312,6 +320,7 @@ export function CampaignWizard({
             token_amount: formData.token_amount,
           }),
           coupons: parseCouponCodes(formData.coupon_codes),
+          ...(initialWidget ? { widget: initialWidget } : {}),
         }),
       });
 

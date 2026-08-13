@@ -55,11 +55,11 @@ export default async function AdminDashboardPage() {
       sub: `+${fmt(stats.campaignsNewThisMonth)} this month`,
     },
     {
-      label: "Revenue",
-      value: money(revenue.total),
+      label: `Revenue (${new Date().getFullYear()})`,
+      value: money(revenue.thisYear),
       icon: DollarSign,
       chip: "bg-emerald-50 text-emerald-600",
-      sub: `${money(revenue.thisMonth)} this month`,
+      sub: `${money(revenue.thisMonth)} this month · ${fmt(revenue.paidCountThisYear)} payments`,
     },
   ];
 
@@ -75,6 +75,7 @@ export default async function AdminDashboardPage() {
     { label: "Impressions", value: fmt(totals.impressions), icon: Eye, chip: "bg-cyan-50 text-cyan-600" },
     { label: "Rewarded Referrals", value: fmt(totals.rewardedReferrals), icon: Award, chip: "bg-orange-50 text-orange-600" },
     { label: "Rewards Value", value: money(totals.rewardsValue), icon: BadgeCheck, chip: "bg-teal-50 text-teal-600" },
+    { label: "MRR (est.)", value: money(revenue.mrr), icon: DollarSign, chip: "bg-emerald-50 text-emerald-600" },
     { label: "Active Subscribers", value: fmt(members.activeSubscribers), icon: CreditCard, chip: "bg-green-50 text-green-600" },
     { label: "New Members (mo)", value: fmt(members.newThisMonth), icon: UserPlus, chip: "bg-fuchsia-50 text-fuchsia-600" },
   ];
@@ -87,7 +88,8 @@ export default async function AdminDashboardPage() {
         <div>
           <h1 className="text-2xl font-bold">Admin Dashboard</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Live platform-wide overview — every figure is computed from the database.
+            Live platform-wide overview — computed from the database, excluding team
+            &amp; test accounts. Revenue counts captured payments only.
           </p>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
@@ -158,19 +160,30 @@ export default async function AdminDashboardPage() {
                 No signup data in range.
               </p>
             ) : (
+              // Pixel heights (not %) — % height collapses inside flex children.
               <div className="flex h-44 items-end gap-1.5">
-                {stats.memberSeries.map((p, i) => (
-                  <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                    <div className="flex w-full flex-1 items-end">
+                {stats.memberSeries.map((p, i) => {
+                  const barPx =
+                    p.value === 0
+                      ? 2
+                      : Math.max(8, Math.round((p.value / maxSeries) * 140));
+                  return (
+                    <div
+                      key={i}
+                      className="flex h-full flex-1 flex-col items-center justify-end gap-1"
+                      title={`${p.label}: ${fmt(p.value)}`}
+                    >
+                      <span className="text-[10px] font-medium tabular-nums text-muted-foreground">
+                        {p.value > 0 ? fmt(p.value) : ""}
+                      </span>
                       <div
-                        className="w-full rounded-t bg-brand/80 transition-all hover:bg-brand"
-                        style={{ height: `${Math.max(4, (p.value / maxSeries) * 100)}%` }}
-                        title={`${p.label}: ${fmt(p.value)}`}
+                        className="w-full min-w-[8px] max-w-[40px] rounded-t bg-[#ff5c62] transition-all hover:bg-[#e84b51]"
+                        style={{ height: `${barPx}px` }}
                       />
+                      <span className="text-[10px] text-muted-foreground">{p.label}</span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground">{p.label}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>

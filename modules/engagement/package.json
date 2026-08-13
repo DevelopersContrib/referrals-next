@@ -1,0 +1,15 @@
+{
+  "name": "@contrib/engagement",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Portable per-user engagement campaigns for VNOC domains. VNOC owns leadmail copy; each app owns enrollment + SES sends.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-ses": ">=3",
+    "mysql2": ">=3"
+  }
+}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sanitizeWidgetHtml } from "@/lib/sanitize-widget-html";
+import { sanitizeWidgetSettings } from "@/lib/widget-settings";
 import {
   isMemberOnPaidPlan,
   subscriptionRequiredResponse,
@@ -92,6 +93,7 @@ export async function POST(request: NextRequest) {
       widget_button_color,
       reward,
       coupons,
+      widget: widgetInput,
     } = body;
 
     if (!name || !type_id || !url_id) {
@@ -162,6 +164,8 @@ export async function POST(request: NextRequest) {
       ? String(widget_button_color)
       : col;
 
+    // Preset (use-case) widget settings win over the defaults derived above.
+    const presetWidget = sanitizeWidgetSettings(widgetInput);
     await prisma.campaign_widget.create({
       data: {
         campaign_id: campaign.id,
@@ -172,6 +176,7 @@ export async function POST(request: NextRequest) {
         button_color: btnCol.replace("#", ""),
         body_text: safeBody || null,
         banner_image_url: bannerUrl,
+        ...presetWidget,
       },
     });
 

@@ -1,0 +1,592 @@
+/* Emails & AI — light panel inside admin (Referrals brand) */
+.engagement-panel {
+  --brand: #ff646c;
+  --brand-deep: #e8454f;
+  --brand-tint: #fff1f2;
+  --brand-line: #fecdd3;
+  --ink: #1c1917;
+  --soft: #78716c;
+  --muted: #78716c;
+  --line: #e7e5e4;
+  --paper: #fafaf9;
+  --paper-2: #f5f5f4;
+  --ok-bg: #ecfdf5;
+  --ok-ink: #065f46;
+  --err-bg: #fef2f2;
+  --err-ink: #991b1b;
+  color: var(--ink);
+  background: var(--paper);
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  padding: 22px 24px 32px;
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.04);
+}
+
+.engagement-panel .soft { color: var(--soft); font-size: 0.95rem; line-height: 1.5; }
+.engagement-panel .muted { color: var(--soft); }
+.engagement-panel .stack { display: grid; gap: 18px; }
+.engagement-panel.admin-page { display: grid; gap: 18px; }
+
+.engagement-panel .card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.engagement-panel .btn,
+.engagement-panel button.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 10px;
+  padding: 0.5rem 0.95rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  background: #fff;
+  color: var(--ink);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.engagement-panel .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.engagement-panel .btn-primary {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+.engagement-panel .btn-primary:hover:not(:disabled) {
+  background: var(--brand-deep);
+  border-color: var(--brand-deep);
+}
+.engagement-panel .btn-ghost {
+  background: #fff;
+  border-color: var(--line);
+  color: var(--ink);
+}
+.engagement-panel .btn-ghost:hover:not(:disabled) {
+  background: var(--paper-2);
+  border-color: #d6d3d1;
+}
+.engagement-panel .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.8rem; }
+
+/* Stats */
+.engagement-panel .admin-stats-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 960px) {
+  .engagement-panel .admin-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 520px) {
+  .engagement-panel .admin-stats-grid { grid-template-columns: 1fr; }
+}
+.engagement-panel .admin-stat-card {
+  padding: 18px 18px 16px;
+  display: grid;
+  gap: 4px;
+}
+.engagement-panel .admin-stat-highlight {
+  background: var(--brand-tint);
+  border-color: var(--brand-line);
+}
+.engagement-panel .admin-stat-value {
+  display: block;
+  font-size: 1.85rem;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.engagement-panel .admin-stat-highlight .admin-stat-value { color: var(--brand-deep); }
+.engagement-panel .admin-stat-label {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.engagement-panel .admin-stat-hint { font-size: 0.76rem; color: var(--soft); }
+
+/* Send health strip */
+.engagement-panel .admin-engage-health {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 0.86rem;
+}
+.engagement-panel .admin-engage-health strong { font-weight: 800; color: var(--ink); }
+.engagement-panel .admin-engage-health .sep {
+  width: 1px;
+  height: 16px;
+  background: var(--line);
+}
+.engagement-panel .admin-engage-health-label {
+  font-weight: 700;
+  color: var(--soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+  margin-right: 4px;
+}
+
+/* Panels / tables */
+.engagement-panel .admin-panel { padding: 18px 20px; }
+.engagement-panel .admin-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.engagement-panel .admin-panel-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.engagement-panel .admin-table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+.engagement-panel .admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.engagement-panel .admin-table th,
+.engagement-panel .admin-table td {
+  padding: 11px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.engagement-panel .admin-table th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--soft);
+  background: var(--paper-2);
+  font-weight: 700;
+}
+.engagement-panel .admin-table tbody tr:hover td { background: #fffafb; }
+.engagement-panel .admin-table tbody tr:last-child td { border-bottom: 0; }
+.engagement-panel .admin-cell-muted {
+  color: var(--soft);
+  max-width: 36ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+.engagement-panel .admin-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.84rem;
+}
+
+.engagement-panel .admin-support-test {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+}
+.engagement-panel .admin-support-test label {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+  min-width: 220px;
+}
+.engagement-panel .admin-support-test input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+}
+
+/* Header */
+.engagement-panel .admin-engage-intro { display: grid; gap: 6px; }
+.engagement-panel .admin-engage-title {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.engagement-panel .admin-engage-lede {
+  margin: 0;
+  max-width: 62ch;
+}
+.engagement-panel .admin-engage-banner {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.engagement-panel .admin-engage-banner.ok {
+  background: var(--ok-bg);
+  color: var(--ok-ink);
+  border: 1px solid #a7f3d0;
+}
+.engagement-panel .admin-engage-banner.err {
+  background: var(--err-bg);
+  color: var(--err-ink);
+  border: 1px solid #fecaca;
+}
+
+.engagement-panel .admin-engage-email {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+  max-width: 420px;
+  font-size: 0.85rem;
+  color: var(--soft);
+}
+.engagement-panel .admin-engage-email input,
+.engagement-panel .admin-engage-email select {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.engagement-panel .admin-engage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+/* Tabs */
+.engagement-panel .admin-engage-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 18px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 10px;
+}
+.engagement-panel .admin-engage-tab {
+  border: 0;
+  background: transparent;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--soft);
+  cursor: pointer;
+}
+.engagement-panel .admin-engage-tab:hover { background: var(--paper-2); color: var(--ink); }
+.engagement-panel .admin-engage-tab.active {
+  background: var(--brand-tint);
+  color: var(--brand-deep);
+  box-shadow: inset 0 0 0 1px var(--brand-line);
+}
+
+/* 3-column browse: campaigns | timeline | preview */
+.engagement-panel .admin-engage-browse {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(200px, 260px) 1fr;
+  min-height: 480px;
+}
+@media (max-width: 900px) {
+  .engagement-panel .admin-engage-browse { grid-template-columns: 1fr; min-height: 0; }
+}
+
+.engagement-panel .admin-engage-campaign-list {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  max-height: 640px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.engagement-panel .admin-engage-campaign-item {
+  display: grid;
+  gap: 3px;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.engagement-panel .admin-engage-campaign-item:hover {
+  border-color: var(--brand-line);
+  background: #fffafb;
+}
+.engagement-panel .admin-engage-campaign-item.active {
+  border-color: var(--brand);
+  background: var(--brand-tint);
+  box-shadow: 0 0 0 1px var(--brand-line);
+}
+.engagement-panel .admin-engage-campaign-item strong {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.25;
+}
+.engagement-panel .admin-engage-campaign-item span { font-size: 0.78rem; color: var(--soft); }
+
+.engagement-panel .admin-engage-campaign-detail {
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.engagement-panel .admin-engage-email-split {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .engagement-panel .admin-engage-email-split { grid-template-columns: 1fr; }
+}
+
+.engagement-panel .admin-engage-email-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 560px;
+  overflow-y: auto;
+  position: relative;
+}
+/* Timeline rail */
+.engagement-panel .admin-engage-email-list::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--brand-line), #e7e5e4);
+  border-radius: 2px;
+  pointer-events: none;
+}
+.engagement-panel .admin-engage-email-list > li { position: relative; }
+.engagement-panel .admin-engage-email-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px 10px 36px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.engagement-panel .admin-engage-email-item::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 18px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--brand);
+  z-index: 1;
+}
+.engagement-panel .admin-engage-email-item:hover {
+  border-color: var(--brand-line);
+  background: #fffafb;
+}
+.engagement-panel .admin-engage-email-item.active {
+  border-color: var(--brand);
+  background: var(--brand-tint);
+  box-shadow: 0 0 0 1px var(--brand-line);
+}
+.engagement-panel .admin-engage-email-item.active::before {
+  background: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-tint);
+}
+.engagement-panel .admin-engage-when {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-deep);
+  font-weight: 800;
+}
+.engagement-panel .admin-engage-email-item strong {
+  font-size: 0.86rem;
+  font-weight: 650;
+  color: var(--ink);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Email preview — full branded HTML */
+.engagement-panel .admin-engage-preview {
+  padding: 0;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--paper-2);
+  min-height: 220px;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+.engagement-panel .admin-engage-preview-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: var(--soft);
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+.engagement-panel .admin-engage-preview > h4 {
+  margin: 0;
+  padding: 14px 16px 0;
+  font-size: 1rem;
+  font-weight: 700;
+  background: #fff;
+}
+.engagement-panel .admin-engage-preview-html {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink);
+  max-width: none;
+  padding: 12px 16px 20px;
+  background: var(--paper-2);
+  overflow: auto;
+  max-height: 520px;
+}
+.engagement-panel .admin-engage-preview-html > div {
+  max-width: 560px;
+  margin: 0 auto;
+}
+.engagement-panel .admin-engage-preview-body {
+  white-space: pre-wrap;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink);
+  padding: 16px;
+}
+.engagement-panel .admin-engage-test-send {
+  padding: 14px 16px 16px;
+  background: #fff;
+  border-top: 1px solid var(--line);
+}
+
+.engagement-panel .admin-engage-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.92rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  line-height: 1.45;
+  resize: vertical;
+  color: var(--ink);
+}
+.engagement-panel .admin-engage-form {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px 18px;
+  background: #fff;
+}
+
+/* Rich text editor */
+.engagement-panel .admin-rte {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+.engagement-panel .admin-rte.disabled { opacity: 0.65; pointer-events: none; }
+.engagement-panel .admin-rte-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper-2);
+}
+.engagement-panel .admin-rte-btn {
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 8px;
+  min-height: 30px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--soft);
+  cursor: pointer;
+}
+.engagement-panel .admin-rte-btn:hover {
+  background: #fff;
+  border-color: var(--line);
+  color: var(--ink);
+}
+.engagement-panel .admin-rte-btn.active {
+  background: var(--brand-tint);
+  border-color: var(--brand-line);
+  color: var(--brand-deep);
+}
+.engagement-panel .admin-rte-sep {
+  width: 1px;
+  align-self: stretch;
+  background: var(--line);
+  margin: 2px 4px;
+}
+.engagement-panel .admin-rte-content {
+  padding: 12px 14px;
+  outline: none;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.engagement-panel .admin-rte-content p { margin: 0 0 0.7em; }
+.engagement-panel .admin-rte-content a,
+.engagement-panel .admin-rte-link {
+  color: var(--brand-deep);
+  text-decoration: underline;
+}
+.engagement-panel .admin-rte .ProseMirror { min-height: inherit; outline: none; }
+.engagement-panel .admin-rte .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--muted);
+  pointer-events: none;
+  height: 0;
+}
+
+/* Dialog overlay polish (EnrollConfirmDialog uses these class names if present) */
+.engagement-panel code {
+  font-size: 0.82em;
+  background: var(--paper-2);
+  padding: 1px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}

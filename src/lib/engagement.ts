@@ -377,8 +377,6 @@ export async function autoEnrollEnabledSegmentCampaigns(opts?: {
   const largeDailyCap = Math.min(200, Math.max(1, opts?.largeDailyCap ?? 30));
   const spreadDaysSmall = opts?.spreadDays ?? 7;
 
-  const { parseRulesFromJson, countSegmentMembers } = await import("@/lib/engagement-segments");
-
   const campaigns = await prisma.engagement_campaigns.findMany({
     where: {
       domain_key: config.domainKey,
@@ -401,6 +399,10 @@ export async function autoEnrollEnabledSegmentCampaigns(opts?: {
   let enrolledTotal = 0;
   const dayStart = startOfUtcDay();
 
+  // Avoid full-table COUNT(*) per segment (can hang on large members tables).
+  // Enroll in capped batches; use daily room when a campaign already enrolled a lot today.
+  void maxSegmentMembers;
+
   for (const camp of campaigns) {
     const segmentKey = (camp.segment_key || "").trim();
     if (!segmentKey) continue;
@@ -420,28 +422,6 @@ export async function autoEnrollEnabledSegmentCampaigns(opts?: {
       continue;
     }
 
-    const rules = parseRulesFromJson(seg.rules_json);
-    const members = await countSegmentMembers(rules);
-
-    if (members <= maxSegmentMembers) {
-      const r = await enrollSegmentIntoCampaign({
-        campaignKey: camp.campaign_key,
-        segmentKey,
-        limit: limitPerCampaign,
-        spreadDays: spreadDaysSmall,
-      });
-      enrolledTotal += r.enrolled;
-      results.push({
-        campaignKey: camp.campaign_key,
-        segmentKey,
-        members,
-        enrolled: r.enrolled,
-        remainingEstimate: r.remainingEstimate,
-        mode: "small",
-      });
-      continue;
-    }
-
     const enrolledToday = await prisma.engagement_enrollments.count({
       where: {
         domain_key: config.domainKey,
@@ -449,14 +429,14 @@ export async function autoEnrollEnabledSegmentCampaigns(opts?: {
         enrolled_at: { gte: dayStart },
       },
     });
-    const room = Math.max(0, largeDailyCap - enrolledToday);
+    const room = Math.max(0, Math.min(limitPerCampaign, largeDailyCap - enrolledToday));
     if (room <= 0) {
       results.push({
         campaignKey: camp.campaign_key,
         segmentKey,
-        members,
+        members: 0,
         enrolled: 0,
-        remainingEstimate: members,
+        remainingEstimate: 0,
         mode: "large_drip",
         enrolledToday,
         skipped: `daily cap ${largeDailyCap} already reached`,
@@ -468,16 +448,16 @@ export async function autoEnrollEnabledSegmentCampaigns(opts?: {
       campaignKey: camp.campaign_key,
       segmentKey,
       limit: room,
-      spreadDays: 1,
+      spreadDays: enrolledToday > 0 ? 1 : spreadDaysSmall,
     });
     enrolledTotal += r.enrolled;
     results.push({
       campaignKey: camp.campaign_key,
       segmentKey,
-      members,
+      members: 0,
       enrolled: r.enrolled,
       remainingEstimate: r.remainingEstimate,
-      mode: "large_drip",
+      mode: "small",
       enrolledToday: enrolledToday + r.enrolled,
     });
   }
@@ -509,7 +489,7 @@ export async function enrollSegmentIntoCampaign(opts: {
   const segmentKey = (opts.segmentKey || campaign.segment_key || "").trim();
   if (!segmentKey) throw new Error("Campaign has no segment — pick a segment first");
 
-  const { getSegmentByKey, parseRulesFromJson, listSegmentMemberIds, countSegmentMembers } =
+  const { getSegmentByKey, parseRulesFromJson, listSegmentMemberIds } =
     await import("@/lib/engagement-segments");
   const seg = await getSegmentByKey(segmentKey);
   if (!seg) throw new Error("Segment not found");
@@ -545,14 +525,8 @@ export async function enrollSegmentIntoCampaign(opts: {
     }
   }
 
-  const totalMatching = await countSegmentMembers(rules);
-  const already = await prisma.engagement_enrollments.count({
-    where: {
-      domain_key: config.domainKey,
-      campaign_key: campaign.campaign_key,
-    },
-  });
-  const remainingEstimate = Math.max(0, totalMatching - already);
+  // Full COUNT(*) over members can hang on large tables — approximate from batch size.
+  const remainingEstimate = candidates.length >= limit ? limit : 0;
 
   return { enrolled, remainingEstimate, spreadDays, segmentKey };
 }

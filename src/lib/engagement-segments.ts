@@ -119,11 +119,13 @@ export async function listSegmentMemberIds(
   opts?: { limit?: number; excludeCampaignKey?: string }
 ): Promise<number[]> {
   const limit = Math.min(500, Math.max(1, opts?.limit ?? 200));
+  // Prefer PRIMARY KEY order over date_signedup — large anti-joins + ORDER BY
+  // date_signedup can hang for minutes on shared MySQL without usable indexes.
   const sql = `
     SELECT m.id
     FROM members m
     WHERE ${buildSegmentWhere(rules, { excludeCampaignKey: opts?.excludeCampaignKey })}
-    ORDER BY m.date_signedup DESC
+    ORDER BY m.id DESC
     LIMIT ${limit}
   `;
   const rows = await prisma.$queryRawUnsafe<{ id: number }[]>(sql);

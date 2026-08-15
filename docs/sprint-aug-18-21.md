@@ -10,7 +10,7 @@ One board for everyone. Older per-person lists are retired — do not redo June 
 |-----|--------|-------|
 | **Jayson** | Dashboard overflow, slug checker, embed, upgrade CTA | 15.0 |
 | **Kareen** | `/stats` + `/billing` plan cards (UI/copy only) | 11.0 |
-| **Ronan** | **Slow domain onboarding**, Shopify, paid→engagement | 12.0 |
+| **Ronan** | **Onboarding must not take 10 min**, Shopify, paid→engagement | 12.0 |
 
 **Rules for all:** do not edit `.env`. Shared MySQL: additive SQL only. Public widgets must never 403 visitors when the owner is `free_capped`. Do not add a unique index on `member_urls.slug`.
 
@@ -172,19 +172,19 @@ A free or trial member opens `/billing` and sees Free vs Growth the same way the
 
 June pipeline work is done (entry/reward emails, Mailchimp/Zapier, OAuth, webhook verify, agent auth). Do not redo those.
 
-## R1 — Domain onboarding is too slow (4.5h) — CRITICAL
+## R1 — Domain onboarding must not take 10 minutes (4.5h) — CRITICAL
 
-**Goal:** Member sees a usable brand result in **~15s**, not a long hang on “Generating referral campaigns…”.
+**Goal:** Adding a domain is a first-run moment. **10 minutes is a bug.** Member sees brand name / logo / scores in **~15 seconds**. Hard fail: if they are still staring at “Generating referral campaigns…” at **30 seconds**, this ticket is not done.
 
-### Why it’s slow (current pipeline)
+### Why it can hit 10 minutes today
 
 Onboarding (`BrandAnalyzer`) polls until the **whole job** is `done`. That waits on all five modules:
 
 `vnoc` + `crawl` → `social` + `intelligence` → **`campaigns` (OpenAI, 3 full programs)**
 
-- Crawl: homepage (12s timeout) + `/contact` + `/pricing` (8s each). A slow site burns 12s before intelligence starts.
-- Campaigns is a second OpenAI call. The AI builder already asks goal / color / design / copy and **regenerates** campaigns — the default three on first analyze are wasted time.
-- Module fan-out is an extra HTTP hop (`/run/[module]`). If the trigger fails, the sweeper waits **2 minutes**.
+- Crawl: homepage (12s timeout) + `/contact` + `/pricing` (8s). A hung site burns the budget before intelligence starts.
+- Campaigns is a second OpenAI call. The AI builder already regenerates from the brief — the default three on first analyze are wasted time **and** they block the UI.
+- Module fan-out is an extra HTTP hop (`/run/[module]`). If the trigger fails, the sweeper waits **2 minutes**, up to **3 attempts** → 6+ minutes of dead air. Cron may not even tick that often.
 - UI does not flip to results until campaigns finish (`brand-analyzer.tsx` waits for `status === "done"`).
 
 ### Tasks
@@ -198,7 +198,7 @@ Onboarding (`BrandAnalyzer`) polls until the **whole job** is `done`. That waits
 
 **Files:** `src/lib/analysis/crawler.ts`, `orchestrator.ts`, `registry.ts`, `src/app/api/brands/analyze/route.ts`, `brand-analyzer.tsx`, `analysis-pipeline.tsx`
 
-**Done when:** New onboarding of a live domain shows brand name/logo/scores in ~15s. Campaign cards are optional/background. A hung `/pricing` page does not block the result.
+**Done when:** New onboarding of a live domain (e.g. `blacksesameph.com`) shows brand name/logo/scores in **~15s**, never 10 minutes. Campaign cards are optional/background. A hung `/pricing` page does not block the result. A dead module trigger does not leave them on a spinner.
 
 ## R2 — Shopify env + OAuth smoke (2h) — HIGH
 
@@ -241,7 +241,7 @@ Launched AI campaigns have `banner_image_url`. `buildPublicCampaignMetadata` sho
 | **J6 Free-forever upgrade CTA** | **Jayson** | **1.5** | **High** |
 | **K1 Make `/stats` awesome** | **Kareen** | **8.0** | **High** |
 | **K2 `/billing` plan cards** | **Kareen** | **3.0** | **High** |
-| **R1 Fast domain onboarding** | **Ronan** | **4.5** | **Critical** |
+| **R1 Onboarding ≠ 10 minutes** | **Ronan** | **4.5** | **Critical** |
 | R2 Shopify env | Ronan | 2.0 | High |
 | R3 Paid → engagement | Ronan | 2.5 | High |
 | R4 Campaign email smoke | Ronan | 2.0 | Medium |
@@ -252,4 +252,4 @@ Launched AI campaigns have `banner_image_url`. `buildPublicCampaignMetadata` sho
 
 1. Jayson: `document.documentElement.scrollWidth === clientWidth` at 375–1280; `free_capped` dashboard banner is a real upgrade card (not the amber strip).
 2. Kareen: `/stats` funnel + multi-series chart; `/billing` Free vs Growth cards. No checkout/PayPal files.
-3. Ronan: onboard a new domain — brand results on screen in ~15s; widget signup email arrives; pay → engagement enrollment row.
+3. Ronan: onboard a new domain — brand results on screen in ~15s, **never 10 minutes**; widget signup email arrives; pay → engagement enrollment row.

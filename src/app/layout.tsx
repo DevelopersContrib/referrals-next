@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Open_Sans, Dosis } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { UnregisterServiceWorkers } from "@/components/unregister-service-workers";
 import "./globals.css";
 
 const openSans = Open_Sans({
@@ -57,6 +58,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans" style={{ fontFamily: "'Open Sans', var(--font-open-sans), sans-serif" }}>
         <TooltipProvider>
+          <UnregisterServiceWorkers />
           {children}
           <Toaster />
         </TooltipProvider>

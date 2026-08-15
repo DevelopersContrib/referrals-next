@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
-  countMemberBrands,
-  isMemberOnPaidPlan,
+  canMemberAddBrand,
   subscriptionRequiredResponse,
 } from "@/lib/member-subscription";
 
@@ -45,9 +44,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
-    const existingBrands = await countMemberBrands(memberId);
-    if (existingBrands >= 1 && !(await isMemberOnPaidPlan(memberId))) {
-      return subscriptionRequiredResponse();
+    const canAdd = await canMemberAddBrand(memberId);
+    if (!canAdd.ok) {
+      return subscriptionRequiredResponse(
+        "Free accounts include 1 domain. Start or renew Growth ($9/mo per brand) to add another."
+      );
     }
 
     // Extract domain from URL

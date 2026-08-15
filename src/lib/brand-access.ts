@@ -94,3 +94,31 @@ export function slugify(value: string): string {
     .replace(/[^\w ]+/g, "")
     .replace(/ +/g, "-");
 }
+
+/** Public URL slug from a domain: blacksesameph.com → blacksesameph-com */
+export function slugifyDomain(domain: string): string {
+  return domain
+    .toLowerCase()
+    .replace(/^www\./, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+export async function uniqueBrandSlug(base: string, excludeId?: number): Promise<string> {
+  const root = (slugifyDomain(base) || slugify(base) || "brand").slice(0, 80);
+  let candidate = root;
+  let n = 2;
+  for (;;) {
+    const existing = await prisma.member_urls.findFirst({
+      where: {
+        slug: candidate,
+        ...(excludeId ? { NOT: { id: excludeId } } : {}),
+      },
+      select: { id: true },
+    });
+    if (!existing) return candidate;
+    candidate = `${root}-${n}`.slice(0, 100);
+    n += 1;
+  }
+}

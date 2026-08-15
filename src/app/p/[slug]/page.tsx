@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { ExternalLinkIcon } from "lucide-react";
 import { BrandLogo } from "@/components/brands/brand-logo";
+import { memberMustShowBranding } from "@/lib/member-subscription";
+import { findPublicBrandBySlug } from "@/lib/public-campaign-server";
 
 const LOGO_URL =
   "https://d1p6j71028fbjm.cloudfront.net/logos/logo-new-referral-1.png";
@@ -15,11 +17,11 @@ export default async function PublicBrandPage({
 }) {
   const { slug } = await params;
 
-  const brand = await prisma.member_urls.findFirst({
-    where: { slug },
-  });
+  const brand = await findPublicBrandBySlug(slug);
 
   if (!brand) notFound();
+
+  const showBranding = await memberMustShowBranding(brand.member_id);
 
   const campaigns = await prisma.member_campaigns.findMany({
     where: { url_id: brand.id, publish: "public" },
@@ -118,12 +120,14 @@ export default async function PublicBrandPage({
           </div>
         )}
       </main>
-      <footer className="border-t bg-white mt-8 py-4 text-center text-sm text-gray-400">
-        Powered by{" "}
-        <a href="https://referrals.com" className="text-blue-600 hover:underline">
-          Referrals.com
-        </a>
-      </footer>
+      {showBranding && (
+        <footer className="border-t bg-white mt-8 py-4 text-center text-sm text-gray-400">
+          Powered by{" "}
+          <a href="https://referrals.com" className="text-blue-600 hover:underline">
+            Referrals.com
+          </a>
+        </footer>
+      )}
     </div>
   );
 }

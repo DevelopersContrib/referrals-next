@@ -10,8 +10,10 @@ import {
   generateBrandProfile,
   generateCampaigns,
   type BrandContext,
+  type CampaignBrief,
   type CampaignSuggestion,
 } from "./intelligence";
+import { generateCampaignHeroImage } from "./campaign-hero-image";
 
 // ── vnoc ──────────────────────────────────────────────────────────────────
 const vnocRunner: ModuleRunner = async (analysis) => {
@@ -118,7 +120,7 @@ const socialRunner: ModuleRunner = async (analysis) => {
 };
 
 // ── shared context builder for the AI modules ──────────────────────────────
-async function buildContext(analysis: brand_analysis): Promise<BrandContext> {
+export async function buildContext(analysis: brand_analysis): Promise<BrandContext> {
   const [crawl, vnoc, socials] = await Promise.all([
     prisma.brand_crawl.findFirst({ where: { analysis_id: analysis.id }, orderBy: { id: "desc" } }),
     prisma.brand_vnoc.findFirst({ where: { analysis_id: analysis.id }, orderBy: { id: "desc" } }),
@@ -197,11 +199,70 @@ const campaignsRunner: ModuleRunner = async (analysis) => {
   };
 
   const campaigns = await generateCampaigns(ctx, profile);
+  await replaceCampaignSuggestions(analysis.id, campaigns);
+};
 
-  await prisma.brand_campaign_suggestion.deleteMany({ where: { analysis_id: analysis.id } });
+export async function regenerateCampaignsForJob(
+  analysisId: number,
+  brief: CampaignBrief
+) {
+  if (!hasOpenAI()) throw new Error("OPENAI_API_KEY not configured");
+  const analysis = await prisma.brand_analysis.findUnique({ where: { id: analysisId } });
+  if (!analysis) throw new Error("Analysis not found");
+
+  const ctx = await buildContext(analysis);
+  const intel = await prisma.brand_intelligence.findFirst({
+    where: { analysis_id: analysis.id },
+    orderBy: { id: "desc" },
+  });
+  if (!intel) throw new Error("Brand analysis is still running. Try again in a moment.");
+
+  const profile = {
+    summary: intel.summary || "",
+    industry: intel.industry || "",
+    icp: intel.icp || "",
+    targetAudience: intel.target_audience || "",
+    products: intel.products || "",
+    usp: intel.usp || "",
+    brandVoice: intel.brand_voice || "",
+    advantages: (intel.advantages as unknown as string[]) || [],
+    weaknesses: (intel.weaknesses as unknown as string[]) || [],
+    opportunities: (intel.opportunities as unknown as string[]) || [],
+    readinessScore: intel.readiness_score || 60,
+  };
+
+  const imagePromise =
+    brief.wantImage === false
+      ? Promise.resolve(null)
+      : generateCampaignHeroImage({
+          memberId: analysis.member_id,
+          domain: analysis.domain,
+          industry: intel.industry,
+          brandVoice: intel.brand_voice,
+          summary: intel.summary,
+          color: brief.color,
+          copyTone: brief.copyTone,
+          goalKind: brief.goalKind,
+          designStyle: brief.designStyle,
+        });
+
+  const [campaigns, bannerImageUrl] = await Promise.all([
+    generateCampaigns(ctx, profile, brief),
+    imagePromise,
+  ]);
+  await replaceCampaignSuggestions(analysis.id, campaigns, brief, bannerImageUrl);
+}
+
+async function replaceCampaignSuggestions(
+  analysisId: number,
+  campaigns: CampaignSuggestion[],
+  brief?: CampaignBrief,
+  bannerImageUrl?: string | null
+) {
+  await prisma.brand_campaign_suggestion.deleteMany({ where: { analysis_id: analysisId } });
   await prisma.brand_campaign_suggestion.createMany({
     data: campaigns.map((c: CampaignSuggestion, i) => ({
-      analysis_id: analysis.id,
+      analysis_id: analysisId,
       kind: c.kind,
       name: c.name,
       reward_type: c.rewardType,
@@ -216,6 +277,15 @@ const campaignsRunner: ModuleRunner = async (analysis) => {
         successPage: c.successPage,
         fraudTips: c.fraudTips,
         launchChannels: c.launchChannels,
+        ...(brief
+          ? {
+              accentColor: brief.color,
+              goalType: brief.goalType,
+              copyTone: brief.copyTone,
+              designStyle: brief.designStyle,
+            }
+          : {}),
+        ...(bannerImageUrl ? { bannerImageUrl } : {}),
       } as object,
       predicted_conversion: c.predictedConversion,
       predicted_referrals: c.predictedReferrals,
@@ -223,7 +293,7 @@ const campaignsRunner: ModuleRunner = async (analysis) => {
       sort_order: i,
     })),
   });
-};
+}
 
 export const RUNNERS: Record<ModuleName, ModuleRunner> = {
   vnoc: vnocRunner,

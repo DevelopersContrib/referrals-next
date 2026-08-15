@@ -23,6 +23,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import Link from "next/link";
+import { buildCampaignEmbedSnippets } from "@/lib/campaign-embed-snippets";
 import { cn } from "@/lib/utils";
 import {
   MapPinIcon,
@@ -373,7 +374,10 @@ export default function EditCampaignPage() {
   }
   if (!campaign) return null;
 
-  const embedSnippet = `<script src="https://www.referrals.com/api/widget/js/${campaignId}" async></script>`;
+  const embedSnippet = buildCampaignEmbedSnippets(
+    process.env.NEXT_PUBLIC_APP_URL || "https://referrals.com",
+    Number(campaignId)
+  ).js;
 
   return (
     <div className="mx-auto max-w-4xl">

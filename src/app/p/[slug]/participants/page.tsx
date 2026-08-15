@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { findPublicBrandBySlug } from "@/lib/public-campaign-server";
 
 export async function generateMetadata({
   params,
@@ -8,9 +9,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const brand = await prisma.member_urls.findFirst({
-    where: { slug },
-  });
+  const brand = await findPublicBrandBySlug(slug);
 
   if (!brand) {
     return { title: "Participants | Referrals.com" };
@@ -29,10 +28,7 @@ export default async function PublicParticipantsPage({
 }) {
   const { slug } = await params;
 
-  // Find brand by slug
-  const brand = await prisma.member_urls.findFirst({
-    where: { slug },
-  });
+  const brand = await findPublicBrandBySlug(slug);
 
   if (!brand) {
     notFound();

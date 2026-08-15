@@ -1,12 +1,15 @@
 import { prisma } from "@/lib/prisma";
 import { completeText, aiEnabled } from "@/lib/ai";
 import { RF_DOMAIN_KEY, RF_ENGAGEMENT_CAMPAIGN } from "@/lib/engagement";
+import { FREE_PARTICIPANT_CAP } from "@/lib/billing-constants";
 
 export type SegmentRules = {
-  /** free | paid | any */
-  plan?: "free" | "paid" | "any";
+  /** free | paid | trial | free_capped | any */
+  plan?: "free" | "paid" | "trial" | "free_capped" | "any";
   /** Has at least one member_campaigns row (mapped from Handyman hasQuotes) */
   hasQuotes?: boolean;
+  /** Free/trial members near participant cap (~80% of FREE_PARTICIPANT_CAP) */
+  nearParticipantCap?: boolean;
   registeredWithinDays?: number;
   registeredBeforeDays?: number;
   inWelcomeSequence?: boolean;
@@ -54,12 +57,25 @@ function buildSegmentWhere(
   const now = Date.now();
   const clauses: string[] = ["m.email IS NOT NULL", "TRIM(m.email) <> ''"];
 
-  if (rules.plan === "free") {
+  if (rules.plan === "trial") {
+    // Growth trial: free/trial plan id with future expiry
+    clauses.push(
+      "(m.plan_id IS NOT NULL AND m.plan_id <= 1 AND m.plan_expiry IS NOT NULL AND m.plan_expiry > NOW())"
+    );
+  } else if (rules.plan === "free_capped") {
+    // Post-trial / expired free — not on active paid
+    clauses.push(
+      `((m.plan_expiry IS NULL OR m.plan_expiry < NOW()) AND NOT (m.plan_id > 1 AND m.plan_expiry IS NOT NULL AND m.plan_expiry > NOW()))`
+    );
+  } else if (rules.plan === "free") {
+    // Legacy: anyone not on active paid (includes trial + capped)
     clauses.push(
       "(m.plan_id IS NULL OR m.plan_id <= 1 OR m.plan_expiry IS NULL OR m.plan_expiry < NOW())"
     );
   } else if (rules.plan === "paid") {
-    clauses.push("(m.plan_id > 1 AND (m.plan_expiry IS NULL OR m.plan_expiry > NOW()))");
+    clauses.push(
+      "(m.plan_id > 1 AND m.plan_expiry IS NOT NULL AND m.plan_expiry > NOW())"
+    );
   }
 
   if (typeof rules.registeredWithinDays === "number" && rules.registeredWithinDays > 0) {
@@ -77,6 +93,15 @@ function buildSegmentWhere(
     clauses.push("EXISTS (SELECT 1 FROM member_campaigns mc WHERE mc.member_id = m.id)");
   } else if (rules.hasQuotes === false) {
     clauses.push("NOT EXISTS (SELECT 1 FROM member_campaigns mc WHERE mc.member_id = m.id)");
+  }
+
+  if (rules.nearParticipantCap === true) {
+    const threshold = Math.max(1, Math.floor(FREE_PARTICIPANT_CAP * 0.8));
+    clauses.push(`(
+      SELECT COUNT(*) FROM campaign_participants cp
+      INNER JOIN member_campaigns mc ON mc.id = cp.campaign_id
+      WHERE mc.member_id = m.id
+    ) >= ${threshold}`);
   }
 
   if (rules.inWelcomeSequence === true) {
@@ -172,13 +197,23 @@ export async function deleteSegment(id: number) {
 
 const FALLBACK_SEGMENTS: { name: string; description: string; rules: SegmentRules }[] = [
   {
-    name: "Free · no campaigns yet",
-    description: "Free members who haven’t created a campaign — activation priority.",
-    rules: { plan: "free", hasQuotes: false, notInWelcomeSequence: true },
+    name: "In Growth trial",
+    description: "Members in the 14-day Growth trial — loss-aversion upgrade window.",
+    rules: { plan: "trial" },
+  },
+  {
+    name: "Free capped (post-trial)",
+    description: "Trial ended — widget live with caps; warm upgrade leads.",
+    rules: { plan: "free_capped", hasQuotes: true },
+  },
+  {
+    name: "Free capped · no campaigns",
+    description: "Post-trial / free with no campaign — activation + upgrade.",
+    rules: { plan: "free_capped", hasQuotes: false },
   },
   {
     name: "Paid active",
-    description: "Paying members with a current plan.",
+    description: "Paying Growth members with a current plan.",
     rules: { plan: "paid" },
   },
   {
@@ -188,23 +223,19 @@ const FALLBACK_SEGMENTS: { name: string; description: string; rules: SegmentRule
   },
   {
     name: "New members (14 days)",
-    description: "First two weeks — product tour window.",
+    description: "First two weeks — product tour / trial window.",
     rules: { registeredWithinDays: 14, notInWelcomeSequence: true },
   },
   {
-    name: "Free · has campaigns",
-    description: "Free members already running campaigns — soft paid CTA.",
-    rules: { plan: "free", hasQuotes: true },
+    name: "Trial · has campaigns",
+    description: "Trial members already running campaigns — strongest upgrade cohort.",
+    rules: { plan: "trial", hasQuotes: true },
   },
   {
-    name: "Quiet free (30+ days, no campaigns)",
-    description: "Signed up a month+ ago with no campaign — gentle nudge.",
-    rules: { plan: "free", hasQuotes: false, registeredBeforeDays: 30 },
-  },
-  {
-    name: "Quiet free (90+ days, no campaigns)",
-    description: "Older free accounts with no campaigns — re-engagement.",
-    rules: { plan: "free", hasQuotes: false, registeredBeforeDays: 90 },
+    name: "Near participant cap",
+    description:
+      "Accounts approaching the free participant limit — upgrade before signups stall.",
+    rules: { plan: "free_capped", nearParticipantCap: true },
   },
   {
     name: "In welcome sequence",
@@ -214,14 +245,20 @@ const FALLBACK_SEGMENTS: { name: string; description: string; rules: SegmentRule
 ];
 
 async function gatherStats() {
-  const [free, paid, total, withCampaigns] = await Promise.all([
+  const [trial, freeCapped, paid, total, withCampaigns] = await Promise.all([
     prisma.$queryRawUnsafe<{ c: bigint }[]>(`
       SELECT COUNT(*) AS c FROM members m
-      WHERE m.plan_id IS NULL OR m.plan_id <= 1 OR m.plan_expiry IS NULL OR m.plan_expiry < NOW()
+      WHERE m.plan_id IS NOT NULL AND m.plan_id <= 1
+        AND m.plan_expiry IS NOT NULL AND m.plan_expiry > NOW()
     `),
     prisma.$queryRawUnsafe<{ c: bigint }[]>(`
       SELECT COUNT(*) AS c FROM members m
-      WHERE m.plan_id > 1 AND (m.plan_expiry IS NULL OR m.plan_expiry > NOW())
+      WHERE (m.plan_expiry IS NULL OR m.plan_expiry < NOW())
+        AND NOT (m.plan_id > 1 AND m.plan_expiry IS NOT NULL AND m.plan_expiry > NOW())
+    `),
+    prisma.$queryRawUnsafe<{ c: bigint }[]>(`
+      SELECT COUNT(*) AS c FROM members m
+      WHERE m.plan_id > 1 AND m.plan_expiry IS NOT NULL AND m.plan_expiry > NOW()
     `),
     prisma.members.count(),
     prisma.$queryRawUnsafe<{ c: bigint }[]>(`
@@ -230,7 +267,8 @@ async function gatherStats() {
   ]);
   return {
     totalMembers: total,
-    freeMembers: Number(free[0]?.c ?? 0),
+    trialMembers: Number(trial[0]?.c ?? 0),
+    freeCappedMembers: Number(freeCapped[0]?.c ?? 0),
     paidMembers: Number(paid[0]?.c ?? 0),
     membersWithCampaigns: Number(withCampaigns[0]?.c ?? 0),
   };
@@ -251,6 +289,12 @@ export async function aiCreateSegments(): Promise<{
   if (aiEnabled()) {
     const prompt = `You create audience SEGMENTS for Referrals.com (referral marketing SaaS). Personal 1:1 engagement — not blasts.
 
+Pricing model: 14-day Growth reverse trial → free forever (capped) → $9/mo Growth paid.
+- trial = in Growth trial (full features, future plan_expiry)
+- free_capped = post-trial / expired free (widget live, caps, branding on)
+- paid = active paid Growth
+- free = legacy alias for anyone not paid (prefer trial or free_capped instead)
+
 Live stats:
 ${JSON.stringify(stats, null, 2)}
 
@@ -259,8 +303,9 @@ Return ONLY a JSON array of 4-6 segments. Each must use this exact shape:
   "name": "short label",
   "description": "one sentence why this segment matters",
   "rules": {
-    "plan": "free" | "paid" | "any",
+    "plan": "trial" | "free_capped" | "free" | "paid" | "any",
     "hasQuotes": true | false | omit,
+    "nearParticipantCap": true | omit,
     "registeredWithinDays": number | omit,
     "registeredBeforeDays": number | omit,
     "inWelcomeSequence": true | omit,
@@ -269,7 +314,8 @@ Return ONLY a JSON array of 4-6 segments. Each must use this exact shape:
 }
 
 Note: hasQuotes means "has created at least one referral campaign" on this platform.
-Rules must be realistic for activation, nurture, or paid upsell. Prefer free members without campaigns.`;
+nearParticipantCap means total participants across campaigns ≥ ~80% of the free cap.
+Prioritize trial ending / free_capped with campaigns (upgrade), near cap, then trial activation, then paid nurture.`;
 
     const text = await completeText(prompt, {
       maxTokens: 900,

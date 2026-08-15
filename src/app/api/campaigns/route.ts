@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { sanitizeWidgetHtml } from "@/lib/sanitize-widget-html";
 import { sanitizeWidgetSettings } from "@/lib/widget-settings";
 import {
-  isMemberOnPaidPlan,
+  isMemberGrowthEntitled,
   subscriptionRequiredResponse,
 } from "@/lib/member-subscription";
 
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const paid = await isMemberOnPaidPlan(memberId);
+    const paid = await isMemberGrowthEntitled(memberId);
     const resolvedPublish =
       publish === "public" || publish === "private"
         ? publish

@@ -54,7 +54,7 @@ const GUIDES = [
       "Campaigns are referral programs tied to a specific brand.",
       'Set goal_type to "signup" or "visit" to define how rewards are triggered.',
       "num_signups controls how many referrals a participant needs before earning a reward.",
-      'Campaigns can be "public" (requires paid plan) or "private".',
+      'Campaigns can be "public" (requires Growth trial or paid Growth) or "private".',
       "Each campaign can have its own widget, lander page, reward configuration, and contest.",
     ],
   },

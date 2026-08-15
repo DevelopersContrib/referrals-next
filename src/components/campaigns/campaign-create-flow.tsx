@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -23,6 +24,7 @@ import {
   type CampaignPreset,
 } from "@/lib/campaign-presets";
 import { Badge } from "@/components/ui/badge";
+import { CampaignCreateEditor } from "@/components/campaigns/campaign-create-editor";
 
 const ICONS: Record<string, LucideIcon> = {
   share: Share2Icon,
@@ -95,44 +97,84 @@ export function CampaignCreateFlow({
           Back to templates
         </button>
 
-        {activePreset ? (
-          <div className="flex items-start gap-3 rounded-xl border border-[#ebeef0] bg-gradient-to-r from-white to-rose-50/40 px-4 py-3">
-            <span
-              className={`flex size-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${activePreset.gradient} text-white shadow-sm`}
-            >
-              {(() => {
-                const Icon = ICONS[activePreset.icon] ?? SparklesIcon;
-                return <Icon className="size-5" />;
-              })()}
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-[#575962]">
-                {activePreset.label} template
-              </p>
-              <p className="text-xs text-[#a7abc3]">
-                Prefilled and ready — tweak anything before you launch.
-              </p>
-            </div>
-          </div>
-        ) : null}
+        {selected === "scratch" ? (
+          <CampaignCreateEditor
+            brandId={brandId}
+            brandUrl={brandUrl}
+            campaignTypes={campaignTypes}
+            rewardTypes={rewardTypes}
+            initialPublish={initialPublish}
+          />
+        ) : (
+          <>
+            {activePreset ? (
+              <div className="flex items-start gap-3 rounded-xl border border-[#ebeef0] bg-gradient-to-r from-white to-rose-50/40 px-4 py-3">
+                <span
+                  className={`flex size-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${activePreset.gradient} text-white shadow-sm`}
+                >
+                  {(() => {
+                    const Icon = ICONS[activePreset.icon] ?? SparklesIcon;
+                    return <Icon className="size-5" />;
+                  })()}
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-[#575962]">
+                    {activePreset.label} template
+                  </p>
+                  <p className="text-xs text-[#a7abc3]">
+                    Prefilled and ready — tweak anything before you launch.
+                  </p>
+                </div>
+              </div>
+            ) : null}
 
-        <CampaignWizard
-          brandId={brandId}
-          brandUrl={brandUrl}
-          brandSlug={brandSlug}
-          embedBaseUrl={embedBaseUrl}
-          campaignTypes={campaignTypes}
-          rewardTypes={rewardTypes}
-          initialPublish={initialPublish}
-          initialForm={resolved?.form}
-          initialWidget={resolved?.widget}
-        />
+            <CampaignWizard
+              brandId={brandId}
+              brandUrl={brandUrl}
+              brandSlug={brandSlug}
+              embedBaseUrl={embedBaseUrl}
+              campaignTypes={campaignTypes}
+              rewardTypes={rewardTypes}
+              initialPublish={initialPublish}
+              initialForm={resolved?.form}
+              initialWidget={resolved?.widget}
+            />
+          </>
+        )}
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-[#a7abc3]">
+          AI campaign builder
+        </h2>
+        <Link
+          href={`/brands/${brandId}/campaigns/ai`}
+          className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-[#ebeef0] bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#FF5C62]/40 hover:shadow-md motion-reduce:transform-none sm:max-w-sm"
+        >
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#FF5C62] to-[#926efb]" />
+          <div className="mb-3 flex items-center justify-between">
+            <span className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#FF5C62] to-[#926efb] text-white shadow-sm">
+              <SparklesIcon className="size-5" />
+            </span>
+            <Badge className="text-[10px]">AI</Badge>
+          </div>
+          <h3 className="text-base font-semibold text-[#575962]">
+            Design with AI
+          </h3>
+          <p className="mt-1 flex-1 text-sm leading-relaxed text-[#a7abc3]">
+            Open the campaign AI builder — three ready-to-launch programs for this brand.
+          </p>
+          <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[#FF5C62]">
+            Open AI builder
+            <ArrowRightIcon className="size-4" />
+          </span>
+        </Link>
+      </section>
+
       {groups.map(([group, presets]) => (
         <section key={group} className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-[#a7abc3]">
@@ -188,21 +230,23 @@ export function CampaignCreateFlow({
         <button
           type="button"
           onClick={() => setSelected("scratch")}
-          className="group flex w-full items-center gap-4 rounded-2xl border border-dashed border-[#d7dce0] bg-white p-5 text-left transition-all hover:border-[#575962]/40 hover:shadow-sm"
+          className="group relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-[#ebeef0] bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#FF5C62]/40 hover:shadow-md motion-reduce:transform-none sm:max-w-sm"
         >
-          <span className="flex size-11 items-center justify-center rounded-xl bg-[#f4f5f7] text-[#575962]">
-            <PencilRulerIcon className="size-5" />
-          </span>
-          <div className="flex-1">
-            <h3 className="text-base font-semibold text-[#575962]">
-              Start from scratch
-            </h3>
-            <p className="text-sm text-[#a7abc3]">
-              Configure every step yourself with the campaign wizard.
-            </p>
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-slate-600 to-slate-400" />
+          <div className="mb-3 flex items-center justify-between">
+            <span className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-slate-700 to-slate-500 text-white shadow-sm">
+              <PencilRulerIcon className="size-5" />
+            </span>
+            <Badge variant="secondary" className="text-[10px]">
+              Full editor
+            </Badge>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-[#d7dce0] px-3 py-1.5 text-sm font-medium text-[#575962] transition-colors group-hover:border-[#575962]/40">
-            Build it
+          <h3 className="text-base font-semibold text-[#575962]">Start from scratch</h3>
+          <p className="mt-1 flex-1 text-sm leading-relaxed text-[#a7abc3]">
+            Same editor as Edit Campaign — type, reward, share, widget, and publish.
+          </p>
+          <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[#FF5C62] opacity-0 transition-opacity group-hover:opacity-100">
+            Open editor
             <ArrowRightIcon className="size-4" />
           </span>
         </button>

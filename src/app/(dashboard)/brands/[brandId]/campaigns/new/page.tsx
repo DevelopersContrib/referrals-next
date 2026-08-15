@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { getBrandIfAccessible } from "@/lib/brand-access";
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
-import { isMemberOnPaidPlan } from "@/lib/member-subscription";
+import { isMemberGrowthEntitled } from "@/lib/member-subscription";
 import { CampaignCreateFlow } from "@/components/campaigns/campaign-create-flow";
 
 interface NewCampaignPageProps {
@@ -32,7 +32,7 @@ export default async function NewCampaignPage({
   const [campaignTypes, rewardTypes, paid] = await Promise.all([
     prisma.campaign_types.findMany({ orderBy: { name: "asc" } }),
     prisma.reward_types.findMany({ orderBy: { name: "asc" } }),
-    isMemberOnPaidPlan(memberId),
+    isMemberGrowthEntitled(memberId),
   ]);
 
   const brandColors =

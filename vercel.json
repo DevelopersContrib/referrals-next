@@ -23,6 +23,10 @@
     {
       "path": "/api/cron/analysis-sweeper",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/checkout-abandonment",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

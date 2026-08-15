@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { encryptShareCode } from "@/lib/encryption";
 import { ZapierIntegration } from "@/lib/integrations/zapier";
+import {
+  ensureParticipantShare,
+  resolveSocialTypeId,
+} from "@/lib/widget-share-tracking";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,11 +18,8 @@ export async function OPTIONS() {
 
 /**
  * POST /api/widget/share
- *
- * Record a social share action.
  * Body: { campaignId, participantId, socialType }
- * Creates or updates participants_share record.
- * Returns the share URL for the given platform.
+ * Creates/updates participants_share and returns the tracked /t/ URL.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -33,8 +33,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Resolve social type to ID
-    const socialTypeId = await resolveSocialType(socialType);
+    const socialTypeId = await resolveSocialTypeId(socialType);
     if (socialTypeId === null) {
       return NextResponse.json(
         { error: "Invalid social type" },
@@ -42,52 +41,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate the share URL with encoded tracking
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://referrals.com";
-    const shareCode = encryptShareCode(
-      `${campaignId}:${socialTypeId}:${participantId}`
-    );
-    const shareUrl = `${appUrl}/t/${shareCode}`;
-
-    // Check if a share record already exists
-    const existing = await prisma.participants_share.findFirst({
-      where: {
-        campaign_id: campaignId,
-        participant_id: participantId,
-        social_type: socialTypeId,
-      },
+    const ensured = await ensureParticipantShare({
+      campaignId: Number(campaignId),
+      participantId: Number(participantId),
+      socialTypeId,
     });
 
-    if (existing) {
-      // Update the existing share record URL
-      await prisma.participants_share.update({
-        where: { id: existing.id },
-        data: { url: shareUrl },
-      });
-    } else {
-      // Create new share record
-      await prisma.participants_share.create({
-        data: {
-          campaign_id: campaignId,
-          participant_id: participantId,
-          social_type: socialTypeId,
-          clicks: 0,
-          url: shareUrl,
-        },
-      });
-    }
-
     const campaign = await prisma.member_campaigns.findUnique({
-      where: { id: campaignId },
+      where: { id: Number(campaignId) },
       select: { member_id: true },
     });
 
     if (campaign) {
       void ZapierIntegration.fireShareEvent(campaign.member_id, {
-        participant_id: participantId,
-        campaign_id: campaignId,
+        participant_id: Number(participantId),
+        campaign_id: Number(campaignId),
         social_type: socialTypeId,
-        url: shareUrl,
+        url: ensured.url,
       }).catch((err) =>
         console.error("[widget/share] Zapier webhook error:", err)
       );
@@ -96,7 +66,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        shareUrl,
+        shareUrl: ensured.url,
         socialType: socialTypeId,
       },
       { headers: corsHeaders }
@@ -108,32 +78,4 @@ export async function POST(request: NextRequest) {
       { status: 500, headers: corsHeaders }
     );
   }
-}
-
-async function resolveSocialType(
-  socialType: string | number
-): Promise<number | null> {
-  if (typeof socialType === "number") return socialType;
-
-  const parsed = parseInt(String(socialType), 10);
-  if (!isNaN(parsed)) return parsed;
-
-  // Map common names to IDs
-  const nameMap: Record<string, number> = {
-    facebook: 1,
-    twitter: 2,
-    linkedin: 3,
-    email: 4,
-    whatsapp: 5,
-  };
-
-  if (nameMap[socialType.toLowerCase()]) {
-    return nameMap[socialType.toLowerCase()];
-  }
-
-  // Look up in DB
-  const social = await prisma.social_types.findFirst({
-    where: { name: socialType },
-  });
-  return social?.id ?? null;
 }

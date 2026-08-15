@@ -257,7 +257,7 @@ export default function WidgetCustomizerPage() {
             Use AI to draft copy and colors, fine-tune fields, and save. All install
             and embed code lives in the{" "}
             <Link
-              href={`/brands/${brandId}/campaigns/${campaignId}#integrations`}
+              href={`/brands/${brandId}/campaigns/${campaignId}#integrations/iframe`}
               className="font-medium text-brand underline-offset-2 hover:underline"
             >
               Integrations tab

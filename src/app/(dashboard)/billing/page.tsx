@@ -122,12 +122,18 @@ export default async function BillingPage({
 									<li>{plan.days || 30} days</li>
 								</ul>
 								{activePlan?.id !== plan.id ? (
-									<Link
-										href={`/billing/plan/${plan.id}`}
-										className="inline-block min-h-11 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover"
-									>
-										{activePlan ? "Switch Plan" : "Subscribe"}
-									</Link>
+									(plan.price || 0) > 0 ? (
+										<Link
+											href={`/billing/plan/${plan.id}`}
+											className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-brand px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-brand-hover sm:w-auto"
+										>
+											Pay with card or PayPal
+										</Link>
+									) : (
+										<span className="inline-flex min-h-11 items-center rounded-lg border border-[#ebeef0] px-4 py-2 text-sm text-muted-foreground">
+											Included in trial / free forever
+										</span>
+									)
 								) : (
 									<Badge>Current Plan</Badge>
 								)}

@@ -34,7 +34,7 @@ const chapters = [
   },
   {
     title: "Launching and scaling",
-    body: "Start with one campaign on one domain for free, prove the channel, then scale to more domains as you grow. Embed widgets where intent is highest — post-purchase, onboarding, and account pages.",
+    body: "Use your 14-day Growth trial to prove the channel, then stay free forever (capped) or keep Growth at $9/mo per brand to scale domains. Embed widgets where intent is highest — post-purchase, onboarding, and account pages.",
   },
 ];
 
@@ -137,13 +137,13 @@ export default function ResourcesPage() {
         <div className="mx-auto max-w-3xl px-4 text-center">
           <h2 className="text-3xl font-bold text-white">Put it into practice</h2>
           <p className="mt-3 text-white/90">
-            Launch your first referral campaign free — every feature included.
+            Start a 14-day Growth trial free — then stay free forever (capped) or upgrade.
           </p>
           <Link
             href="/signup"
             className="mt-6 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#ff646c] shadow-lg transition hover:bg-gray-50"
           >
-            Start free
+            Start free trial
           </Link>
         </div>
       </section>

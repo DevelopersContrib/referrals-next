@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyWebhookSignature } from "@/lib/paypal";
 import { postVnocAttribution, resolveVnocPlan } from "@/lib/vnoc-attribution";
+import { logPayPalWebhook } from "@/lib/billing-webhook-log";
 
 interface PayPalWebhookEvent {
   event_type?: string;
@@ -13,22 +14,39 @@ interface PayPalWebhookEvent {
 }
 
 export async function POST(req: NextRequest) {
+  const transmissionId = req.headers.get("paypal-transmission-id");
+  let loggedEventType: string | null = null;
+  let loggedResourceId: string | null = null;
+
   try {
     const rawBody = await req.text();
     let body: PayPalWebhookEvent;
     try {
       body = JSON.parse(rawBody) as PayPalWebhookEvent;
     } catch {
+      await logPayPalWebhook({
+        transmissionId,
+        verificationStatus: "rejected",
+        processingStatus: "rejected",
+        errorMessage: "Invalid JSON",
+      });
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    const transmissionId = req.headers.get("paypal-transmission-id");
     const transmissionTime = req.headers.get("paypal-transmission-time");
     const transmissionSig = req.headers.get("paypal-transmission-sig");
     const certUrl = req.headers.get("paypal-cert-url");
     const authAlgo = req.headers.get("paypal-auth-algo");
 
     if (!transmissionId || !transmissionTime || !transmissionSig || !certUrl || !authAlgo) {
+      await logPayPalWebhook({
+        transmissionId,
+        eventType: body.event_type,
+        resourceId: body.resource?.id,
+        verificationStatus: "rejected",
+        processingStatus: "rejected",
+        errorMessage: "Missing PayPal signature headers",
+      });
       return NextResponse.json({ error: "Missing PayPal signature headers" }, { status: 401 });
     }
 
@@ -44,11 +62,29 @@ export async function POST(req: NextRequest) {
     );
 
     if (!verified) {
+      await logPayPalWebhook({
+        transmissionId,
+        eventType: body.event_type,
+        resourceId: body.resource?.id,
+        verificationStatus: "rejected",
+        processingStatus: "rejected",
+        errorMessage: "Webhook signature verification failed",
+      });
       return NextResponse.json({ error: "Webhook signature verification failed" }, { status: 401 });
     }
 
     const eventType = body.event_type;
     const resource = body.resource;
+    loggedEventType = eventType ?? null;
+    loggedResourceId = resource?.id ?? resource?.billing_agreement_id ?? null;
+
+    await logPayPalWebhook({
+      transmissionId,
+      eventType,
+      resourceId: loggedResourceId,
+      verificationStatus: "verified",
+      processingStatus: "received",
+    });
 
     switch (eventType) {
       case "BILLING.SUBSCRIPTION.CANCELLED": {
@@ -164,9 +200,24 @@ export async function POST(req: NextRequest) {
         console.log("Unhandled PayPal event:", eventType);
     }
 
+    await logPayPalWebhook({
+      transmissionId,
+      eventType,
+      resourceId: loggedResourceId,
+      verificationStatus: "verified",
+      processingStatus: "processed",
+    });
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("PayPal webhook error:", error);
+    await logPayPalWebhook({
+      transmissionId,
+      eventType: loggedEventType,
+      resourceId: loggedResourceId,
+      verificationStatus: loggedEventType ? "verified" : "pending",
+      processingStatus: "failed",
+      errorMessage: error instanceof Error ? error.message : "Unknown webhook error",
+    });
     return NextResponse.json({ error: "Webhook failed" }, { status: 500 });
   }
 }

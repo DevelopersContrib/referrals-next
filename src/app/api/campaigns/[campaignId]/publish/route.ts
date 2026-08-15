@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
-  isMemberOnPaidPlan,
+  isMemberGrowthEntitled,
   subscriptionRequiredResponse,
 } from "@/lib/member-subscription";
 
@@ -29,7 +29,7 @@ export async function POST(
     const body = await request.json();
     const newStatus = body.publish || (campaign.publish === "public" ? "private" : "public");
 
-    if (newStatus === "public" && !(await isMemberOnPaidPlan(memberId))) {
+    if (newStatus === "public" && !(await isMemberGrowthEntitled(memberId))) {
       return subscriptionRequiredResponse();
     }
 

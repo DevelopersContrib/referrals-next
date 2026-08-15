@@ -17,6 +17,7 @@ export default async function EditBrandPage({ params }: EditBrandPageProps) {
 
   const { brandId } = await params;
   const memberId = parseInt(session.user.id, 10);
+  // Whitelabel / remove branding is paid-only (not trial)
   const isPremium = await isMemberOnPaidPlan(memberId);
 
   return (

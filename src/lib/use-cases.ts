@@ -110,9 +110,9 @@ export const useCases: UseCase[] = [
     intro:
       "Early traction comes from people telling people. Get a fully-featured referral program live for free, prove the channel, and only pay as you scale to more products and domains.",
     benefits: [
-      { title: "Free to launch", body: "Your first campaign and domain are free — every feature included." },
+      { title: "Free to launch", body: "14-day Growth trial with full features — then free forever (capped) or $9/mo per brand." },
       { title: "Fast setup", body: "Go live in an afternoon with templates and embeddable widgets." },
-      { title: "Scale later", body: "Add domains for $9/month each as you launch new products." },
+      { title: "Scale later", body: "Keep Growth for $9/month per brand as you launch new products." },
     ],
     steps: [
       "Sign up and connect your domain",
@@ -121,8 +121,8 @@ export const useCases: UseCase[] = [
       "Measure what works, then scale",
     ],
     faqs: [
-      { q: "Is it really free to start?", a: "Yes — your first campaign on your first domain is free forever, with no feature gates." },
-      { q: "What happens when we grow?", a: "Add more domains for $9/month each. Cancel anytime, month to month." },
+      { q: "Is it really free to start?", a: "Yes — you get 14 days of full Growth features with no credit card. After that you stay free forever with caps (1 domain, 500 participants, Referrals branding) or upgrade to Growth for $9/mo per brand." },
+      { q: "What happens when we grow?", a: "Keep Growth for $9/month per brand — remove branding, unlock domains and advanced analytics. Cancel anytime." },
     ],
   },
 ];

@@ -10,10 +10,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ParticipantTable } from "@/components/campaigns/participant-table";
 import { CampaignShareLinks } from "@/components/campaigns/campaign-share-links";
-import { CampaignTabs } from "@/components/campaigns/campaign-tabs";
+import { CampaignTabs, IntegrationsEmbedLink } from "@/components/campaigns/campaign-tabs";
 import { CampaignRewardSettings } from "@/components/campaigns/campaign-reward-settings";
 import { CampaignEmailsEditor } from "@/components/campaigns/campaign-emails-editor";
 import { IntegrationGuide } from "@/components/campaigns/integration-guide";
+import { CampaignTrackingProof } from "@/components/campaigns/campaign-tracking-proof";
+import { BrandLogo } from "@/components/brands/brand-logo";
+import { kindLook } from "@/lib/analysis/apply-campaign-suggestion";
+import {
+  CampaignDashboardPreview,
+  previewFromRecords,
+} from "@/components/campaigns/campaign-dashboard-preview";
+import { getRewardKind } from "@/lib/reward-types";
 import {
   HomeIcon,
   ChevronRightIcon,
@@ -113,9 +121,53 @@ export default async function CampaignDashboardPage({
     : [];
   const leaderMap = new Map(leaderDetails.map((l) => [l.id, l]));
 
-  const campaignType = await prisma.campaign_types.findFirst({
-    where: { id: campaign.type_id },
-  });
+  const [campaignType, widget, analysis, rewardRow, rewardType] = await Promise.all([
+    prisma.campaign_types.findFirst({
+      where: { id: campaign.type_id },
+    }),
+    prisma.campaign_widget.findFirst({
+      where: { campaign_id: id },
+    }),
+    prisma.brand_analysis.findFirst({
+      where: { url_id: urlId, member_id: memberId },
+      orderBy: { id: "desc" },
+      select: { id: true },
+    }),
+    prisma.campaign_reward.findFirst({
+      where: { campaign_id: id },
+    }),
+    prisma.reward_types.findFirst({
+      where: { id: campaign.reward_type },
+    }),
+  ]);
+
+  const suggestion = analysis
+    ? await prisma.brand_campaign_suggestion.findFirst({
+        where: {
+          analysis_id: analysis.id,
+          OR: [{ name: campaign.name }, { headline: widget?.header_title || undefined }],
+        },
+        orderBy: { id: "desc" },
+      })
+    : null;
+
+  const look = kindLook(suggestion?.kind);
+  const headline = widget?.header_title || suggestion?.headline || campaign.name;
+  const pitch =
+    widget?.description ||
+    suggestion?.description ||
+    null;
+  const rewardKind = getRewardKind(rewardType?.name);
+  const rewardLabel =
+    rewardKind === "cash" && rewardRow?.cash_value
+      ? `$${rewardRow.cash_value} cash per referral`
+      : rewardKind === "coupons"
+        ? "Coupon reward"
+        : rewardKind === "custom" && rewardRow?.custom_message
+          ? rewardRow.custom_message.slice(0, 80)
+          : rewardType?.name
+            ? `${rewardType.name} reward`
+            : null;
 
   const statCards = [
     {
@@ -155,8 +207,9 @@ export default async function CampaignDashboardPage({
   const siteOrigin =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") || "https://referrals.com";
   const slugOrId = brand?.slug?.trim() || String(brand?.id ?? brandId);
-  const referralLink = `${siteOrigin}/r/${campaign.id}`;
-  const publicPageLink = `${siteOrigin}/public/${encodeURIComponent(slugOrId)}/campaign/${campaign.id}`;
+  // Live referral surfaces — never /r/{id} (no route)
+  const referralLink = `${siteOrigin}/widget/${campaign.id}`;
+  const publicPageLink = `${siteOrigin}/p/${encodeURIComponent(slugOrId)}/campaign/${campaign.id}`;
 
   return (
     <div className="space-y-6">
@@ -180,79 +233,142 @@ export default async function CampaignDashboardPage({
         <span className="font-medium text-[#575962]">{campaign.name}</span>
       </nav>
 
-      {/* Campaign Header */}
-      <div className="subheader relative overflow-hidden">
-        {/* decorative glow */}
+      {/* Campaign Header — same designed card the AI showed at launch */}
+      <div
+        className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
+      >
         <div
-          aria-hidden
-          className="pointer-events-none absolute -right-16 -top-24 size-64 rounded-full bg-white/15 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-28 left-1/4 size-56 rounded-full bg-black/10 blur-3xl"
-        />
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-2xl font-black text-white shadow-lg ring-1 ring-white/25 backdrop-blur-sm sm:size-16">
-              {campaign.name.trim().charAt(0).toUpperCase() || "R"}
-            </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-2xl font-black capitalize leading-tight tracking-tight text-white drop-shadow-sm sm:text-3xl lg:text-4xl">
-                  {campaign.name}
+          className="px-5 py-5 sm:px-8 sm:py-6"
+          style={{
+            background: `linear-gradient(135deg, ${look.from}14, ${look.to}0d)`,
+          }}
+        >
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex min-w-0 items-start gap-4">
+              <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white bg-white p-2 shadow-sm sm:size-16">
+                <BrandLogo
+                  domain={brand?.domain || ""}
+                  logoUrl={brand?.logo_url}
+                  imgClassName="h-full w-full object-contain"
+                  fallbackClassName="flex h-full w-full items-center justify-center rounded-xl bg-gray-100 text-xl font-bold text-gray-400"
+                />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className="rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white"
+                    style={{ background: `linear-gradient(135deg, ${look.from}, ${look.to})` }}
+                  >
+                    {look.label}
+                  </span>
+                  <Badge
+                    className={
+                      campaign.publish === "public"
+                        ? "border-0 bg-emerald-100 text-emerald-800 font-semibold uppercase tracking-wide"
+                        : "border-0 bg-gray-100 text-gray-600 font-semibold uppercase tracking-wide"
+                    }
+                  >
+                    {campaign.publish || "public"}
+                  </Badge>
+                </div>
+                <h1 className="mt-2 text-2xl font-bold leading-tight tracking-tight text-gray-900 sm:text-3xl">
+                  {headline}
                 </h1>
-                <Badge
-                  className={
-                    campaign.publish === "public"
-                      ? "border-0 bg-white/25 text-white font-semibold uppercase tracking-wide backdrop-blur-sm"
-                      : "border-0 bg-white/10 text-white/70 font-semibold uppercase tracking-wide backdrop-blur-sm"
-                  }
-                >
-                  {campaign.publish || "public"}
-                </Badge>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 font-medium text-white backdrop-blur-sm">
-                  <MegaphoneIcon className="size-3.5" />
-                  {campaignType?.name || "Campaign"}
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 font-medium text-white backdrop-blur-sm">
-                  <TargetIcon className="size-3.5" />
-                  Goal:{" "}
-                  {campaign.goal_type === "visit"
-                    ? `${campaign.num_visits} visits`
-                    : `${campaign.num_signups} signups`}
-                </span>
+                {pitch && (
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">
+                    {pitch}
+                  </p>
+                )}
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 font-medium">
+                    <MegaphoneIcon className="size-3.5" />
+                    {campaign.name}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 font-medium">
+                    <TargetIcon className="size-3.5" />
+                    Goal:{" "}
+                    {campaign.goal_type === "visit"
+                      ? `${campaign.num_visits} visits`
+                      : `${campaign.num_signups} signups`}
+                  </span>
+                  {campaignType?.name && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 font-medium">
+                      {campaignType.name}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="#integrations" scroll={false}>
-              <Button className="gap-2 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 border border-white/20">
+            <div className="flex flex-wrap gap-2">
+              <IntegrationsEmbedLink className="inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-2.5 text-sm font-medium text-gray-700 hover:border-brand/40 hover:text-brand">
                 <PuzzleIcon className="size-4" />
                 Install / embed
-              </Button>
-            </Link>
-            <Link href={`/brands/${brandId}/campaigns/${campaignId}/edit`}>
-              <Button className="gap-2 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 border border-white/20">
-                <SettingsIcon className="size-4" />
-                Edit
-              </Button>
-            </Link>
-            <Link href={`/brands/${brandId}/campaigns`}>
-              <Button className="gap-2 bg-white text-brand hover:bg-white/90 font-semibold shadow-md">
-                <LayoutDashboardIcon className="size-4" />
-                All Campaigns
-              </Button>
-            </Link>
+              </IntegrationsEmbedLink>
+              <Link href={`/brands/${brandId}/campaigns/${campaignId}/edit`}>
+                <Button variant="outline" className="gap-2">
+                  <SettingsIcon className="size-4" />
+                  Edit
+                </Button>
+              </Link>
+              <Link href={`/brands/${brandId}/campaigns`}>
+                <Button className="gap-2 bg-brand text-white hover:bg-brand/90 font-semibold">
+                  <LayoutDashboardIcon className="size-4" />
+                  All Campaigns
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
+        {suggestion && (
+          <div className="grid grid-cols-3 divide-x divide-gray-100 border-t border-gray-100 text-center">
+            <div className="px-3 py-3">
+              <p className="text-sm font-bold text-gray-900">
+                {suggestion.predicted_conversion || "—"}
+              </p>
+              <p className="text-[11px] text-gray-400">Conversion</p>
+            </div>
+            <div className="px-3 py-3">
+              <p className="text-sm font-bold text-gray-900">
+                {suggestion.predicted_referrals || "—"}
+              </p>
+              <p className="text-[11px] text-gray-400">Referrals</p>
+            </div>
+            <div className="px-3 py-3">
+              <p className="text-sm font-bold text-gray-900">
+                {suggestion.estimated_roi || "—"}
+              </p>
+              <p className="text-[11px] text-gray-400">Est. ROI</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Referral + public page URLs */}
       <div className="portlet">
         <CampaignShareLinks referralUrl={referralLink} publicPageUrl={publicPageLink} />
       </div>
+
+      <CampaignDashboardPreview
+        {...previewFromRecords({
+          kind: suggestion?.kind,
+          headline,
+          pitch,
+          widget,
+          suggestionPayload: suggestion?.payload,
+          rewardLabel,
+          brandDomain: brand?.domain || "",
+          brandLogoUrl: brand?.logo_url,
+          publicPageUrl: publicPageLink,
+          widgetUrl: referralLink,
+        })}
+      />
+
+      <CampaignTrackingProof
+        campaignId={campaign.id}
+        brandId={brandId}
+        initialImpressions={stats.impressions}
+        initialClicks={stats.clicks}
+      />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

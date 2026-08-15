@@ -170,6 +170,13 @@ const nextConfig: NextConfig = {
           { key: "Access-Control-Allow-Methods", value: "GET, OPTIONS" },
         ],
       },
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-store, max-age=0" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+        ],
+      },
     ];
   },
 
@@ -177,6 +184,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "**.referrals.com" },
       { protocol: "https", hostname: "**.amazonaws.com" },
+      { protocol: "https", hostname: "**.cloudfront.net" },
     ],
   },
 };

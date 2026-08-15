@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { encryptShareCode } from "@/lib/encryption";
 import { sendCampaignEntryEmail } from "@/lib/campaign-email";
 import { syncParticipantToMailchimp } from "@/lib/integrations/mailchimp-sync";
 import { ZapierIntegration } from "@/lib/integrations/zapier";
+import {
+  canMemberAcceptParticipant,
+  participantCapResponse,
+} from "@/lib/member-subscription";
+import {
+  SHARE_SOCIAL_DIRECT,
+  buildTrackedShareUrl,
+  ensureParticipantShare,
+} from "@/lib/widget-share-tracking";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,7 +35,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { campaignId, email, name, referrerId } = body;
 
-    if (!campaignId || !email) {
+    const campaignIdNum = Number(campaignId);
+    if (!campaignIdNum || !email) {
       return NextResponse.json(
         { error: "campaignId and email are required" },
         { status: 400, headers: corsHeaders }
@@ -36,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     // Check campaign exists
     const campaign = await prisma.member_campaigns.findUnique({
-      where: { id: campaignId },
+      where: { id: campaignIdNum },
     });
     if (!campaign) {
       return NextResponse.json(
@@ -48,7 +57,7 @@ export async function POST(request: NextRequest) {
     // Check if participant already exists for this campaign
     let participant = await prisma.campaign_participants.findFirst({
       where: {
-        campaign_id: campaignId,
+        campaign_id: campaignIdNum,
         email: email.toLowerCase().trim(),
       },
     });
@@ -56,6 +65,11 @@ export async function POST(request: NextRequest) {
     let isNewParticipant = false;
 
     if (!participant) {
+      const cap = await canMemberAcceptParticipant(campaign.member_id);
+      if (!cap.ok) {
+        return participantCapResponse(corsHeaders);
+      }
+
       isNewParticipant = true;
       // Find or create the global participant record
       let globalParticipant = await prisma.participants.findFirst({
@@ -78,14 +92,14 @@ export async function POST(request: NextRequest) {
       if (referrerId) {
         const referrer = await prisma.campaign_participants.findFirst({
           where: {
-            campaign_id: campaignId,
-            id: referrerId,
+            campaign_id: campaignIdNum,
+            id: Number(referrerId),
           },
         });
         if (referrer) {
           invitedBy = referrer.id;
           // Default social type for direct referral
-          invitedSocial = 1;
+          invitedSocial = SHARE_SOCIAL_DIRECT;
         }
       }
 
@@ -99,7 +113,7 @@ export async function POST(request: NextRequest) {
       // Create campaign participant
       participant = await prisma.campaign_participants.create({
         data: {
-          campaign_id: campaignId,
+          campaign_id: campaignIdNum,
           email: email.toLowerCase().trim(),
           name: name || email.split("@")[0],
           participant_id: globalParticipant.id,
@@ -111,17 +125,23 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Generate share URL
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://referrals.com";
-    const shareCode = encryptShareCode(
-      `${campaignId}:1:${participant.id}`
+    // Ensure share row exists so /t/{code} clicks are not silently dropped
+    const shareUrl = buildTrackedShareUrl(
+      campaignIdNum,
+      SHARE_SOCIAL_DIRECT,
+      participant.id
     );
-    const shareUrl = `${appUrl}/t/${shareCode}`;
+    await ensureParticipantShare({
+      campaignId: campaignIdNum,
+      participantId: participant.id,
+      socialTypeId: SHARE_SOCIAL_DIRECT,
+      url: shareUrl,
+    });
 
     if (isNewParticipant) {
       try {
         const emailContent = await prisma.campaign_email_content.findFirst({
-          where: { campaign_id: campaignId },
+          where: { campaign_id: campaignIdNum },
         });
 
         await sendCampaignEntryEmail({
@@ -138,7 +158,7 @@ export async function POST(request: NextRequest) {
       }
 
       void syncParticipantToMailchimp(
-        campaignId,
+        campaignIdNum,
         participant.email,
         participant.name
       );
@@ -157,7 +177,7 @@ export async function POST(request: NextRequest) {
     // Get referral stats
     const referralCount = await prisma.campaign_participants.count({
       where: {
-        campaign_id: campaignId,
+        campaign_id: campaignIdNum,
         invited_by: participant.id,
       },
     });
@@ -165,7 +185,7 @@ export async function POST(request: NextRequest) {
     // Get click stats
     const shares = await prisma.participants_share.findMany({
       where: {
-        campaign_id: campaignId,
+        campaign_id: campaignIdNum,
         participant_id: participant.id,
       },
     });

@@ -23,6 +23,11 @@ export interface CampaignView {
     successPage?: string;
     fraudTips?: string[];
     launchChannels?: string[];
+    accentColor?: string;
+    goalType?: "visit" | "signup";
+    copyTone?: string;
+    bannerImageUrl?: string;
+    designStyle?: "editorial" | "hero" | "minimal" | "warm";
   } | null;
   predictedConversion: string | null;
   predictedReferrals: string | null;

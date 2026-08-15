@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { slugify } from "@/lib/brand-access";
+import { uniqueBrandSlug } from "@/lib/brand-access";
 import { getRewardKind } from "@/lib/reward-types";
 import {
-  isMemberOnPaidPlan,
+  isMemberGrowthEntitled,
   subscriptionRequiredResponse,
 } from "@/lib/member-subscription";
+import {
+  readSuggestionPayload,
+  widgetSeedFromSuggestion,
+} from "@/lib/analysis/apply-campaign-suggestion";
 
 export const dynamic = "force-dynamic";
 
@@ -67,7 +71,7 @@ export async function POST(
     return NextResponse.json({ error: "No campaign suggestion found" }, { status: 404 });
   }
 
-  const paid = await isMemberOnPaidPlan(memberId);
+  const paid = await isMemberGrowthEntitled(memberId);
   const resolvedPublish =
     body.publish === "public" || body.publish === "private"
       ? body.publish
@@ -103,15 +107,18 @@ export async function POST(
     rewardTypes.find((r) => /custom/i.test(r.name || "")) ||
     rewardTypes[0];
 
-  const payload = (suggestion.payload || {}) as {
-    widgetCopy?: string;
-    successPage?: string;
-    emailSequence?: string[];
-    landingCopy?: string;
-  };
-
+  const payload = readSuggestionPayload(suggestion.payload);
   const name = (suggestion.name || `${brand.domain} referral program`).slice(0, 200);
   const emailBody = Array.isArray(payload.emailSequence) ? payload.emailSequence[0] : undefined;
+  const seed = widgetSeedFromSuggestion({
+    kind: suggestion.kind,
+    headline: suggestion.headline,
+    name,
+    description: suggestion.description,
+    payload,
+    crawlColors: crawl?.colors,
+    brandColors: brand.brand_colors,
+  });
 
   // 1. Campaign
   const campaign = await prisma.member_campaigns.create({
@@ -121,8 +128,9 @@ export async function POST(
       url_id: brand.id,
       member_id: memberId,
       reward_type: reward.id,
-      goal_type: "signup",
-      num_signups: 3,
+      goal_type: payload.goalType === "visit" ? "visit" : "signup",
+      num_visits: payload.goalType === "visit" ? 5 : null,
+      num_signups: payload.goalType === "visit" ? null : 3,
       reward_notify_subject: `You earned a reward from ${brand.domain}`.slice(0, 200),
       reward_notify_message: (payload.successPage || suggestion.description || "").slice(0, 2000) || null,
       campaign_entry_subject: (suggestion.headline || name).slice(0, 200),
@@ -132,29 +140,47 @@ export async function POST(
     },
   });
 
-  // 2. Widget — colors come from the brand's saved palette when available,
-  //    otherwise we derive one from the crawl so the widget is on-brand.
+  // 2. Widget — AI copy + kind accent (crawl black is text, not the CTA).
   const hadBrandColors = Object.keys(paletteFromBrandColors(brand.brand_colors)).length > 0;
   const palette = hadBrandColors
     ? paletteFromBrandColors(brand.brand_colors)
     : paletteFromCrawl(crawl);
-  const primaryColor = stripHash(palette.primary, "6366f1");
-  const buttonColor = stripHash(palette.accent || palette.secondary || palette.primary, primaryColor);
-  const widgetDesc =
-    (payload.widgetCopy || suggestion.description || `Join ${name} and earn rewards!`).slice(0, 65000);
   await prisma.campaign_widget.create({
     data: {
       campaign_id: campaign.id,
-      header_title: (suggestion.headline || name).slice(0, 200),
-      description: widgetDesc,
-      button_text: "Join Now",
-      color: primaryColor,
-      button_color: buttonColor,
-      ...(palette.text ? { text_color: stripHash(palette.text) } : {}),
+      header_title: seed.header_title,
+      description: seed.description,
+      body_text: seed.body_text,
+      success_message: seed.success_message,
+      button_text: seed.button_text,
+      join_button_text: seed.join_button_text,
+      color: seed.color,
+      button_color: seed.button_color,
+      text_color: seed.text_color,
+      header_font_color: seed.header_font_color,
+      header_description_color: seed.header_description_color,
+      background_type: seed.background_type,
+      background_color: seed.background_color,
+      template_id: seed.template_id,
+      ...(seed.banner_image_url ? { banner_image_url: seed.banner_image_url } : {}),
     },
   });
 
-  // 3. Reward (light seed; user can refine specifics in the editor)
+  if (seed.shareText) {
+    const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") || "https://referrals.com"}/widget/${campaign.id}`.slice(0, 200);
+    await prisma.campaign_social_content.create({
+      data: {
+        campaign_id: campaign.id,
+        url: shareUrl,
+        description: seed.shareText,
+        ...(seed.banner_image_url && seed.banner_image_url.length <= 500
+          ? { image_url: seed.banner_image_url }
+          : {}),
+      },
+    });
+  }
+
+  // 3. Reward (seed cash amount / custom copy from the AI card).
   const kind = getRewardKind(reward.name);
   await prisma.campaign_reward.create({
     data: {
@@ -163,23 +189,36 @@ export async function POST(
         kind === "custom"
           ? (suggestion.description || payload.successPage || "").slice(0, 2000) || null
           : null,
+      ...(kind === "cash" && seed.cashHint ? { cash_value: seed.cashHint } : {}),
     },
   });
 
   // 4. Finalize the brand: authoritative logo, slug, description.
   const logo = vnoc?.logo_url || crawl?.logo_url || null;
   const description = intel?.summary || vnoc?.description || crawl?.meta_description || null;
-  const slugBase = intel?.industry ? brand.domain.split(".")[0] : brand.domain.split(".")[0];
+  let nextSlug = brand.slug?.trim() || "";
+  if (nextSlug) {
+    const slugTaken = await prisma.member_urls.findFirst({
+      where: { slug: nextSlug, NOT: { id: brand.id } },
+      select: { id: true },
+    });
+    if (slugTaken) nextSlug = "";
+  }
+  if (!nextSlug) {
+    nextSlug = await uniqueBrandSlug(brand.domain || "brand", brand.id);
+  }
   await prisma.member_urls.update({
     where: { id: brand.id },
     data: {
       ...(logo ? { logo_url: logo.slice(0, 200) } : {}),
       ...(description ? { description: description.slice(0, 2000) } : {}),
-      ...(brand.slug ? {} : { slug: slugify(slugBase).slice(0, 100) }),
+      slug: nextSlug,
       // Persist the derived palette so the brand "owns" its colors going forward.
       ...(!hadBrandColors && Object.keys(palette).length > 0
-        ? { brand_colors: palette }
-        : {}),
+        ? { brand_colors: { ...palette, accent: `#${seed.color}` } }
+        : !hadBrandColors
+          ? { brand_colors: { primary: `#${seed.text_color}`, accent: `#${seed.color}` } }
+          : {}),
     },
   });
 

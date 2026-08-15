@@ -83,9 +83,9 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
 		category: "Getting Started",
 		description: "How to sign up for Referrals.com and get started.",
 		paragraphs: [
-			"Visit referrals.com/signup to create your free account. You'll need your name, email address, and a password. During signup you can also enter your first brand's website URL — Referrals.com will fetch your logo and site details automatically.",
-			"After confirming your email, sign in at /signin to access your dashboard. From there you can add additional brands, create campaigns, and configure your referral widget.",
-			"Your account gives you access to all core features including campaign management, participant tracking, and embeddable widgets. Paid plans unlock higher limits on brands, participants, and advanced tools.",
+			"Visit referrals.com/signup to start your 14-day Growth trial. You'll need your name, email address, and a password. During signup you can also enter your first brand's website URL — Referrals.com will fetch your logo and site details automatically. No credit card is required.",
+			"After confirming your email, your Growth trial begins and you can sign in at /signin. From there add your brand, create campaigns, and embed your referral widget.",
+			"During the trial you get full Growth features (multi-domain, public campaigns, advanced analytics). After 14 days you stay free forever with caps (1 domain, ~500 participants, Referrals.com branding) or upgrade to Growth for $9/mo per brand.",
 		],
 	},
 	{
@@ -95,7 +95,7 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
 		description: "Add a brand by entering your website URL.",
 		paragraphs: [
 			"From your dashboard, click Create Brand or go to /brands/new. Enter your website URL (e.g. https://yoursite.com). Referrals.com validates the domain and pulls in your site title and logo.",
-			"Each brand represents one website or business. You can manage multiple brands from a single account — useful if you run several sites or client accounts.",
+			"Each brand represents one website or business. During your Growth trial (or on paid Growth) you can manage multiple brands from one account. Free forever after trial is capped to 1 domain.",
 			"Once your brand is created, open its dashboard at /brands/[id] to view stats, manage campaigns, and access the widget editor.",
 		],
 	},
@@ -184,7 +184,7 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
 		paragraphs: [
 			"Referrals.com offers pre-built templates for common referral mechanics — social rewards, invite-a-friend, token giveaways, photo voting, polls, and more. Browse templates at /campaign-templates.",
 			"When creating a campaign, choose a template to pre-fill widget layout, default copy, and reward settings. You can customize every element before publishing.",
-			"Templates marked Premium require a paid plan. Free templates include social reward and basic invite flows suitable for most small businesses.",
+			"Templates marked Premium require Growth (included in your 14-day trial, or $9/mo after). Free templates include social reward and basic invite flows suitable for most small businesses.",
 		],
 	},
 	{
@@ -259,9 +259,9 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
 		category: "Billing & Plans",
 		description: "Overview of Referrals.com pricing plans.",
 		paragraphs: [
-			"Referrals.com offers tiered plans based on the number of brands, participants per campaign, and feature access. View current plans and pricing at /billing.",
-			"Free accounts can create brands and run basic campaigns with participant limits. Paid plans increase limits and unlock integrations, API access, and advanced widget customization.",
-			"Each plan lists included brands, participant caps, and billing period (monthly or annual). Compare plans on the billing page before subscribing.",
+			"Referrals.com uses a reverse trial: 14 days of full Growth features, then capped free forever — or keep Growth for $9/month per brand. See /pricing and /billing.",
+			"Free forever (after trial) includes 1 domain, about 500 participants, basic analytics, and required Referrals.com branding. Your live widget keeps working.",
+			"Growth ($9/mo per brand) removes branding, unlocks multi-domain, advanced analytics, and higher limits. Subscribe from /billing/plan/2 via PayPal. Cancel anytime.",
 		],
 	},
 	{
@@ -281,9 +281,9 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
 		category: "Billing & Plans",
 		description: "How to upgrade or switch plans.",
 		paragraphs: [
-			"Go to /billing and click Switch Plan on any higher tier. You'll be guided through PayPal to approve the new subscription rate.",
-			"Upgrades take effect immediately. Your new plan limits (brands, participants) apply right away. Billing is prorated through PayPal for the current period.",
-			"If you hit participant or brand limits, the dashboard will prompt you to upgrade. You can also upgrade proactively before reaching limits.",
+			"Go to /billing and choose Growth ($9/mo per brand), or open /billing/plan/2. You'll approve a PayPal billing agreement to subscribe.",
+			"Upgrades take effect immediately — branding removal, multi-domain, and advanced analytics unlock right away.",
+			"If you hit the free domain or participant cap (or want to remove Powered-by), the dashboard prompts you to upgrade. You can also upgrade during your trial to keep Growth without interruption.",
 		],
 	},
 	{

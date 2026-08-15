@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,16 @@ const passwordRules = [
   { label: "One number", test: (v: string) => /\d/.test(v) },
 ];
 
+function readRref() {
+  if (typeof document === "undefined") return "";
+  const fromUrl = new URLSearchParams(window.location.search).get("rref") || "";
+  const cookie = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("rref="))
+    ?.split("=")[1];
+  return fromUrl || cookie || "";
+}
+
 export function SignupForm() {
   const router = useRouter();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
@@ -21,6 +31,13 @@ export function SignupForm() {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const rref = new URLSearchParams(window.location.search).get("rref");
+    if (rref && /^\d+$/.test(rref)) {
+      document.cookie = `rref=${rref}; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -31,7 +48,10 @@ export function SignupForm() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          rref: readRref(),
+        }),
       });
       const data = await res.json();
 
@@ -62,7 +82,7 @@ export function SignupForm() {
           Create your account
         </h1>
         <p className="mt-2 text-sm text-gray-600">
-          Start growing with referrals — your first campaign is free.
+          Start growing with referrals — 14-day Growth trial, no card.
         </p>
       </div>
 
@@ -166,7 +186,7 @@ export function SignupForm() {
         </Button>
 
         <p className="text-center text-xs text-gray-500">
-          Free to start · No credit card · Launch in 10 minutes
+          14-day Growth trial · No credit card · Then free forever (capped)
         </p>
       </form>
 

@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { countMemberBrands } from "@/lib/member-subscription";
+import { enrollMemberInSignupReferral } from "@/lib/signup-referral";
+import { SignupInviteCard } from "@/components/auth/signup-invite-card";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -100,6 +102,13 @@ export default async function DashboardPage() {
 
   const memberId = parseInt(session.user.id, 10);
   const userName = session.user.name || session.user.email || "User";
+  const invite = session.user.email
+    ? await enrollMemberInSignupReferral({
+        memberId,
+        email: session.user.email,
+        name: session.user.name,
+      }).catch(() => null)
+    : null;
 
   // First-run activation: send brand-less users into guided onboarding.
   if ((await countMemberBrands(memberId)) === 0) {
@@ -235,6 +244,15 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {invite && (
+        <SignupInviteCard
+          shareUrl={invite.shareUrl}
+          campaignId={invite.campaignId}
+          participantId={invite.participantId}
+          compact
+        />
+      )}
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">

@@ -224,7 +224,7 @@ export default function WhitelabelPage() {
               href="/signup"
               className="inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#ff646c] shadow-lg transition hover:bg-gray-50"
             >
-              Start free
+              Start free trial
             </Link>
             <Link
               href="/contact"

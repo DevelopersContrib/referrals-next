@@ -105,8 +105,7 @@ export function ShareButtons({
     setSharing(platform.name);
 
     try {
-      // Record the share via API
-      await fetch("/api/widget/share", {
+      const res = await fetch("/api/widget/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -115,9 +114,11 @@ export function ShareButtons({
           socialType: platform.name,
         }),
       });
+      const data = (await res.json().catch(() => ({}))) as { shareUrl?: string };
+      // Prefer per-social tracked URL from API so /t/ clicks hit the right share row
+      const trackedUrl = data.shareUrl || shareUrl;
 
-      // Open share URL
-      const url = platform.getUrl(shareUrl, shareText, shareTitle);
+      const url = platform.getUrl(trackedUrl, shareText, shareTitle);
       if (platform.name === "email") {
         window.location.href = url;
       } else {
@@ -126,7 +127,6 @@ export function ShareButtons({
 
       onShareComplete?.(platform.name);
     } catch {
-      // Sharing should still work even if tracking fails
       const url = platform.getUrl(shareUrl, shareText, shareTitle);
       window.open(url, "_blank", "width=600,height=400");
     } finally {

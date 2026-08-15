@@ -470,20 +470,20 @@ model member_tokens {
 }
 
 model member_urls {
-  id               Int       @id @default(autoincrement())
-  url              String    @db.VarChar(200)
-  logo_url         String?   @db.VarChar(200)
-  description      String?   @db.Text
-  member_id        Int
-  in_vnoc          Boolean?  @default(false)
-  vnoc_id          Int?
-  date_added       DateTime  @default(now()) @db.Timestamp(0)
-  domain           String    @db.VarChar(100)
-  background_image String?   @db.VarChar(200)
-  slug             String?   @db.VarChar(100)
-  plan_expiry      DateTime? @db.DateTime(0)
-  brand_colors     Json?
-  referral_campaign_id Int?  // the ONE campaign this brand's /go/<domain> link attributes to
+  id                   Int       @id @default(autoincrement())
+  url                  String    @db.VarChar(200)
+  logo_url             String?   @db.VarChar(200)
+  description          String?   @db.Text
+  member_id            Int
+  in_vnoc              Boolean?  @default(false)
+  vnoc_id              Int?
+  date_added           DateTime  @default(now()) @db.Timestamp(0)
+  domain               String    @db.VarChar(100)
+  background_image     String?   @db.VarChar(200)
+  slug                 String?   @db.VarChar(100)
+  plan_expiry          DateTime? @db.DateTime(0)
+  brand_colors         Json?
+  referral_campaign_id Int? // the ONE campaign this brand's /go/<domain> link attributes to
 }
 
 model member_zapier {
@@ -916,58 +916,57 @@ model brand_campaign_suggestion {
 }
 
 model support_tickets {
-  id                  Int       @id @default(autoincrement())
-  public_id           String    @unique @db.VarChar(24)
-  member_id           Int?
-  requester_email     String?   @db.VarChar(255)
-  requester_name      String?   @db.VarChar(120)
-  source              String    @default("contact_form") @db.VarChar(40)
-  site                String?   @db.VarChar(40)
-  subject             String    @db.VarChar(200)
-  category            String    @default("other") @db.VarChar(40)
-  priority            String    @default("normal") @db.VarChar(20)
-  status              String    @default("open") @db.VarChar(40)
-  assigned_admin_id   Int?
-  ai_handling         Boolean   @default(true)
-  ai_turn_count       Int       @default(0)
-  escalated_at        DateTime? @db.DateTime(0)
-  escalation_reason   String?   @db.VarChar(500)
-  last_message_at     DateTime  @default(now()) @db.DateTime(0)
-  created_at          DateTime  @default(now()) @db.Timestamp(0)
-  updated_at          DateTime  @default(now()) @updatedAt @db.Timestamp(0)
-  messages            support_ticket_messages[]
+  id                Int                       @id @default(autoincrement())
+  public_id         String                    @unique @db.VarChar(24)
+  member_id         Int?
+  requester_email   String?                   @db.VarChar(255)
+  requester_name    String?                   @db.VarChar(120)
+  source            String                    @default("contact_form") @db.VarChar(40)
+  site              String?                   @db.VarChar(40)
+  subject           String                    @db.VarChar(200)
+  category          String                    @default("other") @db.VarChar(40)
+  priority          String                    @default("normal") @db.VarChar(20)
+  status            String                    @default("open") @db.VarChar(40)
+  assigned_admin_id Int?
+  ai_handling       Boolean                   @default(true)
+  ai_turn_count     Int                       @default(0)
+  escalated_at      DateTime?                 @db.DateTime(0)
+  escalation_reason String?                   @db.VarChar(500)
+  last_message_at   DateTime                  @default(now()) @db.DateTime(0)
+  created_at        DateTime                  @default(now()) @db.Timestamp(0)
+  updated_at        DateTime                  @default(now()) @updatedAt @db.Timestamp(0)
+  messages          support_ticket_messages[]
 
   @@index([site, status, last_message_at], map: "idx_support_tickets_site_status")
   @@index([requester_email], map: "idx_support_tickets_requester_email")
 }
 
 model support_ticket_messages {
-  id           Int      @id @default(autoincrement())
-  ticket_id    Int
-  author_type  String   @db.VarChar(20)
-  author_id    Int?
-  body         String   @db.Text
-  is_internal  Boolean  @default(false)
-  created_at   DateTime @default(now()) @db.Timestamp(0)
-  ticket       support_tickets @relation(fields: [ticket_id], references: [id], onDelete: Cascade)
+  id          Int             @id @default(autoincrement())
+  ticket_id   Int
+  author_type String          @db.VarChar(20)
+  author_id   Int?
+  body        String          @db.Text
+  is_internal Boolean         @default(false)
+  created_at  DateTime        @default(now()) @db.Timestamp(0)
+  ticket      support_tickets @relation(fields: [ticket_id], references: [id], onDelete: Cascade)
 
   @@index([ticket_id], map: "idx_support_ticket_messages_ticket")
   @@index([ticket_id, created_at], map: "idx_support_ticket_messages_ticket_created")
 }
 
-
 /// Rule-based audience segments (AI-created or manual).
 model engagement_segments {
-  id           Int      @id @default(autoincrement())
-  domain_key   String   @default("referrals") @db.VarChar(40)
-  segment_key  String   @db.VarChar(64)
-  name         String   @db.VarChar(200)
-  description  String?  @db.Text
-  rules_json   String   @db.Text
-  source       String   @default("ai") @db.VarChar(24)
-  enabled      Boolean  @default(true)
-  created_at   DateTime @default(now()) @db.Timestamp(0)
-  updated_at   DateTime @default(now()) @updatedAt @db.Timestamp(0)
+  id          Int      @id @default(autoincrement())
+  domain_key  String   @default("referrals") @db.VarChar(40)
+  segment_key String   @db.VarChar(64)
+  name        String   @db.VarChar(200)
+  description String?  @db.Text
+  rules_json  String   @db.Text
+  source      String   @default("ai") @db.VarChar(24)
+  enabled     Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamp(0)
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamp(0)
 
   @@unique([domain_key, segment_key], map: "uq_engagement_segments_domain_key")
   @@index([domain_key], map: "idx_engagement_segments_domain")
@@ -1006,17 +1005,17 @@ model engagement_steps {
 }
 
 model engagement_enrollments {
-  id           Int       @id @default(autoincrement())
-  domain_key   String    @default("referrals") @db.VarChar(40)
+  id           Int                @id @default(autoincrement())
+  domain_key   String             @default("referrals") @db.VarChar(40)
   user_id      Int
-  campaign_key String    @db.VarChar(64)
-  status       String    @default("active") @db.VarChar(24)
-  current_step Int       @default(0)
-  next_at      DateTime? @db.DateTime(0)
-  context_json String?   @db.Text
-  enrolled_at  DateTime  @default(now()) @db.Timestamp(0)
-  completed_at DateTime? @db.DateTime(0)
-  updated_at   DateTime  @default(now()) @updatedAt @db.Timestamp(0)
+  campaign_key String             @db.VarChar(64)
+  status       String             @default("active") @db.VarChar(24)
+  current_step Int                @default(0)
+  next_at      DateTime?          @db.DateTime(0)
+  context_json String?            @db.Text
+  enrolled_at  DateTime           @default(now()) @db.Timestamp(0)
+  completed_at DateTime?          @db.DateTime(0)
+  updated_at   DateTime           @default(now()) @updatedAt @db.Timestamp(0)
   sends        engagement_sends[]
 
   @@unique([domain_key, user_id, campaign_key], map: "uq_engagement_enroll")
@@ -1024,15 +1023,72 @@ model engagement_enrollments {
 }
 
 model engagement_sends {
-  id            Int      @id @default(autoincrement())
+  id            Int                    @id @default(autoincrement())
   enrollment_id Int
   step_order    Int
   vnoc_mail_id  Int?
-  sent_at       DateTime @default(now()) @db.Timestamp(0)
-  status        String   @default("sent") @db.VarChar(24)
-  error         String?  @db.VarChar(500)
+  sent_at       DateTime               @default(now()) @db.Timestamp(0)
+  status        String                 @default("sent") @db.VarChar(24)
+  error         String?                @db.VarChar(500)
   enrollment    engagement_enrollments @relation(fields: [enrollment_id], references: [id], onDelete: Cascade)
 
   @@unique([enrollment_id, step_order], map: "uq_engagement_send")
   @@index([enrollment_id], map: "idx_engagement_sends_enrollment")
+}
+
+/// One checkout journey. Contains only billing metadata — never card details.
+model billing_checkout_attempts {
+  id                     BigInt    @id @default(autoincrement())
+  attempt_id             String    @unique(map: "uq_billing_checkout_attempt") @db.VarChar(36)
+  member_id              Int
+  plan_id                Int
+  brand_id               Int?
+  provider               String    @default("paypal") @db.VarChar(24)
+  checkout_mode          String    @default("in_page") @db.VarChar(24)
+  status                 String    @default("created") @db.VarChar(32)
+  paypal_subscription_id String?   @db.VarChar(200)
+  error_code             String?   @db.VarChar(100)
+  error_message          String?   @db.VarChar(500)
+  created_at             DateTime  @default(now()) @db.Timestamp(0)
+  updated_at             DateTime  @default(now()) @updatedAt @db.Timestamp(0)
+  completed_at           DateTime? @db.DateTime(0)
+
+  @@index([member_id, created_at], map: "idx_checkout_attempt_member")
+  @@index([status, updated_at], map: "idx_checkout_attempt_status")
+  @@index([paypal_subscription_id], map: "idx_checkout_attempt_subscription")
+}
+
+/// Append-only checkout timeline for funnel, abandonment, and error diagnosis.
+model billing_checkout_events {
+  id                     BigInt   @id @default(autoincrement())
+  attempt_id             String   @db.VarChar(36)
+  member_id              Int
+  plan_id                Int
+  event_name             String   @db.VarChar(40)
+  checkout_mode          String?  @db.VarChar(24)
+  paypal_subscription_id String?  @db.VarChar(200)
+  error_code             String?  @db.VarChar(100)
+  error_message          String?  @db.VarChar(500)
+  metadata_json          String?  @db.Text
+  created_at             DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([attempt_id, created_at], map: "idx_checkout_event_attempt")
+  @@index([member_id, created_at], map: "idx_checkout_event_member")
+  @@index([event_name, created_at], map: "idx_checkout_event_name")
+}
+
+/// Every PayPal webhook delivery, including simulator tests and rejected events.
+model billing_paypal_webhook_events {
+  id                  BigInt    @id @default(autoincrement())
+  transmission_id     String?   @unique(map: "uq_paypal_webhook_transmission") @db.VarChar(100)
+  event_type          String?   @db.VarChar(100)
+  resource_id         String?   @db.VarChar(200)
+  verification_status String    @db.VarChar(24)
+  processing_status   String    @db.VarChar(24)
+  error_message       String?   @db.VarChar(500)
+  received_at         DateTime  @default(now()) @db.Timestamp(0)
+  processed_at        DateTime? @db.DateTime(0)
+
+  @@index([event_type, received_at], map: "idx_paypal_webhook_type")
+  @@index([resource_id], map: "idx_paypal_webhook_resource")
 }

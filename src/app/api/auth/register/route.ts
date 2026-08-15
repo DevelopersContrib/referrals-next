@@ -4,10 +4,11 @@ import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendVerificationEmail } from "@/lib/ses";
 import { postVnocAttribution } from "@/lib/vnoc-attribution";
+import { enrollMemberInSignupReferral } from "@/lib/signup-referral";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password, website } = await req.json();
+    const { name, email, password, website, rref: rrefBody } = await req.json();
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -48,6 +49,9 @@ export async function POST(req: NextRequest) {
         is_verified: false,
         date_signedup: new Date(),
         num_of_logins: 0,
+        plan_id: 1,
+        // Trial clock starts on email verify — not at register — so days aren't burned waiting
+        plan_expiry: null,
       },
     });
 
@@ -70,30 +74,39 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Credit the referring domain: if this signup arrived via /go/<domain> (rref
-    // cookie = the domain's referrer participant in the signup-referral campaign),
-    // record the referred signup and issue the referrer a $5-token reward
-    // (ledgered / unminted). One reward per referred signup; idempotent by email.
+    // Credit the referring domain / member: rref cookie or body = referrer
+    // participant id. Enroll this new member in the platform signup campaign
+    // so they can invite others immediately, and reward the referrer once.
+    let invite: Awaited<ReturnType<typeof enrollMemberInSignupReferral>> = null;
     try {
-      const rrefRaw = req.cookies.get("rref")?.value || "";
+      const rrefRaw =
+        (typeof rrefBody === "string" && rrefBody) ||
+        req.cookies.get("rref")?.value ||
+        "";
       const rref = /^\d+$/.test(rrefRaw) ? parseInt(rrefRaw, 10) : NaN;
-      if (Number.isFinite(rref)) {
-        // Credit in whatever campaign the referrer participant belongs to
-        // (the brand's designated referral campaign, set via /go/<domain>).
-        const referrer = await prisma.campaign_participants.findFirst({ where: { id: rref } });
+      const invitedBy = Number.isFinite(rref) ? rref : null;
+
+      invite = await enrollMemberInSignupReferral({
+        memberId: member.id,
+        email,
+        name,
+        invitedBy,
+      });
+
+      if (invitedBy && invite?.created) {
+        const referrer = await prisma.campaign_participants.findFirst({
+          where: { id: invitedBy },
+        });
         if (referrer) {
-          const CAMPAIGN = referrer.campaign_id;
-          const already = await prisma.campaign_participants.findFirst({
-            where: { campaign_id: CAMPAIGN, email },
+          await prisma.participants_rewards.create({
+            data: {
+              campaign_id: referrer.campaign_id,
+              participant_id: invitedBy,
+              reward_type: 4,
+              social_type: 1,
+              token_symbol: "ADAO",
+            },
           });
-          if (!already) {
-            await prisma.campaign_participants.create({
-              data: { campaign_id: CAMPAIGN, email, name, participant_id: member.id, invited_by: rref },
-            });
-            await prisma.participants_rewards.create({
-              data: { campaign_id: CAMPAIGN, participant_id: rref, reward_type: 4, social_type: 1, token_symbol: "ADAO" },
-            });
-          }
         }
       }
     } catch (refErr) {
@@ -121,6 +134,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       memberId: member.id,
+      shareUrl: invite?.shareUrl ?? null,
     });
   } catch (error) {
     console.error("Registration error:", error);

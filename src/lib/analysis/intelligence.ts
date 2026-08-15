@@ -1,5 +1,6 @@
 /** OpenAI-backed brand profile + referral campaign generation. */
 import { chatJSON } from "@/lib/openai";
+import { DESIGN_META, type CampaignDesignStyle } from "./campaign-design";
 
 export interface BrandContext {
   domain: string;
@@ -127,15 +128,40 @@ const KIND_META: Record<CampaignKind, string> = {
   loyalty: "Customer Loyalty — reward and retain existing customers who refer",
 };
 
+export type CampaignBrief = {
+  goalKind: CampaignKind;
+  goalType: "visit" | "signup";
+  color: string;
+  copyTone: string;
+  designStyle: CampaignDesignStyle;
+  wantImage?: boolean;
+};
+
 export async function generateCampaigns(
   ctx: BrandContext,
-  profile: BrandProfile
+  profile: BrandProfile,
+  brief?: CampaignBrief
 ): Promise<CampaignSuggestion[]> {
+  const briefBlock = brief
+    ? `
+
+The member already chose:
+- Goal focus: ${KIND_META[brief.goalKind]} — make this campaign FIRST and the strongest
+- Reward unlocks after: ${brief.goalType === "visit" ? "tracked referral visits" : "friend signups"}
+- Primary brand color: ${brief.color}
+- Page design: ${DESIGN_META[brief.designStyle].label} — ${DESIGN_META[brief.designStyle].copyHint}
+- Copy tone: ${brief.copyTone}
+
+Write all copy in that tone and design. Still return exactly 3 campaigns.`
+    : "";
+
+  const order = brief
+    ? [brief.goalKind, ...(["fast_growth", "revenue", "loyalty"] as CampaignKind[]).filter((k) => k !== brief.goalKind)]
+    : (["fast_growth", "revenue", "loyalty"] as CampaignKind[]);
+
   const prompt = `You are a referral marketing expert. Design THREE referral campaigns for this business.
 Return ONLY valid JSON: { "campaigns": [ ... ] } with exactly 3 items in this order:
-1. fast_growth (${KIND_META.fast_growth})
-2. revenue (${KIND_META.revenue})
-3. loyalty (${KIND_META.loyalty})
+${order.map((k, i) => `${i + 1}. ${k} (${KIND_META[k]})`).join("\n")}${briefBlock}
 
 Each campaign object must have these exact keys:
 {
@@ -176,7 +202,9 @@ Match the brand voice. Be concrete and realistic with predictions.`;
     maxTokens: 3500,
   });
 
-  const kinds: CampaignKind[] = ["fast_growth", "revenue", "loyalty"];
+  const kinds: CampaignKind[] = brief
+    ? [brief.goalKind, ...(["fast_growth", "revenue", "loyalty"] as CampaignKind[]).filter((k) => k !== brief.goalKind)]
+    : ["fast_growth", "revenue", "loyalty"];
   const list = Array.isArray(raw.campaigns) ? raw.campaigns : [];
   const arr = (v: unknown, max: number): string[] =>
     Array.isArray(v) ? v.map((x) => String(x)).filter(Boolean).slice(0, max) : [];

@@ -193,10 +193,19 @@ async function getAccessToken(): Promise<string> {
   return data.access_token;
 }
 
-async function getOrCreateProduct(): Promise<string> {
-  // In production, store this product ID in env or database
+export const PAYPAL_PRODUCT_NAME = "Referrals.com Subscription";
+
+/**
+ * Resolve the catalog product, preferring PAYPAL_PRODUCT_ID and then an
+ * existing product with the same name. Without the name lookup every
+ * abandoned checkout would leave a new product in the PayPal account.
+ */
+export async function getOrCreateProduct(): Promise<string> {
   const productId = process.env.PAYPAL_PRODUCT_ID;
   if (productId) return productId;
+
+  const existing = await findProductIdByName(PAYPAL_PRODUCT_NAME);
+  if (existing) return existing;
 
   const response = await fetch(
     `${getPayPalApiBaseUrl()}/v1/catalogs/products`,
@@ -207,7 +216,7 @@ async function getOrCreateProduct(): Promise<string> {
         Authorization: `Bearer ${await getAccessToken()}`,
       },
       body: JSON.stringify({
-        name: "Referrals.com Subscription",
+        name: PAYPAL_PRODUCT_NAME,
         type: "SERVICE",
         category: "SOFTWARE",
       }),
@@ -216,4 +225,55 @@ async function getOrCreateProduct(): Promise<string> {
 
   const data = await response.json();
   return data.id;
+}
+
+async function findProductIdByName(name: string): Promise<string | null> {
+  const token = await getAccessToken();
+
+  for (let page = 1; page <= 5; page++) {
+    const response = await fetch(
+      `${getPayPalApiBaseUrl()}/v1/catalogs/products?page_size=20&page=${page}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!response.ok) return null;
+
+    const data = (await response.json()) as {
+      products?: { id?: string; name?: string }[];
+    };
+    const products = data.products ?? [];
+    const match = products.find((p) => p.name === name && p.id);
+    if (match?.id) return match.id;
+    if (products.length < 20) return null;
+  }
+
+  return null;
+}
+
+/** Find an ACTIVE billing plan by exact name so plans are reused, not duplicated. */
+export async function findSubscriptionPlanIdByName(
+  name: string,
+  productId?: string
+): Promise<string | null> {
+  const token = await getAccessToken();
+  const productFilter = productId ? `&product_id=${encodeURIComponent(productId)}` : "";
+
+  for (let page = 1; page <= 5; page++) {
+    const response = await fetch(
+      `${getPayPalApiBaseUrl()}/v1/billing/plans?page_size=20&page=${page}${productFilter}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!response.ok) return null;
+
+    const data = (await response.json()) as {
+      plans?: { id?: string; name?: string; status?: string }[];
+    };
+    const plans = data.plans ?? [];
+    const match = plans.find(
+      (p) => p.name === name && p.id && (p.status ?? "ACTIVE") === "ACTIVE"
+    );
+    if (match?.id) return match.id;
+    if (plans.length < 20) return null;
+  }
+
+  return null;
 }

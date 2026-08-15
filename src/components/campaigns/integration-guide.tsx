@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -209,10 +209,34 @@ export function IntegrationGuide({
     [snippets, widgetHref, publicUrl, networkApi]
   );
 
-  const [activeId, setActiveId] = useState(integrations[0].id);
+  const [activeId, setActiveId] = useState(() => {
+    if (typeof window === "undefined") return "javascript";
+    const sub = window.location.hash.replace(/^#/, "").split("/")[1];
+    if (!sub) return "javascript";
+    return sub === "embed" ? "iframe" : sub;
+  });
   const [copied, setCopied] = useState(false);
   const active = integrations.find((i) => i.id === activeId) ?? integrations[0];
   const ActiveIcon = active.icon;
+  const knownIds = useMemo(() => new Set(integrations.map((i) => i.id)), [integrations]);
+
+  // #integrations/iframe (or /embed) opens the Embed tab from Install / embed.
+  useEffect(() => {
+    const apply = () => {
+      const raw = window.location.hash.replace(/^#/, "");
+      const [tab, sub] = raw.split("/");
+      if (tab !== "integrations") return;
+      if (!sub) {
+        setActiveId("javascript");
+        return;
+      }
+      const id = sub === "embed" ? "iframe" : sub;
+      if (knownIds.has(id)) setActiveId(id);
+    };
+    apply();
+    window.addEventListener("hashchange", apply);
+    return () => window.removeEventListener("hashchange", apply);
+  }, [knownIds]);
 
   const copy = useCallback(async (text: string) => {
     try {
@@ -242,6 +266,7 @@ export function IntegrationGuide({
               onClick={() => {
                 setActiveId(item.id);
                 setCopied(false);
+                history.replaceState(null, "", `#integrations/${item.id}`);
               }}
               aria-pressed={isActive}
               className={cn(

@@ -26,7 +26,7 @@ const featureSections = [
     items: [
       {
         title: "Multi-Campaign Support",
-        desc: "Run unlimited referral campaigns across multiple brands and domains from a single dashboard.",
+        desc: "Run referral campaigns across multiple brands and domains on Growth (included in your 14-day trial).",
         icon: (
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
@@ -302,7 +302,7 @@ export default function FeaturesPage() {
                   href="/signup"
                   className="rounded-xl bg-[#FF5C62] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:bg-[#ff4f58]"
                 >
-                  Start for free
+                  Start free trial
                 </Link>
                 <Link
                   href="/pricing"
@@ -373,14 +373,15 @@ export default function FeaturesPage() {
             Ready to get started?
           </h2>
           <p className="mt-4 text-lg text-white/80">
-            Create your free account and launch your first campaign in minutes.
+            Get 14 days of full Growth features — no credit card. Then stay free
+            forever (capped) or keep Growth for $9/mo per brand.
           </p>
           <div className="mt-8 flex items-center justify-center gap-4">
             <Link
               href="/signup"
               className="rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#ff646c] shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
             >
-              Start for Free
+              Start free trial
             </Link>
             <Link
               href="/pricing"

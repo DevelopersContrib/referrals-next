@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isMemberOnPaidPlan } from "@/lib/member-subscription";
+import { getMemberEntitlement } from "@/lib/member-subscription";
 import { DashboardClientRoot } from "./dashboard-client-root";
 
 export default async function DashboardLayout({
@@ -13,19 +13,28 @@ export default async function DashboardLayout({
   if (!session?.user?.id) redirect("/signin");
 
   const memberId = parseInt(session.user.id, 10);
-  const [member, isPaid] = await Promise.all([
+  const [member, entitlement, brands] = await Promise.all([
     prisma.members.findUnique({
       where: { id: memberId },
       select: { is_verified: true },
     }),
-    isMemberOnPaidPlan(memberId),
+    getMemberEntitlement(memberId),
+    prisma.member_urls.findMany({
+      where: { member_id: memberId },
+      orderBy: { date_added: "desc" },
+      select: { id: true, domain: true },
+      take: 20,
+    }),
   ]);
 
   return (
     <DashboardClientRoot
+      brands={brands}
       onboarding={{
         isVerified: Boolean(member?.is_verified),
-        isPaid,
+        isGrowth: entitlement.isGrowth,
+        status: entitlement.status,
+        daysLeft: entitlement.daysLeft,
       }}
     >
       {children}

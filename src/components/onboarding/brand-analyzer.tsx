@@ -203,8 +203,8 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
           <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 animate-in fade-in">
             <p className="font-semibold text-amber-900">Add another domain</p>
             <p className="mt-1 text-sm text-amber-800">
-              Your first brand is free. Adding more domains is $9/month each —
-              upgrade to analyze and launch this one.
+              Your Growth trial includes full features. Adding more domains after
+              trial (or beyond free caps) is $9/month each — upgrade to continue.
             </p>
             <Link href="/billing" className="mt-3 inline-block">
               <Button className="bg-amber-600 hover:bg-amber-700">Upgrade to add this domain</Button>

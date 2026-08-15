@@ -45,24 +45,12 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Increment aggregated impression count
-    const existing = await prisma.campaign_widget_impressions_count.findUnique({
+    // Increment aggregated impression count (upsert avoids first-hit race)
+    await prisma.campaign_widget_impressions_count.upsert({
       where: { campaign_id: campaignId },
+      create: { campaign_id: campaignId, views: 1 },
+      update: { views: { increment: 1 } },
     });
-
-    if (existing) {
-      await prisma.campaign_widget_impressions_count.update({
-        where: { campaign_id: campaignId },
-        data: { views: { increment: 1 } },
-      });
-    } else {
-      await prisma.campaign_widget_impressions_count.create({
-        data: {
-          campaign_id: campaignId,
-          views: 1,
-        },
-      });
-    }
 
     return NextResponse.json(
       { success: true },

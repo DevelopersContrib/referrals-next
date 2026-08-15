@@ -2,6 +2,8 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { VnocTrack } from "@/components/analytics/vnoc-track";
+import { SignupInviteCard } from "@/components/auth/signup-invite-card";
+import { getSignupReferralInviteByEmail } from "@/lib/signup-referral";
 
 export const metadata: Metadata = {
   title: "Account Created",
@@ -31,6 +33,10 @@ export default async function SignupSuccessPage({
 }) {
   const params = await searchParams;
   const email = params.email || "your email";
+  const invite =
+    params.email && params.email.includes("@")
+      ? await getSignupReferralInviteByEmail(params.email).catch(() => null)
+      : null;
 
   return (
     <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-12">
@@ -73,7 +79,7 @@ export default async function SignupSuccessPage({
             <ol className="mt-2 space-y-1.5 text-gray-600">
               <li>1. Verify your email</li>
               <li>2. Sign in and add your website</li>
-              <li>3. Launch your first free campaign</li>
+              <li>3. Launch your first campaign (14-day Growth trial starts on verify)</li>
             </ol>
           </div>
           <div className="mt-6 flex flex-col gap-2">
@@ -91,35 +97,20 @@ export default async function SignupSuccessPage({
             </Link>
           </div>
 
-          <div className="mt-6 border-t border-rose-100 pt-5">
-            <p className="text-xs text-gray-500">
-              Know a business that would love this?
-            </p>
-            <div className="mt-2 flex justify-center gap-2">
-              <a
-                href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
-                  "https://referrals.com"
-                )}&text=${encodeURIComponent(
-                  "I just joined Referrals.com to grow with word-of-mouth — check it out:"
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-rose-50"
-              >
-                Share on X
-              </a>
-              <a
-                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-                  "https://referrals.com"
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-rose-50"
-              >
-                Share on LinkedIn
-              </a>
+          {invite ? (
+            <SignupInviteCard
+              shareUrl={invite.shareUrl}
+              campaignId={invite.campaignId}
+              participantId={invite.participantId}
+            />
+          ) : (
+            <div className="mt-6 border-t border-rose-100 pt-5">
+              <p className="text-xs text-gray-500">
+                Know a business that would love this? Share Referrals.com after
+                you verify — your unique invite link will be ready.
+              </p>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

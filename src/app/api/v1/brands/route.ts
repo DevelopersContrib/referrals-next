@@ -7,6 +7,7 @@ import {
   handleCors,
   getPagination,
 } from "@/lib/api/helpers";
+import { canMemberAddBrand } from "@/lib/member-subscription";
 
 export async function OPTIONS() {
   return handleCors();
@@ -58,6 +59,14 @@ export async function POST(req: NextRequest) {
 
     if (!url) {
       return apiError("URL is required", 400);
+    }
+
+    const canAdd = await canMemberAddBrand(memberId);
+    if (!canAdd.ok) {
+      return apiError(
+        "Free accounts include 1 domain. Upgrade to Growth ($9/mo per brand) to add another.",
+        403
+      );
     }
 
     let domain = "";

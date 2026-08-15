@@ -9,11 +9,17 @@ import {
 	getCampaignStatsForMember,
 	getMemberParticipantsSeries,
 } from "@/lib/member-stats";
+import {
+	DEFAULT_PAID_PLAN_ID,
+	getMemberEntitlement,
+} from "@/lib/member-subscription";
 
 export default async function StatsPage() {
 	const session = await auth();
 	if (!session?.user?.id) redirect("/signin");
 	const memberId = parseInt(session.user.id, 10);
+	const entitlement = await getMemberEntitlement(memberId);
+	const advancedAnalytics = entitlement.isGrowth;
 
 	const campaigns = await prisma.member_campaigns.findMany({
 		where: { member_id: memberId },
@@ -65,7 +71,9 @@ export default async function StatsPage() {
 	fromDate.setFullYear(fromDate.getFullYear() - 1);
 
 	const [chartData, campaignStats] = await Promise.all([
-		getMemberParticipantsSeries(memberId, fromDate, toDate),
+		advancedAnalytics
+			? getMemberParticipantsSeries(memberId, fromDate, toDate)
+			: Promise.resolve([]),
 		getCampaignStatsForMember(memberId),
 	]);
 
@@ -83,9 +91,24 @@ export default async function StatsPage() {
 			<div>
 				<h1 className="text-2xl font-bold">Statistics</h1>
 				<p className="mt-1 text-muted-foreground">
-					Overall performance metrics across all your campaigns.
+					{advancedAnalytics
+						? "Overall performance metrics across all your campaigns."
+						: "Basic totals on free forever. Upgrade to Growth for charts and deeper analytics."}
 				</p>
 			</div>
+
+			{!advancedAnalytics && (
+				<div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+					<span className="font-semibold">Basic analytics only.</span>{" "}
+					Time-series charts and advanced breakdowns are part of Growth.{" "}
+					<Link
+						href={`/billing/plan/${DEFAULT_PAID_PLAN_ID}`}
+						className="font-semibold text-rose-600 underline-offset-2 hover:underline"
+					>
+						Upgrade — $9/mo
+					</Link>
+				</div>
+			)}
 
 			<div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
 				{statCards.map((stat) => (
@@ -104,7 +127,16 @@ export default async function StatsPage() {
 				))}
 			</div>
 
-			<StatsPerformanceSection chartData={chartData} />
+			{advancedAnalytics ? (
+				<StatsPerformanceSection chartData={chartData} />
+			) : (
+				<Card>
+					<CardContent className="py-10 text-center text-sm text-muted-foreground">
+						Performance charts unlock on Growth (included in your 14-day trial,
+						or $9/mo after).
+					</CardContent>
+				</Card>
+			)}
 
 			{campaignStats.length > 0 && (
 				<Card>

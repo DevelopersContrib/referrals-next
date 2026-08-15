@@ -3,8 +3,10 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import Facebook from "next-auth/providers/facebook";
 import { compareSync } from "bcryptjs";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { memberIdIsPlatformAdmin, memberRowIsPlatformAdmin } from "@/lib/platform-admin";
+import { enrollMemberInSignupReferral } from "@/lib/signup-referral";
 
 const googleReady =
   Boolean(process.env.GOOGLE_CLIENT_ID?.trim()) &&
@@ -126,9 +128,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               signedup_social: account.provider,
               num_of_logins: 1,
               date_signedup: new Date(),
+              plan_id: 1,
+              plan_expiry: new Date(Date.now() + 14 * 86400000),
             },
           });
           user.id = String(newMember.id);
+          try {
+            const rrefRaw = (await cookies()).get("rref")?.value || "";
+            const invitedBy = /^\d+$/.test(rrefRaw) ? parseInt(rrefRaw, 10) : null;
+            const invite = await enrollMemberInSignupReferral({
+              memberId: newMember.id,
+              email: newMember.email,
+              name: newMember.name,
+              invitedBy,
+            });
+            if (invitedBy && invite?.created) {
+              const referrer = await prisma.campaign_participants.findFirst({
+                where: { id: invitedBy },
+              });
+              if (referrer) {
+                await prisma.participants_rewards.create({
+                  data: {
+                    campaign_id: referrer.campaign_id,
+                    participant_id: invitedBy,
+                    reward_type: 4,
+                    social_type: 1,
+                    token_symbol: "ADAO",
+                  },
+                });
+              }
+            }
+          } catch (err) {
+            console.error("[auth] signup-referral enroll failed (non-fatal):", err);
+          }
         } else {
           await prisma.members.update({
             where: { id: existingMember.id },

@@ -64,7 +64,7 @@ export default async function UseCasePage({ params }: Props) {
               href="/signup"
               className="rounded-xl bg-[#FF5C62] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:bg-[#ff4f58]"
             >
-              Start free
+              Start free trial
             </Link>
             <Link
               href="/pricing"
@@ -153,15 +153,18 @@ export default async function UseCasePage({ params }: Props) {
       {/* CTA */}
       <section className="bg-gradient-to-r from-[#ff646c] via-[#ff5c62] to-[#926efb] py-16">
         <div className="mx-auto max-w-3xl px-4 text-center">
-          <h2 className="text-3xl font-bold text-white">Launch your first campaign free</h2>
+          <h2 className="text-3xl font-bold text-white">
+            Start your 14-day Growth trial
+          </h2>
           <p className="mt-3 text-white/90">
-            Every feature included. No credit card. Add domains for $9/mo as you grow.
+            Every Growth feature for 14 days. No credit card. Stay free forever
+            (capped) or keep Growth for $9/mo as you grow.
           </p>
           <Link
             href="/signup"
             className="mt-6 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#ff646c] shadow-lg transition hover:bg-gray-50"
           >
-            Start free
+            Start free trial
           </Link>
         </div>
       </section>

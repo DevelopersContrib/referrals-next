@@ -92,7 +92,11 @@ const bottomNav = [
   { title: "Account", href: "/account", icon: UserIcon },
 ];
 
-export function DashboardSidebar() {
+export function DashboardSidebar({
+  brands = [],
+}: {
+  brands?: { id: number; domain: string }[];
+}) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const isAdmin = Boolean((session?.user as { isAdmin?: boolean })?.isAdmin);
@@ -174,6 +178,28 @@ export function DashboardSidebar() {
                 </SidebarMenuButton>
                 {brandsOpen && (
                   <SidebarMenuSub>
+                    {brands.map((brand) => {
+                      const href = `/brands/${brand.id}`;
+                      const isActive =
+                        pathname === href || pathname.startsWith(`${href}/`);
+                      return (
+                        <SidebarMenuSubItem key={brand.id}>
+                          <SidebarMenuSubButton
+                            isActive={isActive}
+                            render={<Link href={href} />}
+                            className={isActive ? "text-brand font-medium" : ""}
+                          >
+                            <span
+                              aria-hidden
+                              className="flex size-3.5 shrink-0 items-center justify-center text-base leading-none text-[#a7abc3]"
+                            >
+                              ·
+                            </span>
+                            <span className="truncate">{brand.domain}</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      );
+                    })}
                     {brandsNav
                       .filter((item) => !item.adminOnly || isAdmin)
                       .map((item) => {
@@ -181,10 +207,7 @@ export function DashboardSidebar() {
                         item.href === "/brands/allbrands"
                           ? pathname === item.href ||
                             pathname.startsWith(item.href + "/")
-                          : pathname === item.href ||
-                            (pathname.startsWith(item.href + "/") &&
-                              !pathname.startsWith("/brands/allbrands") &&
-                              !pathname.startsWith("/brands/new"));
+                          : pathname === item.href;
                       return (
                         <SidebarMenuSubItem key={item.href}>
                           <SidebarMenuSubButton

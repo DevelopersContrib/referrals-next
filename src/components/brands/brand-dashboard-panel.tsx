@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ import {
   MegaphoneIcon,
   Loader2Icon,
   CalendarIcon,
-  ArrowRightIcon,
+  ChevronRightIcon,
   AwardIcon,
   DollarSignIcon,
   EyeIcon,
@@ -166,6 +166,30 @@ export function BrandDashboardPanel({
   const [loadingReferrals, setLoadingReferrals] = useState(false);
   const [loadingShares, setLoadingShares] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [campaignQuery, setCampaignQuery] = useState("");
+  const [campaignStatus, setCampaignStatus] = useState<"all" | "public" | "private">("all");
+  const [campaignSort, setCampaignSort] = useState<"newest" | "oldest" | "name_asc" | "name_desc">(
+    "newest"
+  );
+
+  const visibleCampaigns = useMemo(() => {
+    const q = campaignQuery.trim().toLowerCase();
+    const filtered = campaigns.filter((c) => {
+      const status = (c.publish || "public").toLowerCase();
+      if (campaignStatus !== "all" && status !== campaignStatus) return false;
+      if (q && !c.name.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    const sorted = [...filtered];
+    sorted.sort((a, b) => {
+      if (campaignSort === "name_asc") return a.name.localeCompare(b.name);
+      if (campaignSort === "name_desc") return b.name.localeCompare(a.name);
+      const da = new Date(a.date_added).getTime();
+      const db = new Date(b.date_added).getTime();
+      return campaignSort === "oldest" ? da - db : db - da;
+    });
+    return sorted;
+  }, [campaigns, campaignQuery, campaignStatus, campaignSort]);
 
   const fetchOverview = useCallback(async () => {
     setLoadingOverview(true);
@@ -284,8 +308,8 @@ export function BrandDashboardPanel({
         </div>
       </div>
 
-      {/* Leaders + latest campaigns */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      {/* Leaders */}
+      <div className="grid gap-6 lg:grid-cols-2">
         <div className="portlet p-5">
           <div className="mb-4 flex items-center gap-2">
             <TrophyIcon className="size-5 text-[#ffc107]" />
@@ -352,73 +376,6 @@ export function BrandDashboardPanel({
           )}
         </div>
 
-        <div className="portlet p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MegaphoneIcon className="size-5 text-brand" />
-              <h3 className="font-semibold text-[#575962]">Latest Campaigns</h3>
-            </div>
-            <Link href={`/brands/${brand.id}/campaigns`}>
-              <Button variant="ghost" size="sm" className="gap-1 text-xs text-brand">
-                All <ArrowRightIcon className="size-3" />
-              </Button>
-            </Link>
-          </div>
-          {campaigns.length === 0 ? (
-            <div className="py-6 text-center">
-              <p className="text-sm text-[#a7abc3]">No campaigns yet.</p>
-              <Link href={`/brands/${brand.id}/campaigns/new`}>
-                <Button
-                  size="sm"
-                  className="mt-3 gap-1 bg-brand text-white hover:bg-brand-hover"
-                >
-                  <PlusIcon className="size-3" />
-                  Create First Campaign
-                </Button>
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {campaigns.slice(0, 5).map((campaign) => (
-                <Link
-                  key={campaign.id}
-                  href={`/brands/${brand.id}/campaigns/${campaign.id}`}
-                  className="block rounded-md border border-[#ebeef0] p-2.5 transition-colors hover:border-brand/30 hover:bg-brand/5"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-[#575962]">
-                        {campaign.name}
-                      </p>
-                      <div className="mt-1 flex items-center gap-1">
-                        <CalendarIcon className="size-3 text-[#a7abc3]" />
-                        <p className="text-xs text-[#a7abc3]">
-                          {new Date(campaign.date_added).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            }
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge
-                      className={
-                        campaign.publish === "public"
-                          ? "border-0 bg-[#28a745]/10 text-[10px] text-[#28a745]"
-                          : "border-0 bg-[#f2f3f8] text-[10px] text-[#a7abc3]"
-                      }
-                    >
-                      {campaign.publish ?? "public"}
-                    </Badge>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Referrals + Shares charts */}
@@ -473,6 +430,152 @@ export function BrandDashboardPanel({
           </div>
           <p className="mt-2 text-xs text-[#a7abc3]">Shares over time</p>
         </div>
+      </div>
+
+      <div className="portlet min-w-0 p-5 sm:p-6">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <MegaphoneIcon className="size-5 text-brand" />
+            <h3 className="font-semibold text-[#575962]">Campaigns</h3>
+            <span className="text-xs text-[#a7abc3]">
+              {visibleCampaigns.length}
+              {visibleCampaigns.length !== campaigns.length
+                ? ` of ${campaigns.length}`
+                : ""}
+            </span>
+          </div>
+          <Link href={`/brands/${brand.id}/campaigns/new`}>
+            <Button size="sm" className="gap-1 bg-brand text-white hover:bg-brand-hover">
+              <PlusIcon className="size-3.5" />
+              Create Campaign
+            </Button>
+          </Link>
+        </div>
+
+        <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+          <div className="relative min-w-0">
+            <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[#a7abc3]" />
+            <Input
+              value={campaignQuery}
+              onChange={(e) => setCampaignQuery(e.target.value)}
+              placeholder="Search campaigns…"
+              className="h-9 pl-8"
+              aria-label="Search campaigns"
+            />
+          </div>
+          <select
+            value={campaignStatus}
+            onChange={(e) =>
+              setCampaignStatus(e.target.value as "all" | "public" | "private")
+            }
+            className="h-9 rounded-lg border border-input bg-white px-2.5 text-sm text-[#575962]"
+            aria-label="Filter by status"
+          >
+            <option value="all">All statuses</option>
+            <option value="public">Public</option>
+            <option value="private">Private</option>
+          </select>
+          <select
+            value={campaignSort}
+            onChange={(e) =>
+              setCampaignSort(
+                e.target.value as "newest" | "oldest" | "name_asc" | "name_desc"
+              )
+            }
+            className="h-9 rounded-lg border border-input bg-white px-2.5 text-sm text-[#575962]"
+            aria-label="Sort campaigns"
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="name_asc">Name A–Z</option>
+            <option value="name_desc">Name Z–A</option>
+          </select>
+        </div>
+
+        {campaigns.length === 0 ? (
+          <div className="py-10 text-center">
+            <p className="text-sm text-[#a7abc3]">No campaigns yet.</p>
+            <Link href={`/brands/${brand.id}/campaigns/new`}>
+              <Button
+                size="sm"
+                className="mt-3 gap-1 bg-brand text-white hover:bg-brand-hover"
+              >
+                <PlusIcon className="size-3" />
+                Create First Campaign
+              </Button>
+            </Link>
+          </div>
+        ) : visibleCampaigns.length === 0 ? (
+          <p className="py-10 text-center text-sm text-[#a7abc3]">
+            No campaigns match this search.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[520px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-[#ebeef0] text-xs uppercase tracking-wide text-[#a7abc3]">
+                  <th className="pb-2 pr-3 font-semibold">Campaign</th>
+                  <th className="pb-2 pr-3 font-semibold">Status</th>
+                  <th className="pb-2 pr-3 font-semibold">Added</th>
+                  <th className="pb-2 text-right font-semibold"> </th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleCampaigns.map((campaign) => (
+                  <tr
+                    key={campaign.id}
+                    className="border-b border-[#f4f5f8] last:border-0"
+                  >
+                    <td className="py-3 pr-3">
+                      <Link
+                        href={`/brands/${brand.id}/campaigns/${campaign.id}`}
+                        className="font-semibold text-brand hover:underline"
+                      >
+                        {campaign.name}
+                      </Link>
+                    </td>
+                    <td className="py-3 pr-3">
+                      <Badge
+                        className={
+                          campaign.publish === "public"
+                            ? "border-0 bg-[#28a745]/10 text-[10px] text-[#28a745]"
+                            : "border-0 bg-[#f2f3f8] text-[10px] text-[#a7abc3]"
+                        }
+                      >
+                        {campaign.publish ?? "public"}
+                      </Badge>
+                    </td>
+                    <td className="py-3 pr-3 text-[#a7abc3]">
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarIcon className="size-3" />
+                        {new Date(campaign.date_added).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </td>
+                    <td className="py-3 text-right">
+                      <div className="flex justify-end gap-2">
+                        <Link href={`/brands/${brand.id}/campaigns/${campaign.id}`}>
+                          <Button variant="outline" size="sm" className="gap-1">
+                            Open
+                            <ChevronRightIcon className="size-3.5" />
+                          </Button>
+                        </Link>
+                        <Link href={`/brands/${brand.id}/campaigns/${campaign.id}/edit`}>
+                          <Button variant="outline" size="sm">
+                            Edit
+                          </Button>
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>

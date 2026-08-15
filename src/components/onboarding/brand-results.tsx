@@ -123,9 +123,9 @@ export function BrandResults({ status }: { status: AnalysisStatus }) {
         return;
       }
       setLaunchedId(c.id);
-      // Send them to the campaign so they can grab the embed / go live.
+      // Campaign overview: live referral URL + stats (impressions prove tracking)
       setTimeout(() => {
-        router.push(`/brands/${data.brandId}/campaigns/${data.campaignId}/widget`);
+        router.push(`/brands/${data.brandId}/campaigns/${data.campaignId}`);
       }, 600);
     } catch {
       setError("Something went wrong launching the campaign.");

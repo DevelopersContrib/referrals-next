@@ -2,14 +2,60 @@
 
 import Link from "next/link";
 import { CheckCircle2Icon, RocketIcon, ArrowRightIcon, SparklesIcon } from "lucide-react";
+import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
 
 type Props = {
   isVerified: boolean;
-  isPaid: boolean;
+  /** Growth entitled (trial or paid) */
+  isGrowth: boolean;
+  status?: "trial" | "free_capped" | "paid" | "unverified";
+  daysLeft?: number | null;
 };
 
-export function PaidOnboardingBanner({ isVerified, isPaid }: Props) {
-  if (isVerified && isPaid) return null;
+export function PaidOnboardingBanner({
+  isVerified,
+  isGrowth,
+  status,
+  daysLeft,
+}: Props) {
+  if (isVerified && status === "paid") return null;
+  if (isVerified && status === "trial" && (daysLeft == null || daysLeft > 3)) {
+    // Soft nudge only near end of trial
+    return (
+      <div className="mb-5 rounded-xl border border-violet-200 bg-violet-50/80 px-4 py-3 text-sm text-violet-950">
+        <span className="font-semibold">Growth trial:</span>{" "}
+        {daysLeft == null ? "active" : `${daysLeft} day${daysLeft === 1 ? "" : "s"} left`}.
+        Full features unlocked.{" "}
+        <Link
+          href={`/billing/plan/${DEFAULT_PAID_PLAN_ID}`}
+          className="font-semibold text-[#926efb] underline-offset-2 hover:underline"
+        >
+          Keep Growth for $9/mo
+        </Link>
+      </div>
+    );
+  }
+
+  if (isVerified && status === "free_capped") {
+    return (
+      <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-950">
+        <p className="font-semibold">You&apos;re on free forever (capped)</p>
+        <p className="mt-1 text-amber-900/80">
+          Your widget still works. Upgrade to Growth to remove branding, unlock
+          domains, leaderboards, and advanced analytics.
+        </p>
+        <Link
+          href={`/billing/plan/${DEFAULT_PAID_PLAN_ID}`}
+          className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-rose-600 hover:text-rose-700"
+        >
+          Upgrade to Growth — $9/mo
+          <ArrowRightIcon className="size-3" />
+        </Link>
+      </div>
+    );
+  }
+
+  if (isVerified && isGrowth && status !== "trial") return null;
 
   const steps = [
     {
@@ -18,15 +64,18 @@ export function PaidOnboardingBanner({ isVerified, isPaid }: Props) {
       done: isVerified,
       href: null as string | null,
       cta: null as string | null,
-      hint: "Use the link we sent so your account is active.",
+      hint: "Use the link we sent so your Growth trial unlocks.",
     },
     {
       id: "billing",
-      label: "Choose a plan",
-      done: isPaid,
-      href: "/billing",
-      cta: "Go to Billing",
-      hint: "Subscribe to publish referral programs and add extra brands.",
+      label: status === "trial" && daysLeft != null && daysLeft <= 3 ? "Keep Growth" : "Explore Growth",
+      done: status === "paid",
+      href: `/billing/plan/${DEFAULT_PAID_PLAN_ID}`,
+      cta: "View $9/mo plan",
+      hint:
+        status === "trial"
+          ? `Trial ends in ${daysLeft ?? "?"} day(s) — then free forever (capped).`
+          : "Subscribe to remove branding and unlock full Growth.",
     },
   ];
 
@@ -36,11 +85,6 @@ export function PaidOnboardingBanner({ isVerified, isPaid }: Props) {
 
   return (
     <div className="group relative mb-5 overflow-hidden rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50 via-white to-rose-50/60 p-[1px] shadow-sm">
-      {/* animated sheen */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -inset-x-10 -top-16 h-32 rotate-6 bg-gradient-to-r from-transparent via-white/50 to-transparent blur-2xl motion-safe:animate-pulse"
-      />
       <div className="relative rounded-2xl bg-white/70 px-4 py-4 backdrop-blur-sm sm:px-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -49,16 +93,14 @@ export function PaidOnboardingBanner({ isVerified, isPaid }: Props) {
             </div>
             <div>
               <p className="flex items-center gap-1.5 text-sm font-bold text-amber-950">
-                Finish setup
+                {status === "trial" ? "Growth trial" : "Finish setup"}
                 <SparklesIcon className="size-3.5 text-amber-500" />
               </p>
               <p className="text-xs text-amber-900/70">
-                Unlock publishing and multi-brand workspaces.
+                14-day full product — then free forever (capped) or $9/mo.
               </p>
             </div>
           </div>
-
-          {/* progress ring-ish pill */}
           <div className="flex items-center gap-2 rounded-full bg-white px-3 py-1.5 shadow-sm ring-1 ring-amber-200/80">
             <span className="text-xs font-semibold text-amber-950">
               {completed}/{total} done
@@ -67,7 +109,6 @@ export function PaidOnboardingBanner({ isVerified, isPaid }: Props) {
           </div>
         </div>
 
-        {/* progress bar */}
         <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-amber-100">
           <div
             className="h-full rounded-full bg-gradient-to-r from-amber-400 to-rose-500 transition-[width] duration-700 ease-out"
@@ -75,7 +116,6 @@ export function PaidOnboardingBanner({ isVerified, isPaid }: Props) {
           />
         </div>
 
-        {/* step cards */}
         <ol className="mt-3 grid gap-2.5 sm:grid-cols-2">
           {steps.map((s, i) => (
             <li

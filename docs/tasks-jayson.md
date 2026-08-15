@@ -5,6 +5,8 @@
 **Sprint focus:** Page builds, component polish, navigation, and content
 **Created:** June 20, 2026
 
+> **Next sprint (Aug 18–22):** dashboard overflow, slug checker, and a full-page campaign embed — see [`docs/tasks-ui-sprint-aug-18-22.md`](./tasks-ui-sprint-aug-18-22.md) (U1–U5). That file supersedes **J7** below.
+
 ---
 
 ## J1 — Stats Page Charts & Visuals (3 hours) — HIGH

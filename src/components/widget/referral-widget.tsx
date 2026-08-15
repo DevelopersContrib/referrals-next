@@ -27,6 +27,7 @@ interface WidgetConfig {
   goalNum?: number;
   shareText?: string;
   shareTitle?: string;
+  showBranding?: boolean;
 }
 
 interface Participant {
@@ -60,6 +61,7 @@ interface ReferralWidgetProps {
   reward?: RewardInfo | null;
   leaderboard?: LeaderboardEntry[];
   isEmbed?: boolean;
+  skipImpression?: boolean;
 }
 
 /**
@@ -78,6 +80,7 @@ export function ReferralWidget({
   reward = null,
   leaderboard = [],
   isEmbed = false,
+  skipImpression = false,
 }: ReferralWidgetProps) {
   const [step, setStep] = useState<"signup" | "share">("signup");
   const [email, setEmail] = useState("");
@@ -111,14 +114,15 @@ export function ReferralWidget({
     };
   }, [isEmbed, step]);
 
-  // Track impression on mount
+  // Track impression on mount (dashboard / studio preview must not inflate counts)
   useEffect(() => {
+    if (skipImpression) return;
     fetch("/api/widget/impression", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ campaignId: config.campaignId }),
     }).catch(() => {});
-  }, [config.campaignId]);
+  }, [config.campaignId, skipImpression]);
 
   // Check for returning participant in localStorage
   useEffect(() => {
@@ -193,8 +197,21 @@ export function ReferralWidget({
     }
   }
 
-  function copyLink() {
+  async function copyLink() {
     if (!participant?.shareUrl) return;
+    try {
+      await fetch("/api/widget/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          campaignId: config.campaignId,
+          participantId: participant.id,
+          socialType: "copy",
+        }),
+      });
+    } catch {
+      /* tracking fail-open */
+    }
     navigator.clipboard.writeText(participant.shareUrl).then(() => {
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
@@ -525,7 +542,8 @@ export function ReferralWidget({
           </div>
         )}
 
-        {/* Powered by */}
+        {/* Powered by — required on trial/free; hidden for paid */}
+        {config.showBranding !== false && (
         <div
           style={{
             marginTop: "16px",
@@ -544,6 +562,7 @@ export function ReferralWidget({
             Referrals.com
           </a>
         </div>
+        )}
       </div>
     </div>
   );

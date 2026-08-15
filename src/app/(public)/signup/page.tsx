@@ -4,13 +4,13 @@ import { AuthHeroPanel } from "@/components/auth/auth-hero-panel";
 import { SignupForm } from "@/components/auth/signup-form";
 
 export const metadata: Metadata = {
-  title: "Sign up free — Referrals.com",
+  title: "Start your 14-day Growth trial — Referrals.com",
   description:
-    "Create your free Referrals.com account and launch a referral program your customers love to share. No credit card required.",
+    "Create your Referrals.com account and get 14 days of full Growth features — no credit card. Then stay free forever (capped) or upgrade for $9/mo per brand.",
   openGraph: {
-    title: "Sign up free — Referrals.com",
+    title: "Start your 14-day Growth trial — Referrals.com",
     description:
-      "Join 500k+ businesses growing with referral marketing. Launch your first campaign free in minutes.",
+      "14-day Growth trial, no credit card. Then free forever (capped) or $9/mo per brand.",
     url: "https://referrals.com/signup",
     siteName: "Referrals.com",
     images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
@@ -18,9 +18,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sign up free — Referrals.com",
+    title: "Start your 14-day Growth trial — Referrals.com",
     description:
-      "Join 500k+ businesses growing with referral marketing. Launch your first campaign free in minutes.",
+      "14-day Growth trial, no credit card. Then free forever (capped) or $9/mo per brand.",
   },
 };
 

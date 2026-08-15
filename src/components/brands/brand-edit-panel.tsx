@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { slugify } from "@/lib/brand-access";
+import { slugify, slugifyDomain } from "@/lib/brand-access";
 import { ImageInput } from "@/components/media/image-input";
 import {
   ArrowLeftIcon,
@@ -213,7 +213,7 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
     const domainPart = value
       .replace(/^(?:https?:\/\/)?(?:www\.)?/i, "")
       .split("/")[0];
-    const slug = slugify(domainPart);
+    const slug = slugifyDomain(domainPart);
     setForm((prev) => ({ ...prev, url: value, slug }));
     checkDomain(value);
     if (slug) checkSlug(slug);

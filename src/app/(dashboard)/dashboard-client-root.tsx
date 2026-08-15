@@ -8,20 +8,28 @@ import { PaidOnboardingBanner } from "@/components/dashboard/paid-onboarding-ban
 
 type Props = {
   children: React.ReactNode;
-  onboarding: { isVerified: boolean; isPaid: boolean };
+  brands: { id: number; domain: string }[];
+  onboarding: {
+    isVerified: boolean;
+    isGrowth: boolean;
+    status: "trial" | "free_capped" | "paid" | "unverified";
+    daysLeft: number | null;
+  };
 };
 
-export function DashboardClientRoot({ children, onboarding }: Props) {
+export function DashboardClientRoot({ children, brands, onboarding }: Props) {
   return (
     <SessionProvider>
       <SidebarProvider>
-        <DashboardSidebar />
+        <DashboardSidebar brands={brands} />
         <SidebarInset>
           <DashboardHeader />
           <main className="flex-1 overflow-auto bg-dashboard p-4 lg:p-6 xl:p-8">
             <PaidOnboardingBanner
               isVerified={onboarding.isVerified}
-              isPaid={onboarding.isPaid}
+              isGrowth={onboarding.isGrowth}
+              status={onboarding.status}
+              daysLeft={onboarding.daysLeft}
             />
             {children}
           </main>

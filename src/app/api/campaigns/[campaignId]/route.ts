@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getCampaignByIdIfAccessible } from "@/lib/brand-access";
 import {
-  isMemberOnPaidPlan,
+  isMemberGrowthEntitled,
   subscriptionRequiredResponse,
 } from "@/lib/member-subscription";
 import { sanitizeRewardInput } from "@/lib/reward-types";
@@ -108,7 +108,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const paid = isAdmin || (await isMemberOnPaidPlan(memberId));
+    const paid = isAdmin || (await isMemberGrowthEntitled(memberId));
     const {
       name,
       type_id,

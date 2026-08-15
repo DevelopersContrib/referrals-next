@@ -112,7 +112,8 @@ const features = [
   },
   {
     title: "Unlimited Potential",
-    description: "Launch campaigns across 10 domains with unlimited participants and referral tracking.",
+    description:
+      "On Growth, launch campaigns across multiple domains with high participant limits and full referral tracking.",
   },
   {
     title: "Ready-Made Templates",
@@ -290,7 +291,8 @@ export default async function HomePage() {
           "@type": "Offer",
           price: "0",
           priceCurrency: "USD",
-          description: "First campaign free, then $9/month per additional domain.",
+          description:
+            "14-day Growth trial free, then capped free forever or $9/month per brand.",
         },
         aggregateRating: {
           "@type": "AggregateRating",
@@ -538,28 +540,28 @@ export default async function HomePage() {
               Simple, Transparent Pricing
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-              Choose the plan that fits your growth stage
+              Choose a plan that fits — 14-day Growth trial, then free forever (capped)
             </p>
           </div>
 
           <div className="mx-auto mt-12 grid max-w-4xl gap-8 lg:grid-cols-2">
             {/* Free */}
             <div className="rounded-2xl border border-rose-100 bg-white p-8 shadow-sm">
-              <h3 className="text-xl font-semibold text-gray-900">Free</h3>
+              <h3 className="text-xl font-semibold text-gray-900">Free forever</h3>
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="text-4xl font-bold text-gray-900">$0</span>
-                <span className="text-gray-500">/forever</span>
+                <span className="text-gray-500">/after 14-day trial</span>
               </div>
               <p className="mt-2 text-sm text-gray-600">
-                1 campaign on 1 domain — every feature included.
+                Widget stays live — 1 domain, 500 participants, branding on.
               </p>
               <ul className="mt-6 space-y-3">
                 {[
-                  "Gamification & leaderboards",
-                  "Voting campaigns",
-                  "Advanced analytics",
-                  "Anti-fraud tracking",
-                  "API access & integrations",
+                  "Live embeddable widget",
+                  "Basic analytics",
+                  "Share & click tracking",
+                  "Data never wiped",
+                  "Referrals.com branding",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-gray-700">
                     <svg className="h-5 w-5 flex-shrink-0 text-[#FF5C62]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -573,30 +575,30 @@ export default async function HomePage() {
                 href="/signup"
                 className="mt-8 block rounded-xl bg-[#FF5C62] px-6 py-3 text-center text-sm font-semibold text-white transition-all hover:bg-[#ff4f58] hover:shadow-lg hover:shadow-[#FF5C62]/25"
               >
-                Start Free
+                Start free trial
               </Link>
             </div>
 
-            {/* Per additional domain */}
+            {/* Growth */}
             <div className="relative rounded-2xl border border-[#926efb]/30 bg-white p-8 shadow-sm">
               <span className="absolute -top-3 right-6 rounded-full bg-[#926efb] px-3 py-1 text-xs font-semibold text-white">
-                Grow
+                14-day trial
               </span>
-              <h3 className="text-xl font-semibold text-gray-900">Per additional domain</h3>
+              <h3 className="text-xl font-semibold text-gray-900">Growth</h3>
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="text-4xl font-bold text-gray-900">$9</span>
-                <span className="text-gray-500">/month per domain</span>
+                <span className="text-gray-500">/month per brand</span>
               </div>
               <p className="mt-2 text-sm text-gray-600">
-                Same full feature set — just add domains as you grow.
+                Full product during trial — then upgrade to keep Growth.
               </p>
               <ul className="mt-6 space-y-3">
                 {[
-                  "Everything in Free, on every domain",
-                  "Unlimited campaigns per domain",
-                  "No tiers, no feature gates",
-                  "Cancel any domain anytime",
-                  "Month-to-month, no contracts",
+                  "Remove Referrals.com branding",
+                  "Unlimited domains & campaigns",
+                  "Leaderboards & advanced analytics",
+                  "Included free for 14 days",
+                  "Month-to-month, cancel anytime",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-gray-700">
                     <svg className="h-5 w-5 flex-shrink-0 text-[#926efb]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

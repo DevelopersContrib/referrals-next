@@ -40,7 +40,6 @@ export default async function BrandDashboardPage({ params }: PageProps) {
     prisma.member_campaigns.findMany({
       where: { url_id: id },
       orderBy: { id: "desc" },
-      take: 5,
       select: {
         id: true,
         name: true,

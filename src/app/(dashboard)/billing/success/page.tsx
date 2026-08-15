@@ -63,16 +63,16 @@ export default async function BillingSuccessPage() {
             Thank you for your purchase! Your subscription has been activated and
             you now have full access to all features included in your plan.
           </p>
-          <div className="mt-6 flex flex-col gap-2">
+          <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
             <Link
               href="/dashboard"
-              className="inline-block rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+              className="inline-flex min-h-11 items-center justify-center rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
             >
               Go to Dashboard
             </Link>
             <Link
               href="/billing"
-              className="text-sm text-blue-600 hover:underline"
+              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-200 px-6 py-2.5 text-sm font-medium text-blue-600 hover:bg-gray-50"
             >
               View Billing Details
             </Link>

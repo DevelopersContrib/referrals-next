@@ -14,8 +14,8 @@ export function RoiCalculator() {
   const invited = sharers * invitesPer;
   const newCustomers = Math.round(invited * (convRate / 100));
   const newRevenue = newCustomers * aov;
-  const domainsNeeded = 1; // first domain free
-  const cost = 0; // first campaign/domain is free
+  const domainsNeeded = 1;
+  const cost = 0; // Growth trial is free; capped free forever after
   const roi = cost > 0 ? Math.round((newRevenue / cost) * 100) : null;
 
   const inputs: {
@@ -79,13 +79,13 @@ export function RoiCalculator() {
           </div>
           <div className="flex justify-between">
             <span>Your cost</span>
-            <span className="font-semibold">Free — first campaign</span>
+            <span className="font-semibold">$0 during Growth trial</span>
           </div>
         </div>
         <p className="mt-6 text-xs text-white/75">
           {roi !== null
             ? `That's roughly ${roi.toLocaleString("en-US")}% ROI.`
-            : "Your first campaign and domain are always free — pure upside."}
+            : "14-day Growth trial is free — then stay free forever (capped) or $9/mo per brand."}
         </p>
       </div>
     </div>

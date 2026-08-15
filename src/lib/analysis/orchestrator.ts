@@ -59,6 +59,36 @@ export async function createAnalysisJob(memberId: number, rawUrl: string) {
   return { analysis, brandId: brand.id };
 }
 
+/** Analyze an existing brand — does not create another member_urls row. */
+export async function createAnalysisJobForBrand(
+  memberId: number,
+  brand: { id: number; url: string; domain: string }
+) {
+  const input_url = normalizeInputUrl(brand.url || brand.domain);
+  const domain = extractDomainFromUrl(input_url) || brand.domain;
+
+  const analysis = await prisma.brand_analysis.create({
+    data: {
+      member_id: memberId,
+      url_id: brand.id,
+      input_url,
+      domain,
+      status: "pending",
+    },
+  });
+
+  await prisma.brand_analysis_module.createMany({
+    data: MODULES.map((m) => ({
+      analysis_id: analysis.id,
+      module: m,
+      status: "pending",
+      depends_on: MODULE_DEPS[m].join(",") || null,
+    })),
+  });
+
+  return { analysis, brandId: brand.id };
+}
+
 /** Fire a fire-and-forget request to the per-module runner endpoint. */
 async function triggerModule(jobId: number, module: ModuleName) {
   const url = `${appBaseUrl()}/api/brands/analyze/${jobId}/run/${module}`;

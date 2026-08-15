@@ -28,14 +28,14 @@ const walkthroughSteps = [
 		step: 1,
 		title: "Create Your Account",
 		description:
-			"Sign up for a free account at Referrals.com. You will need your name, email, and the website URL for your first brand.",
+			"Sign up at Referrals.com to start your 14-day Growth trial (no credit card). You will need your name, email, and the website URL for your first brand.",
 		image: "/images/walkthrough/step-01-signup.png",
 	},
 	{
 		step: 2,
 		title: "Add Your Brand",
 		description:
-			"After signing up, add your brand by entering your website URL. We will automatically fetch your site details and logo. You can manage multiple brands from one account.",
+			"After signing up, add your brand by entering your website URL. We will automatically fetch your site details and logo. Multi-domain is included in your Growth trial and paid Growth; free forever after trial is capped to one domain.",
 		image: "/images/walkthrough/step-02-brand.png",
 	},
 	{

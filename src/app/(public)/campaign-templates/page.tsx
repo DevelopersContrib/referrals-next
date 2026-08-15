@@ -149,7 +149,7 @@ export default function CampaignTemplatesPage() {
               href="/signup"
               className="inline-flex items-center gap-2 self-start rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:border-[#FF5C62]/40 hover:bg-[#FF5C62]/10"
             >
-              Start free
+              Start free trial
               <ArrowRightIcon className="size-4" />
             </Link>
           </div>

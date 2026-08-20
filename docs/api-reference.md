@@ -439,6 +439,38 @@ app.listen(3000);
 
 ---
 
+## Network (VNOC operator)
+
+### `GET /v1/network/referrals?domain={domain}`
+
+Read-only referral performance for a **VNOC domain** (`member_urls.vnoc_id IS NOT NULL`). Non-VNOC or unknown domains return `{ found: false }` — never a non-VNOC brand. `domain` may be a host or URL (`www.` / protocol stripped).
+
+**Auth:** `X-API-Key: NETWORK_READ_KEY` (network operator secret, not a member `ref_*` key)
+
+```json
+// 200 — VNOC domain with a referral brand
+{
+  "success": true,
+  "data": {
+    "found": true,
+    "domain": "handyman.com",
+    "vnoc_id": 411,
+    "brand": { "id": 12, "url": "https://handyman.com", "domain": "handyman.com", "referral_campaign_id": 34 },
+    "campaigns": [
+      { "id": 34, "name": "Handyman Pros", "publish": "public", "reward_type": 2, "visits": 812, "signups": 143, "is_primary": true }
+    ],
+    "totals": { "campaigns": 1, "visits": 812, "signups": 143 }
+  }
+}
+
+// 200 — not a VNOC referral brand
+{ "success": true, "data": { "found": false, "domain": "example.com" } }
+```
+
+Missing/invalid key → 401. Missing `domain` → 400. POST/PUT/DELETE → 405.
+
+---
+
 ## Rate Limits
 
 No hard rate limits are currently enforced. Pagination defaults to 20 items, max 100.

@@ -46,6 +46,7 @@ export function proxy(request: NextRequest) {
 
   const publicExact = new Set([
     "/",
+    "/go",
     "/signin",
     "/signup",
     "/forgot-password",

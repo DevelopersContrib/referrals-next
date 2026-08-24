@@ -55,7 +55,7 @@ export default function ShopifyIntegrationPage() {
 
   if (loading) {
     return (
-      <div className="p-8">
+      <div className="mx-auto max-w-3xl">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/3" />
           <div className="h-4 bg-gray-200 rounded w-2/3" />
@@ -65,7 +65,7 @@ export default function ShopifyIntegrationPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-8">
+    <div className="mx-auto max-w-3xl">
       <h1 className="text-2xl font-bold text-gray-900">Shopify Integration</h1>
       <p className="mt-2 text-gray-600">
         Connect your Shopify store to create referral campaigns for your
@@ -156,9 +156,7 @@ export default function ShopifyIntegrationPage() {
           <li>1. Enter your Shopify store name and click Connect</li>
           <li>2. Authorize Referrals.com in your Shopify admin</li>
           <li>3. Create referral campaigns linked to your Shopify products</li>
-          <li>
-            4. Track referral sales and reward advocates automatically
-          </li>
+          <li>4. Track referral sales and reward advocates automatically</li>
         </ul>
       </div>
 

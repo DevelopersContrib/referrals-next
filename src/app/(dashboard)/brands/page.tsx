@@ -39,7 +39,10 @@ export default async function BrandsPage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-[#a7abc3]">
-        <Link href="/dashboard" className="flex items-center gap-1 hover:text-brand transition-colors">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-1 hover:text-brand transition-colors"
+        >
           <HomeIcon className="size-3.5" />
           Home
         </Link>
@@ -60,7 +63,6 @@ export default async function BrandsPage() {
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/api/brands/export" className="w-full sm:w-auto">
             <Button className="min-h-11 w-full gap-2 bg-[#28a745] text-white hover:bg-[#218838] sm:w-auto">
-
               <DownloadIcon className="size-4" />
               Export CSV
             </Button>
@@ -104,7 +106,6 @@ export default async function BrandsPage() {
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="border-b border-[#ebeef0] bg-[#f7f8fa]">
@@ -142,7 +143,7 @@ export default async function BrandsPage() {
                       <div className="min-w-0">
                         <Link
                           href={`/brands/${brand.id}`}
-                          className="font-semibold text-[#575962] hover:text-brand transition-colors"
+                          className="block truncate font-semibold text-[#575962] hover:text-brand transition-colors"
                         >
                           {brand.domain}
                         </Link>
@@ -150,9 +151,9 @@ export default async function BrandsPage() {
                           href={brand.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-0.5 flex items-center gap-1 truncate text-xs text-[#36a3f7] hover:underline lg:hidden"
+                          className="mt-0.5 flex max-w-[220px] items-center gap-1 text-xs text-[#36a3f7] hover:underline lg:hidden"
                         >
-                          {brand.url}
+                          <span className="truncate">{brand.url}</span>
                           <ExternalLinkIcon className="size-3 shrink-0" />
                         </a>
                       </div>
@@ -163,9 +164,9 @@ export default async function BrandsPage() {
                       href={brand.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex max-w-[200px] items-center gap-1 truncate text-sm text-[#36a3f7] hover:underline"
+                      className="inline-flex max-w-[200px] items-center gap-1 text-sm text-[#36a3f7] hover:underline"
                     >
-                      {brand.url}
+                      <span className="truncate">{brand.url}</span>
                       <ExternalLinkIcon className="size-3 shrink-0" />
                     </a>
                   </TableCell>
@@ -216,7 +217,6 @@ export default async function BrandsPage() {
               ))}
             </TableBody>
           </Table>
-          </div>
         )}
       </div>
     </div>

@@ -92,11 +92,19 @@ function DateRangeSearch({
     <div className="flex flex-col gap-2 lg:flex-row lg:items-end">
       <div className="flex-1">
         <label className="mb-1 block text-xs text-[#a7abc3]">From</label>
-        <Input type="date" value={from} onChange={(e) => onFromChange(e.target.value)} />
+        <Input
+          type="date"
+          value={from}
+          onChange={(e) => onFromChange(e.target.value)}
+        />
       </div>
       <div className="flex-1">
         <label className="mb-1 block text-xs text-[#a7abc3]">To</label>
-        <Input type="date" value={to} onChange={(e) => onToChange(e.target.value)} />
+        <Input
+          type="date"
+          value={to}
+          onChange={(e) => onToChange(e.target.value)}
+        />
       </div>
       <Button
         onClick={onSearch}
@@ -127,11 +135,15 @@ function OverviewStat({
 }) {
   return (
     <div className="flex flex-col items-center gap-2.5 rounded-xl border border-[#ebeef0] bg-white p-4 text-center transition-all hover:-translate-y-0.5 hover:shadow-md">
-      <div className={`flex size-10 items-center justify-center rounded-lg ${chip}`}>
+      <div
+        className={`flex size-10 items-center justify-center rounded-lg ${chip}`}
+      >
         <Icon className="size-5" />
       </div>
       <div>
-        <div className="text-xl font-bold leading-tight text-[#464457]">{value}</div>
+        <div className="text-xl font-bold leading-tight text-[#464457]">
+          {value}
+        </div>
         <div className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#a7abc3]">
           {label}
         </div>
@@ -158,7 +170,7 @@ export function BrandDashboardPanel({
 
   const [overview, setOverview] = useState<OverviewStats | null>(null);
   const [participantsSeries, setParticipantsSeries] = useState<SeriesPoint[]>(
-    []
+    [],
   );
   const [sharesSeries, setSharesSeries] = useState<SeriesPoint[]>([]);
 
@@ -167,10 +179,12 @@ export function BrandDashboardPanel({
   const [loadingShares, setLoadingShares] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [campaignQuery, setCampaignQuery] = useState("");
-  const [campaignStatus, setCampaignStatus] = useState<"all" | "public" | "private">("all");
-  const [campaignSort, setCampaignSort] = useState<"newest" | "oldest" | "name_asc" | "name_desc">(
-    "newest"
-  );
+  const [campaignStatus, setCampaignStatus] = useState<
+    "all" | "public" | "private"
+  >("all");
+  const [campaignSort, setCampaignSort] = useState<
+    "newest" | "oldest" | "name_asc" | "name_desc"
+  >("newest");
 
   const visibleCampaigns = useMemo(() => {
     const q = campaignQuery.trim().toLowerCase();
@@ -291,14 +305,49 @@ export function BrandDashboardPanel({
               <Loader2Icon className="size-6 animate-spin text-brand" />
             </div>
           ) : overview ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-              <OverviewStat icon={AwardIcon} label="Rewarded Referrals" value={overview.rewardedReferrals.toLocaleString()} chip="bg-brand/10 text-brand" />
-              <OverviewStat icon={DollarSignIcon} label="Rewards Value" value={`$${Math.round(overview.rewardsValue).toLocaleString()}`} chip="bg-[#28a745]/10 text-[#28a745]" />
-              <OverviewStat icon={MegaphoneIcon} label="Campaigns" value={overview.totalCampaigns.toLocaleString()} chip="bg-[#36a3f7]/10 text-[#36a3f7]" />
-              <OverviewStat icon={EyeIcon} label="Impressions" value={overview.totalImpressions.toLocaleString()} chip="bg-[#8950fc]/10 text-[#8950fc]" />
-              <OverviewStat icon={UsersIcon} label="Referrals" value={overview.totalParticipants.toLocaleString()} chip="bg-[#ff9f29]/10 text-[#ff9f29]" />
-              <OverviewStat icon={Share2Icon} label="Shares" value={overview.totalShares.toLocaleString()} chip="bg-[#1dc9b7]/10 text-[#1dc9b7]" />
-              <OverviewStat icon={MousePointerClickIcon} label="Clicks" value={overview.totalClicks.toLocaleString()} chip="bg-[#fd397a]/10 text-[#fd397a]" />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
+              <OverviewStat
+                icon={AwardIcon}
+                label="Rewarded Referrals"
+                value={overview.rewardedReferrals.toLocaleString()}
+                chip="bg-brand/10 text-brand"
+              />
+              <OverviewStat
+                icon={DollarSignIcon}
+                label="Rewards Value"
+                value={`$${Math.round(overview.rewardsValue).toLocaleString()}`}
+                chip="bg-[#28a745]/10 text-[#28a745]"
+              />
+              <OverviewStat
+                icon={MegaphoneIcon}
+                label="Campaigns"
+                value={overview.totalCampaigns.toLocaleString()}
+                chip="bg-[#36a3f7]/10 text-[#36a3f7]"
+              />
+              <OverviewStat
+                icon={EyeIcon}
+                label="Impressions"
+                value={overview.totalImpressions.toLocaleString()}
+                chip="bg-[#8950fc]/10 text-[#8950fc]"
+              />
+              <OverviewStat
+                icon={UsersIcon}
+                label="Referrals"
+                value={overview.totalParticipants.toLocaleString()}
+                chip="bg-[#ff9f29]/10 text-[#ff9f29]"
+              />
+              <OverviewStat
+                icon={Share2Icon}
+                label="Shares"
+                value={overview.totalShares.toLocaleString()}
+                chip="bg-[#1dc9b7]/10 text-[#1dc9b7]"
+              />
+              <OverviewStat
+                icon={MousePointerClickIcon}
+                label="Clicks"
+                value={overview.totalClicks.toLocaleString()}
+                chip="bg-[#fd397a]/10 text-[#fd397a]"
+              />
             </div>
           ) : (
             <p className="py-8 text-center text-sm text-[#a7abc3]">
@@ -375,7 +424,6 @@ export function BrandDashboardPanel({
             </div>
           )}
         </div>
-
       </div>
 
       {/* Referrals + Shares charts */}
@@ -445,7 +493,10 @@ export function BrandDashboardPanel({
             </span>
           </div>
           <Link href={`/brands/${brand.id}/campaigns/new`}>
-            <Button size="sm" className="gap-1 bg-brand text-white hover:bg-brand-hover">
+            <Button
+              size="sm"
+              className="gap-1 bg-brand text-white hover:bg-brand-hover"
+            >
               <PlusIcon className="size-3.5" />
               Create Campaign
             </Button>
@@ -479,7 +530,8 @@ export function BrandDashboardPanel({
             value={campaignSort}
             onChange={(e) =>
               setCampaignSort(
-                e.target.value as "newest" | "oldest" | "name_asc" | "name_desc"
+                e.target.value as
+                  "newest" | "oldest" | "name_asc" | "name_desc",
               )
             }
             className="h-9 rounded-lg border border-input bg-white px-2.5 text-sm text-[#575962]"
@@ -548,22 +600,29 @@ export function BrandDashboardPanel({
                     <td className="py-3 pr-3 text-[#a7abc3]">
                       <span className="inline-flex items-center gap-1">
                         <CalendarIcon className="size-3" />
-                        {new Date(campaign.date_added).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
+                        {new Date(campaign.date_added).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          },
+                        )}
                       </span>
                     </td>
                     <td className="py-3 text-right">
                       <div className="flex justify-end gap-2">
-                        <Link href={`/brands/${brand.id}/campaigns/${campaign.id}`}>
+                        <Link
+                          href={`/brands/${brand.id}/campaigns/${campaign.id}`}
+                        >
                           <Button variant="outline" size="sm" className="gap-1">
                             Open
                             <ChevronRightIcon className="size-3.5" />
                           </Button>
                         </Link>
-                        <Link href={`/brands/${brand.id}/campaigns/${campaign.id}/edit`}>
+                        <Link
+                          href={`/brands/${brand.id}/campaigns/${campaign.id}/edit`}
+                        >
                           <Button variant="outline" size="sm">
                             Edit
                           </Button>
@@ -583,8 +642,8 @@ export function BrandDashboardPanel({
           <DialogHeader>
             <DialogTitle>No campaigns yet</DialogTitle>
             <DialogDescription>
-              It looks like you haven&apos;t created a campaign for {brand.domain}{" "}
-              yet. Would you like to set one up?
+              It looks like you haven&apos;t created a campaign for{" "}
+              {brand.domain} yet. Would you like to set one up?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -593,9 +652,7 @@ export function BrandDashboardPanel({
             </Button>
             <Button
               className="bg-brand hover:bg-brand-hover"
-              onClick={() =>
-                router.push(`/brands/${brand.id}/campaigns/new`)
-              }
+              onClick={() => router.push(`/brands/${brand.id}/campaigns/new`)}
             >
               Create Campaign
             </Button>

@@ -14,7 +14,10 @@ export default function MailchimpIntegrationPage() {
   const [lists, setLists] = useState<MailchimpList[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchStatus();
@@ -52,7 +55,10 @@ export default function MailchimpIntegrationPage() {
       if (resp.ok) {
         setConnected(true);
         setLists(data.lists || []);
-        setMessage({ type: "success", text: "MailChimp connected successfully!" });
+        setMessage({
+          type: "success",
+          text: "MailChimp connected successfully!",
+        });
         setApiKey("");
       } else {
         setMessage({ type: "error", text: data.error || "Failed to connect" });
@@ -66,7 +72,7 @@ export default function MailchimpIntegrationPage() {
 
   if (loading) {
     return (
-      <div className="p-8">
+      <div className="mx-auto max-w-3xl">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/3" />
           <div className="h-4 bg-gray-200 rounded w-2/3" />
@@ -76,8 +82,10 @@ export default function MailchimpIntegrationPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-8">
-      <h1 className="text-2xl font-bold text-gray-900">MailChimp Integration</h1>
+    <div className="mx-auto max-w-3xl">
+      <h1 className="text-2xl font-bold text-gray-900">
+        MailChimp Integration
+      </h1>
       <p className="mt-2 text-gray-600">
         Connect your MailChimp account to sync referral participants with your
         email lists.
@@ -126,7 +134,8 @@ export default function MailchimpIntegrationPage() {
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <p className="mt-1 text-xs text-gray-500">
-            Find your API key in MailChimp under Account &gt; Extras &gt; API keys
+            Find your API key in MailChimp under Account &gt; Extras &gt; API
+            keys
           </p>
         </div>
         <button
@@ -134,14 +143,20 @@ export default function MailchimpIntegrationPage() {
           disabled={!apiKey || saving}
           className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {saving ? "Connecting..." : connected ? "Update API Key" : "Connect MailChimp"}
+          {saving
+            ? "Connecting..."
+            : connected
+              ? "Update API Key"
+              : "Connect MailChimp"}
         </button>
       </form>
 
       {/* Lists */}
       {connected && lists.length > 0 && (
         <div className="mt-8">
-          <h2 className="text-lg font-semibold text-gray-900">Your Audiences</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Your Audiences
+          </h2>
           <div className="mt-3 space-y-2">
             {lists.map((list) => (
               <div
@@ -166,7 +181,9 @@ export default function MailchimpIntegrationPage() {
         <h3 className="font-semibold text-gray-900">How It Works</h3>
         <ul className="mt-3 space-y-2 text-sm text-gray-600">
           <li>1. Enter your MailChimp API key above</li>
-          <li>2. Select which audience list to sync in your campaign settings</li>
+          <li>
+            2. Select which audience list to sync in your campaign settings
+          </li>
           <li>
             3. New referral participants are automatically added to your
             MailChimp audience

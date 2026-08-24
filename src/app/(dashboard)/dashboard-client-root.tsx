@@ -24,7 +24,7 @@ export function DashboardClientRoot({ children, brands, onboarding }: Props) {
         <DashboardSidebar brands={brands} />
         <SidebarInset>
           <DashboardHeader />
-          <main className="flex-1 overflow-auto bg-dashboard p-4 lg:p-6 xl:p-8">
+          <main className="min-w-0 flex-1 bg-dashboard p-4 lg:p-6 xl:p-8">
             <PaidOnboardingBanner
               isVerified={onboarding.isVerified}
               isGrowth={onboarding.isGrowth}
@@ -35,7 +35,8 @@ export function DashboardClientRoot({ children, brands, onboarding }: Props) {
           </main>
           <footer className="border-t border-[#ebeef0] bg-white px-4 py-3 lg:px-6">
             <p className="text-xs text-[#a7abc3]">
-              2026 &copy; Referrals.com &mdash; Grow your business with referral marketing
+              2026 &copy; Referrals.com &mdash; Grow your business with referral
+              marketing
             </p>
           </footer>
         </SidebarInset>

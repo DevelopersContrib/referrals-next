@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { BrandLogo } from "@/components/brands/brand-logo";
 import type { ModuleName } from "@/lib/analysis/types";
+import { ONBOARDING_MODULES } from "@/lib/analysis/types";
 import type { AnalysisStatus, ModuleView } from "./analysis-types";
 
 const LOGO_URL =
@@ -27,7 +28,7 @@ const ICONS: Record<ModuleName, LucideIcon> = {
   campaigns: Megaphone,
 };
 
-const ORDER: ModuleName[] = ["vnoc", "crawl", "social", "intelligence", "campaigns"];
+const ORDER: ModuleName[] = [...ONBOARDING_MODULES];
 
 const ROTATING = [
   "Reading your homepage…",
@@ -252,7 +253,7 @@ export function AnalysisPipeline({
           </div>
 
           <p className="mt-4 text-center text-xs text-gray-400">
-            This usually takes 20–40 seconds. Hang tight — it&apos;s worth it.
+            This usually takes about 15 seconds. Hang tight.
           </p>
         </div>
       </div>

@@ -159,12 +159,20 @@ export async function POST(request: NextRequest) {
     });
 
     try {
+      const brand = campaign.url_id
+        ? await prisma.member_urls.findUnique({
+            where: { id: campaign.url_id },
+            select: { domain: true },
+          })
+        : null;
+
       await sendCampaignRewardEmail({
         to: participant.email,
         campaignName: campaign.name,
         participantName: participant.name,
         rewardSubject: campaign.reward_notify_subject,
         rewardMessage: campaign.reward_notify_message,
+        fromName: brand?.domain || campaign.name,
         reward: rewardRecord,
       });
     } catch (emailError) {

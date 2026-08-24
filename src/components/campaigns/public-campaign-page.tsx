@@ -24,6 +24,16 @@ export function buildPublicCampaignMetadata(
       type: "website",
       ...(data.heroImageUrl ? { images: [{ url: data.heroImageUrl }] } : {}),
     },
+    ...(data.heroImageUrl
+      ? {
+          twitter: {
+            card: "summary_large_image" as const,
+            title,
+            description,
+            images: [data.heroImageUrl],
+          },
+        }
+      : {}),
   };
 }
 

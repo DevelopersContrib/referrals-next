@@ -8,6 +8,14 @@ import type { brand_analysis } from "@prisma/client";
 export const MODULES = ["vnoc", "crawl", "social", "intelligence", "campaigns"] as const;
 export type ModuleName = (typeof MODULES)[number];
 
+/** First-run onboarding — skip default campaign gen (use /campaigns/ai or brief regen). */
+export const ONBOARDING_MODULES = [
+  "vnoc",
+  "crawl",
+  "social",
+  "intelligence",
+] as const satisfies readonly ModuleName[];
+
 export function isModuleName(v: string): v is ModuleName {
   return (MODULES as readonly string[]).includes(v);
 }

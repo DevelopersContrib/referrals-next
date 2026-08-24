@@ -245,6 +245,87 @@ export async function cancelRfMemberActivation(memberId: number) {
 
 export const cancelHyContractorActivation = cancelRfMemberActivation;
 
+/**
+ * After a successful paid activation: stop trial/loss-aversion sequences and
+ * enroll the member in the paid nurture campaign. Idempotent — safe on replay.
+ */
+export async function handlePaidEngagementTransition(memberId: number): Promise<void> {
+  const config = rfEngagementConfig();
+  if (config.enabled === false) return;
+
+  await cancelRfMemberActivation(memberId);
+
+  const { parseRulesFromJson } = await import("@/lib/engagement-segments");
+  const segments = await prisma.engagement_segments.findMany({
+    where: { domain_key: config.domainKey, enabled: true },
+    select: { segment_key: true, rules_json: true },
+  });
+
+  const upgradeSegmentKeys = segments
+    .filter((s) => {
+      const plan = parseRulesFromJson(s.rules_json).plan;
+      return plan === "trial" || plan === "free_capped" || plan === "free";
+    })
+    .map((s) => s.segment_key);
+
+  if (upgradeSegmentKeys.length) {
+    const upgradeCampaigns = await prisma.engagement_campaigns.findMany({
+      where: {
+        domain_key: config.domainKey,
+        segment_key: { in: upgradeSegmentKeys },
+      },
+      select: { campaign_key: true },
+    });
+    const upgradeKeys = upgradeCampaigns.map((c) => c.campaign_key);
+    if (upgradeKeys.length) {
+      await prisma.engagement_enrollments.updateMany({
+        where: {
+          domain_key: config.domainKey,
+          user_id: memberId,
+          campaign_key: { in: upgradeKeys },
+          status: "active",
+        },
+        data: { status: "cancelled", next_at: null, completed_at: new Date() },
+      });
+    }
+  }
+
+  const paidSegmentKey = segments.find(
+    (s) => parseRulesFromJson(s.rules_json).plan === "paid"
+  )?.segment_key;
+  if (!paidSegmentKey) return;
+
+  const paidCampaign = await prisma.engagement_campaigns.findFirst({
+    where: {
+      domain_key: config.domainKey,
+      enabled: true,
+      segment_key: paidSegmentKey,
+    },
+    select: { campaign_key: true },
+  });
+  if (!paidCampaign) return;
+
+  const existing = await prisma.engagement_enrollments.findFirst({
+    where: {
+      domain_key: config.domainKey,
+      user_id: memberId,
+      campaign_key: paidCampaign.campaign_key,
+      status: { in: ["active", "completed"] },
+    },
+  });
+  if (existing) return;
+
+  await rfEngagementStore.upsertEnrollment({
+    domainKey: config.domainKey,
+    userId: memberId,
+    campaignKey: paidCampaign.campaign_key,
+    status: "active",
+    currentStep: 0,
+    nextAt: new Date(),
+    contextJson: JSON.stringify({ source: "paid_activate" }),
+  });
+}
+
 export async function sendEngagementEmailTest(opts: {
   stepId: number;
   to: string;

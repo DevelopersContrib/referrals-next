@@ -10,7 +10,12 @@ import type { brand_analysis } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { extractDomainFromUrl } from "@/lib/brand-access";
 import { RUNNERS } from "./registry";
-import { MODULES, MODULE_DEPS, isModuleName, type ModuleName } from "./types";
+import {
+  MODULE_DEPS,
+  ONBOARDING_MODULES,
+  isModuleName,
+  type ModuleName,
+} from "./types";
 
 const MAX_ATTEMPTS = 3;
 const TERMINAL = ["done", "failed"];
@@ -47,16 +52,124 @@ export async function createAnalysisJob(memberId: number, rawUrl: string) {
     },
   });
 
+  await createModuleRows(analysis.id, [...ONBOARDING_MODULES]);
+
+  return { analysis, brandId: brand.id };
+}
+
+async function createModuleRows(analysisId: number, modules: readonly ModuleName[]) {
   await prisma.brand_analysis_module.createMany({
-    data: MODULES.map((m) => ({
-      analysis_id: analysis.id,
+    data: modules.map((m) => ({
+      analysis_id: analysisId,
       module: m,
       status: "pending",
       depends_on: MODULE_DEPS[m].join(",") || null,
     })),
   });
+}
 
-  return { analysis, brandId: brand.id };
+/** Prior analysis with crawl + intelligence already complete — reuse for Design with AI. */
+async function findReusableAnalysis(urlId: number) {
+  const priorJobs = await prisma.brand_analysis.findMany({
+    where: { url_id: urlId, status: "done" },
+    orderBy: { completed_at: "desc" },
+    take: 5,
+  });
+
+  for (const job of priorJobs) {
+    const modules = await prisma.brand_analysis_module.findMany({
+      where: { analysis_id: job.id },
+    });
+    const crawlDone = modules.some((m) => m.module === "crawl" && m.status === "done");
+    const intelDone = modules.some((m) => m.module === "intelligence" && m.status === "done");
+    if (crawlDone && intelDone) return job;
+  }
+  return null;
+}
+
+async function copyAnalysisArtifacts(fromAnalysisId: number, toAnalysisId: number) {
+  const [vnoc, crawl, socials, intel] = await Promise.all([
+    prisma.brand_vnoc.findFirst({ where: { analysis_id: fromAnalysisId }, orderBy: { id: "desc" } }),
+    prisma.brand_crawl.findFirst({ where: { analysis_id: fromAnalysisId }, orderBy: { id: "desc" } }),
+    prisma.brand_social.findMany({ where: { analysis_id: fromAnalysisId } }),
+    prisma.brand_intelligence.findFirst({
+      where: { analysis_id: fromAnalysisId },
+      orderBy: { id: "desc" },
+    }),
+  ]);
+
+  if (vnoc) {
+    await prisma.brand_vnoc.create({
+      data: {
+        analysis_id: toAnalysisId,
+        matched: vnoc.matched,
+        vnoc_domain_id: vnoc.vnoc_domain_id ?? undefined,
+        name: vnoc.name ?? undefined,
+        logo_url: vnoc.logo_url ?? undefined,
+        description: vnoc.description ?? undefined,
+        tagline: vnoc.tagline ?? undefined,
+        socials: vnoc.socials as object,
+        raw: vnoc.raw as object | undefined,
+      },
+    });
+  }
+
+  if (crawl) {
+    await prisma.brand_crawl.create({
+      data: {
+        analysis_id: toAnalysisId,
+        name: crawl.name ?? undefined,
+        logo_url: crawl.logo_url ?? undefined,
+        favicon_url: crawl.favicon_url ?? undefined,
+        title: crawl.title ?? undefined,
+        meta_description: crawl.meta_description ?? undefined,
+        primary_cta: crawl.primary_cta ?? undefined,
+        colors: crawl.colors as object,
+        fonts: crawl.fonts as object,
+        products: crawl.products as object,
+        services: crawl.services as object,
+        pricing: crawl.pricing as object,
+        emails: crawl.emails as object,
+        phones: crawl.phones as object,
+        addresses: crawl.addresses as object,
+        languages: crawl.languages as object,
+        currencies: crawl.currencies as object,
+        pages_crawled: crawl.pages_crawled,
+        raw: crawl.raw as object,
+      },
+    });
+  }
+
+  if (socials.length) {
+    await prisma.brand_social.createMany({
+      data: socials.map((s) => ({
+        analysis_id: toAnalysisId,
+        platform: s.platform,
+        url: s.url,
+        source: s.source,
+        verified: s.verified,
+      })),
+    });
+  }
+
+  if (intel) {
+    await prisma.brand_intelligence.create({
+      data: {
+        analysis_id: toAnalysisId,
+        summary: intel.summary,
+        industry: intel.industry,
+        icp: intel.icp,
+        target_audience: intel.target_audience,
+        products: intel.products,
+        usp: intel.usp,
+        brand_voice: intel.brand_voice,
+        advantages: intel.advantages as object,
+        weaknesses: intel.weaknesses as object,
+        opportunities: intel.opportunities as object,
+        readiness_score: intel.readiness_score,
+      },
+    });
+  }
 }
 
 /** Analyze an existing brand — does not create another member_urls row. */
@@ -66,6 +179,7 @@ export async function createAnalysisJobForBrand(
 ) {
   const input_url = normalizeInputUrl(brand.url || brand.domain);
   const domain = extractDomainFromUrl(input_url) || brand.domain;
+  const prior = await findReusableAnalysis(brand.id);
 
   const analysis = await prisma.brand_analysis.create({
     data: {
@@ -73,35 +187,62 @@ export async function createAnalysisJobForBrand(
       url_id: brand.id,
       input_url,
       domain,
-      status: "pending",
+      status: prior ? "running" : "pending",
+      ...(prior
+        ? {
+            in_vnoc: prior.in_vnoc,
+            vnoc_id: prior.vnoc_id ?? undefined,
+            started_at: new Date(),
+          }
+        : {}),
     },
   });
 
-  await prisma.brand_analysis_module.createMany({
-    data: MODULES.map((m) => ({
-      analysis_id: analysis.id,
-      module: m,
-      status: "pending",
-      depends_on: MODULE_DEPS[m].join(",") || null,
-    })),
-  });
+  if (prior) {
+    await createModuleRows(analysis.id, [...ONBOARDING_MODULES]);
+    await prisma.brand_analysis_module.updateMany({
+      where: { analysis_id: analysis.id },
+      data: { status: "done", completed_at: new Date() },
+    });
+    await copyAnalysisArtifacts(prior.id, analysis.id);
+    const scores = await computeScores(analysis.id);
+    await prisma.brand_analysis.update({
+      where: { id: analysis.id },
+      data: {
+        status: "done",
+        completed_at: new Date(),
+        website_score: scores.website,
+        social_score: scores.social,
+        referral_score: scores.referral,
+        overall_health: scores.overall,
+      },
+    });
+    console.info(
+      `[analysis] job ${analysis.id} reused prior job ${prior.id} for brand ${brand.id}`
+    );
+  } else {
+    await createModuleRows(analysis.id, [...ONBOARDING_MODULES]);
+  }
 
-  return { analysis, brandId: brand.id };
+  return { analysis, brandId: brand.id, reused: Boolean(prior) };
 }
 
 /** Fire a fire-and-forget request to the per-module runner endpoint. */
 async function triggerModule(jobId: number, module: ModuleName) {
   const url = `${appBaseUrl()}/api/brands/analyze/${jobId}/run/${module}`;
   try {
-    await fetch(url, {
+    const res = await fetch(url, {
       method: "POST",
       headers: { "x-internal-secret": process.env.ANALYSIS_INTERNAL_SECRET || "" },
-      // Keep the trigger cheap; the endpoint returns 202 and works in after().
       cache: "no-store",
     });
+    if (!res.ok) {
+      console.error(`triggerModule ${module} for job ${jobId} returned ${res.status}`);
+      void runModuleAndAdvance(jobId, module);
+    }
   } catch (e) {
-    // Not fatal: the cron sweeper will retry queued/pending modules.
     console.error(`triggerModule ${module} for job ${jobId} failed`, (e as Error).message);
+    void runModuleAndAdvance(jobId, module);
   }
 }
 
@@ -159,15 +300,19 @@ export async function runModuleAndAdvance(jobId: number, module: ModuleName) {
   });
   if (claimed.count !== 1) return; // someone else is running it
 
+  const startedAt = Date.now();
   try {
     await RUNNERS[module](analysis as brand_analysis);
+    const durationMs = Date.now() - startedAt;
     await prisma.brand_analysis_module.update({
       where: { id: row.id },
       data: { status: "done", completed_at: new Date(), error: null },
     });
+    console.info(`[analysis] job ${jobId} module ${module} done in ${durationMs}ms`);
   } catch (e) {
+    const durationMs = Date.now() - startedAt;
     const msg = (e as Error).message?.slice(0, 500) || "unknown error";
-    console.error(`module ${module} failed for job ${jobId}:`, msg);
+    console.error(`[analysis] job ${jobId} module ${module} failed after ${durationMs}ms:`, msg);
     await prisma.brand_analysis_module.update({
       where: { id: row.id },
       data: { status: "failed", completed_at: new Date(), error: msg },
@@ -175,7 +320,33 @@ export async function runModuleAndAdvance(jobId: number, module: ModuleName) {
   }
 
   await scheduleReady(jobId);
+  await finalizePartialScores(jobId);
   await finalizeIfDone(jobId);
+}
+
+/** Write health scores once intelligence is ready (UI can show results before job completes). */
+async function finalizePartialScores(jobId: number) {
+  const intel = await prisma.brand_analysis_module.findFirst({
+    where: { analysis_id: jobId, module: "intelligence", status: "done" },
+  });
+  if (!intel) return;
+
+  const job = await prisma.brand_analysis.findUnique({
+    where: { id: jobId },
+    select: { overall_health: true },
+  });
+  if (job?.overall_health != null) return;
+
+  const scores = await computeScores(jobId);
+  await prisma.brand_analysis.update({
+    where: { id: jobId },
+    data: {
+      website_score: scores.website,
+      social_score: scores.social,
+      referral_score: scores.referral,
+      overall_health: scores.overall,
+    },
+  });
 }
 
 /** Recompute health scores + mark the job done/failed once all modules are terminal. */
@@ -189,6 +360,12 @@ async function finalizeIfDone(jobId: number) {
   const scores = await computeScores(jobId);
   const anyDone = modules.some((m) => m.status === "done");
 
+  const job = await prisma.brand_analysis.findUnique({
+    where: { id: jobId },
+    select: { started_at: true },
+  });
+  const elapsedMs = job?.started_at ? Date.now() - job.started_at.getTime() : null;
+
   await prisma.brand_analysis.update({
     where: { id: jobId },
     data: {
@@ -200,6 +377,14 @@ async function finalizeIfDone(jobId: number) {
       overall_health: scores.overall,
     },
   });
+
+  if (elapsedMs != null) {
+    const timing = modules
+      .filter((m) => m.completed_at)
+      .map((m) => `${m.module}:${m.completed_at!.toISOString()}`)
+      .join(", ");
+    console.info(`[analysis] job ${jobId} done in ${elapsedMs}ms (${timing})`);
+  }
 }
 
 async function computeScores(jobId: number) {
@@ -240,14 +425,14 @@ function arrLen(v: unknown): number {
 
 /** Cron sweeper: re-trigger modules that stalled or failed (under the attempt cap). */
 export async function sweepStuckModules() {
-  const cutoff = new Date(Date.now() - 2 * 60 * 1000); // 2 minutes
+  const runningCutoff = new Date(Date.now() - 2 * 60 * 1000);
 
   const stuck = await prisma.brand_analysis_module.findMany({
     where: {
       attempts: { lt: MAX_ATTEMPTS },
       OR: [
         { status: "queued" },
-        { status: "running", started_at: { lt: cutoff } },
+        { status: "running", started_at: { lt: runningCutoff } },
         { status: "failed" },
       ],
     },

@@ -42,11 +42,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Brand not found" }, { status: 404 });
     }
 
-    const { analysis, brandId } = await createAnalysisJobForBrand(memberId, brand);
-    after(async () => {
-      await kickoffJob(analysis.id);
-    });
-    return NextResponse.json({ jobId: analysis.id, brandId }, { status: 201 });
+    const { analysis, brandId, reused } = await createAnalysisJobForBrand(memberId, brand);
+    if (!reused) {
+      after(async () => {
+        await kickoffJob(analysis.id);
+      });
+    }
+    return NextResponse.json({ jobId: analysis.id, brandId, reused }, { status: 201 });
   }
 
   const raw = String(body.url || "").trim();

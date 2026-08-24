@@ -143,6 +143,12 @@ export async function POST(request: NextRequest) {
         const emailContent = await prisma.campaign_email_content.findFirst({
           where: { campaign_id: campaignIdNum },
         });
+        const brand = campaign.url_id
+          ? await prisma.member_urls.findUnique({
+              where: { id: campaign.url_id },
+              select: { domain: true },
+            })
+          : null;
 
         await sendCampaignEntryEmail({
           to: participant.email,
@@ -152,6 +158,7 @@ export async function POST(request: NextRequest) {
           entrySubject: campaign.campaign_entry_subject,
           entryMessage: campaign.campaign_entry_message,
           customTemplate: emailContent,
+          fromName: brand?.domain || campaign.name,
         });
       } catch (emailError) {
         console.error("[widget/signup] Failed to send entry email:", emailError);

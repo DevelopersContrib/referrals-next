@@ -49,9 +49,11 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
       if (res.ok) {
         const data = (await res.json()) as AnalysisStatus;
         setStatus(data);
-        if (data.status === "done" || data.status === "failed") {
+        const intelDone = data.modules?.some(
+          (m) => m.module === "intelligence" && m.status === "done"
+        );
+        if (intelDone || data.status === "done" || data.status === "failed") {
           stoppedRef.current = true;
-          // Give the reveal a beat before flipping to the results view.
           setTimeout(() => setPhase("results"), 700);
           return;
         }

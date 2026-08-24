@@ -86,6 +86,8 @@ export async function sendCampaignEntryEmail(params: {
   entrySubject?: string | null;
   entryMessage?: string | null;
   customTemplate?: { subject: string; template: string | null } | null;
+  /** Display name in the From header — defaults to campaignName. */
+  fromName?: string | null;
 }): Promise<void> {
   const content = resolveEntryEmailContent(
     params.customTemplate,
@@ -105,7 +107,7 @@ export async function sendCampaignEntryEmail(params: {
     to: params.to,
     subject: substituteCampaignEmailTemplate(content.subject, vars),
     html: toEmailHtml(substituteCampaignEmailTemplate(content.body, vars)),
-    fromName: params.campaignName,
+    fromName: params.fromName?.trim() || params.campaignName,
   });
 }
 
@@ -115,6 +117,7 @@ export async function sendCampaignRewardEmail(params: {
   participantName: string;
   rewardSubject?: string | null;
   rewardMessage?: string | null;
+  fromName?: string | null;
   reward: {
     coupon?: string | null;
     redirect_url?: string | null;
@@ -144,6 +147,6 @@ export async function sendCampaignRewardEmail(params: {
     to: params.to,
     subject: substituteCampaignEmailTemplate(rewardSubject.trim(), vars),
     html: toEmailHtml(body),
-    fromName: params.campaignName,
+    fromName: params.fromName?.trim() || params.campaignName,
   });
 }

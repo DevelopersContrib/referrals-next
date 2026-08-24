@@ -1,5 +1,14 @@
 import type { Integration, IntegrationResult } from "./base";
 
+/** Canonical Shopify app credentials (legacy SHOPIFY_API_* still accepted locally). */
+export function shopifyClientId(): string {
+  return process.env.SHOPIFY_CLIENT_ID || process.env.SHOPIFY_API_KEY || "";
+}
+
+export function shopifyClientSecret(): string {
+  return process.env.SHOPIFY_CLIENT_SECRET || process.env.SHOPIFY_API_SECRET || "";
+}
+
 interface ShopifyProduct {
   id: number;
   title: string;
@@ -80,8 +89,8 @@ export class ShopifyIntegration implements Integration {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            client_id: process.env.SHOPIFY_CLIENT_ID,
-            client_secret: process.env.SHOPIFY_CLIENT_SECRET,
+            client_id: shopifyClientId(),
+            client_secret: shopifyClientSecret(),
             code,
           }),
         }
@@ -114,7 +123,7 @@ export class ShopifyIntegration implements Integration {
   static getOAuthUrl(shopName: string, redirectUri: string, state: string): string {
     const cleanShop = shopName.replace(".myshopify.com", "");
     const scopes = "read_products,read_orders";
-    return `https://${cleanShop}.myshopify.com/admin/oauth/authorize?client_id=${process.env.SHOPIFY_CLIENT_ID}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
+    return `https://${cleanShop}.myshopify.com/admin/oauth/authorize?client_id=${shopifyClientId()}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
   }
 
   /**

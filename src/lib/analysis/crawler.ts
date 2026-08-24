@@ -29,9 +29,11 @@ export interface CrawlResult {
   contactHtml: string;
 }
 
+const PAGE_TIMEOUT_MS = 5_000;
+
 async function fetchPage(
   url: string,
-  timeoutMs = 12_000
+  timeoutMs = PAGE_TIMEOUT_MS
 ): Promise<{ ok: boolean; status: number; html: string; finalUrl: string }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -148,16 +150,23 @@ export async function crawlSite(inputUrl: string): Promise<CrawlResult> {
   const html = home.html;
   const finalBase = home.finalUrl || base;
 
-  // Best-effort secondary pages (parallel, short timeout).
-  const [contact, pricing] = await Promise.all([
-    fetchPage(`${origin}/contact`, 8000),
-    fetchPage(`${origin}/pricing`, 8000),
-  ]);
-  if (contact.ok) pages++;
-  if (pricing.ok) pages++;
+  // Homepage + at most one extra page (contact preferred, then pricing).
+  let contactHtml = "";
+  let extraHtml = "";
+  const contact = await fetchPage(`${origin}/contact`);
+  if (contact.ok) {
+    pages++;
+    contactHtml = contact.html;
+    extraHtml = contact.html;
+  } else {
+    const pricing = await fetchPage(`${origin}/pricing`);
+    if (pricing.ok) {
+      pages++;
+      extraHtml = pricing.html;
+    }
+  }
 
-  const contactHtml = contact.ok ? contact.html : "";
-  const combined = html + "\n" + contactHtml + "\n" + (pricing.ok ? pricing.html : "");
+  const combined = html + "\n" + contactHtml + "\n" + extraHtml;
 
   // --- Title / description / name ---
   const titleMatch = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);

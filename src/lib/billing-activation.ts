@@ -2,6 +2,7 @@ import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSubscription } from "@/lib/paypal";
 import { postVnocAttribution, resolveVnocPlan } from "@/lib/vnoc-attribution";
+import { handlePaidEngagementTransition } from "@/lib/engagement";
 import {
   logCheckoutEvent,
   newCheckoutAttemptId,
@@ -210,6 +211,13 @@ export async function activatePaidSubscription(opts: {
     );
 
     await log("activated");
+    if (!alreadyProcessed) {
+      try {
+        await handlePaidEngagementTransition(memberId);
+      } catch (engagementError) {
+        console.error("[billing] paid engagement transition failed:", engagementError);
+      }
+    }
     return { ok: true, alreadyProcessed: false };
   } catch (error) {
     console.error("[billing] subscription activation error:", error);

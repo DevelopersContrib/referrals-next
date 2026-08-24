@@ -56,34 +56,45 @@ export async function GET() {
     // Continue without blog posts if content dir is unavailable
   }
 
-  // Dynamic pages: public brand pages
+  // Dynamic pages: public brand landing pages (/p/{slug})
   let brandUrls: { url: string; date_added: Date }[] = [];
   try {
     const brands = await prisma.member_urls.findMany({
-      select: { slug: true, date_added: true },
+      select: { slug: true, domain: true, date_added: true },
       where: { slug: { not: null } },
     });
     brandUrls = brands
       .filter((b) => b.slug)
       .map((b) => ({
-        url: `/brands/${b.slug}`,
+        url: `/p/${b.slug}`,
         date_added: b.date_added,
       }));
   } catch {
     // If DB query fails, continue with static pages only
   }
 
-  // Dynamic pages: public campaign pages
+  // Dynamic pages: public campaign pages (/p/{slug}/campaign/{id})
   let campaignUrls: { url: string; date_added: Date }[] = [];
   try {
     const campaigns = await prisma.member_campaigns.findMany({
-      select: { id: true, date_added: true },
+      select: { id: true, date_added: true, url_id: true },
       where: { publish: "public" },
     });
-    campaignUrls = campaigns.map((c) => ({
-      url: `/campaigns/${c.id}`,
-      date_added: c.date_added,
-    }));
+    const urlIds = [...new Set(campaigns.map((c) => c.url_id).filter(Boolean))];
+    const brands =
+      urlIds.length > 0
+        ? await prisma.member_urls.findMany({
+            where: { id: { in: urlIds } },
+            select: { id: true, slug: true, domain: true },
+          })
+        : [];
+    const brandById = new Map(brands.map((b) => [b.id, b]));
+    campaignUrls = campaigns.flatMap((c) => {
+      const brand = brandById.get(c.url_id);
+      const slug = brand?.slug || brand?.domain;
+      if (!slug) return [];
+      return [{ url: `/p/${slug}/campaign/${c.id}`, date_added: c.date_added }];
+    });
   } catch {
     // Continue with what we have
   }

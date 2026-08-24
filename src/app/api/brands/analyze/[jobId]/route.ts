@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { MODULES, MODULE_LABELS, type ModuleName } from "@/lib/analysis/types";
+import { MODULE_LABELS, isModuleName, type ModuleName } from "@/lib/analysis/types";
 
 export const dynamic = "force-dynamic";
 
@@ -40,16 +40,14 @@ export async function GET(
     }),
   ]);
 
-  const statusByName = new Map(moduleRows.map((m) => [m.module, m]));
-  const modules = MODULES.map((m: ModuleName) => {
-    const row = statusByName.get(m);
-    return {
-      module: m,
-      status: row?.status || "pending",
-      error: row?.error || null,
-      labels: MODULE_LABELS[m],
-    };
-  });
+  const modules = moduleRows
+    .filter((m): m is (typeof m & { module: ModuleName }) => isModuleName(m.module))
+    .map((row) => ({
+      module: row.module,
+      status: row.status || "pending",
+      error: row.error || null,
+      labels: MODULE_LABELS[row.module],
+    }));
 
   const arr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
 

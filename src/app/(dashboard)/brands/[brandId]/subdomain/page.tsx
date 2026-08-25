@@ -2,7 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,34 +63,46 @@ export default function SubdomainPage() {
         <CardHeader>
           <CardTitle>Custom Subdomain</CardTitle>
           <CardDescription>
-            Set up a custom subdomain for your referral pages (e.g., refer.yourbrand.com)
+            Set up a custom subdomain for your referral pages (e.g.,
+            refer.yourbrand.com)
           </CardDescription>
         </CardHeader>
         <CardContent>
           {currentSubdomain && (
-            <div className="mb-4 flex items-center gap-2">
+            <div className="mb-4 flex min-w-0 flex-wrap items-center gap-2">
               <span className="text-sm">Current:</span>
-              <Badge variant="secondary">{currentSubdomain.subdomain}.referrals.com</Badge>
+              <Badge variant="secondary" className="max-w-full break-all">
+                {currentSubdomain.subdomain}.referrals.com
+              </Badge>
             </div>
           )}
           <form onSubmit={handleSave} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="subdomain">Subdomain</Label>
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 <Input
                   id="subdomain"
                   value={subdomain}
-                  onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                  onChange={(e) =>
+                    setSubdomain(
+                      e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
+                    )
+                  }
                   placeholder="yourbrand"
+                  className="min-w-0 flex-1"
                 />
-                <span className="text-sm text-muted-foreground">.referrals.com</span>
+                <span className="shrink-0 text-sm text-muted-foreground">
+                  .referrals.com
+                </span>
               </div>
             </div>
             <Button type="submit" disabled={loading}>
               {loading ? "Saving..." : "Save Subdomain"}
             </Button>
             {message && (
-              <p className={`text-sm ${message.includes("success") ? "text-green-600" : "text-red-600"}`}>
+              <p
+                className={`text-sm ${message.includes("success") ? "text-green-600" : "text-red-600"}`}
+              >
                 {message}
               </p>
             )}
@@ -96,12 +114,17 @@ export default function SubdomainPage() {
         <CardHeader>
           <CardTitle>Custom Domain</CardTitle>
           <CardDescription>
-            Point your own domain to Referrals.com for a fully whitelabeled experience.
+            Point your own domain to Referrals.com for a fully whitelabeled
+            experience.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            To use a custom domain, add a CNAME record pointing to <code className="bg-gray-100 px-1 rounded">proxy.referrals.com</code>, then contact support to verify.
+            To use a custom domain, add a CNAME record pointing to{" "}
+            <code className="bg-gray-100 px-1 rounded">
+              proxy.referrals.com
+            </code>
+            , then contact support to verify.
           </p>
         </CardContent>
       </Card>

@@ -19,7 +19,7 @@ export function StatsCampaignMobileList({
 				>
 					<Link
 						href={`/brands/${c.urlId}/campaigns/${c.id}`}
-						className="font-medium text-brand hover:underline"
+						className="block wrap-break-word font-medium text-brand hover:underline"
 					>
 						{c.name}
 					</Link>

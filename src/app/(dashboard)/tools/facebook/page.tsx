@@ -53,7 +53,7 @@ export default function FacebookToolPage() {
       () => {
         setConnected(false);
         setPages([]);
-      }
+      },
     );
   }
 
@@ -93,13 +93,18 @@ export default function FacebookToolPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-muted-foreground">Checking connection status...</p>
+            <p className="text-muted-foreground">
+              Checking connection status...
+            </p>
           ) : connected ? (
             <Button variant="destructive" onClick={handleDisconnect}>
               Disconnect Facebook
             </Button>
           ) : (
-            <Button onClick={handleConnect} className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              onClick={handleConnect}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
               <svg
                 className="mr-2 h-4 w-4"
                 fill="currentColor"
@@ -124,10 +129,10 @@ export default function FacebookToolPage() {
               {pages.map((page) => (
                 <div
                   key={page.id}
-                  className="flex items-center justify-between rounded-lg border px-4 py-3"
+                  className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
                       <svg
                         className="h-5 w-5"
                         fill="currentColor"
@@ -136,14 +141,17 @@ export default function FacebookToolPage() {
                         <path d="M3 3h18v18H3V3zm16.525 13.707c-.131-.821-.666-1.511-2.252-2.155-.554-.262-.867-.482-.958-.715-.046-.119-.061-.355.033-.473.127-.206.484-.24.812-.174.267.055.52.199.716.397l.794-.737a2.53 2.53 0 00-.948-.593v-.793h-.794v.662c-.843.195-1.4.799-1.465 1.383-.093.832.365 1.357 1.43 1.716.549.2.876.468.932.713.065.367-.256.684-.672.684a1.23 1.23 0 01-.853-.382l-.718.849a2.34 2.34 0 001.075.567v.72h.793v-.7c.875-.207 1.459-.798 1.569-1.475z" />
                       </svg>
                     </div>
-                    <div>
-                      <p className="font-medium">{page.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{page.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">
                         Page ID: {page.id}
                       </p>
                     </div>
                   </div>
-                  <Badge variant={page.connected ? "default" : "secondary"}>
+                  <Badge
+                    variant={page.connected ? "default" : "secondary"}
+                    className="shrink-0"
+                  >
                     {page.connected ? "Active" : "Inactive"}
                   </Badge>
                 </div>

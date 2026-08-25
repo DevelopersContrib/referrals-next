@@ -5,7 +5,8 @@ import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollableTabsList } from "@/components/ui/scrollable-tabs-list";
 import {
   UserIcon,
   KeyIcon,
@@ -38,6 +39,7 @@ export function AccountForm({
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [tab, setTab] = useState("profile");
 
   async function handleProfileSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -131,25 +133,43 @@ export function AccountForm({
   }
 
   return (
-    <Tabs defaultValue="profile">
-      <TabsList variant="line" className="border-b border-[#ebeef0] pb-0 mb-6">
-        <TabsTrigger value="profile" className="gap-1.5">
-          <UserIcon className="size-4" />
-          Profile
-        </TabsTrigger>
-        <TabsTrigger value="api" className="gap-1.5">
-          <KeyIcon className="size-4" />
-          API Settings
-        </TabsTrigger>
-        <TabsTrigger value="password" className="gap-1.5">
-          <ShieldIcon className="size-4" />
-          Password
-        </TabsTrigger>
-        <TabsTrigger value="delete" className="gap-1.5 text-[#dc3545]">
-          <Trash2Icon className="size-4" />
-          Delete
-        </TabsTrigger>
-      </TabsList>
+    <Tabs value={tab} onValueChange={setTab} className="min-w-0">
+      <div className="mb-6 min-w-0 border-b border-portlet-border">
+        <ScrollableTabsList activeValue={tab} aria-label="Account sections">
+          <TabsTrigger
+            value="profile"
+            data-tab-value="profile"
+            className="h-10 flex-none gap-1.5 px-3 data-active:text-brand data-active:after:bg-brand"
+          >
+            <UserIcon className="size-4" />
+            Profile
+          </TabsTrigger>
+          <TabsTrigger
+            value="api"
+            data-tab-value="api"
+            className="h-10 flex-none gap-1.5 px-3 data-active:text-brand data-active:after:bg-brand"
+          >
+            <KeyIcon className="size-4" />
+            API Settings
+          </TabsTrigger>
+          <TabsTrigger
+            value="password"
+            data-tab-value="password"
+            className="h-10 flex-none gap-1.5 px-3 data-active:text-brand data-active:after:bg-brand"
+          >
+            <ShieldIcon className="size-4" />
+            Password
+          </TabsTrigger>
+          <TabsTrigger
+            value="delete"
+            data-tab-value="delete"
+            className="h-10 flex-none gap-1.5 px-3 text-danger data-active:text-danger data-active:after:bg-danger"
+          >
+            <Trash2Icon className="size-4" />
+            Delete
+          </TabsTrigger>
+        </ScrollableTabsList>
+      </div>
 
       {/* Profile Tab */}
       <TabsContent value="profile">

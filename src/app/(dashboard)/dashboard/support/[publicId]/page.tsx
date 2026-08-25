@@ -44,9 +44,11 @@ export default async function MemberSupportTicketPage({ params }: Props) {
         ← All tickets
       </Link>
       <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="font-mono text-xs font-semibold text-brand">{ticket.public_id}</p>
-          <h1 className="mt-1 text-2xl font-black tracking-tight text-[#1c1917]">
+        <div className="min-w-0">
+          <p className="font-mono text-xs font-semibold text-brand">
+            {ticket.public_id}
+          </p>
+          <h1 className="mt-1 wrap-break-word text-2xl font-black tracking-tight text-[#1c1917]">
             {ticket.subject}
           </h1>
           <p className="mt-1 text-xs capitalize text-[#a7abc3]">

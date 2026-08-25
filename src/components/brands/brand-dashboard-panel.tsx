@@ -578,10 +578,10 @@ export function BrandDashboardPanel({
                     key={campaign.id}
                     className="border-b border-[#f4f5f8] last:border-0"
                   >
-                    <td className="py-3 pr-3">
+                    <td className="max-w-60 py-3 pr-3">
                       <Link
                         href={`/brands/${brand.id}/campaigns/${campaign.id}`}
-                        className="font-semibold text-brand hover:underline"
+                        className="block truncate font-semibold text-brand hover:underline"
                       >
                         {campaign.name}
                       </Link>

@@ -1,13 +1,8 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState, type ReactNode } from "react";
+import { Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollableTabsList } from "@/components/ui/scrollable-tabs-list";
 import {
   BarChart3Icon,
   UsersIcon,
@@ -72,19 +67,6 @@ interface CampaignTabsProps {
   integrations: ReactNode;
 }
 
-/**
- * Edge fade for the tab strip. Background-agnostic (mask, not a gradient
- * overlay) so it works over the dashboard's tinted page background.
- */
-function edgeMask(hasStart: boolean, hasEnd: boolean) {
-  if (!hasStart && !hasEnd) return undefined;
-  const start = hasStart ? "transparent 0, black 28px" : "black 0";
-  const end = hasEnd
-    ? "black calc(100% - 28px), transparent 100%"
-    : "black 100%";
-  return `linear-gradient(to right, ${start}, ${end})`;
-}
-
 export function CampaignTabs({
   analytics,
   referrals,
@@ -93,47 +75,6 @@ export function CampaignTabs({
   integrations,
 }: CampaignTabsProps) {
   const [value, setValue] = useState<TabValue>("analytics");
-  const listRef = useRef<HTMLDivElement>(null);
-  const [overflow, setOverflow] = useState({ start: false, end: false });
-
-  const syncOverflow = useCallback(() => {
-    const list = listRef.current;
-    if (!list) return;
-    const max = list.scrollWidth - list.clientWidth;
-    setOverflow({
-      start: list.scrollLeft > 1,
-      end: max > 1 && list.scrollLeft < max - 1,
-    });
-  }, []);
-
-  // Keep the fades honest as the strip is scrolled or the column resizes.
-  useEffect(() => {
-    const list = listRef.current;
-    if (!list) return;
-    syncOverflow();
-    list.addEventListener("scroll", syncOverflow, { passive: true });
-    const observer = new ResizeObserver(syncOverflow);
-    observer.observe(list);
-    return () => {
-      list.removeEventListener("scroll", syncOverflow);
-      observer.disconnect();
-    };
-  }, [syncOverflow]);
-
-  // Reveal the selected tab when it sits outside the visible strip (deep links
-  // to #integrations land here on narrow screens). Horizontal only — never
-  // yanks the page vertically.
-  useEffect(() => {
-    const list = listRef.current;
-    if (!list || list.scrollWidth <= list.clientWidth) return;
-    const tab = list.querySelector<HTMLElement>(`[data-tab-value="${value}"]`);
-    if (!tab) return;
-    const target = tab.offsetLeft - (list.clientWidth - tab.offsetWidth) / 2;
-    list.scrollTo({
-      left: Math.max(0, target),
-      behavior: "smooth",
-    });
-  }, [value]);
 
   // Deep-link: #integrations or #integrations/iframe (Install / embed → Embed tab).
   useEffect(() => {
@@ -166,16 +107,9 @@ export function CampaignTabs({
     <div id="campaign-tabs" className="min-w-0 scroll-mt-20">
       <Tabs value={value} onValueChange={onValueChange} className="min-w-0">
         <div className="min-w-0 border-b border-portlet-border">
-          <TabsList
-            ref={listRef}
-            variant="line"
+          <ScrollableTabsList
+            activeValue={value}
             aria-label="Campaign sections"
-            style={{
-              maskImage: edgeMask(overflow.start, overflow.end),
-              WebkitMaskImage: edgeMask(overflow.start, overflow.end),
-            }}
-            // The bottom padding lands the active underline on the border below.
-            className="h-auto w-full min-w-0 max-w-full flex-nowrap justify-start gap-1 overflow-x-auto overscroll-x-contain rounded-none p-0 pb-1.25 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {TABS.map((t) => {
               const Icon = t.icon;
@@ -191,7 +125,7 @@ export function CampaignTabs({
                 </TabsTrigger>
               );
             })}
-          </TabsList>
+          </ScrollableTabsList>
         </div>
 
         {TABS.map((t) => (

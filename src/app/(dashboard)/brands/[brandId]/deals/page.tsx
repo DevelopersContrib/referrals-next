@@ -5,7 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
-export default async function DealsPage({ params }: { params: Promise<{ brandId: string }> }) {
+export default async function DealsPage({
+  params,
+}: {
+  params: Promise<{ brandId: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin");
 
@@ -25,14 +29,18 @@ export default async function DealsPage({ params }: { params: Promise<{ brandId:
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Deals — {brand.domain}</h1>
-          <p className="text-muted-foreground">Manage promotions and deals for this brand.</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="wrap-break-word text-2xl font-bold">
+            Deals — {brand.domain}
+          </h1>
+          <p className="text-muted-foreground">
+            Manage promotions and deals for this brand.
+          </p>
         </div>
         <Link
           href={`/brands/${brandId}/deals/new`}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="inline-flex h-10 w-full shrink-0 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 sm:w-auto"
         >
           Create Deal
         </Link>
@@ -49,7 +57,9 @@ export default async function DealsPage({ params }: { params: Promise<{ brandId:
           {deals.map((deal) => (
             <Card key={deal.id}>
               <CardHeader>
-                <CardTitle className="text-base">{deal.title || `Deal #${deal.id}`}</CardTitle>
+                <CardTitle className="text-base">
+                  {deal.title || `Deal #${deal.id}`}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-2">

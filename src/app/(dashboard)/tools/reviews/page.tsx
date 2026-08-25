@@ -1,7 +1,13 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export default async function ReviewsToolPage() {
@@ -43,8 +49,8 @@ export default async function ReviewsToolPage() {
                   key={review.id}
                   className="flex items-start gap-4 rounded-lg border p-4"
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-medium">
                         {"*".repeat(review.rating)}{" "}
                         <span className="text-muted-foreground">
@@ -58,7 +64,7 @@ export default async function ReviewsToolPage() {
                       </Badge>
                     </div>
                     {review.message && (
-                      <p className="mt-2 text-sm text-gray-600">
+                      <p className="mt-2 wrap-break-word text-sm text-gray-600">
                         {review.message}
                       </p>
                     )}

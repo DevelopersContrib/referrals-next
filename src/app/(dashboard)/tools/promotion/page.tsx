@@ -1,7 +1,13 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export default async function PromotionToolPage() {
@@ -54,10 +60,10 @@ export default async function PromotionToolPage() {
               {promotions.map((promo) => (
                 <div
                   key={promo.id}
-                  className="flex items-center justify-between rounded-lg border p-4"
+                  className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-lg border p-4"
                 >
-                  <div>
-                    <p className="font-medium text-gray-900">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-gray-900">
                       {campaignMap.get(promo.campaign_id) ||
                         `Campaign #${promo.campaign_id}`}
                     </p>
@@ -66,7 +72,10 @@ export default async function PromotionToolPage() {
                       {new Date(promo.date_updated).toLocaleDateString()}
                     </p>
                   </div>
-                  <Badge variant={promo.approved ? "default" : "secondary"}>
+                  <Badge
+                    variant={promo.approved ? "default" : "secondary"}
+                    className="shrink-0"
+                  >
                     {promo.approved ? "Approved" : "Pending"}
                   </Badge>
                 </div>

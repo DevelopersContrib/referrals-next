@@ -73,13 +73,13 @@ export default function ShopifyIntegrationPage() {
       </p>
 
       {/* Status Badge */}
-      <div className="mt-6 flex items-center gap-2">
+      <div className="mt-6 flex min-w-0 items-center gap-2">
         <span
-          className={`inline-block w-3 h-3 rounded-full ${
+          className={`inline-block w-3 h-3 shrink-0 rounded-full ${
             connected ? "bg-green-500" : "bg-gray-300"
           }`}
         />
-        <span className="text-sm font-medium text-gray-700">
+        <span className="min-w-0 break-all text-sm font-medium text-gray-700">
           {connected
             ? `Connected${connectedShop ? ` to ${connectedShop}` : ""}`
             : "Not Connected"}
@@ -109,16 +109,16 @@ export default function ShopifyIntegrationPage() {
             >
               Shopify Store Name
             </label>
-            <div className="mt-1 flex rounded-md">
+            <div className="mt-1 flex min-w-0 rounded-md">
               <input
                 id="shop-name"
                 type="text"
                 value={shopName}
                 onChange={(e) => setShopName(e.target.value)}
                 placeholder="my-store"
-                className="block w-full rounded-l-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="block min-w-0 flex-1 rounded-l-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
-              <span className="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">
+              <span className="inline-flex shrink-0 items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">
                 .myshopify.com
               </span>
             </div>

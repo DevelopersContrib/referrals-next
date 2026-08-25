@@ -179,7 +179,7 @@ export default async function StatsPage() {
 											<td className="max-w-[200px] py-2.5 font-medium">
 												<Link
 													href={`/brands/${c.urlId}/campaigns/${c.id}`}
-													className="truncate text-brand hover:underline"
+													className="block truncate text-brand hover:underline"
 												>
 													{c.name}
 												</Link>

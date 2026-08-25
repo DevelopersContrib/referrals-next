@@ -85,7 +85,7 @@ export function CampaignEmailsEditor({ campaignId }: { campaignId: string }) {
 
   function updateTemplate(index: number, field: string, value: string) {
     setEmailTemplates((prev) =>
-      prev.map((t, i) => (i === index ? { ...t, [field]: value } : t))
+      prev.map((t, i) => (i === index ? { ...t, [field]: value } : t)),
     );
   }
 
@@ -123,10 +123,16 @@ export function CampaignEmailsEditor({ campaignId }: { campaignId: string }) {
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2">
         <Tabs defaultValue="entry">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="entry">Entry Email</TabsTrigger>
-            <TabsTrigger value="reward">Reward Email</TabsTrigger>
-            <TabsTrigger value="twoway">Two-Way Reward</TabsTrigger>
+          <TabsList className="h-auto w-full min-w-0 max-w-full flex-nowrap justify-start gap-1 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <TabsTrigger value="entry" className="h-8 flex-none px-3">
+              Entry Email
+            </TabsTrigger>
+            <TabsTrigger value="reward" className="h-8 flex-none px-3">
+              Reward Email
+            </TabsTrigger>
+            <TabsTrigger value="twoway" className="h-8 flex-none px-3">
+              Two-Way Reward
+            </TabsTrigger>
           </TabsList>
 
           {/* Entry Email */}
@@ -232,14 +238,19 @@ export function CampaignEmailsEditor({ campaignId }: { campaignId: string }) {
         {/* Custom Email Templates */}
         <Card className="mt-6">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
                 <CardTitle>Custom Email Templates</CardTitle>
                 <CardDescription>
                   Additional email templates for this campaign
                 </CardDescription>
               </div>
-              <Button variant="outline" size="sm" onClick={addTemplate}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={addTemplate}
+                className="w-full sm:w-auto sm:shrink-0"
+              >
                 Add Template
               </Button>
             </div>
@@ -247,18 +258,20 @@ export function CampaignEmailsEditor({ campaignId }: { campaignId: string }) {
           <CardContent>
             {emailTemplates.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No custom templates. Click &quot;Add Template&quot; to create one.
+                No custom templates. Click &quot;Add Template&quot; to create
+                one.
               </p>
             ) : (
               <div className="space-y-6">
                 {emailTemplates.map((template, index) => (
                   <div key={index} className="space-y-3 rounded-lg border p-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <Label>Template {index + 1}</Label>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => removeTemplate(index)}
+                        className="shrink-0"
                       >
                         Remove
                       </Button>

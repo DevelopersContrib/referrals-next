@@ -70,13 +70,13 @@ export default async function AccountPage() {
               </AvatarFallback>
             </Avatar>
 
-            <h3 className="mt-4 text-lg font-semibold text-[#575962]">
+            <h3 className="mt-4 wrap-break-word text-lg font-semibold text-[#575962]">
               {member.name}
             </h3>
 
-            <div className="mt-1 flex items-center justify-center gap-1.5 text-sm text-[#a7abc3]">
-              <MailIcon className="size-3.5" />
-              {member.email}
+            <div className="mt-1 flex min-w-0 items-center justify-center gap-1.5 text-sm text-[#a7abc3]">
+              <MailIcon className="size-3.5 shrink-0" />
+              <span className="min-w-0 truncate">{member.email}</span>
             </div>
 
             <div className="mt-4">

@@ -36,7 +36,7 @@ export default async function ForumPage() {
 
   const voteMap = new Map(voteCounts.map((v) => [v.topic_id, v._count.id]));
   const commentMap = new Map(
-    commentCounts.map((c) => [c.topic_id, c._count.id])
+    commentCounts.map((c) => [c.topic_id, c._count.id]),
   );
 
   return (
@@ -65,7 +65,9 @@ export default async function ForumPage() {
             </Button>
           </Link>
           <Link href="/forum/new">
-            <Button size="sm" className="min-h-11">New Topic</Button>
+            <Button size="sm" className="min-h-11">
+              New Topic
+            </Button>
           </Link>
         </div>
       </div>
@@ -89,25 +91,27 @@ export default async function ForumPage() {
               <Card key={topic.id}>
                 <CardContent className="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:gap-4">
                   <div className="flex gap-6 lg:gap-4">
-                  <div className="flex flex-col items-center gap-1 text-center min-w-[60px]">
-                    <span className="text-lg font-bold">{votes}</span>
-                    <span className="text-xs text-muted-foreground">votes</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-1 text-center min-w-[60px]">
-                    <span className="text-lg font-bold">{comments}</span>
-                    <span className="text-xs text-muted-foreground">
-                      replies
-                    </span>
-                  </div>
+                    <div className="flex flex-col items-center gap-1 text-center min-w-[60px]">
+                      <span className="text-lg font-bold">{votes}</span>
+                      <span className="text-xs text-muted-foreground">
+                        votes
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-1 text-center min-w-[60px]">
+                      <span className="text-lg font-bold">{comments}</span>
+                      <span className="text-xs text-muted-foreground">
+                        replies
+                      </span>
+                    </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <Link
                       href={`/forum/post/${topic.slug || topic.id}`}
-                      className="font-medium text-gray-900 hover:text-blue-600"
+                      className="block wrap-break-word font-medium text-gray-900 hover:text-blue-600"
                     >
                       {topic.title}
                     </Link>
-                    <div className="mt-1 flex items-center gap-2">
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
                       {category && (
                         <Link href={`/forum/${category.slug || category.id}`}>
                           <Badge variant="secondary" className="text-xs">

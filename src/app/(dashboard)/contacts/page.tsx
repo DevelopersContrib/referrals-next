@@ -80,9 +80,7 @@ export default function ContactsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="py-8 text-center text-muted-foreground">
-              Loading...
-            </p>
+            <p className="py-8 text-center text-muted-foreground">Loading...</p>
           ) : contacts.length === 0 ? (
             <p className="py-8 text-center text-muted-foreground">
               No contacts found.
@@ -91,30 +89,34 @@ export default function ContactsPage() {
             <>
               <ContactsMobileList contacts={contacts} />
               <div className="hidden overflow-x-auto lg:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Campaign</TableHead>
-                    <TableHead>Joined</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {contacts.map((contact) => (
-                    <TableRow key={contact.id}>
-                      <TableCell className="font-medium">
-                        {contact.name}
-                      </TableCell>
-                      <TableCell>{contact.email}</TableCell>
-                      <TableCell>{contact.campaign_name}</TableCell>
-                      <TableCell>
-                        {new Date(contact.date_signedup).toLocaleDateString()}
-                      </TableCell>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Campaign</TableHead>
+                      <TableHead>Joined</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {contacts.map((contact) => (
+                      <TableRow key={contact.id}>
+                        <TableCell className="max-w-55 truncate font-medium">
+                          {contact.name}
+                        </TableCell>
+                        <TableCell className="max-w-65 truncate">
+                          {contact.email}
+                        </TableCell>
+                        <TableCell className="max-w-55 truncate">
+                          {contact.campaign_name}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {new Date(contact.date_signedup).toLocaleDateString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             </>
           )}

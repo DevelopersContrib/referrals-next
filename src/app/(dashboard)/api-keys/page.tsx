@@ -1,7 +1,13 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ApiKeyActions } from "./api-key-actions";
 
@@ -43,10 +49,10 @@ export default async function ApiKeysPage() {
               {keys.map((key) => (
                 <div
                   key={key.user_key_id}
-                  className="flex items-center justify-between rounded-lg border p-4"
+                  className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-lg border p-4"
                 >
-                  <div>
-                    <code className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
+                  <div className="min-w-0 flex-1">
+                    <code className="block break-all text-sm font-mono bg-gray-100 px-2 py-1 rounded">
                       {key.api_key
                         ? `${key.api_key.substring(0, 8)}${"*".repeat(24)}`
                         : "N/A"}
@@ -56,7 +62,9 @@ export default async function ApiKeysPage() {
                       {new Date(key.date_generated).toLocaleDateString()}
                     </p>
                   </div>
-                  <Badge variant="default">Active</Badge>
+                  <Badge variant="default" className="shrink-0">
+                    Active
+                  </Badge>
                 </div>
               ))}
             </div>

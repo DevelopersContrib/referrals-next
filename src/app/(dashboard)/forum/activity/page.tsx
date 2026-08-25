@@ -116,7 +116,7 @@ export default async function ForumActivityPage() {
                     }`}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm">
+                    <p className="wrap-break-word text-sm">
                       <span className="font-medium text-gray-900">
                         {item.memberId
                           ? memberMap.get(item.memberId) || "Unknown"

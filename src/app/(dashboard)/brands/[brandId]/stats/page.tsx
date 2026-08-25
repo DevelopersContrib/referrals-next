@@ -15,7 +15,8 @@ export default async function BrandStatsPage({
   const brand = await prisma.member_urls.findUnique({
     where: { id: parseInt(brandId, 10) },
   });
-  if (!brand || brand.member_id !== parseInt(session.user.id, 10)) redirect("/brands");
+  if (!brand || brand.member_id !== parseInt(session.user.id, 10))
+    redirect("/brands");
 
   const campaigns = await prisma.member_campaigns.findMany({
     where: { url_id: parseInt(brandId, 10) },
@@ -29,12 +30,16 @@ export default async function BrandStatsPage({
 
   if (campaignIds.length > 0) {
     const [pCount, clicksAgg, sCount] = await Promise.all([
-      prisma.campaign_participants.count({ where: { campaign_id: { in: campaignIds } } }),
+      prisma.campaign_participants.count({
+        where: { campaign_id: { in: campaignIds } },
+      }),
       prisma.participants_share.aggregate({
         where: { campaign_id: { in: campaignIds } },
         _sum: { clicks: true },
       }),
-      prisma.participants_share.count({ where: { campaign_id: { in: campaignIds } } }),
+      prisma.participants_share.count({
+        where: { campaign_id: { in: campaignIds } },
+      }),
     ]);
     participants = pCount;
     totalClicks = clicksAgg._sum.clicks || 0;
@@ -42,13 +47,14 @@ export default async function BrandStatsPage({
   }
 
   // Top referrers
-  const topSharers = campaignIds.length > 0
-    ? await prisma.participants_share.findMany({
-        where: { campaign_id: { in: campaignIds } },
-        orderBy: { clicks: "desc" },
-        take: 10,
-      })
-    : [];
+  const topSharers =
+    campaignIds.length > 0
+      ? await prisma.participants_share.findMany({
+          where: { campaign_id: { in: campaignIds } },
+          orderBy: { clicks: "desc" },
+          take: 10,
+        })
+      : [];
 
   return (
     <div className="space-y-6">
@@ -56,20 +62,44 @@ export default async function BrandStatsPage({
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-4">
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Campaigns</CardTitle></CardHeader>
-          <CardContent><p className="text-3xl font-bold">{campaigns.length}</p></CardContent>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">
+              Campaigns
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{campaigns.length}</p>
+          </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Participants</CardTitle></CardHeader>
-          <CardContent><p className="text-3xl font-bold">{participants}</p></CardContent>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">
+              Participants
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{participants}</p>
+          </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Clicks</CardTitle></CardHeader>
-          <CardContent><p className="text-3xl font-bold">{totalClicks}</p></CardContent>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">
+              Total Clicks
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{totalClicks}</p>
+          </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Shares</CardTitle></CardHeader>
-          <CardContent><p className="text-3xl font-bold">{totalShares}</p></CardContent>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">
+              Total Shares
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{totalShares}</p>
+          </CardContent>
         </Card>
       </div>
 
@@ -84,9 +114,16 @@ export default async function BrandStatsPage({
           ) : (
             <div className="space-y-2">
               {topSharers.map((share, i) => (
-                <div key={share.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-2">
-                  <span className="font-medium">#{i + 1} — Participant {share.participant_id}</span>
-                  <span className="text-sm font-semibold">{share.clicks || 0} clicks</span>
+                <div
+                  key={share.id}
+                  className="flex min-w-0 flex-wrap items-center justify-between gap-2 bg-gray-50 rounded-lg px-4 py-2"
+                >
+                  <span className="min-w-0 font-medium">
+                    #{i + 1} — Participant {share.participant_id}
+                  </span>
+                  <span className="shrink-0 text-sm font-semibold">
+                    {share.clicks || 0} clicks
+                  </span>
                 </div>
               ))}
             </div>

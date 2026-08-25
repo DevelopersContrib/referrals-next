@@ -151,9 +151,9 @@ export default async function BrandsPage() {
                           href={brand.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-0.5 flex max-w-[220px] items-center gap-1 text-xs text-[#36a3f7] hover:underline lg:hidden"
+                          className="mt-0.5 flex min-w-0 max-w-[220px] items-center gap-1 text-xs text-[#36a3f7] hover:underline lg:hidden"
                         >
-                          <span className="truncate">{brand.url}</span>
+                          <span className="min-w-0 truncate">{brand.url}</span>
                           <ExternalLinkIcon className="size-3 shrink-0" />
                         </a>
                       </div>
@@ -164,9 +164,9 @@ export default async function BrandsPage() {
                       href={brand.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex max-w-[200px] items-center gap-1 text-sm text-[#36a3f7] hover:underline"
+                      className="inline-flex min-w-0 max-w-[200px] items-center gap-1 text-sm text-[#36a3f7] hover:underline"
                     >
-                      <span className="truncate">{brand.url}</span>
+                      <span className="min-w-0 truncate">{brand.url}</span>
                       <ExternalLinkIcon className="size-3 shrink-0" />
                     </a>
                   </TableCell>

@@ -26,7 +26,9 @@ export function BillingErrorBanner({ initialError }: BillingErrorBannerProps) {
 			role="alert"
 			className="flex items-start justify-between gap-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800"
 		>
-			<p className="text-sm">{decodeURIComponent(error)}</p>
+			<p className="min-w-0 flex-1 text-sm wrap-break-word">
+				{decodeURIComponent(error)}
+			</p>
 			<button
 				type="button"
 				onClick={handleDismiss}

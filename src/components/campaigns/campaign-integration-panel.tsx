@@ -12,7 +12,10 @@ import {
   ExternalLinkIcon,
   LayoutDashboardIcon,
 } from "lucide-react";
-import { buildCampaignEmbedSnippets, trimEmbedBase } from "@/lib/campaign-embed-snippets";
+import {
+  buildCampaignEmbedSnippets,
+  trimEmbedBase,
+} from "@/lib/campaign-embed-snippets";
 import { IntegrationEmbedSections } from "@/components/campaigns/integration-embed-sections";
 
 export interface CampaignIntegrationPanelProps {
@@ -39,12 +42,18 @@ export function CampaignIntegrationPanel({
   layout = "tabs",
   showFooterLinks = true,
 }: CampaignIntegrationPanelProps) {
-  const root = useMemo(() => trimEmbedBase(baseUrl || "https://referrals.com"), [baseUrl]);
+  const root = useMemo(
+    () => trimEmbedBase(baseUrl || "https://referrals.com"),
+    [baseUrl],
+  );
   const id = campaignId;
   const seg = (publicSegment ?? brandSlug ?? brandId).toString().trim();
   const publicPath = `${root}/public/${encodeURIComponent(seg)}/campaign/${id}`;
 
-  const snippets = useMemo(() => buildCampaignEmbedSnippets(baseUrl, id), [baseUrl, id]);
+  const snippets = useMemo(
+    () => buildCampaignEmbedSnippets(baseUrl, id),
+    [baseUrl, id],
+  );
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const copy = useCallback(async (text: string, key: string) => {
@@ -69,7 +78,7 @@ export function CampaignIntegrationPanel({
             "rounded-2xl border p-5 shadow-sm sm:p-6",
             isPostCreate
               ? "border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 via-white to-sky-50/60"
-              : "border-slate-200/80 bg-gradient-to-br from-slate-50 to-white"
+              : "border-slate-200/80 bg-gradient-to-br from-slate-50 to-white",
           )}
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -103,7 +112,7 @@ export function CampaignIntegrationPanel({
               href={`/brands/${brandId}/campaigns/${id}/widget`}
               className={cn(
                 buttonVariants({ variant: "default", size: "default" }),
-                "shrink-0 gap-1.5"
+                "shrink-0 gap-1.5",
               )}
             >
               <LayoutDashboardIcon className="size-4" />
@@ -111,29 +120,37 @@ export function CampaignIntegrationPanel({
             </Link>
           </div>
 
-          <div className="mt-4 flex flex-col gap-2 rounded-xl border border-slate-200/80 bg-white/80 p-4 text-sm text-slate-700 sm:flex-row sm:flex-wrap sm:items-center">
-            <span className="font-medium text-slate-900">Public campaign page:</span>
+          <div className="mt-4 flex min-w-0 flex-col gap-2 rounded-xl border border-slate-200/80 bg-white/80 p-4 text-sm text-slate-700 sm:flex-row sm:flex-wrap sm:items-center">
+            <span className="shrink-0 font-medium text-slate-900">
+              Public campaign page:
+            </span>
             <a
               href={publicPath}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 font-mono text-xs text-brand underline-offset-2 hover:underline sm:text-sm"
+              className="inline-flex min-w-0 items-center gap-1 font-mono text-xs text-brand underline-offset-2 hover:underline sm:text-sm"
             >
-              {publicPath.replace(/^https?:\/\//, "")}
+              <span className="min-w-0 truncate">
+                {publicPath.replace(/^https?:\/\//, "")}
+              </span>
               <ExternalLinkIcon className="size-3.5 shrink-0 opacity-70" />
             </a>
           </div>
           {isPostCreate && (
             <p className="mt-3 text-xs text-slate-500">
-              Same campaign id ({id}) works everywhere — the widget endpoints below apply wherever
-              this domain serves the widget API.
+              Same campaign id ({id}) works everywhere — the widget endpoints
+              below apply wherever this domain serves the widget API.
             </p>
           )}
         </div>
       )}
 
       {layout === "sections" ? (
-        <IntegrationEmbedSections snippets={snippets} brandId={brandId} campaignId={id} />
+        <IntegrationEmbedSections
+          snippets={snippets}
+          brandId={brandId}
+          campaignId={id}
+        />
       ) : (
         <Tabs defaultValue="javascript">
           <TabsList className="mb-4 flex h-auto w-full flex-wrap justify-start gap-1 bg-slate-100/80 p-1.5">
@@ -150,8 +167,8 @@ export function CampaignIntegrationPanel({
 
           <TabsContent value="javascript" className="mt-0 space-y-3">
             <p className="text-sm text-muted-foreground">
-              Recommended: one script tag loads configuration and injects the widget (embed, popup,
-              or floating) from your{" "}
+              Recommended: one script tag loads configuration and injects the
+              widget (embed, popup, or floating) from your{" "}
               <Link
                 href={`/brands/${brandId}/campaigns/${id}/widget`}
                 className="font-medium text-brand underline-offset-2 hover:underline"
@@ -169,8 +186,9 @@ export function CampaignIntegrationPanel({
 
           <TabsContent value="iframe" className="mt-0 space-y-3">
             <p className="text-sm text-muted-foreground">
-              Paste anywhere HTML is accepted — landing pages, CMS blocks, email-safe pages (where
-              iframes are allowed). No JavaScript required.
+              Paste anywhere HTML is accepted — landing pages, CMS blocks,
+              email-safe pages (where iframes are allowed). No JavaScript
+              required.
             </p>
             <CodeBlock
               code={snippets.iframe}
@@ -181,12 +199,15 @@ export function CampaignIntegrationPanel({
 
           <TabsContent value="node" className="mt-0 space-y-3">
             <p className="text-sm text-muted-foreground">
-              Server-rendered apps (Express / Fastify / Koa): send a page that includes the loader
-              script. Run with{" "}
-              <code className="rounded bg-slate-100 px-1">node server.js</code> and open{" "}
-              <code className="rounded bg-slate-100 px-1">/refer</code>. For Next.js/React, use the{" "}
-              <strong className="font-medium text-foreground">JavaScript</strong> tab inside a client
-              component.
+              Server-rendered apps (Express / Fastify / Koa): send a page that
+              includes the loader script. Run with{" "}
+              <code className="rounded bg-slate-100 px-1">node server.js</code>{" "}
+              and open <code className="rounded bg-slate-100 px-1">/refer</code>
+              . For Next.js/React, use the{" "}
+              <strong className="font-medium text-foreground">
+                JavaScript
+              </strong>{" "}
+              tab inside a client component.
             </p>
             <CodeBlock
               code={snippets.node}
@@ -203,7 +224,7 @@ export function CampaignIntegrationPanel({
             href={`/brands/${brandId}/campaigns/${id}`}
             className={cn(
               buttonVariants({ variant: "outline", size: "default" }),
-              "inline-flex justify-center"
+              "inline-flex justify-center",
             )}
           >
             Open campaign dashboard
@@ -212,7 +233,7 @@ export function CampaignIntegrationPanel({
             href={`/brands/${brandId}/campaigns`}
             className={cn(
               buttonVariants({ variant: "default", size: "default" }),
-              "inline-flex justify-center"
+              "inline-flex justify-center",
             )}
           >
             Back to all campaigns
@@ -233,19 +254,21 @@ function CodeBlock({
   copied: boolean;
 }) {
   return (
-    <div className="relative rounded-xl border border-slate-200 bg-slate-950 text-slate-100 shadow-inner">
-      <Button
-        type="button"
-        size="sm"
-        variant="secondary"
-        className="absolute right-2 top-2 z-[1] h-8 gap-1 border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700"
-        onClick={onCopy}
-      >
-        <CopyIcon className="size-3.5" />
-        {copied ? "Copied" : "Copy"}
-      </Button>
-      <pre className="max-h-[min(70vh,420px)] overflow-auto p-4 pr-24 text-xs leading-relaxed sm:text-sm">
-        <code>{code}</code>
+    <div className="min-w-0 max-w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950 text-slate-100 shadow-inner">
+      <div className="flex items-center justify-end border-b border-slate-800 px-3 py-2">
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          className="h-8 shrink-0 gap-1.5 border border-slate-700 bg-slate-800 text-slate-100 hover:bg-slate-700"
+          onClick={onCopy}
+        >
+          <CopyIcon className="size-3.5" />
+          {copied ? "Copied" : "Copy"}
+        </Button>
+      </div>
+      <pre className="max-h-[min(70vh,420px)] max-w-full overflow-auto overscroll-x-contain p-4 text-xs leading-relaxed sm:text-sm">
+        <code className="block">{code}</code>
       </pre>
     </div>
   );

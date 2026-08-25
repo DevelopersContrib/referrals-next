@@ -163,9 +163,11 @@ export function PartnershipsBrowser({ brands }: PartnershipsBrowserProps) {
 									key={req.id}
 									className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#ebeef0] px-4 py-3"
 								>
-									<span className="font-medium">{req.brandDomain}</span>
+									<span className="min-w-0 break-all font-medium">
+										{req.brandDomain}
+									</span>
 									<Badge
-										className={`border-0 font-medium ${STATUS_STYLES[req.status]}`}
+										className={`shrink-0 border-0 font-medium ${STATUS_STYLES[req.status]}`}
 									>
 										{req.status}
 									</Badge>

@@ -53,7 +53,10 @@ import {
   type RewardFormValues,
 } from "@/lib/reward-types";
 import { buildCampaignEmbedSnippets } from "@/lib/campaign-embed-snippets";
-import type { CampaignType, RewardType } from "@/components/campaigns/campaign-wizard";
+import type {
+  CampaignType,
+  RewardType,
+} from "@/components/campaigns/campaign-wizard";
 
 function FieldHelp({ text }: { text: string }) {
   return (
@@ -75,11 +78,36 @@ function FieldHelp({ text }: { text: string }) {
 }
 
 const STEPS = [
-  { n: 1, title: "Campaign Type", desc: "Select campaign type", icon: MapPinIcon },
-  { n: 2, title: "Reward", desc: "Setup reward for each successful referral", icon: GiftIcon },
-  { n: 3, title: "Want to Share?", desc: "Configure what to share on social sites", icon: Share2Icon },
-  { n: 4, title: "Widget Design", desc: "Customize widget or banner to be displayed on your site", icon: MonitorIcon },
-  { n: 5, title: "Publish Campaign", desc: "Embed code to your site to receive referrals from visitor", icon: Rocket },
+  {
+    n: 1,
+    title: "Campaign Type",
+    desc: "Select campaign type",
+    icon: MapPinIcon,
+  },
+  {
+    n: 2,
+    title: "Reward",
+    desc: "Setup reward for each successful referral",
+    icon: GiftIcon,
+  },
+  {
+    n: 3,
+    title: "Want to Share?",
+    desc: "Configure what to share on social sites",
+    icon: Share2Icon,
+  },
+  {
+    n: 4,
+    title: "Widget Design",
+    desc: "Customize widget or banner to be displayed on your site",
+    icon: MonitorIcon,
+  },
+  {
+    n: 5,
+    title: "Publish Campaign",
+    desc: "Embed code to your site to receive referrals from visitor",
+    icon: Rocket,
+  },
 ] as const;
 
 export function CampaignCreateEditor({
@@ -125,7 +153,7 @@ export function CampaignCreateEditor({
   });
   const [email, setEmail] = useState({ subject: "", template: "" });
   const [rewardValues, setRewardValues] = useState<RewardFormValues>(
-    rewardFormValuesFromRecord(null)
+    rewardFormValuesFromRecord(null),
   );
 
   function updateField(field: string, value: string) {
@@ -136,7 +164,7 @@ export function CampaignCreateEditor({
   }
 
   const selectedRewardType = rewardTypes.find(
-    (t) => t.id.toString() === formData.reward_type
+    (t) => t.id.toString() === formData.reward_type,
   );
 
   async function aiWriteEmails() {
@@ -165,10 +193,14 @@ export function CampaignCreateEditor({
       const data = await res.json();
       setFormData((prev) => ({
         ...prev,
-        reward_notify_subject: data.reward_notify_subject || prev.reward_notify_subject,
-        reward_notify_message: data.reward_notify_message || prev.reward_notify_message,
-        campaign_entry_subject: data.campaign_entry_subject || prev.campaign_entry_subject,
-        campaign_entry_message: data.campaign_entry_message || prev.campaign_entry_message,
+        reward_notify_subject:
+          data.reward_notify_subject || prev.reward_notify_subject,
+        reward_notify_message:
+          data.reward_notify_message || prev.reward_notify_message,
+        campaign_entry_subject:
+          data.campaign_entry_subject || prev.campaign_entry_subject,
+        campaign_entry_message:
+          data.campaign_entry_message || prev.campaign_entry_message,
       }));
       toast.success("AI drafted your reward & entry emails — review and tweak");
     } catch (e) {
@@ -208,9 +240,14 @@ export function CampaignCreateEditor({
         template: data.invite_message || prev.template,
       }));
       if (data.social_description) {
-        setSocial((prev) => ({ ...prev, description: data.social_description }));
+        setSocial((prev) => ({
+          ...prev,
+          description: data.social_description,
+        }));
       }
-      toast.success("AI drafted your invite email & social blurb — review and tweak");
+      toast.success(
+        "AI drafted your invite email & social blurb — review and tweak",
+      );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "AI request failed");
     } finally {
@@ -267,7 +304,11 @@ export function CampaignCreateEditor({
           reward_type: formData.reward_type,
           reward: buildRewardPayload(kind, rewardValues),
           socialContent: [
-            { url: social.url, description: social.description, image_url: social.image_url },
+            {
+              url: social.url,
+              description: social.description,
+              image_url: social.image_url,
+            },
           ],
           emailContent: [{ subject: email.subject, template: email.template }],
         }),
@@ -276,7 +317,9 @@ export function CampaignCreateEditor({
       toast.success("Campaign created");
       router.push(`/brands/${brandId}/campaigns/${campaignId}`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create campaign");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create campaign",
+      );
     } finally {
       setSaving(false);
     }
@@ -285,7 +328,7 @@ export function CampaignCreateEditor({
   const embedSnippet = createdId
     ? buildCampaignEmbedSnippets(
         process.env.NEXT_PUBLIC_APP_URL || "https://referrals.com",
-        createdId
+        createdId,
       ).js
     : "";
 
@@ -297,12 +340,19 @@ export function CampaignCreateEditor({
           const done = s.n < step;
           const current = s.n === step;
           return (
-            <div key={s.n} className="flex flex-1 flex-col items-center text-center">
+            <div
+              key={s.n}
+              className="flex flex-1 flex-col items-center text-center"
+            >
               <div className="flex w-full items-center">
                 <div
                   className={cn(
                     "h-0.5 flex-1",
-                    i === 0 ? "opacity-0" : done || current ? "bg-brand" : "bg-border"
+                    i === 0
+                      ? "opacity-0"
+                      : done || current
+                        ? "bg-brand"
+                        : "bg-border",
                   )}
                 />
                 <button
@@ -314,23 +364,31 @@ export function CampaignCreateEditor({
                       ? "border-brand bg-brand text-white"
                       : current
                         ? "border-brand bg-background text-brand ring-4 ring-brand/15"
-                        : "border-border bg-background text-muted-foreground hover:border-brand/40"
+                        : "border-border bg-background text-muted-foreground hover:border-brand/40",
                   )}
                 >
-                  {done ? <CheckIcon className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+                  {done ? (
+                    <CheckIcon className="h-5 w-5" />
+                  ) : (
+                    <Icon className="h-5 w-5" />
+                  )}
                 </button>
                 <div
                   className={cn(
                     "h-0.5 flex-1",
-                    i === STEPS.length - 1 ? "opacity-0" : done ? "bg-brand" : "bg-border"
+                    i === STEPS.length - 1
+                      ? "opacity-0"
+                      : done
+                        ? "bg-brand"
+                        : "bg-border",
                   )}
                 />
               </div>
-              <div className="mt-2 px-1">
+              <div className="mt-2 min-w-0 px-1">
                 <div
                   className={cn(
-                    "text-sm font-semibold",
-                    current ? "text-foreground" : "text-muted-foreground"
+                    "text-[11px] leading-tight font-semibold wrap-break-word sm:text-sm",
+                    current ? "text-foreground" : "text-muted-foreground",
                   )}
                 >
                   {s.n}. {s.title}
@@ -348,7 +406,9 @@ export function CampaignCreateEditor({
         <Card>
           <CardHeader>
             <CardTitle>Campaign Type</CardTitle>
-            <CardDescription>Select the type of referral campaign.</CardDescription>
+            <CardDescription>
+              Select the type of referral campaign.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -361,7 +421,9 @@ export function CampaignCreateEditor({
                     onClick={() => updateField("type_id", t.id.toString())}
                     className={cn(
                       "rounded-lg border-2 p-4 text-left transition-colors",
-                      active ? "border-brand bg-brand/5" : "border-border hover:border-brand/40"
+                      active
+                        ? "border-brand bg-brand/5"
+                        : "border-border hover:border-brand/40",
                     )}
                   >
                     <div className="font-medium">{t.name}</div>
@@ -412,7 +474,9 @@ export function CampaignCreateEditor({
                 </Label>
                 <Select
                   value={formData.goal_type}
-                  onValueChange={(val: string | null) => updateField("goal_type", val || "")}
+                  onValueChange={(val: string | null) =>
+                    updateField("goal_type", val || "")
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -465,13 +529,15 @@ export function CampaignCreateEditor({
                 </Label>
                 <Select
                   value={formData.reward_type}
-                  onValueChange={(val: string | null) => updateField("reward_type", val || "")}
+                  onValueChange={(val: string | null) =>
+                    updateField("reward_type", val || "")
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select reward type">
                       {(value: string | null) =>
-                        rewardTypes.find((r) => r.id.toString() === value)?.name ??
-                        "Select reward type"
+                        rewardTypes.find((r) => r.id.toString() === value)
+                          ?.name ?? "Select reward type"
                       }
                     </SelectValue>
                   </SelectTrigger>
@@ -497,7 +563,9 @@ export function CampaignCreateEditor({
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <CardTitle>Reward Notifications</CardTitle>
-                  <CardDescription>Email copy sent when rewards are earned</CardDescription>
+                  <CardDescription>
+                    Email copy sent when rewards are earned
+                  </CardDescription>
                 </div>
                 <Button
                   type="button"
@@ -522,7 +590,9 @@ export function CampaignCreateEditor({
                 <Input
                   id="reward_subject"
                   value={formData.reward_notify_subject}
-                  onChange={(e) => updateField("reward_notify_subject", e.target.value)}
+                  onChange={(e) =>
+                    updateField("reward_notify_subject", e.target.value)
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -530,7 +600,9 @@ export function CampaignCreateEditor({
                 <RichTextEditor
                   ariaLabel="Reward email message"
                   value={formData.reward_notify_message || ""}
-                  onChange={(html) => updateField("reward_notify_message", html)}
+                  onChange={(html) =>
+                    updateField("reward_notify_message", html)
+                  }
                   minHeight={140}
                 />
               </div>
@@ -540,7 +612,9 @@ export function CampaignCreateEditor({
                 <Input
                   id="entry_subject"
                   value={formData.campaign_entry_subject}
-                  onChange={(e) => updateField("campaign_entry_subject", e.target.value)}
+                  onChange={(e) =>
+                    updateField("campaign_entry_subject", e.target.value)
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -548,7 +622,9 @@ export function CampaignCreateEditor({
                 <RichTextEditor
                   ariaLabel="Entry email message"
                   value={formData.campaign_entry_message || ""}
-                  onChange={(html) => updateField("campaign_entry_message", html)}
+                  onChange={(html) =>
+                    updateField("campaign_entry_message", html)
+                  }
                   minHeight={140}
                 />
               </div>
@@ -565,9 +641,12 @@ export function CampaignCreateEditor({
                 <Share2Icon className="size-4" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-[#464457]">What participants share</p>
+                <p className="text-sm font-semibold text-[#464457]">
+                  What participants share
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  Set up the social blurb and the invite email. Let AI draft it for you.
+                  Set up the social blurb and the invite email. Let AI draft it
+                  for you.
                 </p>
               </div>
             </div>
@@ -603,7 +682,9 @@ export function CampaignCreateEditor({
                     id="share_url"
                     placeholder="https://..."
                     value={social.url}
-                    onChange={(e) => setSocial((p) => ({ ...p, url: e.target.value }))}
+                    onChange={(e) =>
+                      setSocial((p) => ({ ...p, url: e.target.value }))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -612,14 +693,18 @@ export function CampaignCreateEditor({
                     id="share_desc"
                     rows={3}
                     value={social.description}
-                    onChange={(e) => setSocial((p) => ({ ...p, description: e.target.value }))}
+                    onChange={(e) =>
+                      setSocial((p) => ({ ...p, description: e.target.value }))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Campaign image</Label>
                   <ImageInput
                     value={social.image_url || ""}
-                    onChange={(url) => setSocial((p) => ({ ...p, image_url: url }))}
+                    onChange={(url) =>
+                      setSocial((p) => ({ ...p, image_url: url }))
+                    }
                     uploadType="campaigns"
                   />
                 </div>
@@ -646,7 +731,8 @@ export function CampaignCreateEditor({
                         : "your-site.com"}
                     </p>
                     <p className="line-clamp-2 text-sm text-[#464457]">
-                      {social.description || "Your share description will appear here."}
+                      {social.description ||
+                        "Your share description will appear here."}
                     </p>
                   </div>
                 </div>
@@ -664,7 +750,9 @@ export function CampaignCreateEditor({
                 <Input
                   id="email_subject"
                   value={email.subject}
-                  onChange={(e) => setEmail((p) => ({ ...p, subject: e.target.value }))}
+                  onChange={(e) =>
+                    setEmail((p) => ({ ...p, subject: e.target.value }))
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -672,8 +760,15 @@ export function CampaignCreateEditor({
                 <RichTextEditor
                   ariaLabel="Invite email content"
                   value={email.template || ""}
-                  onChange={(html) => setEmail((p) => ({ ...p, template: html }))}
-                  placeholders={["[name]", "[invited_by_name]", "[brand]", "[link]"]}
+                  onChange={(html) =>
+                    setEmail((p) => ({ ...p, template: html }))
+                  }
+                  placeholders={[
+                    "[name]",
+                    "[invited_by_name]",
+                    "[brand]",
+                    "[link]",
+                  ]}
                   minHeight={200}
                 />
               </div>
@@ -686,20 +781,30 @@ export function CampaignCreateEditor({
         <Card>
           <CardHeader>
             <CardTitle>Widget Design</CardTitle>
-            <CardDescription>Customize the widget or banner shown on your site.</CardDescription>
+            <CardDescription>
+              Customize the widget or banner shown on your site.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Create the campaign first, then the full widget customizer (templates, colors, banner)
-              opens — same as Edit Campaign.
+              Create the campaign first, then the full widget customizer
+              (templates, colors, banner) opens — same as Edit Campaign.
             </p>
             {createdId ? (
-              <Button variant="outline" render={<Link href={`/brands/${brandId}/campaigns/${createdId}/widget`} />}>
+              <Button
+                variant="outline"
+                render={
+                  <Link
+                    href={`/brands/${brandId}/campaigns/${createdId}/widget`}
+                  />
+                }
+              >
                 Open Widget Customizer
               </Button>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Use <strong>Create campaign</strong> below, then you can open the customizer.
+                Use <strong>Create campaign</strong> below, then you can open
+                the customizer.
               </p>
             )}
           </CardContent>
@@ -717,7 +822,9 @@ export function CampaignCreateEditor({
                 <Label>Visibility</Label>
                 <Select
                   value={formData.publish}
-                  onValueChange={(val: string | null) => updateField("publish", val || "")}
+                  onValueChange={(val: string | null) =>
+                    updateField("publish", val || "")
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -734,31 +841,62 @@ export function CampaignCreateEditor({
             <Card>
               <CardHeader>
                 <CardTitle>Embed Code</CardTitle>
-                <CardDescription>Paste this into your site to receive referrals.</CardDescription>
+                <CardDescription>
+                  Paste this into your site to receive referrals.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Textarea readOnly rows={3} value={embedSnippet} className="font-mono text-xs" />
+                <Textarea
+                  readOnly
+                  rows={3}
+                  value={embedSnippet}
+                  className="w-full max-w-full font-mono text-xs"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(embedSnippet);
+                    toast.success("Embed code copied");
+                  }}
+                  className="w-full shrink-0 sm:w-auto"
+                >
+                  Copy Embed Code
+                </Button>
               </CardContent>
             </Card>
           ) : null}
         </div>
       )}
 
-      <div className="mt-8 flex items-center justify-between">
-        <div>
+      <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
           {step > 1 && (
-            <Button variant="outline" onClick={() => setStep((s) => Math.max(1, s - 1))}>
+            <Button
+              variant="outline"
+              onClick={() => setStep((s) => Math.max(1, s - 1))}
+              className="flex-1 sm:flex-none"
+            >
               ← Back
             </Button>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {step < STEPS.length && (
-            <Button variant="outline" onClick={() => setStep((s) => Math.min(STEPS.length, s + 1))}>
+            <Button
+              variant="outline"
+              onClick={() => setStep((s) => Math.min(STEPS.length, s + 1))}
+              className="flex-1 sm:flex-none"
+            >
               Next →
             </Button>
           )}
-          <Button onClick={handleSave} disabled={saving}>
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 sm:flex-none"
+          >
             {saving ? "Creating..." : "Create campaign"}
           </Button>
         </div>

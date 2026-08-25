@@ -12,8 +12,8 @@ export default function EmailsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold">Email Templates</h1>
           <p className="mt-1 text-muted-foreground">
             Customize emails sent to participants
@@ -21,7 +21,10 @@ export default function EmailsPage() {
         </div>
         <Button
           variant="outline"
-          onClick={() => router.push(`/brands/${brandId}/campaigns/${campaignId}`)}
+          onClick={() =>
+            router.push(`/brands/${brandId}/campaigns/${campaignId}`)
+          }
+          className="w-full sm:w-auto sm:shrink-0"
         >
           Back to Campaign
         </Button>

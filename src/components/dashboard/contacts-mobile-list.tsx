@@ -20,12 +20,16 @@ export function ContactsMobileList({ contacts }: ContactsMobileListProps) {
 					key={contact.id}
 					className="rounded-lg border border-portlet-border bg-[#f9fafb] p-4"
 				>
-					<p className="font-medium text-[#575962]">{contact.name}</p>
+					<p className="truncate font-medium text-[#575962]">
+						{contact.name}
+					</p>
 					<p className="mt-0.5 truncate text-sm text-muted-foreground">
 						{contact.email}
 					</p>
-					<div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-						<span className="truncate">{contact.campaign_name}</span>
+					<div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+						<span className="min-w-0 flex-1 truncate">
+							{contact.campaign_name}
+						</span>
 						<span className="shrink-0">
 							{new Date(contact.date_signedup).toLocaleDateString()}
 						</span>

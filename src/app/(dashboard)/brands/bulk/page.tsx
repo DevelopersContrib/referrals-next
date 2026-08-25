@@ -90,7 +90,9 @@ export default function BulkBrandImportPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Textarea
-                placeholder={"https://example.com\nhttps://another-site.com\nmy-brand.io"}
+                placeholder={
+                  "https://example.com\nhttps://another-site.com\nmy-brand.io"
+                }
                 value={urls}
                 onChange={(e) => setUrls(e.target.value)}
                 rows={10}
@@ -111,7 +113,7 @@ export default function BulkBrandImportPage() {
       {results.length > 0 && (
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle className="flex items-center gap-3">
+            <CardTitle className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
               Import Results
               <Badge variant="default">{successCount} success</Badge>
               {errorCount > 0 && (
@@ -124,12 +126,12 @@ export default function BulkBrandImportPage() {
               {results.map((result, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-lg border px-4 py-2"
+                  className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-2"
                 >
-                  <span className="truncate text-sm font-mono">
+                  <span className="min-w-0 flex-1 truncate text-sm font-mono">
                     {result.url}
                   </span>
-                  <div className="ml-4 flex items-center gap-2">
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
                     <Badge
                       variant={
                         result.status === "success" ? "default" : "destructive"

@@ -46,6 +46,13 @@ Sidebar + main must stay inside the viewport. Reproduced Aug 15 on campaign over
 
 Same shell rules on member routes (not admin, not marketing). Walk `/dashboard`, `/contacts`, `/brands`, create/edit/widget, `/billing`, `/account`, `/forum`, `/tools/*` at 375 / 768 / 1280. **`/stats` visuals are Kareen’s** — only fix overflow if the shell still breaks. `min-w-0` on flex children; tables in `overflow-x-auto`; URLs `truncate` + copy.
 
+- [x] Tab bars scroll inside the bar (`ScrollableTabsList` now shared by campaign, account and brand-edit tabs)
+- [x] Toolbars and wizard footers stack below `sm` instead of overflowing
+- [x] Tables scroll inside their card; long cells truncate instead of widening the row
+- [x] URLs / emails / API keys / IDs truncate or break, copy buttons keep `shrink-0`
+- [x] Embed + code blocks contained (`max-w-full overflow-x-auto`, copy moved out of the code area)
+- [x] `/stats` shell left to Kareen — only the broken `truncate` on campaign links was fixed
+
 ## J4 — Slug checker before create (2h) — HIGH
 
 Two brands shared `blacksesameph`; public page 404’d. Edit already calls `/api/brands/check-slug`. Create / onboarding / admin new do not.
@@ -247,7 +254,7 @@ Launched AI campaigns have `banner_image_url`. `buildPublicCampaignMetadata` sho
 | ----------------------------------- | ---------- | -------- | ------------ |
 | J1 Shell overflow                   | Jayson     | 4.0      | Critical     |
 | J2 Campaign / Integrations fit      | Jayson     | 2.5      | High         |
-| J3 Dashboard responsive             | Jayson     | 3.5      | High         |
+| J3 Dashboard responsive ✅          | Jayson     | 3.5      | High         |
 | J4 Slug checker                     | Jayson     | 2.0      | High         |
 | J5 Full-page embed                  | Jayson     | 1.5      | Medium       |
 | **J6 Free-forever upgrade CTA**     | **Jayson** | **1.5**  | **High**     |

@@ -67,7 +67,7 @@ export function ParticipantTable({
       });
 
       const response = await fetch(
-        `/api/campaigns/${campaignId}/participants?${params}`
+        `/api/campaigns/${campaignId}/participants?${params}`,
       );
       if (!response.ok) throw new Error("Failed to fetch");
 
@@ -111,15 +111,19 @@ export function ParticipantTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <Input
           placeholder="Search by name or email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
+          className="w-full min-w-0 sm:max-w-sm"
         />
         {showExport && (
-          <Button variant="outline" onClick={handleExport}>
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            className="w-full sm:w-auto sm:shrink-0"
+          >
             Export CSV
           </Button>
         )}
@@ -181,9 +185,11 @@ export function ParticipantTable({
             ) : (
               participants.map((p) => (
                 <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.name}</TableCell>
-                  <TableCell>{p.email}</TableCell>
-                  <TableCell>
+                  <TableCell className="max-w-50 truncate font-medium">
+                    {p.name}
+                  </TableCell>
+                  <TableCell className="max-w-60 truncate">{p.email}</TableCell>
+                  <TableCell className="whitespace-nowrap">
                     {new Date(p.date_signedup).toLocaleDateString()}
                   </TableCell>
                   {!compact && (
@@ -204,12 +210,12 @@ export function ParticipantTable({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {(page - 1) * limit + 1}-
-            {Math.min(page * limit, total)} of {total} participants
+            Showing {(page - 1) * limit + 1}-{Math.min(page * limit, total)} of{" "}
+            {total} participants
           </p>
-          <div className="flex gap-2">
+          <div className="flex gap-2 sm:shrink-0">
             <Button
               variant="outline"
               size="sm"

@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollableTabsList } from "@/components/ui/scrollable-tabs-list";
 import {
   Dialog,
   DialogContent,
@@ -39,8 +40,7 @@ const COLOR_ROLES: Array<{ key: string; label: string }> = [
   { key: "text", label: "Text" },
 ];
 
-const DEFAULT_BACKGROUND =
-  "https://cdn.vnoc.com/background/bgdefault.jpg";
+const DEFAULT_BACKGROUND = "https://cdn.vnoc.com/background/bgdefault.jpg";
 
 export type BrandEditData = {
   id: number;
@@ -69,14 +69,34 @@ const SOCIAL_FIELDS: Array<{
   label: string;
   help: string;
 }> = [
-  { key: "facebook", label: "Facebook URL", help: "https://www.facebook.com/name" },
+  {
+    key: "facebook",
+    label: "Facebook URL",
+    help: "https://www.facebook.com/name",
+  },
   { key: "twitter", label: "X URL", help: "https://www.x.com/name" },
-  { key: "instagram", label: "Instagram URL", help: "https://www.instagram.com/name" },
-  { key: "youtube", label: "Youtube URL", help: "https://www.youtube.com/channel/id" },
-  { key: "linkedin", label: "Linkedin URL", help: "https://www.linkedin.com/in/name-id/" },
+  {
+    key: "instagram",
+    label: "Instagram URL",
+    help: "https://www.instagram.com/name",
+  },
+  {
+    key: "youtube",
+    label: "Youtube URL",
+    help: "https://www.youtube.com/channel/id",
+  },
+  {
+    key: "linkedin",
+    label: "Linkedin URL",
+    help: "https://www.linkedin.com/in/name-id/",
+  },
   { key: "github", label: "Github URL", help: "https://www.github.com/name" },
   { key: "discord", label: "Discord URL", help: "https://www.discord.gg/id" },
-  { key: "telegram", label: "Telegram URL", help: "https://www.telegram.com/id" },
+  {
+    key: "telegram",
+    label: "Telegram URL",
+    help: "https://www.telegram.com/id",
+  },
 ];
 
 interface BrandEditPanelProps {
@@ -84,7 +104,10 @@ interface BrandEditPanelProps {
   isPremium?: boolean;
 }
 
-export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelProps) {
+export function BrandEditPanel({
+  brandId,
+  isPremium = false,
+}: BrandEditPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("t") === "social" ? "social" : "brand";
@@ -148,7 +171,7 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
       setBrandColors(
         data.brand_colors && typeof data.brand_colors === "object"
           ? data.brand_colors
-          : {}
+          : {},
       );
 
       if (socialsRes.ok) {
@@ -182,7 +205,7 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
         setDomainStatus(
           data.is_admin
             ? "This was already setup."
-            : "Domain is not available!"
+            : "Domain is not available!",
         );
         setDomainLink(data.url_link || "");
       } else {
@@ -203,7 +226,9 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
         body: JSON.stringify({ slug, excludeBrandId: brandId }),
       });
       const data = await res.json();
-      setSlugStatus(data.available ? "Slug is available!" : "Slug is not available!");
+      setSlugStatus(
+        data.available ? "Slug is available!" : "Slug is not available!",
+      );
     } catch {
       setSlugStatus("");
     }
@@ -222,7 +247,7 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
   const generateColors = useCallback(
     async (
       source: "auto" | "logo" | "website" | "surprise" = "auto",
-      opts: { silent?: boolean } = {}
+      opts: { silent?: boolean } = {},
     ) => {
       const website = formRef.current.url;
       const logo = formRef.current.logo_url;
@@ -230,7 +255,11 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
         if (!opts.silent) toast.error("Add a logo first");
         return;
       }
-      if ((source === "website" || source === "auto") && !website.trim() && !logo.trim()) {
+      if (
+        (source === "website" || source === "auto") &&
+        !website.trim() &&
+        !logo.trim()
+      ) {
         if (!opts.silent) toast.error("Add a website URL or logo first");
         return;
       }
@@ -255,13 +284,15 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
         }
       } catch (e) {
         if (!opts.silent) {
-          toast.error(e instanceof Error ? e.message : "Failed to generate colors");
+          toast.error(
+            e instanceof Error ? e.message : "Failed to generate colors",
+          );
         }
       } finally {
         setColorsLoading(false);
       }
     },
-    []
+    [],
   );
 
   // Automate: if a brand has no palette yet, generate one from its logo/website.
@@ -309,7 +340,9 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
       setBrand(updated);
       toast.success("Brand updated successfully");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update brand");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to update brand",
+      );
     } finally {
       setSaving(false);
     }
@@ -330,7 +363,9 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
       }
       toast.success(data.message);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save socials");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to save socials",
+      );
     } finally {
       setSaving(false);
     }
@@ -399,24 +434,43 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
       <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
         <div className="portlet p-0">
           <Tabs value={tab} onValueChange={setTab}>
-            <div className="border-b border-[#ebeef0] px-4 pt-4">
-              <TabsList className="h-auto w-full justify-start gap-1 bg-transparent p-0">
-                <TabsTrigger value="brand" className="gap-1.5">
+            <div className="min-w-0 border-b border-[#ebeef0] px-4 pt-4">
+              <ScrollableTabsList
+                activeValue={tab}
+                aria-label="Brand settings sections"
+                className="bg-transparent"
+              >
+                <TabsTrigger
+                  value="brand"
+                  data-tab-value="brand"
+                  className="h-10 flex-none gap-1.5 px-3 data-active:text-brand data-active:after:bg-brand"
+                >
                   Brand
                 </TabsTrigger>
-                <TabsTrigger value="social" className="gap-1.5">
+                <TabsTrigger
+                  value="social"
+                  data-tab-value="social"
+                  className="h-10 flex-none gap-1.5 px-3 data-active:text-brand data-active:after:bg-brand"
+                >
                   Social Media Brand
                 </TabsTrigger>
                 {isPremium && (
-                  <TabsTrigger value="whitelabel" className="gap-1.5">
+                  <TabsTrigger
+                    value="whitelabel"
+                    data-tab-value="whitelabel"
+                    className="h-10 flex-none gap-1.5 px-3 data-active:text-brand data-active:after:bg-brand"
+                  >
                     Whitelabel
                   </TabsTrigger>
                 )}
-              </TabsList>
+              </ScrollableTabsList>
             </div>
 
             <TabsContent value="brand" className="p-6">
-              <form onSubmit={handleBrandSubmit} className="mx-auto max-w-2xl space-y-5">
+              <form
+                onSubmit={handleBrandSubmit}
+                className="mx-auto max-w-2xl space-y-5"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="website">Website Url *</Label>
                   <Input
@@ -453,7 +507,9 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
                   <Label>Logo</Label>
                   <ImageInput
                     value={form.logo_url}
-                    onChange={(url) => setForm((p) => ({ ...p, logo_url: url }))}
+                    onChange={(url) =>
+                      setForm((p) => ({ ...p, logo_url: url }))
+                    }
                     uploadType="brands"
                     previewClass="h-32"
                     urlPlaceholder="https://.../logo.png"
@@ -494,7 +550,9 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
                         variant="outline"
                         size="sm"
                         onClick={() => generateColors("logo")}
-                        disabled={colorsLoading || saving || !form.logo_url.trim()}
+                        disabled={
+                          colorsLoading || saving || !form.logo_url.trim()
+                        }
                         className="gap-1.5"
                       >
                         <SparklesIcon className="size-4 text-brand" />
@@ -536,9 +594,14 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
                           <div className="flex items-center gap-2 rounded-md border border-[#ebeef0] p-1.5">
                             <input
                               type="color"
-                              value={/^#[0-9a-fA-F]{6}$/.test(val) ? val : "#ffffff"}
+                              value={
+                                /^#[0-9a-fA-F]{6}$/.test(val) ? val : "#ffffff"
+                              }
                               onChange={(e) =>
-                                setBrandColors((p) => ({ ...p, [key]: e.target.value }))
+                                setBrandColors((p) => ({
+                                  ...p,
+                                  [key]: e.target.value,
+                                }))
                               }
                               className="size-8 shrink-0 cursor-pointer rounded border-0 bg-transparent p-0"
                               aria-label={`${label} color`}
@@ -547,7 +610,10 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
                             <input
                               value={val}
                               onChange={(e) =>
-                                setBrandColors((p) => ({ ...p, [key]: e.target.value }))
+                                setBrandColors((p) => ({
+                                  ...p,
+                                  [key]: e.target.value,
+                                }))
                               }
                               placeholder="#000000"
                               className="w-full min-w-0 bg-transparent text-xs uppercase text-[#575962] outline-none"
@@ -604,16 +670,16 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
 
                 {form.slug ? (
                   publicPath && (
-                    <div className="rounded-md border border-[#28a745]/30 bg-[#28a745]/5 px-4 py-3 text-sm text-[#575962]">
+                    <div className="min-w-0 rounded-md border border-[#28a745]/30 bg-[#28a745]/5 px-4 py-3 text-sm text-[#575962]">
                       View public brand page here{" "}
                       <a
                         href={publicPath}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-semibold text-brand hover:underline"
+                        className="inline-flex max-w-full items-center gap-1 break-all font-semibold text-brand hover:underline"
                       >
                         {publicPath}
-                        <ExternalLinkIcon className="size-3" />
+                        <ExternalLinkIcon className="size-3 shrink-0" />
                       </a>
                     </div>
                   )
@@ -624,7 +690,11 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
                 )}
 
                 <div className="flex gap-2 pt-2">
-                  <Button type="submit" disabled={saving} className="bg-brand hover:bg-brand-hover">
+                  <Button
+                    type="submit"
+                    disabled={saving}
+                    className="bg-brand hover:bg-brand-hover"
+                  >
                     {saving ? "Saving..." : "Submit"}
                   </Button>
                   <Button
@@ -640,7 +710,10 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
             </TabsContent>
 
             <TabsContent value="social" className="p-6">
-              <form onSubmit={handleSocialSubmit} className="mx-auto max-w-2xl space-y-5">
+              <form
+                onSubmit={handleSocialSubmit}
+                className="mx-auto max-w-2xl space-y-5"
+              >
                 <div>
                   <h3 className="text-lg font-semibold text-[#575962]">
                     Social Media{" "}
@@ -664,7 +737,11 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
                   </div>
                 ))}
                 <div className="flex gap-2 pt-2">
-                  <Button type="submit" disabled={saving} className="bg-brand hover:bg-brand-hover">
+                  <Button
+                    type="submit"
+                    disabled={saving}
+                    className="bg-brand hover:bg-brand-hover"
+                  >
                     {saving ? "Saving..." : "Submit"}
                   </Button>
                 </div>
@@ -745,7 +822,11 @@ export function BrandEditPanel({ brandId, isPremium = false }: BrandEditPanelPro
             <Button variant="outline" onClick={() => setDeleteOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" disabled={deleting} onClick={handleDelete}>
+            <Button
+              variant="destructive"
+              disabled={deleting}
+              onClick={handleDelete}
+            >
               {deleting ? "Deleting..." : "Yes, delete it"}
             </Button>
           </DialogFooter>

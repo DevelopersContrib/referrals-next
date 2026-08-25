@@ -27,13 +27,14 @@ export default async function NotificationsPage() {
   const campaignIds = campaigns.map((c) => c.id);
   const campaignMap = new Map(campaigns.map((c) => [c.id, c.name]));
 
-  const recentSignups = campaignIds.length > 0
-    ? await prisma.campaign_participants.findMany({
-        where: { campaign_id: { in: campaignIds } },
-        orderBy: { date_signedup: "desc" },
-        take: 20,
-      })
-    : [];
+  const recentSignups =
+    campaignIds.length > 0
+      ? await prisma.campaign_participants.findMany({
+          where: { campaign_id: { in: campaignIds } },
+          orderBy: { date_signedup: "desc" },
+          take: 20,
+        })
+      : [];
 
   const allNotifications = [
     ...notifications.map((n) => ({
@@ -60,8 +61,8 @@ export default async function NotificationsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold">Notifications</h1>
           <p className="mt-1 text-muted-foreground">
             Stay updated with your campaign activity.
@@ -116,9 +117,9 @@ export default async function NotificationsPage() {
                       notification.read ? "bg-transparent" : "bg-blue-500"
                     }`}
                   />
-                  <div className="flex-1">
+                  <div className="min-w-0 flex-1">
                     <p
-                      className={`text-sm ${
+                      className={`text-sm wrap-break-word ${
                         notification.read
                           ? "text-muted-foreground"
                           : "font-medium text-foreground"
@@ -126,7 +127,7 @@ export default async function NotificationsPage() {
                     >
                       {notification.message}
                     </p>
-                    <div className="mt-1 flex items-center gap-2">
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
                       <span className="text-xs text-muted-foreground">
                         {notification.date
                           ? new Date(notification.date).toLocaleString()

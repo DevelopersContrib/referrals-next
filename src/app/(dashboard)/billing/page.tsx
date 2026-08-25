@@ -83,7 +83,7 @@ export default async function BillingPage({
 						)}
 					</div>
 					{currentSubscription?.paypal_agreement_id && (
-						<p className="mt-2 font-mono text-xs text-muted-foreground">
+						<p className="mt-2 break-all font-mono text-xs text-muted-foreground">
 							Agreement: {currentSubscription.paypal_agreement_id}
 						</p>
 					)}

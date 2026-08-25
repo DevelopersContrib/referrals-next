@@ -88,23 +88,25 @@ function EditorContent() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold">Campaign Editor</h1>
           <p className="mt-1 text-muted-foreground">
             Edit the content for your campaign landing page.
             {campaignId && (
-              <span className="ml-1 font-medium">
-                Campaign #{campaignId}
-              </span>
+              <span className="ml-1 font-medium">Campaign #{campaignId}</span>
             )}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 sm:shrink-0">
           {saved && (
             <span className="text-sm text-green-600">Changes saved!</span>
           )}
-          <Button onClick={handleSave} disabled={saving || !campaignId}>
+          <Button
+            onClick={handleSave}
+            disabled={saving || !campaignId}
+            className="w-full sm:w-auto"
+          >
             {saving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
@@ -120,8 +122,8 @@ function EditorContent() {
         <Card className="mt-6">
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground">
-              No campaign selected. Navigate to a campaign and click
-              &quot;Edit Content&quot; to start editing.
+              No campaign selected. Navigate to a campaign and click &quot;Edit
+              Content&quot; to start editing.
             </p>
           </CardContent>
         </Card>
@@ -174,15 +176,17 @@ function EditorContent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-lg border bg-white p-6">
+              <div className="min-w-0 overflow-x-auto rounded-lg border bg-white p-6">
                 {title && (
-                  <h2 className="mb-4 text-xl font-bold text-gray-900">
+                  <h2 className="mb-4 text-xl font-bold wrap-break-word text-gray-900">
                     {title}
                   </h2>
                 )}
                 {content ? (
+                  // Author-supplied HTML: cap media and let wide blocks scroll
+                  // instead of stretching the card.
                   <div
-                    className="prose prose-sm max-w-none text-gray-700"
+                    className="prose prose-sm max-w-none wrap-break-word text-gray-700 [&_img]:h-auto [&_img]:max-w-full [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto"
                     dangerouslySetInnerHTML={{ __html: content }}
                   />
                 ) : (

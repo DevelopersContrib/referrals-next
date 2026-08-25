@@ -91,7 +91,7 @@ export default async function TopicDetailPage({
         })
       : [];
   const commentVoteMap = new Map(
-    commentVoteCounts.map((v) => [v.comment_id, v._count.id])
+    commentVoteCounts.map((v) => [v.comment_id, v._count.id]),
   );
 
   const isAuthor = topic.member_id === memberId;
@@ -119,24 +119,26 @@ export default async function TopicDetailPage({
       {/* Topic */}
       <Card>
         <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">{topic.title}</h1>
-              <div className="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
-                <span>by {author?.name || "Unknown"}</span>
-                <span>
-                  {new Date(topic.date_posted).toLocaleDateString()}
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h1 className="wrap-break-word text-2xl font-bold">{topic.title}</h1>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                <span className="wrap-break-word">
+                  by {author?.name || "Unknown"}
                 </span>
+                <span>{new Date(topic.date_posted).toLocaleDateString()}</span>
                 <span>{viewCount} views</span>
                 {category && (
-                  <Badge variant="secondary">{category.name}</Badge>
+                  <Badge variant="secondary" className="max-w-full wrap-break-word">
+                    {category.name}
+                  </Badge>
                 )}
               </div>
             </div>
             {isAuthor && (
               <Link
                 href={`/forum/post/${topic.slug}/edit`}
-                className="text-sm text-blue-600 hover:underline"
+                className="shrink-0 text-sm text-blue-600 hover:underline"
               >
                 Edit
               </Link>
@@ -144,7 +146,7 @@ export default async function TopicDetailPage({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="whitespace-pre-wrap text-gray-700">
+          <div className="whitespace-pre-wrap wrap-break-word text-gray-700">
             {topic.content}
           </div>
           <div className="mt-4 flex items-center gap-2">
@@ -162,8 +164,8 @@ export default async function TopicDetailPage({
           {comments.map((comment) => (
             <Card key={comment.id}>
               <CardContent className="py-4">
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <span className="font-medium text-gray-900">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                  <span className="wrap-break-word font-medium text-gray-900">
                     {comment.member_id
                       ? authorMap.get(comment.member_id) || "Unknown"
                       : "Unknown"}
@@ -175,7 +177,7 @@ export default async function TopicDetailPage({
                     {commentVoteMap.get(comment.id) || 0} votes
                   </span>
                 </div>
-                <div className="mt-2 whitespace-pre-wrap text-gray-700">
+                <div className="mt-2 whitespace-pre-wrap wrap-break-word text-gray-700">
                   {comment.answer}
                 </div>
               </CardContent>

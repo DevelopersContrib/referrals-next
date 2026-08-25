@@ -1,7 +1,13 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export default async function ShoutoutsToolPage() {
@@ -39,7 +45,7 @@ export default async function ShoutoutsToolPage() {
             <div className="space-y-4">
               {shoutouts.map((shoutout) => (
                 <div key={shoutout.id} className="rounded-lg border p-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <Badge
                       variant={shoutout.approved ? "default" : "secondary"}
                     >
@@ -50,7 +56,7 @@ export default async function ShoutoutsToolPage() {
                     </span>
                   </div>
                   {shoutout.message && (
-                    <p className="mt-3 text-sm text-gray-600">
+                    <p className="mt-3 wrap-break-word text-sm text-gray-600">
                       {shoutout.message}
                     </p>
                   )}

@@ -161,13 +161,17 @@ export default function MailchimpIntegrationPage() {
             {lists.map((list) => (
               <div
                 key={list.id}
-                className="flex items-center justify-between p-3 bg-white border rounded-lg"
+                className="flex min-w-0 flex-wrap items-center justify-between gap-2 p-3 bg-white border rounded-lg"
               >
-                <div>
-                  <p className="font-medium text-gray-900">{list.name}</p>
-                  <p className="text-xs text-gray-500">ID: {list.id}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-gray-900">
+                    {list.name}
+                  </p>
+                  <p className="truncate text-xs text-gray-500">
+                    ID: {list.id}
+                  </p>
                 </div>
-                <span className="text-sm text-gray-500">
+                <span className="shrink-0 text-sm text-gray-500">
                   {list.member_count.toLocaleString()} subscribers
                 </span>
               </div>

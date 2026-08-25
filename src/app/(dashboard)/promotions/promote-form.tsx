@@ -58,15 +58,13 @@ export function PromoteForm({ campaigns }: PromoteFormProps) {
           {error}
         </div>
       )}
-      <div className="flex items-end gap-3">
-        <div className="flex-1">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="min-w-0 flex-1">
           <Select
             value={campaignId}
-            onValueChange={(value: string | null) =>
-              setCampaignId(value || "")
-            }
+            onValueChange={(value: string | null) => setCampaignId(value || "")}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select a campaign to promote" />
             </SelectTrigger>
             <SelectContent>
@@ -78,7 +76,11 @@ export function PromoteForm({ campaigns }: PromoteFormProps) {
             </SelectContent>
           </Select>
         </div>
-        <Button type="submit" disabled={loading || !campaignId}>
+        <Button
+          type="submit"
+          disabled={loading || !campaignId}
+          className="w-full sm:w-auto sm:shrink-0"
+        >
           {loading ? "Submitting..." : "Submit for Promotion"}
         </Button>
       </div>

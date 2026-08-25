@@ -52,7 +52,10 @@ async function getDashboardData(memberId: number) {
 
     // Count campaigns per brand manually
     for (const c of allCampaigns) {
-      campaignCountByBrandMap.set(c.url_id, (campaignCountByBrandMap.get(c.url_id) || 0) + 1);
+      campaignCountByBrandMap.set(
+        c.url_id,
+        (campaignCountByBrandMap.get(c.url_id) || 0) + 1,
+      );
     }
 
     if (campaignIds.length > 0) {
@@ -261,7 +264,9 @@ export default async function DashboardPage() {
           return (
             <div key={stat.title} className="stat-card">
               <div className="flex items-center justify-between">
-                <div className={`flex size-10 items-center justify-center rounded-lg ${stat.bg}`}>
+                <div
+                  className={`flex size-10 items-center justify-center rounded-lg ${stat.bg}`}
+                >
                   <Icon className={`size-5 ${stat.color}`} />
                 </div>
               </div>
@@ -316,11 +321,13 @@ export default async function DashboardPage() {
                           className="mb-3 h-8 w-auto brightness-0 invert opacity-90"
                         />
                       ) : (
-                        <h3 className="mb-2 text-xl font-bold text-white drop-shadow-lg">
+                        <h3 className="mb-2 wrap-break-word text-xl font-bold text-white drop-shadow-lg">
                           {brand.domain}
                         </h3>
                       )}
-                      <p className="mb-3 text-xs text-white/70">{brand.url}</p>
+                      <p className="mb-3 truncate text-xs text-white/70">
+                        {brand.url}
+                      </p>
 
                       {/* Stats Grid */}
                       <div className="grid grid-cols-3 gap-2 rounded-md bg-black/30 p-2.5 backdrop-blur-sm">
@@ -353,7 +360,7 @@ export default async function DashboardPage() {
                           <p className="text-base font-bold text-white">
                             {new Date(brand.date_added).toLocaleDateString(
                               "en-US",
-                              { month: "short", year: "2-digit" }
+                              { month: "short", year: "2-digit" },
                             )}
                           </p>
                           <p className="text-[10px] uppercase tracking-wider text-white/60">

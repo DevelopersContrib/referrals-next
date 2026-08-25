@@ -18,7 +18,8 @@ type Props = {
 };
 
 function authorLabel(type: string): string {
-  if (type === "customer" || type === "email" || type === "contractor") return "You";
+  if (type === "customer" || type === "email" || type === "contractor")
+    return "You";
   if (type === "agent") return "Support Assistant";
   if (type === "staff") return "Referrals Support";
   return "System";
@@ -75,15 +76,18 @@ export default function SupportTicketThread({
                   : "border-brand/20 bg-brand/5"
             }`}
           >
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs font-bold uppercase tracking-wide text-[#a7abc3]">
                 {authorLabel(m.author_type)}
               </p>
-              <time className="text-[11px] text-[#a7abc3]" suppressHydrationWarning>
+              <time
+                className="text-[11px] text-[#a7abc3]"
+                suppressHydrationWarning
+              >
                 {new Date(m.created_at).toLocaleString("en-US")}
               </time>
             </div>
-            <div className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-[#575962]">
+            <div className="mt-2 whitespace-pre-wrap wrap-break-word text-sm leading-relaxed text-[#575962]">
               {m.body}
             </div>
           </div>
@@ -139,7 +143,9 @@ export default function SupportTicketThread({
           </button>
         </form>
       ) : (
-        <p className="text-sm text-[#a7abc3]">This ticket is {status.replace(/_/g, " ")}.</p>
+        <p className="text-sm text-[#a7abc3]">
+          This ticket is {status.replace(/_/g, " ")}.
+        </p>
       )}
     </div>
   );

@@ -181,7 +181,7 @@ export function BannerManager({ campaigns }: BannerManagerProps) {
 							Choose File
 						</Button>
 						{previewFile && (
-							<p className="mt-2 text-xs text-muted-foreground">
+							<p className="mt-2 break-all text-xs text-muted-foreground">
 								{previewFile.name} &middot;{" "}
 								{formatFileSize(previewFile.size)}
 								{dimensions &&

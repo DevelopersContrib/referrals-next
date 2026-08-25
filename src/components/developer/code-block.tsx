@@ -11,8 +11,8 @@ export function CodeBlock({
   className?: string;
 }) {
   return (
-    <div className={cn("group/code relative", className)}>
-      <pre className="overflow-x-auto rounded-lg bg-gray-900 p-4 pr-12 font-mono text-sm leading-relaxed text-green-400">
+    <div className={cn("group/code relative min-w-0 max-w-full", className)}>
+      <pre className="max-w-full overflow-x-auto overscroll-x-contain rounded-lg bg-gray-900 p-4 pr-12 font-mono text-sm leading-relaxed text-green-400">
         {code}
       </pre>
       <CopyToClipboardButton

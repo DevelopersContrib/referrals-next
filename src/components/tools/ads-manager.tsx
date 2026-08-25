@@ -181,11 +181,13 @@ export function AdsManager({ campaigns }: AdsManagerProps) {
 					</CardHeader>
 					<CardContent>
 						<div className="rounded-lg border border-[#ebeef0] bg-white p-4 shadow-sm">
-							<div className="mb-2 flex items-center gap-2">
-								<div className="size-8 rounded-full bg-brand/10" />
-								<div>
+							<div className="mb-2 flex min-w-0 items-center gap-2">
+								<div className="size-8 shrink-0 rounded-full bg-brand/10" />
+								<div className="min-w-0">
 									<p className="text-xs text-muted-foreground">Sponsored</p>
-									<p className="text-sm font-semibold">{previewCampaign}</p>
+									<p className="truncate text-sm font-semibold">
+										{previewCampaign}
+									</p>
 								</div>
 							</div>
 							<div className="aspect-[2/1] rounded-md bg-gradient-to-br from-brand/10 to-[#f7f8fa]" />

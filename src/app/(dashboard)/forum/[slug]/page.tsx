@@ -27,7 +27,10 @@ export default async function ForumCategoryPage({
         <p className="mt-2 text-muted-foreground">
           The category you are looking for does not exist.
         </p>
-        <Link href="/forum" className="mt-4 inline-block text-sm text-blue-600 hover:underline">
+        <Link
+          href="/forum"
+          className="mt-4 inline-block text-sm text-blue-600 hover:underline"
+        >
           Back to Forum
         </Link>
       </div>
@@ -57,7 +60,7 @@ export default async function ForumCategoryPage({
 
   const voteMap = new Map(voteCounts.map((v) => [v.topic_id, v._count.id]));
   const commentMap = new Map(
-    commentCounts.map((c) => [c.topic_id, c._count.id])
+    commentCounts.map((c) => [c.topic_id, c._count.id]),
   );
 
   return (
@@ -93,12 +96,12 @@ export default async function ForumCategoryPage({
 
             return (
               <Card key={topic.id}>
-                <CardContent className="flex items-center gap-4 py-4">
-                  <div className="flex flex-col items-center gap-1 text-center min-w-[60px]">
+                <CardContent className="flex items-center gap-3 py-4 sm:gap-4">
+                  <div className="flex shrink-0 flex-col items-center gap-1 text-center min-w-[48px] sm:min-w-[60px]">
                     <span className="text-lg font-bold">{votes}</span>
                     <span className="text-xs text-muted-foreground">votes</span>
                   </div>
-                  <div className="flex flex-col items-center gap-1 text-center min-w-[60px]">
+                  <div className="flex shrink-0 flex-col items-center gap-1 text-center min-w-[48px] sm:min-w-[60px]">
                     <span className="text-lg font-bold">{comments}</span>
                     <span className="text-xs text-muted-foreground">
                       replies
@@ -107,11 +110,11 @@ export default async function ForumCategoryPage({
                   <div className="flex-1 min-w-0">
                     <Link
                       href={`/forum/post/${topic.slug || topic.id}`}
-                      className="font-medium text-gray-900 hover:text-blue-600"
+                      className="block wrap-break-word font-medium text-gray-900 hover:text-blue-600"
                     >
                       {topic.title}
                     </Link>
-                    <div className="mt-1 flex items-center gap-2">
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
                       <Badge variant="secondary" className="text-xs">
                         {category.name}
                       </Badge>

@@ -71,12 +71,12 @@ export default async function ForumUnansweredPage() {
 
             return (
               <Card key={topic.id}>
-                <CardContent className="flex items-center gap-4 py-4">
-                  <div className="flex flex-col items-center gap-1 text-center min-w-[60px]">
+                <CardContent className="flex items-center gap-3 py-4 sm:gap-4">
+                  <div className="flex shrink-0 flex-col items-center gap-1 text-center min-w-[48px] sm:min-w-[60px]">
                     <span className="text-lg font-bold">{votes}</span>
                     <span className="text-xs text-muted-foreground">votes</span>
                   </div>
-                  <div className="flex flex-col items-center gap-1 text-center min-w-[60px]">
+                  <div className="flex shrink-0 flex-col items-center gap-1 text-center min-w-[48px] sm:min-w-[60px]">
                     <span className="text-lg font-bold text-orange-500">0</span>
                     <span className="text-xs text-muted-foreground">
                       replies
@@ -85,11 +85,11 @@ export default async function ForumUnansweredPage() {
                   <div className="flex-1 min-w-0">
                     <Link
                       href={`/forum/post/${topic.slug || topic.id}`}
-                      className="font-medium text-gray-900 hover:text-blue-600"
+                      className="block wrap-break-word font-medium text-gray-900 hover:text-blue-600"
                     >
                       {topic.title}
                     </Link>
-                    <div className="mt-1 flex items-center gap-2">
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
                       {category && (
                         <Badge variant="secondary" className="text-xs">
                           {category.name}

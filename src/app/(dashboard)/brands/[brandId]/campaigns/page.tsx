@@ -57,7 +57,7 @@ export default async function CampaignListPage({
         })
       : [];
   const countMap = new Map(
-    participantCounts.map((p) => [p.campaign_id, p._count.id])
+    participantCounts.map((p) => [p.campaign_id, p._count.id]),
   );
 
   // Get campaign types
@@ -72,15 +72,18 @@ export default async function CampaignListPage({
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold">Campaigns</h1>
-          <p className="mt-1 text-muted-foreground">
+          <p className="mt-1 wrap-break-word text-muted-foreground">
             Manage referral campaigns for {brand.url || "your brand"}
           </p>
         </div>
-        <Link href={`/brands/${brandId}/campaigns/new`}>
-          <Button>Create Campaign</Button>
+        <Link
+          href={`/brands/${brandId}/campaigns/new`}
+          className="w-full sm:w-auto sm:shrink-0"
+        >
+          <Button className="w-full sm:w-auto">Create Campaign</Button>
         </Link>
       </div>
 

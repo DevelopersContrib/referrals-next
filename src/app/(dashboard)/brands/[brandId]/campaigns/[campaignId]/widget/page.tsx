@@ -36,7 +36,9 @@ export default function WidgetCustomizerPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [campaignName, setCampaignName] = useState("");
-  const [aiLoading, setAiLoading] = useState<null | "widget" | "bannerHtml">(null);
+  const [aiLoading, setAiLoading] = useState<null | "widget" | "bannerHtml">(
+    null,
+  );
   const [vibe, setVibe] = useState("");
 
   const [formData, setFormData] = useState({
@@ -146,7 +148,8 @@ export default function WidgetCustomizerPage() {
         button_color: data.button_color ?? prev.button_color,
         text_color: data.text_color ?? prev.text_color,
         background_color: data.background_color ?? prev.background_color,
-        body_text: data.body_text != null ? String(data.body_text) : prev.body_text,
+        body_text:
+          data.body_text != null ? String(data.body_text) : prev.body_text,
       }));
       toast.success("Widget draft updated — review and click Save to publish.");
     } catch (e) {
@@ -204,28 +207,38 @@ export default function WidgetCustomizerPage() {
         color: `#${formData.text_color}`,
       }}
     >
-      <h3 className="text-lg font-bold leading-snug" style={{ color: `#${formData.color}` }}>
+      <h3
+        className="text-lg font-bold leading-snug"
+        style={{ color: `#${formData.color}` }}
+      >
         {formData.header_title || "Your headline goes here"}
       </h3>
       <p className="mt-1.5 text-sm opacity-80">
-        {formData.description || "A short line explaining the reward and why to join."}
+        {formData.description ||
+          "A short line explaining the reward and why to join."}
       </p>
       {formData.body_text ? (
         <div
           className="prose prose-sm mt-3 max-w-none"
-          dangerouslySetInnerHTML={{ __html: sanitizeWidgetHtml(formData.body_text) }}
+          dangerouslySetInnerHTML={{
+            __html: sanitizeWidgetHtml(formData.body_text),
+          }}
         />
       ) : null}
 
       <div className="mt-4 space-y-3">
         <div>
-          <span className="text-xs font-medium opacity-90">{formData.field_label_1 || "Full name"}</span>
+          <span className="text-xs font-medium opacity-90">
+            {formData.field_label_1 || "Full name"}
+          </span>
           <div className="mt-1 rounded-md border border-black/10 bg-white/95 px-3 py-2 text-sm text-gray-400">
             Jane Doe
           </div>
         </div>
         <div>
-          <span className="text-xs font-medium opacity-90">{formData.field_label_2 || "Email"}</span>
+          <span className="text-xs font-medium opacity-90">
+            {formData.field_label_2 || "Email"}
+          </span>
           <div className="mt-1 rounded-md border border-black/10 bg-white/95 px-3 py-2 text-sm text-gray-400">
             jane@example.com
           </div>
@@ -244,7 +257,9 @@ export default function WidgetCustomizerPage() {
           🎉 Join 1,200+ others already earning rewards
         </p>
       ) : null}
-      <p className="mt-2 text-center text-[10px] opacity-50">Powered by Referrals.com</p>
+      <p className="mt-2 text-center text-[10px] opacity-50">
+        Powered by Referrals.com
+      </p>
     </div>
   );
 
@@ -254,8 +269,8 @@ export default function WidgetCustomizerPage() {
         <div>
           <h1 className="text-2xl font-bold">Widget studio</h1>
           <p className="mt-1 text-muted-foreground">
-            Use AI to draft copy and colors, fine-tune fields, and save. All install
-            and embed code lives in the{" "}
+            Use AI to draft copy and colors, fine-tune fields, and save. All
+            install and embed code lives in the{" "}
             <Link
               href={`/brands/${brandId}/campaigns/${campaignId}#integrations/iframe`}
               className="font-medium text-brand underline-offset-2 hover:underline"
@@ -267,7 +282,9 @@ export default function WidgetCustomizerPage() {
         </div>
         <Button
           variant="outline"
-          onClick={() => router.push(`/brands/${brandId}/campaigns/${campaignId}`)}
+          onClick={() =>
+            router.push(`/brands/${brandId}/campaigns/${campaignId}`)
+          }
         >
           Back to campaign
         </Button>
@@ -281,8 +298,8 @@ export default function WidgetCustomizerPage() {
             AI widget creator
           </CardTitle>
           <CardDescription>
-            Generates a draft for this campaign (campaign id {cid}). Save when you are happy — the
-            live embed iframe uses saved settings.
+            Generates a draft for this campaign (campaign id {cid}). Save when
+            you are happy — the live embed iframe uses saved settings.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -303,7 +320,9 @@ export default function WidgetCustomizerPage() {
               className="gap-2 bg-violet-600 text-white hover:bg-violet-700"
             >
               <SparklesIcon className="size-4" />
-              {aiLoading === "widget" ? "Generating…" : "Generate copy & colors"}
+              {aiLoading === "widget"
+                ? "Generating…"
+                : "Generate copy & colors"}
             </Button>
             <Button
               type="button"
@@ -361,7 +380,9 @@ export default function WidgetCustomizerPage() {
                   <Input
                     id="field_label_1"
                     value={formData.field_label_1}
-                    onChange={(e) => updateField("field_label_1", e.target.value)}
+                    onChange={(e) =>
+                      updateField("field_label_1", e.target.value)
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -369,7 +390,9 @@ export default function WidgetCustomizerPage() {
                   <Input
                     id="field_label_2"
                     value={formData.field_label_2}
-                    onChange={(e) => updateField("field_label_2", e.target.value)}
+                    onChange={(e) =>
+                      updateField("field_label_2", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -389,7 +412,9 @@ export default function WidgetCustomizerPage() {
                   id="success_message"
                   rows={2}
                   value={formData.success_message}
-                  onChange={(e) => updateField("success_message", e.target.value)}
+                  onChange={(e) =>
+                    updateField("success_message", e.target.value)
+                  }
                 />
               </div>
             </CardContent>
@@ -424,7 +449,9 @@ export default function WidgetCustomizerPage() {
                     <Input
                       id="button_color"
                       value={formData.button_color}
-                      onChange={(e) => updateField("button_color", e.target.value)}
+                      onChange={(e) =>
+                        updateField("button_color", e.target.value)
+                      }
                       maxLength={6}
                     />
                     <div
@@ -443,7 +470,9 @@ export default function WidgetCustomizerPage() {
                     <Input
                       id="text_color"
                       value={formData.text_color}
-                      onChange={(e) => updateField("text_color", e.target.value)}
+                      onChange={(e) =>
+                        updateField("text_color", e.target.value)
+                      }
                       maxLength={6}
                     />
                     <div
@@ -459,7 +488,9 @@ export default function WidgetCustomizerPage() {
                     <Input
                       id="background_color"
                       value={formData.background_color}
-                      onChange={(e) => updateField("background_color", e.target.value)}
+                      onChange={(e) =>
+                        updateField("background_color", e.target.value)
+                      }
                       maxLength={6}
                     />
                     <div
@@ -476,7 +507,9 @@ export default function WidgetCustomizerPage() {
                 <Label>Placement</Label>
                 <Select
                   value={formData.placement}
-                  onValueChange={(val: string | null) => updateField("placement", val || "")}
+                  onValueChange={(val: string | null) =>
+                    updateField("placement", val || "")
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -494,8 +527,8 @@ export default function WidgetCustomizerPage() {
             <CardHeader>
               <CardTitle>Images</CardTitle>
               <CardDescription>
-                Add a banner and background. Generate a brand-aware banner with AI, upload,
-                or paste a URL.
+                Add a banner and background. Generate a brand-aware banner with
+                AI, upload, or paste a URL.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -524,22 +557,28 @@ export default function WidgetCustomizerPage() {
             </CardContent>
           </Card>
 
-          <Button onClick={handleSave} disabled={saving} className="w-full" size="lg">
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full"
+            size="lg"
+          >
             {saving ? "Saving…" : "Save widget settings"}
           </Button>
         </div>
 
         <div className="space-y-4 lg:sticky lg:top-24">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <h2 className="text-lg font-semibold">Live preview</h2>
               <p className="text-sm text-muted-foreground">
                 Exactly what visitors see. Updates as you type —{" "}
-                <span className="font-medium text-foreground">Save</span> to publish.
+                <span className="font-medium text-foreground">Save</span> to
+                publish.
               </p>
             </div>
             <span
-              className="rounded-full border px-2.5 py-1 text-xs font-medium capitalize text-muted-foreground"
+              className="w-fit shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium capitalize text-muted-foreground"
               title="Change this under Styling → Placement"
             >
               {isPopup ? "Popup" : "Inline"} placement
@@ -549,12 +588,15 @@ export default function WidgetCustomizerPage() {
           {/* Mock browser window showing the widget in context */}
           <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
             {/* browser chrome */}
-            <div className="flex items-center gap-2 border-b bg-muted/40 px-3 py-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-              <div className="ml-2 flex-1 truncate rounded-md bg-white px-3 py-1 text-xs text-muted-foreground">
-                {(campaignName || "yourbrand.com").toLowerCase().replace(/\s+/g, "")}.com
+            <div className="flex min-w-0 items-center gap-2 border-b bg-muted/40 px-3 py-2">
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-red-400" />
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-amber-400" />
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400" />
+              <div className="ml-2 min-w-0 flex-1 truncate rounded-md bg-white px-3 py-1 text-xs text-muted-foreground">
+                {(campaignName || "yourbrand.com")
+                  .toLowerCase()
+                  .replace(/\s+/g, "")}
+                .com
               </div>
             </div>
 
@@ -573,7 +615,9 @@ export default function WidgetCustomizerPage() {
                 <div className="h-3 w-2/3 rounded bg-gray-200" />
                 <div className="mt-2 h-3 w-1/2 rounded bg-gray-100" />
 
-                {!isPopup && <div className="mx-auto mt-5 max-w-sm">{widgetCard}</div>}
+                {!isPopup && (
+                  <div className="mx-auto mt-5 max-w-sm">{widgetCard}</div>
+                )}
 
                 {isPopup && (
                   <div className="mt-3 space-y-2">
@@ -601,7 +645,8 @@ export default function WidgetCustomizerPage() {
 
           {formData.success_message ? (
             <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-              <span className="font-semibold">After signup:</span> {formData.success_message}
+              <span className="font-semibold">After signup:</span>{" "}
+              {formData.success_message}
             </div>
           ) : null}
         </div>

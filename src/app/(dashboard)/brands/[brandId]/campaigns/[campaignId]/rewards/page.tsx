@@ -26,13 +26,20 @@ export default async function RewardsPage({ params }: RewardsPageProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold">Rewards & Coupons</h1>
-          <p className="mt-1 text-muted-foreground">{campaign.name}</p>
+          <p className="mt-1 wrap-break-word text-muted-foreground">
+            {campaign.name}
+          </p>
         </div>
-        <Link href={`/brands/${brandId}/campaigns/${campaignId}`}>
-          <Button variant="outline">Back to Campaign</Button>
+        <Link
+          href={`/brands/${brandId}/campaigns/${campaignId}`}
+          className="w-full sm:w-auto sm:shrink-0"
+        >
+          <Button variant="outline" className="w-full sm:w-auto">
+            Back to Campaign
+          </Button>
         </Link>
       </div>
 

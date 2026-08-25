@@ -224,7 +224,7 @@ export default async function BrandDeveloperPage({ params }: PageProps) {
           <p className="text-3xl font-bold text-brand">{campaignCount}</p>
           <p className="mt-1 text-sm text-muted-foreground">Campaigns</p>
         </div>
-        <div className="stat-card text-center">
+        <div className="stat-card min-w-0 text-center">
           <p className="truncate text-lg font-bold text-brand">
             {brand.domain}
           </p>
@@ -267,9 +267,7 @@ export default async function BrandDeveloperPage({ params }: PageProps) {
                     <p className="font-semibold transition-colors group-hover:text-brand">
                       {link.title}
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      {link.desc}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{link.desc}</p>
                   </div>
                   <ExternalLinkIcon className="size-4 text-muted-foreground" />
                 </CardContent>

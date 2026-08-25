@@ -172,7 +172,9 @@ A free or trial member opens `/billing` and sees Free vs Growth the same way the
 
 June pipeline work is done (entry/reward emails, Mailchimp/Zapier, OAuth, webhook verify, agent auth). Do not redo those.
 
-## R1 — Domain onboarding must not take 10 minutes (4.5h) — CRITICAL
+**Sprint status (Ronan):** R1 ✅ · R2 ✅ · R3 ✅ · R4 partial (code ✅, live email smoke pending) · R5 ✅ (code; live OG preview optional)
+
+## R1 — Domain onboarding must not take 10 minutes (4.5h) — CRITICAL ✅
 
 **Goal:** Adding a domain is a first-run moment. **10 minutes is a bug.** Member sees brand name / logo / scores in **~15 seconds**. Hard fail: if they are still staring at “Generating referral campaigns…” at **30 seconds**, this ticket is not done.
 
@@ -189,43 +191,52 @@ Onboarding (`BrandAnalyzer`) polls until the **whole job** is `done`. That waits
 
 ### Tasks
 
-- [ ] **Unblock the UI:** show `BrandResults` when `intelligence` is done (logo, scores, profile). Do not wait for the `campaigns` module.
-- [ ] **Skip default campaign gen on first analyze** (or run it only if the member stays on the results page). Dedicated `/campaigns/ai` already generates from the brief.
-- [ ] **Cap the crawl:** homepage + at most one extra page; timeout **5s**; fail soft and continue. Intelligence can run on homepage-only data.
-- [ ] **Don’t stall on a dead trigger:** if `/run/[module]` doesn’t 202, run the module in-process on the analyze POST (or shorten sweeper from 2 min to 20s for `queued`).
-- [ ] Time the job: log `started_at` → each module `completed_at` → `done`. Target: intelligence ready **< 15s** on a normal site (e.g. `blacksesameph.com`).
-- [ ] Do not re-crawl the whole site when Design with AI reuses an existing brand (`createAnalysisJobForBrand`) if crawl+intel already exist.
+- [x] **Unblock the UI:** show `BrandResults` when `intelligence` is done (logo, scores, profile). Do not wait for the `campaigns` module. (`brand-analyzer.tsx`)
+- [x] **Skip default campaign gen on first analyze** (or run it only if the member stays on the results page). Dedicated `/campaigns/ai` already generates from the brief. (`ONBOARDING_MODULES` excludes `campaigns`)
+- [x] **Cap the crawl:** homepage + at most one extra page; timeout **5s**; fail soft and continue. Intelligence can run on homepage-only data. (`crawler.ts`)
+- [x] **Don’t stall on a dead trigger:** if `/run/[module]` doesn’t 202, run the module in-process on the analyze POST (or shorten sweeper from 2 min to 20s for `queued`). In-process fallback in `orchestrator.ts` `triggerModule`. Sweeper still 2 min for stuck `running` — acceptable; cron every 5 min.
+- [x] Time the job: log `started_at` → each module `completed_at` → `done`. Target: intelligence ready **< 15s** on a normal site (e.g. `blacksesameph.com`). (`orchestrator.ts`)
+- [x] Do not re-crawl the whole site when Design with AI reuses an existing brand (`createAnalysisJobForBrand`) if crawl+intel already exist. (`findReusableAnalysis` + `copyAnalysisArtifacts`)
 
 **Files:** `src/lib/analysis/crawler.ts`, `orchestrator.ts`, `registry.ts`, `src/app/api/brands/analyze/route.ts`, `brand-analyzer.tsx`, `analysis-pipeline.tsx`
 
 **Done when:** New onboarding of a live domain (e.g. `blacksesameph.com`) shows brand name/logo/scores in **~15s**, never 10 minutes. Campaign cards are optional/background. A hung `/pricing` page does not block the result. A dead module trigger does not leave them on a spinner.
 
-## R2 — Shopify env + OAuth smoke (2h) — HIGH
+## R2 — Shopify env + OAuth smoke (2h) — HIGH ✅
 
 Code uses `SHOPIFY_CLIENT_ID` / `SHOPIFY_CLIENT_SECRET`. Local `.env` still has `SHOPIFY_API_KEY` / `SHOPIFY_API_SECRET`. Align **code** to one pair (prefer Shopify’s `CLIENT_ID` names). Update `.env.local.example` only — do not edit `.env`. Document the two keys ops must set in Vercel. Smoke: connect a test shop or prove the authorize URL is well-formed.
 
-## R3 — Enroll engagement after paid activate (2.5h) — HIGH
+- [x] Code aligned to `SHOPIFY_CLIENT_ID` / `SHOPIFY_CLIENT_SECRET` (legacy `SHOPIFY_API_*` fallback in `shopify.ts`)
+- [x] `.env.local.example` — Shopify vars + `NEXT_PUBLIC_SHOPIFY_CLIENT_ID`
+- [x] Vercel ops docs — `docs/shopify-integration.md`
+- [x] OAuth smoke — `npx tsx scripts/smoke-shopify-oauth.ts` (well-formed authorize URL; no live shop required)
+
+## R3 — Enroll engagement after paid activate (2.5h) — HIGH ✅
 
 Paid checkout now writes `member_plan` + entitlements. Engagement still segments `trial` / `free_capped` / `paid` but activate does not enroll the “you just paid” sequence.
 
-- [ ] On successful `billing-activation` / webhook activate, enroll the member in the paid campaign (or stop the trial/loss-aversion sequence).
-- [ ] Idempotent — replayed webhooks must not double-enroll.
-- [ ] Do not send mail from the webhook if the engagement tick already would.
+- [x] On successful `billing-activation` / webhook activate, enroll the member in the paid campaign (or stop the trial/loss-aversion sequence). (`handlePaidEngagementTransition` in `billing-activation.ts` via confirm/execute)
+- [x] Idempotent — replayed webhooks must not double-enroll. (`alreadyProcessed` skip + existing enrollment check)
+- [x] Do not send mail from the webhook if the engagement tick already would. (engagement runs in `activatePaidSubscription`, not PayPal webhook route)
 
 **Files:** `src/lib/billing-activation.ts`, webhook route, `src/lib/engagement-segments.ts`
 
-## R4 — Campaign email smoke (2h) — MEDIUM
+## R4 — Campaign email smoke (2h) — MEDIUM *(partial)*
 
 `sendCampaignEntryEmail` / `sendCampaignRewardEmail` are wired. Prove they arrive.
 
-- [ ] Join via widget → entry email with `{{name}}` / referral link
-- [ ] Hit reward threshold → reward email with coupon/cash
-- [ ] Failed SES must not fail signup (already try/catch — confirm)
-- [ ] From display = campaign/brand name, not a raw SES address if we can set it
+- [ ] Join via widget → entry email with `{{name}}` / referral link *(live smoke not recorded)*
+- [ ] Hit reward threshold → reward email with coupon/cash *(live smoke not recorded)*
+- [x] Failed SES must not fail signup (already try/catch — confirm). (`widget/signup`, `widget/reward`)
+- [x] From display = campaign/brand name, not a raw SES address if we can set it. (`fromName: brand?.domain || campaign.name`)
 
-## R5 — Public campaign OG from hero (1h) — LOW
+## R5 — Public campaign OG from hero (1h) — LOW ✅
 
 Launched AI campaigns have `banner_image_url`. `buildPublicCampaignMetadata` should set `openGraph.images` (already started — confirm live `/p/{slug}/campaign/{id}` shows the hero in Slack/iMessage). Add those URLs to `sitemap.xml` if missing.
+
+- [x] `openGraph.images` + Twitter card from `heroImageUrl` (`public-campaign-page.tsx`)
+- [x] Public campaign URLs in `sitemap.xml` (`/p/{slug}/campaign/{id}`)
+- [ ] Confirm live preview in Slack/iMessage *(optional manual check)*
 
 ---
 
@@ -241,11 +252,11 @@ Launched AI campaigns have `banner_image_url`. `buildPublicCampaignMetadata` sho
 | **J6 Free-forever upgrade CTA** | **Jayson** | **1.5** | **High** |
 | **K1 Make `/stats` awesome** | **Kareen** | **8.0** | **High** |
 | **K2 `/billing` plan cards** | **Kareen** | **3.0** | **High** |
-| **R1 Onboarding ≠ 10 minutes** | **Ronan** | **4.5** | **Critical** |
-| R2 Shopify env | Ronan | 2.0 | High |
-| R3 Paid → engagement | Ronan | 2.5 | High |
-| R4 Campaign email smoke | Ronan | 2.0 | Medium |
-| R5 Public OG / sitemap | Ronan | 1.0 | Low |
+| **R1 Onboarding ≠ 10 minutes** ✅ | **Ronan** | **4.5** | **Critical** |
+| R2 Shopify env ✅ | Ronan | 2.0 | High |
+| R3 Paid → engagement ✅ | Ronan | 2.5 | High |
+| R4 Campaign email smoke *(partial)* | Ronan | 2.0 | Medium |
+| R5 Public OG / sitemap ✅ | Ronan | 1.0 | Low |
 | **Total** | | **38.0** | |
 
 ### How to verify

@@ -1,11 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { buildCampaignEmbedSnippets, trimEmbedBase } from "@/lib/campaign-embed-snippets";
+import {
+  buildCampaignEmbedSnippets,
+  trimEmbedBase,
+} from "@/lib/campaign-embed-snippets";
 import {
   Code2Icon,
   SquareCodeIcon,
@@ -54,11 +64,14 @@ export function IntegrationGuide({
 }: IntegrationGuideProps) {
   const snippets = useMemo(
     () => buildCampaignEmbedSnippets(baseUrl, campaignId),
-    [baseUrl, campaignId]
+    [baseUrl, campaignId],
   );
   const widgetHref = `/brands/${brandId}/campaigns/${campaignId}/widget`;
   const root = trimEmbedBase(baseUrl || "https://referrals.com");
-  const fromDomain = (brandDomain || "").trim().toLowerCase().replace(/^www\./, "");
+  const fromDomain = (brandDomain || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^www\./, "");
   const networkApi = `${root}/api/domain-refer?from=${fromDomain || "yourdomain.com"}&to=TARGET-DOMAIN.com`;
 
   const integrations = useMemo<IntegrationDef[]>(
@@ -74,7 +87,10 @@ export function IntegrationGuide({
           <>
             The recommended install. One script tag loads your configuration and
             injects the widget (embed, popup, or floating) based on your{" "}
-            <Link href={widgetHref} className="font-medium text-brand underline-offset-2 hover:underline">
+            <Link
+              href={widgetHref}
+              className="font-medium text-brand underline-offset-2 hover:underline"
+            >
               widget settings
             </Link>
             .
@@ -97,11 +113,13 @@ export function IntegrationGuide({
         blurb: (
           <>
             Earn{" "}
-            <strong className="font-medium text-foreground">$5 in tokens</strong>{" "}
+            <strong className="font-medium text-foreground">
+              $5 in tokens
+            </strong>{" "}
             every time you send a visitor to another domain in the network and
             they sign up. Turn any outbound link into an attributed referral
-            link — mint one on demand from the API below (<code>from</code> = your
-            domain, <code>to</code> = the site you&rsquo;re linking to).
+            link — mint one on demand from the API below (<code>from</code> =
+            your domain, <code>to</code> = the site you&rsquo;re linking to).
           </>
         ),
         steps: [
@@ -168,7 +186,8 @@ export function IntegrationGuide({
         ],
         code: snippets.js,
         codeLabel: "Custom Liquid",
-        docHref: "https://help.shopify.com/en/manual/online-store/themes/theme-structure/extend/edit-theme-code",
+        docHref:
+          "https://help.shopify.com/en/manual/online-store/themes/theme-structure/extend/edit-theme-code",
       },
       {
         id: "wordpress",
@@ -206,19 +225,20 @@ export function IntegrationGuide({
         copyLabel: "Copy link",
       },
     ],
-    [snippets, widgetHref, publicUrl, networkApi]
+    [snippets, widgetHref, publicUrl, networkApi],
   );
 
-  const [activeId, setActiveId] = useState(() => {
-    if (typeof window === "undefined") return "javascript";
-    const sub = window.location.hash.replace(/^#/, "").split("/")[1];
-    if (!sub) return "javascript";
-    return sub === "embed" ? "iframe" : sub;
-  });
+  // Starts on the default so server and client markup agree; the hash effect
+  // below switches to the deep-linked panel right after mount.
+  const [activeId, setActiveId] = useState("javascript");
   const [copied, setCopied] = useState(false);
+  const railRef = useRef<HTMLElement>(null);
   const active = integrations.find((i) => i.id === activeId) ?? integrations[0];
   const ActiveIcon = active.icon;
-  const knownIds = useMemo(() => new Set(integrations.map((i) => i.id)), [integrations]);
+  const knownIds = useMemo(
+    () => new Set(integrations.map((i) => i.id)),
+    [integrations],
+  );
 
   // #integrations/iframe (or /embed) opens the Embed tab from Install / embed.
   useEffect(() => {
@@ -238,6 +258,24 @@ export function IntegrationGuide({
     return () => window.removeEventListener("hashchange", apply);
   }, [knownIds]);
 
+  // Below lg the rail is a horizontal scroller, so a deep-linked panel can sit
+  // off-screen. Bring it into view without moving the page vertically.
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail || rail.scrollWidth <= rail.clientWidth) return;
+    const item = rail.querySelector<HTMLElement>(
+      `[data-rail-id="${activeId}"]`,
+    );
+    if (!item) return;
+    rail.scrollTo({
+      left: Math.max(
+        0,
+        item.offsetLeft - (rail.clientWidth - item.offsetWidth) / 2,
+      ),
+      behavior: "smooth",
+    });
+  }, [activeId]);
+
   const copy = useCallback(async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -250,11 +288,12 @@ export function IntegrationGuide({
   }, []);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-      {/* Left rail — integration types */}
+    <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)]">
+      {/* Left rail — integration types. Scrolls inside itself below lg. */}
       <nav
+        ref={railRef}
         aria-label="Integration types"
-        className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0"
+        className="-mx-1 flex min-w-0 max-w-full snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0 [&::-webkit-scrollbar]:hidden"
       >
         {integrations.map((item) => {
           const Icon = item.icon;
@@ -263,6 +302,7 @@ export function IntegrationGuide({
             <button
               key={item.id}
               type="button"
+              data-rail-id={item.id}
               onClick={() => {
                 setActiveId(item.id);
                 setCopied(false);
@@ -270,16 +310,16 @@ export function IntegrationGuide({
               }}
               aria-pressed={isActive}
               className={cn(
-                "group flex shrink-0 items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all lg:w-full",
+                "group flex shrink-0 snap-start items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all lg:w-full lg:snap-align-none",
                 isActive
                   ? "border-brand/40 bg-brand/5 shadow-sm"
-                  : "border-[#ebeef0] bg-white hover:border-brand/30 hover:bg-brand/5"
+                  : "border-[#ebeef0] bg-white hover:border-brand/30 hover:bg-brand/5",
               )}
             >
               <span
                 className={cn(
                   "flex size-9 shrink-0 items-center justify-center rounded-lg transition-transform group-hover:scale-105",
-                  item.tint
+                  item.tint,
                 )}
               >
                 <Icon className="size-5" />
@@ -288,7 +328,7 @@ export function IntegrationGuide({
                 <span
                   className={cn(
                     "flex items-center gap-1.5 text-sm font-semibold",
-                    isActive ? "text-brand" : "text-[#575962]"
+                    isActive ? "text-brand" : "text-[#575962]",
                   )}
                 >
                   {item.label}
@@ -308,13 +348,13 @@ export function IntegrationGuide({
       </nav>
 
       {/* Right panel — how-to */}
-      <div className="portlet">
+      <div className="portlet min-w-0 max-w-full">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <span
               className={cn(
                 "flex size-11 items-center justify-center rounded-xl",
-                active.tint
+                active.tint,
               )}
             >
               <ActiveIcon className="size-5" />
@@ -356,20 +396,19 @@ export function IntegrationGuide({
           ))}
         </ol>
 
-        {/* Code / link */}
+        {/* Code / link — the label and Copy sit in a header bar so the button
+            never covers the snippet once the column narrows. */}
         {active.code && (
-          <div className="mt-5">
-            {active.codeLabel && (
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#a7abc3]">
-                {active.codeLabel}
+          <div className="mt-5 min-w-0 max-w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-inner">
+            <div className="flex items-center justify-between gap-2 border-b border-slate-800 px-3 py-2">
+              <p className="min-w-0 truncate text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                {active.codeLabel ?? "Snippet"}
               </p>
-            )}
-            <div className="relative rounded-xl border border-slate-200 bg-slate-950 text-slate-100 shadow-inner">
               <Button
                 type="button"
                 size="sm"
                 variant="secondary"
-                className="absolute right-2 top-2 z-[1] h-8 gap-1 border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700"
+                className="h-8 shrink-0 gap-1.5 border border-slate-700 bg-slate-800 text-slate-100 hover:bg-slate-700"
                 onClick={() => copy(active.code!)}
               >
                 {copied ? (
@@ -377,12 +416,12 @@ export function IntegrationGuide({
                 ) : (
                   <CopyIcon className="size-3.5" />
                 )}
-                {copied ? "Copied" : active.copyLabel ?? "Copy"}
+                {copied ? "Copied" : (active.copyLabel ?? "Copy")}
               </Button>
-              <pre className="max-h-[min(60vh,400px)] overflow-auto p-4 pr-24 text-xs leading-relaxed sm:text-sm">
-                <code>{active.code}</code>
-              </pre>
             </div>
+            <pre className="max-h-[min(60vh,400px)] max-w-full overflow-auto overscroll-x-contain p-4 text-xs leading-relaxed text-slate-100 sm:text-sm">
+              <code className="block">{active.code}</code>
+            </pre>
           </div>
         )}
 

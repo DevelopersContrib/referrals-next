@@ -10,7 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ParticipantTable } from "@/components/campaigns/participant-table";
 import { CampaignShareLinks } from "@/components/campaigns/campaign-share-links";
-import { CampaignTabs, IntegrationsEmbedLink } from "@/components/campaigns/campaign-tabs";
+import {
+  CampaignTabs,
+  IntegrationsEmbedLink,
+} from "@/components/campaigns/campaign-tabs";
 import { CampaignRewardSettings } from "@/components/campaigns/campaign-reward-settings";
 import { CampaignEmailsEditor } from "@/components/campaigns/campaign-emails-editor";
 import { IntegrationGuide } from "@/components/campaigns/integration-guide";
@@ -121,42 +124,44 @@ export default async function CampaignDashboardPage({
     : [];
   const leaderMap = new Map(leaderDetails.map((l) => [l.id, l]));
 
-  const [campaignType, widget, analysis, rewardRow, rewardType] = await Promise.all([
-    prisma.campaign_types.findFirst({
-      where: { id: campaign.type_id },
-    }),
-    prisma.campaign_widget.findFirst({
-      where: { campaign_id: id },
-    }),
-    prisma.brand_analysis.findFirst({
-      where: { url_id: urlId, member_id: memberId },
-      orderBy: { id: "desc" },
-      select: { id: true },
-    }),
-    prisma.campaign_reward.findFirst({
-      where: { campaign_id: id },
-    }),
-    prisma.reward_types.findFirst({
-      where: { id: campaign.reward_type },
-    }),
-  ]);
+  const [campaignType, widget, analysis, rewardRow, rewardType] =
+    await Promise.all([
+      prisma.campaign_types.findFirst({
+        where: { id: campaign.type_id },
+      }),
+      prisma.campaign_widget.findFirst({
+        where: { campaign_id: id },
+      }),
+      prisma.brand_analysis.findFirst({
+        where: { url_id: urlId, member_id: memberId },
+        orderBy: { id: "desc" },
+        select: { id: true },
+      }),
+      prisma.campaign_reward.findFirst({
+        where: { campaign_id: id },
+      }),
+      prisma.reward_types.findFirst({
+        where: { id: campaign.reward_type },
+      }),
+    ]);
 
   const suggestion = analysis
     ? await prisma.brand_campaign_suggestion.findFirst({
         where: {
           analysis_id: analysis.id,
-          OR: [{ name: campaign.name }, { headline: widget?.header_title || undefined }],
+          OR: [
+            { name: campaign.name },
+            { headline: widget?.header_title || undefined },
+          ],
         },
         orderBy: { id: "desc" },
       })
     : null;
 
   const look = kindLook(suggestion?.kind);
-  const headline = widget?.header_title || suggestion?.headline || campaign.name;
-  const pitch =
-    widget?.description ||
-    suggestion?.description ||
-    null;
+  const headline =
+    widget?.header_title || suggestion?.headline || campaign.name;
+  const pitch = widget?.description || suggestion?.description || null;
   const rewardKind = getRewardKind(rewardType?.name);
   const rewardLabel =
     rewardKind === "cash" && rewardRow?.cash_value
@@ -205,16 +210,17 @@ export default async function CampaignDashboardPage({
   ];
 
   const siteOrigin =
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") || "https://referrals.com";
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ||
+    "https://referrals.com";
   const slugOrId = brand?.slug?.trim() || String(brand?.id ?? brandId);
   // Live referral surfaces — never /r/{id} (no route)
   const referralLink = `${siteOrigin}/widget/${campaign.id}`;
   const publicPageLink = `${siteOrigin}/p/${encodeURIComponent(slugOrId)}/campaign/${campaign.id}`;
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm text-[#a7abc3]">
+      <nav className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-[#a7abc3]">
         <Link
           href="/dashboard"
           className="flex items-center gap-1 hover:text-brand transition-colors"
@@ -222,21 +228,21 @@ export default async function CampaignDashboardPage({
           <HomeIcon className="size-3.5" />
           Home
         </Link>
-        <ChevronRightIcon className="size-3" />
+        <ChevronRightIcon className="size-3 shrink-0" />
         <Link
           href={`/brands/${brandId}`}
-          className="hover:text-brand transition-colors"
+          className="max-w-[45vw] truncate hover:text-brand transition-colors sm:max-w-none"
         >
           {brand?.domain || "Brand"}
         </Link>
-        <ChevronRightIcon className="size-3" />
-        <span className="font-medium text-[#575962]">{campaign.name}</span>
+        <ChevronRightIcon className="size-3 shrink-0" />
+        <span className="max-w-full truncate font-medium text-[#575962]">
+          {campaign.name}
+        </span>
       </nav>
 
       {/* Campaign Header — same designed card the AI showed at launch */}
-      <div
-        className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
-      >
+      <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div
           className="px-5 py-5 sm:px-8 sm:py-6"
           style={{
@@ -257,7 +263,9 @@ export default async function CampaignDashboardPage({
                 <div className="flex flex-wrap items-center gap-2">
                   <span
                     className="rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white"
-                    style={{ background: `linear-gradient(135deg, ${look.from}, ${look.to})` }}
+                    style={{
+                      background: `linear-gradient(135deg, ${look.from}, ${look.to})`,
+                    }}
                   >
                     {look.label}
                   </span>
@@ -299,19 +307,28 @@ export default async function CampaignDashboardPage({
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <IntegrationsEmbedLink className="inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-2.5 text-sm font-medium text-gray-700 hover:border-brand/40 hover:text-brand">
+            <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:shrink-0 lg:justify-end">
+              <IntegrationsEmbedLink className="inline-flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:border-brand/40 hover:text-brand sm:w-auto">
                 <PuzzleIcon className="size-4" />
                 Install / embed
               </IntegrationsEmbedLink>
-              <Link href={`/brands/${brandId}/campaigns/${campaignId}/edit`}>
-                <Button variant="outline" className="gap-2">
+              <Link
+                href={`/brands/${brandId}/campaigns/${campaignId}/edit`}
+                className="w-full sm:w-auto"
+              >
+                <Button
+                  variant="outline"
+                  className="h-10 w-full gap-2 whitespace-nowrap shadow-sm sm:w-auto"
+                >
                   <SettingsIcon className="size-4" />
                   Edit
                 </Button>
               </Link>
-              <Link href={`/brands/${brandId}/campaigns`}>
-                <Button className="gap-2 bg-brand text-white hover:bg-brand/90 font-semibold">
+              <Link
+                href={`/brands/${brandId}/campaigns`}
+                className="w-full sm:w-auto"
+              >
+                <Button className="h-10 w-full gap-2 whitespace-nowrap bg-brand font-semibold text-white shadow-sm hover:bg-brand/90 sm:w-auto">
                   <LayoutDashboardIcon className="size-4" />
                   All Campaigns
                 </Button>
@@ -344,8 +361,11 @@ export default async function CampaignDashboardPage({
       </div>
 
       {/* Referral + public page URLs */}
-      <div className="portlet">
-        <CampaignShareLinks referralUrl={referralLink} publicPageUrl={publicPageLink} />
+      <div className="portlet min-w-0">
+        <CampaignShareLinks
+          referralUrl={referralLink}
+          publicPageUrl={publicPageLink}
+        />
       </div>
 
       <CampaignDashboardPreview
@@ -406,9 +426,9 @@ export default async function CampaignDashboardPage({
       {/* Tabbed Interface */}
       <CampaignTabs
         analytics={
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid min-w-0 gap-6 lg:grid-cols-2">
             {/* Top Referrers */}
-            <div className="portlet">
+            <div className="portlet min-w-0">
               <div className="mb-4 flex items-center gap-2">
                 <TrophyIcon className="size-5 text-[#ffc107]" />
                 <h3 className="font-semibold text-[#575962]">Top Referrers</h3>
@@ -448,7 +468,7 @@ export default async function CampaignDashboardPage({
             </div>
 
             {/* Share Leaders */}
-            <div className="portlet">
+            <div className="portlet min-w-0">
               <div className="mb-4 flex items-center gap-2">
                 <ShareIcon className="size-5 text-brand" />
                 <h3 className="font-semibold text-[#575962]">Share Leaders</h3>
@@ -489,8 +509,8 @@ export default async function CampaignDashboardPage({
           </div>
         }
         referrals={
-          <div className="portlet">
-            <div className="mb-4 flex items-center justify-between">
+          <div className="portlet min-w-0">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <h3 className="font-semibold text-[#575962]">All Participants</h3>
               <div className="flex gap-2">
                 <Link

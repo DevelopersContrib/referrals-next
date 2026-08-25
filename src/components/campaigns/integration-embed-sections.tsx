@@ -27,19 +27,21 @@ function EmbedCodeBlock({
   onCopy: (text: string, key: string) => void;
 }) {
   return (
-    <div className="relative rounded-xl border border-slate-200 bg-slate-950 text-slate-100 shadow-inner">
-      <Button
-        type="button"
-        size="sm"
-        variant="secondary"
-        className="absolute right-2 top-2 z-[1] h-8 gap-1 border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700"
-        onClick={() => onCopy(code, copyKey)}
-      >
-        <CopyIcon className="size-3.5" />
-        {copiedKey === copyKey ? "Copied" : "Copy"}
-      </Button>
-      <pre className="max-h-[min(55vh,360px)] overflow-auto p-4 pr-24 text-xs leading-relaxed sm:text-sm">
-        <code>{code}</code>
+    <div className="min-w-0 max-w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950 text-slate-100 shadow-inner">
+      <div className="flex items-center justify-end border-b border-slate-800 px-3 py-2">
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          className="h-8 shrink-0 gap-1.5 border border-slate-700 bg-slate-800 text-slate-100 hover:bg-slate-700"
+          onClick={() => onCopy(code, copyKey)}
+        >
+          <CopyIcon className="size-3.5" />
+          {copiedKey === copyKey ? "Copied" : "Copy"}
+        </Button>
+      </div>
+      <pre className="max-h-[min(55vh,360px)] max-w-full overflow-auto overscroll-x-contain p-4 text-xs leading-relaxed sm:text-sm">
+        <code className="block">{code}</code>
       </pre>
     </div>
   );
@@ -75,8 +77,12 @@ export function IntegrationEmbedSections({
         title: "JavaScript loader",
         description: (
           <>
-            Recommended: one script injects the widget (embed, popup, or floating) from your{" "}
-            <Link href={widgetHref} className="font-medium text-brand underline-offset-2 hover:underline">
+            Recommended: one script injects the widget (embed, popup, or
+            floating) from your{" "}
+            <Link
+              href={widgetHref}
+              className="font-medium text-brand underline-offset-2 hover:underline"
+            >
               widget settings
             </Link>
             .
@@ -96,24 +102,32 @@ export function IntegrationEmbedSections({
         title: "Node.js",
         description: (
           <>
-            Server-rendered apps (Express / Fastify / Koa): send a page that includes the loader
-            script. Run with <code className="rounded bg-slate-100 px-1">node server.js</code> and
-            open <code className="rounded bg-slate-100 px-1">/refer</code>.
+            Server-rendered apps (Express / Fastify / Koa): send a page that
+            includes the loader script. Run with{" "}
+            <code className="rounded bg-slate-100 px-1">node server.js</code>{" "}
+            and open <code className="rounded bg-slate-100 px-1">/refer</code>.
           </>
         ),
         code: snippets.node,
       },
     ],
-    [snippets, widgetHref]
+    [snippets, widgetHref],
   );
 
   return (
     <div className="space-y-4">
       {sections.map((s) => (
-        <Card key={s.id} className="overflow-hidden border-slate-200/90 shadow-sm">
+        <Card
+          key={s.id}
+          className="overflow-hidden border-slate-200/90 shadow-sm"
+        >
           <CardHeader className="border-b border-slate-100 bg-slate-50/80 py-4">
-            <CardTitle className="text-base font-semibold text-slate-900">{s.title}</CardTitle>
-            <div className="text-sm text-muted-foreground [&_a]:text-brand">{s.description}</div>
+            <CardTitle className="text-base font-semibold text-slate-900">
+              {s.title}
+            </CardTitle>
+            <div className="text-sm text-muted-foreground [&_a]:text-brand">
+              {s.description}
+            </div>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
             {Array.isArray(s.code) ? (

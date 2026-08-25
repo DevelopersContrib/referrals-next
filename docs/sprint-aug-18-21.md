@@ -6,11 +6,11 @@
 
 One board for everyone. Older per-person lists are retired — do not redo June work.
 
-| Who | Focus | Hours |
-|-----|--------|-------|
-| **Jayson** | Dashboard overflow, slug checker, embed, upgrade CTA | 15.0 |
-| **Kareen** | `/stats` + `/billing` plan cards (UI/copy only) | 11.0 |
-| **Ronan** | **Onboarding must not take 10 min**, Shopify, paid→engagement | 12.0 |
+| Who        | Focus                                                         | Hours |
+| ---------- | ------------------------------------------------------------- | ----- |
+| **Jayson** | Dashboard overflow, slug checker, embed, upgrade CTA          | 15.0  |
+| **Kareen** | `/stats` + `/billing` plan cards (UI/copy only)               | 11.0  |
+| **Ronan**  | **Onboarding must not take 10 min**, Shopify, paid→engagement | 12.0  |
 
 **Rules for all:** do not edit `.env`. Shared MySQL: additive SQL only. Public widgets must never 403 visitors when the owner is `free_capped`. Do not add a unique index on `member_urls.slug`.
 
@@ -35,10 +35,10 @@ Sidebar + main must stay inside the viewport. Reproduced Aug 15 on campaign over
 
 ## J2 — Campaign + Integrations fit the column (2.5h) — HIGH
 
-- [ ] Header actions wrap below `md`
-- [ ] `CampaignTabs` scroll/wrap inside the tab bar only
-- [ ] `IntegrationGuide` `<pre>`: `max-w-full overflow-x-auto`; right panel `min-w-0`
-- [ ] `#integrations/iframe` still opens Embed
+- [x] Header actions wrap below `md`
+- [x] `CampaignTabs` scroll/wrap inside the tab bar only
+- [x] `IntegrationGuide` `<pre>`: `max-w-full overflow-x-auto`; right panel `min-w-0`
+- [x] `#integrations/iframe` still opens Embed
 
 **Files:** campaign `[campaignId]/page.tsx`, `campaign-tabs.tsx`, `integration-guide.tsx`, share-links / embed panels
 
@@ -142,6 +142,7 @@ Do **not** change checkout. Only `src/app/(dashboard)/billing/page.tsx` (and sma
 **Subtitle:** 14 days of Growth, then free forever — or keep Growth for $9/month per brand.
 
 **Current plan** — human status, not DB:
+
 - Trial: “You’re on Growth (trial) · X days left”
 - Free capped: “Free forever · 1 brand, 500 participants, branding on”
 - Paid: “Growth · renews [date]”
@@ -150,13 +151,13 @@ Do **not** change checkout. Only `src/app/(dashboard)/billing/page.tsx` (and sma
 
 **Two cards only** (map plan id 1 + 2; ignore leftover admin plans):
 
-| | Free forever | Growth (featured) |
-|---|---|---|
-| Eyebrow | After your 14-day trial | Most popular |
-| Price | **$0** / forever | **$9** / month per brand |
-| Blurb | Widget stays live. Caps apply. Branding on. | Remove branding. Unlock domains & analytics. |
+|          | Free forever                                                                             | Growth (featured)                                                                                           |
+| -------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Eyebrow  | After your 14-day trial                                                                  | Most popular                                                                                                |
+| Price    | **$0** / forever                                                                         | **$9** / month per brand                                                                                    |
+| Blurb    | Widget stays live. Caps apply. Branding on.                                              | Remove branding. Unlock domains & analytics.                                                                |
 | Features | Widget keeps working · 1 brand · 500 participants · Basic stats · Referrals.com branding | Everything in Free, plus: remove branding · more brands · higher limits · public pages · advanced analytics |
-| CTA | “Included after trial” (no button) or “You’re on Free” | Trial/free → **Continue with Growth** → `/billing/plan/2`. Paid on 2 → **Current plan** |
+| CTA      | “Included after trial” (no button) or “You’re on Free”                                   | Trial/free → **Continue with Growth** → `/billing/plan/2`. Paid on 2 → **Current plan**                     |
 
 Do not say “Pay with card or PayPal” on this page. Do not show “30 days” as a feature. Do not print `0` participants as “unlimited” unless you mean it — free is **500**, Growth is uncapped for product copy.
 
@@ -221,12 +222,12 @@ Paid checkout now writes `member_plan` + entitlements. Engagement still segments
 
 **Files:** `src/lib/billing-activation.ts`, webhook route, `src/lib/engagement-segments.ts`
 
-## R4 — Campaign email smoke (2h) — MEDIUM *(partial)*
+## R4 — Campaign email smoke (2h) — MEDIUM _(partial)_
 
 `sendCampaignEntryEmail` / `sendCampaignRewardEmail` are wired. Prove they arrive.
 
-- [ ] Join via widget → entry email with `{{name}}` / referral link *(live smoke not recorded)*
-- [ ] Hit reward threshold → reward email with coupon/cash *(live smoke not recorded)*
+- [ ] Join via widget → entry email with `{{name}}` / referral link _(live smoke not recorded)_
+- [ ] Hit reward threshold → reward email with coupon/cash _(live smoke not recorded)_
 - [x] Failed SES must not fail signup (already try/catch — confirm). (`widget/signup`, `widget/reward`)
 - [x] From display = campaign/brand name, not a raw SES address if we can set it. (`fromName: brand?.domain || campaign.name`)
 
@@ -236,28 +237,28 @@ Launched AI campaigns have `banner_image_url`. `buildPublicCampaignMetadata` sho
 
 - [x] `openGraph.images` + Twitter card from `heroImageUrl` (`public-campaign-page.tsx`)
 - [x] Public campaign URLs in `sitemap.xml` (`/p/{slug}/campaign/{id}`)
-- [ ] Confirm live preview in Slack/iMessage *(optional manual check)*
+- [ ] Confirm live preview in Slack/iMessage _(optional manual check)_
 
 ---
 
 # Hours
 
-| ID | Owner | Hours | Pri |
-|----|-------|-------|-----|
-| J1 Shell overflow | Jayson | 4.0 | Critical |
-| J2 Campaign / Integrations fit | Jayson | 2.5 | High |
-| J3 Dashboard responsive | Jayson | 3.5 | High |
-| J4 Slug checker | Jayson | 2.0 | High |
-| J5 Full-page embed | Jayson | 1.5 | Medium |
-| **J6 Free-forever upgrade CTA** | **Jayson** | **1.5** | **High** |
-| **K1 Make `/stats` awesome** | **Kareen** | **8.0** | **High** |
-| **K2 `/billing` plan cards** | **Kareen** | **3.0** | **High** |
-| **R1 Onboarding ≠ 10 minutes** ✅ | **Ronan** | **4.5** | **Critical** |
-| R2 Shopify env ✅ | Ronan | 2.0 | High |
-| R3 Paid → engagement ✅ | Ronan | 2.5 | High |
-| R4 Campaign email smoke *(partial)* | Ronan | 2.0 | Medium |
-| R5 Public OG / sitemap ✅ | Ronan | 1.0 | Low |
-| **Total** | | **38.0** | |
+| ID                                  | Owner      | Hours    | Pri          |
+| ----------------------------------- | ---------- | -------- | ------------ |
+| J1 Shell overflow                   | Jayson     | 4.0      | Critical     |
+| J2 Campaign / Integrations fit      | Jayson     | 2.5      | High         |
+| J3 Dashboard responsive             | Jayson     | 3.5      | High         |
+| J4 Slug checker                     | Jayson     | 2.0      | High         |
+| J5 Full-page embed                  | Jayson     | 1.5      | Medium       |
+| **J6 Free-forever upgrade CTA**     | **Jayson** | **1.5**  | **High**     |
+| **K1 Make `/stats` awesome**        | **Kareen** | **8.0**  | **High**     |
+| **K2 `/billing` plan cards**        | **Kareen** | **3.0**  | **High**     |
+| **R1 Onboarding ≠ 10 minutes** ✅   | **Ronan**  | **4.5**  | **Critical** |
+| R2 Shopify env ✅                   | Ronan      | 2.0      | High         |
+| R3 Paid → engagement ✅             | Ronan      | 2.5      | High         |
+| R4 Campaign email smoke _(partial)_ | Ronan      | 2.0      | Medium       |
+| R5 Public OG / sitemap ✅           | Ronan      | 1.0      | Low          |
+| **Total**                           |            | **38.0** |              |
 
 ### How to verify
 

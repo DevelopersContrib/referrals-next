@@ -24,7 +24,7 @@ export function DashboardClientRoot({ children, brands, onboarding }: Props) {
         <DashboardSidebar brands={brands} />
         <SidebarInset>
           <DashboardHeader />
-          <main className="min-w-0 flex-1 bg-dashboard p-4 lg:p-6 xl:p-8">
+          <main className="min-w-0 max-w-full flex-1 bg-dashboard p-4 lg:p-6 xl:p-8">
             <PaidOnboardingBanner
               isVerified={onboarding.isVerified}
               isGrowth={onboarding.isGrowth}

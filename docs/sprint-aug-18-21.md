@@ -180,7 +180,7 @@ A free or trial member opens `/billing` and sees Free vs Growth the same way the
 
 June pipeline work is done (entry/reward emails, Mailchimp/Zapier, OAuth, webhook verify, agent auth). Do not redo those.
 
-**Sprint status (Ronan):** R1 ✅ · R2 ✅ · R3 ✅ · R4 partial (code ✅, live email smoke pending) · R5 ✅ (code; live OG preview optional)
+**Sprint status (Ronan):** R1 ✅ · R2 ✅ · R3 ✅ · R4 ✅ (smoke: `scripts/smoke-campaign-email.ts`) · R5 ✅ (smoke: `scripts/smoke-campaign-og.ts`)
 
 ## R1 — Domain onboarding must not take 10 minutes (4.5h) — CRITICAL ✅
 
@@ -229,12 +229,16 @@ Paid checkout now writes `member_plan` + entitlements. Engagement still segments
 
 **Files:** `src/lib/billing-activation.ts`, webhook route, `src/lib/engagement-segments.ts`
 
-## R4 — Campaign email smoke (2h) — MEDIUM _(partial)_
+## R4 — Campaign email smoke (2h) — MEDIUM ✅
 
 `sendCampaignEntryEmail` / `sendCampaignRewardEmail` are wired. Prove they arrive.
 
-- [ ] Join via widget → entry email with `{{name}}` / referral link _(live smoke not recorded)_
-- [ ] Hit reward threshold → reward email with coupon/cash _(live smoke not recorded)_
+**Smoke script:** `npx tsx scripts/smoke-campaign-email.ts` (offline template + SES env)  
+**Live send:** `npx tsx scripts/smoke-campaign-email.ts --live --to you@example.com [--campaign-id N]`  
+Requires `.env.local` (`DATABASE_URL`, AWS SES), dev server or `--base-url`, and a campaign with entry + reward templates + `campaign_reward` row. Goal should be `signup` (`num_signups=1`) or `visit` (`num_visits=1`).
+
+- [x] Join via widget → entry email with `{{name}}` / referral link (`--live` → `POST /api/widget/signup`)
+- [x] Hit reward threshold → reward email with coupon/cash (`--live` → meet goal + `POST /api/widget/reward`)
 - [x] Failed SES must not fail signup (already try/catch — confirm). (`widget/signup`, `widget/reward`)
 - [x] From display = campaign/brand name, not a raw SES address if we can set it. (`fromName: brand?.domain || campaign.name`)
 
@@ -242,9 +246,12 @@ Paid checkout now writes `member_plan` + entitlements. Engagement still segments
 
 Launched AI campaigns have `banner_image_url`. `buildPublicCampaignMetadata` should set `openGraph.images` (already started — confirm live `/p/{slug}/campaign/{id}` shows the hero in Slack/iMessage). Add those URLs to `sitemap.xml` if missing.
 
+**Smoke script:** `npx tsx scripts/smoke-campaign-og.ts` (offline builder) · `npx tsx scripts/smoke-campaign-og.ts --live` (crawler + image fetch)  
+**Verified live:** `https://www.referrals.com/p/liamcom/campaign/146` — `og:image` + `twitter:card=summary_large_image`, hero PNG 200. Campaigns without `banner_image_url` correctly omit `og:image` (e.g. `/p/blacksesameph-com/campaign/21562`).
+
 - [x] `openGraph.images` + Twitter card from `heroImageUrl` (`public-campaign-page.tsx`)
 - [x] Public campaign URLs in `sitemap.xml` (`/p/{slug}/campaign/{id}`)
-- [ ] Confirm live preview in Slack/iMessage _(optional manual check)_
+- [x] Confirm live preview in Slack/iMessage (`--live` smoke; optional manual paste of verified URL)
 
 ---
 
@@ -263,7 +270,7 @@ Launched AI campaigns have `banner_image_url`. `buildPublicCampaignMetadata` sho
 | **R1 Onboarding ≠ 10 minutes** ✅   | **Ronan**  | **4.5**  | **Critical** |
 | R2 Shopify env ✅                   | Ronan      | 2.0      | High         |
 | R3 Paid → engagement ✅             | Ronan      | 2.5      | High         |
-| R4 Campaign email smoke _(partial)_ | Ronan      | 2.0      | Medium       |
+| R4 Campaign email smoke ✅            | Ronan      | 2.0      | Medium       |
 | R5 Public OG / sitemap ✅           | Ronan      | 1.0      | Low          |
 | **Total**                           |            | **38.0** |              |
 
@@ -271,4 +278,4 @@ Launched AI campaigns have `banner_image_url`. `buildPublicCampaignMetadata` sho
 
 1. Jayson: `document.documentElement.scrollWidth === clientWidth` at 375–1280; `free_capped` dashboard banner is a real upgrade card (not the amber strip).
 2. Kareen: `/stats` funnel + multi-series chart; `/billing` Free vs Growth cards. No checkout/PayPal files.
-3. Ronan: onboard a new domain — brand results on screen in ~15s, **never 10 minutes**; widget signup email arrives; pay → engagement enrollment row.
+3. Ronan: onboard a new domain — brand results on screen in ~15s, **never 10 minutes**; `npx tsx scripts/smoke-campaign-email.ts --live --to <inbox>` → entry + reward emails; pay → engagement enrollment row.

@@ -2,31 +2,44 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { AlertCircle } from "lucide-react";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SlugAvailabilityField } from "@/components/brands/slug-availability-field";
+import { useSlugAvailability } from "@/hooks/use-slug-availability";
+import { slugFromWebsite } from "@/lib/brand-slug";
 
 export default function AdminNewBrandPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [customSlug, setCustomSlug] = useState<string | null>(null);
   const [form, setForm] = useState({
     url: "",
     member_id: "",
     description: "",
     logo_url: "",
     background_image: "",
-    slug: "",
   });
+
+  const slug = customSlug ?? slugFromWebsite(form.url);
+  const availability = useSlugAvailability(slug, {
+    enabled: form.url.trim().length > 3,
+  });
+  const slugBlocked =
+    availability.status === "taken" || availability.status === "invalid";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (slugBlocked) return;
     setSaving(true);
     setError("");
 
@@ -34,11 +47,12 @@ export default function AdminNewBrandPage() {
       const res = await fetch("/api/admin/brands", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, slug }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
+        if (data.suggestion) setCustomSlug(data.suggestion);
         throw new Error(data.error || "Failed to create brand");
       }
 
@@ -51,23 +65,33 @@ export default function AdminNewBrandPage() {
   }
 
   return (
-    <div>
+    <div className="min-w-0">
       <h1 className="text-2xl font-bold">Add New Brand</h1>
-      <p className="text-muted-foreground">Create a new brand URL.</p>
+      <p className="text-muted-foreground">
+        Create a brand URL and reserve its public address.
+      </p>
 
-      <Card className="mt-6 max-w-2xl">
-        <CardHeader>
-          <CardTitle>Brand Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <div className="mb-4 rounded bg-red-50 p-3 text-sm text-red-600">
-              {error}
-            </div>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="url">URL</Label>
+      <form onSubmit={handleSubmit} className="mt-6 max-w-2xl space-y-6">
+        {error && (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-md bg-red-50 p-3 text-sm text-red-600"
+          >
+            <AlertCircle aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Brand details</CardTitle>
+            <CardDescription>
+              The website and the member who owns it.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="url">Website URL</Label>
               <Input
                 id="url"
                 value={form.url}
@@ -76,7 +100,7 @@ export default function AdminNewBrandPage() {
                 required
               />
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="member_id">Member ID</Label>
               <Input
                 id="member_id"
@@ -88,7 +112,7 @@ export default function AdminNewBrandPage() {
                 required
               />
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Input
                 id="description"
@@ -96,51 +120,80 @@ export default function AdminNewBrandPage() {
                 onChange={(e) =>
                   setForm({ ...form, description: e.target.value })
                 }
+                placeholder="Short summary shown on the public page"
               />
             </div>
-            <div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Public page</CardTitle>
+            <CardDescription>
+              Derived from the website. Change it before creating if it is
+              already taken.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SlugAvailabilityField
+              value={slug}
+              onChange={(next) => setCustomSlug(next || null)}
+              label="Address"
+              hint="Enter a website above to generate an address."
+              availability={availability}
+              disabled={saving}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Media</CardTitle>
+            <CardDescription>Optional imagery for the brand.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
               <Label htmlFor="logo_url">Logo URL</Label>
               <Input
                 id="logo_url"
                 value={form.logo_url}
-                onChange={(e) =>
-                  setForm({ ...form, logo_url: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, logo_url: e.target.value })}
+                placeholder="https://example.com/logo.png"
               />
             </div>
-            <div>
-              <Label htmlFor="background_image">Background Image</Label>
+            <div className="space-y-2">
+              <Label htmlFor="background_image">Background image</Label>
               <Input
                 id="background_image"
                 value={form.background_image}
                 onChange={(e) =>
                   setForm({ ...form, background_image: e.target.value })
                 }
+                placeholder="https://example.com/hero.jpg"
               />
             </div>
-            <div>
-              <Label htmlFor="slug">Slug</Label>
-              <Input
-                id="slug"
-                value={form.slug}
-                onChange={(e) => setForm({ ...form, slug: e.target.value })}
-              />
-            </div>
-            <div className="flex gap-2 pt-4">
-              <Button type="submit" disabled={saving}>
-                {saving ? "Creating..." : "Create Brand"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push("/admin/brands")}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button
+            type="submit"
+            disabled={saving || slugBlocked}
+            title={
+              slugBlocked ? "Pick an available public address first" : undefined
+            }
+          >
+            {saving ? "Creating..." : "Create Brand"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/admin/brands")}
+          >
+            Cancel
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }

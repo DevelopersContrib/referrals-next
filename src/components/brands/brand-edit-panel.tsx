@@ -18,7 +18,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { slugify, slugifyDomain } from "@/lib/brand-access";
+import { slugFromWebsite } from "@/lib/brand-slug";
+import { SlugAvailabilityField } from "@/components/brands/slug-availability-field";
+import { useSlugAvailability } from "@/hooks/use-slug-availability";
 import { ImageInput } from "@/components/media/image-input";
 import {
   ArrowLeftIcon,
@@ -120,7 +122,6 @@ export function BrandEditPanel({
   const [tab, setTab] = useState(initialTab);
   const [domainStatus, setDomainStatus] = useState("");
   const [domainLink, setDomainLink] = useState("");
-  const [slugStatus, setSlugStatus] = useState("");
   const [brandColors, setBrandColors] = useState<Record<string, string>>({});
   const [colorsLoading, setColorsLoading] = useState(false);
   const [colorsMood, setColorsMood] = useState("");
@@ -136,6 +137,14 @@ export function BrandEditPanel({
   const formRef = useRef(form);
   formRef.current = form;
   const autoColorsTried = useRef(false);
+
+  const slugAvailability = useSlugAvailability(form.slug, {
+    excludeBrandId: Number(brandId),
+    enabled: !loading,
+  });
+  const slugBlocked =
+    slugAvailability.status === "taken" ||
+    slugAvailability.status === "invalid";
 
   const [socials, setSocials] = useState<SocialForm>({
     facebook: "",
@@ -217,31 +226,10 @@ export function BrandEditPanel({
     }
   }
 
-  async function checkSlug(slug: string) {
-    if (!slug) return;
-    try {
-      const res = await fetch("/api/brands/check-slug", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, excludeBrandId: brandId }),
-      });
-      const data = await res.json();
-      setSlugStatus(
-        data.available ? "Slug is available!" : "Slug is not available!",
-      );
-    } catch {
-      setSlugStatus("");
-    }
-  }
-
   function handleUrlChange(value: string) {
-    const domainPart = value
-      .replace(/^(?:https?:\/\/)?(?:www\.)?/i, "")
-      .split("/")[0];
-    const slug = slugifyDomain(domainPart);
-    setForm((prev) => ({ ...prev, url: value, slug }));
+    const slug = slugFromWebsite(value);
+    setForm((prev) => ({ ...prev, url: value, slug: slug || prev.slug }));
     checkDomain(value);
-    if (slug) checkSlug(slug);
   }
 
   const generateColors = useCallback(
@@ -333,6 +321,10 @@ export function BrandEditPanel({
 
       if (!res.ok) {
         const err = await res.json();
+        if (err.suggestion) {
+          setForm((p) => ({ ...p, slug: err.suggestion }));
+          throw new Error(`${err.error} We suggested ${err.suggestion}.`);
+        }
         throw new Error(err.error || "Failed to update brand");
       }
 
@@ -643,56 +635,43 @@ export function BrandEditPanel({
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="slug">Slug *</Label>
-                  <Input
-                    id="slug"
-                    value={form.slug}
-                    onChange={(e) => {
-                      const slug = slugify(e.target.value);
-                      setForm((p) => ({ ...p, slug }));
-                      checkSlug(slug);
-                    }}
-                    disabled={saving}
-                  />
-                  <p
-                    className={`text-sm ${
-                      slugStatus.includes("available!")
-                        ? "font-medium text-[#28a745]"
-                        : slugStatus.includes("not available")
-                          ? "font-medium text-destructive"
-                          : "text-[#a7abc3]"
-                    }`}
-                  >
-                    {slugStatus || "E.g: referrals"}
-                  </p>
-                </div>
+                <SlugAvailabilityField
+                  value={form.slug}
+                  onChange={(slug) => setForm((p) => ({ ...p, slug }))}
+                  availability={slugAvailability}
+                  label="Public page address *"
+                  hint="E.g: referrals"
+                  disabled={saving}
+                />
 
-                {form.slug ? (
-                  publicPath && (
-                    <div className="min-w-0 rounded-md border border-[#28a745]/30 bg-[#28a745]/5 px-4 py-3 text-sm text-[#575962]">
-                      View public brand page here{" "}
-                      <a
-                        href={publicPath}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex max-w-full items-center gap-1 break-all font-semibold text-brand hover:underline"
-                      >
-                        {publicPath}
-                        <ExternalLinkIcon className="size-3 shrink-0" />
-                      </a>
-                    </div>
-                  )
+                {publicPath && slugAvailability.status !== "taken" ? (
+                  <div className="min-w-0 rounded-md border border-[#28a745]/30 bg-[#28a745]/5 px-4 py-3 text-sm text-[#575962]">
+                    View public brand page here{" "}
+                    <a
+                      href={publicPath}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex max-w-full items-center gap-1 break-all font-semibold text-brand hover:underline"
+                    >
+                      {publicPath}
+                      <ExternalLinkIcon className="size-3 shrink-0" />
+                    </a>
+                  </div>
                 ) : (
                   <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive">
-                    Add slug to view public brand page
+                    Pick an available address to view the public brand page
                   </div>
                 )}
 
                 <div className="flex gap-2 pt-2">
                   <Button
                     type="submit"
-                    disabled={saving}
+                    disabled={saving || slugBlocked}
+                    title={
+                      slugBlocked
+                        ? "Pick an available public address first"
+                        : undefined
+                    }
                     className="bg-brand hover:bg-brand-hover"
                   >
                     {saving ? "Saving..." : "Submit"}

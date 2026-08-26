@@ -5,6 +5,9 @@ import { Globe, Sparkles, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { SlugAvailabilityField } from "@/components/brands/slug-availability-field";
+import { useSlugAvailability } from "@/hooks/use-slug-availability";
+import { slugFromWebsite } from "@/lib/brand-slug";
 import { AnalysisPipeline } from "./analysis-pipeline";
 import { BrandResults } from "./brand-results";
 import type { AnalysisStatus } from "./analysis-types";
@@ -36,21 +39,29 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
   const [needsUpgrade, setNeedsUpgrade] = useState(false);
   const [jobId, setJobId] = useState<number | null>(null);
   const [status, setStatus] = useState<AnalysisStatus | null>(null);
+  /** Set once the member edits the address; until then it tracks the website. */
+  const [customSlug, setCustomSlug] = useState<string | null>(null);
 
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stoppedRef = useRef(false);
 
   const valid = looksLikeUrl(url);
+  const slug = customSlug ?? slugFromWebsite(url);
+  const availability = useSlugAvailability(slug, { enabled: valid });
+  const slugBlocked =
+    availability.status === "taken" || availability.status === "invalid";
 
   const poll = useCallback(async (id: number) => {
     if (stoppedRef.current) return;
     try {
-      const res = await fetch(`/api/brands/analyze/${id}`, { cache: "no-store" });
+      const res = await fetch(`/api/brands/analyze/${id}`, {
+        cache: "no-store",
+      });
       if (res.ok) {
         const data = (await res.json()) as AnalysisStatus;
         setStatus(data);
         const intelDone = data.modules?.some(
-          (m) => m.module === "intelligence" && m.status === "done"
+          (m) => m.module === "intelligence" && m.status === "done",
         );
         if (intelDone || data.status === "done" || data.status === "failed") {
           stoppedRef.current = true;
@@ -74,7 +85,7 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
   async function handleAnalyze(e: React.FormEvent) {
     e.preventDefault();
     setTouched(true);
-    if (!valid || submitting) return;
+    if (!valid || submitting || slugBlocked) return;
     setSubmitting(true);
     setError(null);
     setNeedsUpgrade(false);
@@ -83,15 +94,21 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
       const res = await fetch("/api/brands/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim() }),
+        body: JSON.stringify({ url: url.trim(), slug }),
       });
       const data = await res.json();
 
       if (!res.ok) {
         if (data.code === "REQUIRES_SUBSCRIPTION") {
           setNeedsUpgrade(true);
+        } else if (data.suggestion) {
+          // Someone claimed the address between the check and this request.
+          setCustomSlug(data.suggestion);
+          setError(`${data.error} We switched you to ${data.suggestion}.`);
         } else {
-          setError(data.error || "Could not start the analysis. Please try again.");
+          setError(
+            data.error || "Could not start the analysis. Please try again.",
+          );
         }
         setSubmitting(false);
         return;
@@ -120,7 +137,14 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
     <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl flex-col justify-center px-4 py-12">
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
         <Link href="/" className="mb-5 flex w-fit items-center">
-          <Image src={LOGO_URL} alt="Referrals.com" width={104} height={33} priority unoptimized />
+          <Image
+            src={LOGO_URL}
+            alt="Referrals.com"
+            width={104}
+            height={33}
+            priority
+            unoptimized
+          />
         </Link>
 
         <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#FF5C62]/25 bg-gradient-to-r from-[#FF5C62]/10 to-[#926efb]/10 px-3.5 py-1.5 text-xs font-semibold text-[#FF5C62]">
@@ -132,7 +156,9 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
           className="text-3xl font-bold tracking-tight text-gray-900 sm:text-[2.6rem] sm:leading-[1.1]"
           style={{ fontFamily: "var(--font-dosis), sans-serif" }}
         >
-          {firstName ? `${firstName}, let's analyze your brand.` : "Let's analyze your brand."}
+          {firstName
+            ? `${firstName}, let's analyze your brand.`
+            : "Let's analyze your brand."}
         </h1>
         <p className="mt-4 max-w-xl text-lg text-gray-600">
           Drop in your website and our AI reads your brand, finds your social
@@ -142,7 +168,9 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
         <form onSubmit={handleAnalyze} className="mt-8">
           <div
             className={`group flex items-center gap-2 rounded-2xl border-2 bg-white p-2 pl-4 shadow-sm transition-all focus-within:shadow-lg ${
-              touched && !valid ? "border-red-300" : "border-gray-200 focus-within:border-[#FF5C62]"
+              touched && !valid
+                ? "border-red-300"
+                : "border-gray-200 focus-within:border-[#FF5C62]"
             }`}
           >
             <Globe className="h-5 w-5 flex-shrink-0 text-gray-400 group-focus-within:text-[#FF5C62]" />
@@ -159,12 +187,18 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
             />
             <Button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || slugBlocked}
+              title={
+                slugBlocked
+                  ? "Pick an available public address first"
+                  : undefined
+              }
               className="h-11 shrink-0 gap-1.5 rounded-xl bg-[#FF5C62] px-5 text-sm font-semibold hover:bg-[#ff4f58]"
             >
               {submitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" /> Starting…
+                  <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" />{" "}
+                  Starting…
                 </>
               ) : (
                 <>
@@ -176,11 +210,22 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
 
           {touched && !valid && (
             <p className="mt-2 pl-1 text-sm text-red-500">
-              Enter a valid website, like <span className="font-medium">yourbrand.com</span>.
+              Enter a valid website, like{" "}
+              <span className="font-medium">yourbrand.com</span>.
             </p>
           )}
-          {error && (
-            <p className="mt-2 pl-1 text-sm text-red-500">{error}</p>
+          {error && <p className="mt-2 pl-1 text-sm text-red-500">{error}</p>}
+
+          {valid && (
+            <div className="mt-4 rounded-2xl border border-[#ebeef0] bg-white/70 p-4 shadow-sm animate-in fade-in slide-in-from-top-1 duration-300 sm:p-5">
+              <SlugAvailabilityField
+                value={slug}
+                onChange={(next) => setCustomSlug(next || null)}
+                availability={availability}
+                hint="We reserve this address the moment you hit Analyze."
+                disabled={submitting}
+              />
+            </div>
           )}
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -205,11 +250,14 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
           <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 animate-in fade-in">
             <p className="font-semibold text-amber-900">Add another domain</p>
             <p className="mt-1 text-sm text-amber-800">
-              Your Growth trial includes full features. Adding more domains after
-              trial (or beyond free caps) is $9/month each — upgrade to continue.
+              Your Growth trial includes full features. Adding more domains
+              after trial (or beyond free caps) is $9/month each — upgrade to
+              continue.
             </p>
             <Link href="/billing" className="mt-3 inline-block">
-              <Button className="bg-amber-600 hover:bg-amber-700">Upgrade to add this domain</Button>
+              <Button className="bg-amber-600 hover:bg-amber-700">
+                Upgrade to add this domain
+              </Button>
             </Link>
           </div>
         )}

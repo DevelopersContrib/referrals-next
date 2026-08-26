@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminApiGuard } from "@/lib/require-platform-admin";
 import { prisma } from "@/lib/prisma";
+import { claimBrandSlug } from "@/lib/brand-access";
+import { guardBrandSlug } from "@/lib/brand-slug-guard";
 
 export async function GET(req: NextRequest) {
   const denied = await adminApiGuard();
@@ -13,10 +15,7 @@ export async function GET(req: NextRequest) {
 
     const where = search
       ? {
-          OR: [
-            { url: { contains: search } },
-            { domain: { contains: search } },
-          ],
+          OR: [{ url: { contains: search } }, { domain: { contains: search } }],
         }
       : {};
 
@@ -40,7 +39,7 @@ export async function GET(req: NextRequest) {
     console.error("Error fetching brands:", error);
     return NextResponse.json(
       { error: "Failed to fetch brands" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -53,15 +52,12 @@ export async function POST(req: NextRequest) {
     const { url, member_id } = body;
 
     if (!url) {
-      return NextResponse.json(
-        { error: "URL is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
     if (member_id === undefined || member_id === null || member_id === "") {
       return NextResponse.json(
         { error: "Member is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -72,7 +68,10 @@ export async function POST(req: NextRequest) {
       domain = url.replace(/^https?:\/\//, "").split("/")[0];
     }
 
-    const brand = await prisma.member_urls.create({
+    const slugGuard = await guardBrandSlug({ slug: body.slug, website: url });
+    if (!slugGuard.ok) return slugGuard.response;
+
+    const created = await prisma.member_urls.create({
       data: {
         url,
         domain,
@@ -80,16 +79,16 @@ export async function POST(req: NextRequest) {
         description: body.description ?? null,
         logo_url: body.logo_url ?? null,
         background_image: body.background_image ?? null,
-        slug: body.slug ?? null,
       },
     });
+    const slug = await claimBrandSlug(created.id, slugGuard.slug, domain);
 
-    return NextResponse.json(brand, { status: 201 });
+    return NextResponse.json({ ...created, slug }, { status: 201 });
   } catch (error) {
     console.error("Error creating brand:", error);
     return NextResponse.json(
       { error: "Failed to create brand" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

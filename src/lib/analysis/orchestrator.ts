@@ -8,7 +8,7 @@
  */
 import type { brand_analysis } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { extractDomainFromUrl } from "@/lib/brand-access";
+import { claimBrandSlug, extractDomainFromUrl } from "@/lib/brand-access";
 import { RUNNERS } from "./registry";
 import {
   MODULE_DEPS,
@@ -33,7 +33,11 @@ function normalizeInputUrl(raw: string): string {
 }
 
 /** Create the draft brand + analysis job + one module row per analyzer. */
-export async function createAnalysisJob(memberId: number, rawUrl: string) {
+export async function createAnalysisJob(
+  memberId: number,
+  rawUrl: string,
+  requestedSlug?: string,
+) {
   const input_url = normalizeInputUrl(rawUrl);
   const domain = extractDomainFromUrl(input_url);
 
@@ -41,6 +45,10 @@ export async function createAnalysisJob(memberId: number, rawUrl: string) {
   const brand = await prisma.member_urls.create({
     data: { url: input_url, member_id: memberId, domain },
   });
+
+  // Reserve the public address up front — the member was shown it before they
+  // hit Analyze, and launch must not silently hand them a different one.
+  const slug = await claimBrandSlug(brand.id, requestedSlug, domain);
 
   const analysis = await prisma.brand_analysis.create({
     data: {
@@ -54,10 +62,13 @@ export async function createAnalysisJob(memberId: number, rawUrl: string) {
 
   await createModuleRows(analysis.id, [...ONBOARDING_MODULES]);
 
-  return { analysis, brandId: brand.id };
+  return { analysis, brandId: brand.id, slug };
 }
 
-async function createModuleRows(analysisId: number, modules: readonly ModuleName[]) {
+async function createModuleRows(
+  analysisId: number,
+  modules: readonly ModuleName[],
+) {
   await prisma.brand_analysis_module.createMany({
     data: modules.map((m) => ({
       analysis_id: analysisId,
@@ -80,17 +91,30 @@ async function findReusableAnalysis(urlId: number) {
     const modules = await prisma.brand_analysis_module.findMany({
       where: { analysis_id: job.id },
     });
-    const crawlDone = modules.some((m) => m.module === "crawl" && m.status === "done");
-    const intelDone = modules.some((m) => m.module === "intelligence" && m.status === "done");
+    const crawlDone = modules.some(
+      (m) => m.module === "crawl" && m.status === "done",
+    );
+    const intelDone = modules.some(
+      (m) => m.module === "intelligence" && m.status === "done",
+    );
     if (crawlDone && intelDone) return job;
   }
   return null;
 }
 
-async function copyAnalysisArtifacts(fromAnalysisId: number, toAnalysisId: number) {
+async function copyAnalysisArtifacts(
+  fromAnalysisId: number,
+  toAnalysisId: number,
+) {
   const [vnoc, crawl, socials, intel] = await Promise.all([
-    prisma.brand_vnoc.findFirst({ where: { analysis_id: fromAnalysisId }, orderBy: { id: "desc" } }),
-    prisma.brand_crawl.findFirst({ where: { analysis_id: fromAnalysisId }, orderBy: { id: "desc" } }),
+    prisma.brand_vnoc.findFirst({
+      where: { analysis_id: fromAnalysisId },
+      orderBy: { id: "desc" },
+    }),
+    prisma.brand_crawl.findFirst({
+      where: { analysis_id: fromAnalysisId },
+      orderBy: { id: "desc" },
+    }),
     prisma.brand_social.findMany({ where: { analysis_id: fromAnalysisId } }),
     prisma.brand_intelligence.findFirst({
       where: { analysis_id: fromAnalysisId },
@@ -175,7 +199,7 @@ async function copyAnalysisArtifacts(fromAnalysisId: number, toAnalysisId: numbe
 /** Analyze an existing brand — does not create another member_urls row. */
 export async function createAnalysisJobForBrand(
   memberId: number,
-  brand: { id: number; url: string; domain: string }
+  brand: { id: number; url: string; domain: string },
 ) {
   const input_url = normalizeInputUrl(brand.url || brand.domain);
   const domain = extractDomainFromUrl(input_url) || brand.domain;
@@ -218,7 +242,7 @@ export async function createAnalysisJobForBrand(
       },
     });
     console.info(
-      `[analysis] job ${analysis.id} reused prior job ${prior.id} for brand ${brand.id}`
+      `[analysis] job ${analysis.id} reused prior job ${prior.id} for brand ${brand.id}`,
     );
   } else {
     await createModuleRows(analysis.id, [...ONBOARDING_MODULES]);
@@ -233,15 +257,22 @@ async function triggerModule(jobId: number, module: ModuleName) {
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: { "x-internal-secret": process.env.ANALYSIS_INTERNAL_SECRET || "" },
+      headers: {
+        "x-internal-secret": process.env.ANALYSIS_INTERNAL_SECRET || "",
+      },
       cache: "no-store",
     });
     if (!res.ok) {
-      console.error(`triggerModule ${module} for job ${jobId} returned ${res.status}`);
+      console.error(
+        `triggerModule ${module} for job ${jobId} returned ${res.status}`,
+      );
       void runModuleAndAdvance(jobId, module);
     }
   } catch (e) {
-    console.error(`triggerModule ${module} for job ${jobId} failed`, (e as Error).message);
+    console.error(
+      `triggerModule ${module} for job ${jobId} failed`,
+      (e as Error).message,
+    );
     void runModuleAndAdvance(jobId, module);
   }
 }
@@ -255,8 +286,13 @@ export async function scheduleReady(jobId: number) {
 
   for (const m of modules) {
     if (m.status !== "pending") continue;
-    const deps = (m.depends_on || "").split(",").map((d) => d.trim()).filter(Boolean);
-    const ready = deps.every((d) => TERMINAL.includes(statusByName.get(d) || ""));
+    const deps = (m.depends_on || "")
+      .split(",")
+      .map((d) => d.trim())
+      .filter(Boolean);
+    const ready = deps.every((d) =>
+      TERMINAL.includes(statusByName.get(d) || ""),
+    );
     if (!ready) continue;
     if (!isModuleName(m.module)) continue;
 
@@ -284,7 +320,9 @@ export async function kickoffJob(jobId: number) {
  * cron sweeper. Idempotent-ish via the queued->running claim.
  */
 export async function runModuleAndAdvance(jobId: number, module: ModuleName) {
-  const analysis = await prisma.brand_analysis.findUnique({ where: { id: jobId } });
+  const analysis = await prisma.brand_analysis.findUnique({
+    where: { id: jobId },
+  });
   if (!analysis) return;
 
   const row = await prisma.brand_analysis_module.findFirst({
@@ -296,7 +334,11 @@ export async function runModuleAndAdvance(jobId: number, module: ModuleName) {
   // Claim: queued/pending/failed -> running.
   const claimed = await prisma.brand_analysis_module.updateMany({
     where: { id: row.id, status: { in: ["queued", "pending", "failed"] } },
-    data: { status: "running", started_at: new Date(), attempts: { increment: 1 } },
+    data: {
+      status: "running",
+      started_at: new Date(),
+      attempts: { increment: 1 },
+    },
   });
   if (claimed.count !== 1) return; // someone else is running it
 
@@ -308,11 +350,16 @@ export async function runModuleAndAdvance(jobId: number, module: ModuleName) {
       where: { id: row.id },
       data: { status: "done", completed_at: new Date(), error: null },
     });
-    console.info(`[analysis] job ${jobId} module ${module} done in ${durationMs}ms`);
+    console.info(
+      `[analysis] job ${jobId} module ${module} done in ${durationMs}ms`,
+    );
   } catch (e) {
     const durationMs = Date.now() - startedAt;
     const msg = (e as Error).message?.slice(0, 500) || "unknown error";
-    console.error(`[analysis] job ${jobId} module ${module} failed after ${durationMs}ms:`, msg);
+    console.error(
+      `[analysis] job ${jobId} module ${module} failed after ${durationMs}ms:`,
+      msg,
+    );
     await prisma.brand_analysis_module.update({
       where: { id: row.id },
       data: { status: "failed", completed_at: new Date(), error: msg },
@@ -364,7 +411,9 @@ async function finalizeIfDone(jobId: number) {
     where: { id: jobId },
     select: { started_at: true },
   });
-  const elapsedMs = job?.started_at ? Date.now() - job.started_at.getTime() : null;
+  const elapsedMs = job?.started_at
+    ? Date.now() - job.started_at.getTime()
+    : null;
 
   await prisma.brand_analysis.update({
     where: { id: jobId },
@@ -389,9 +438,15 @@ async function finalizeIfDone(jobId: number) {
 
 async function computeScores(jobId: number) {
   const [crawl, socials, intel] = await Promise.all([
-    prisma.brand_crawl.findFirst({ where: { analysis_id: jobId }, orderBy: { id: "desc" } }),
+    prisma.brand_crawl.findFirst({
+      where: { analysis_id: jobId },
+      orderBy: { id: "desc" },
+    }),
     prisma.brand_social.findMany({ where: { analysis_id: jobId } }),
-    prisma.brand_intelligence.findFirst({ where: { analysis_id: jobId }, orderBy: { id: "desc" } }),
+    prisma.brand_intelligence.findFirst({
+      where: { analysis_id: jobId },
+      orderBy: { id: "desc" },
+    }),
   ]);
 
   // Website score: completeness of extracted signals.
@@ -414,7 +469,9 @@ async function computeScores(jobId: number) {
   const referral = intel?.readiness_score ?? 0;
 
   const present = [website, social, referral].filter((n) => n > 0);
-  const overall = present.length ? Math.round(present.reduce((a, b) => a + b, 0) / present.length) : 0;
+  const overall = present.length
+    ? Math.round(present.reduce((a, b) => a + b, 0) / present.length)
+    : 0;
 
   return { website, social, referral, overall };
 }

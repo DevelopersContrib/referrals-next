@@ -6,6 +6,7 @@ import {
   getBrandIfAccessible,
   userCanAccessBrand,
 } from "@/lib/brand-access";
+import { guardBrandSlug } from "@/lib/brand-slug-guard";
 
 type RouteParams = { params: Promise<{ brandId: string }> };
 
@@ -26,7 +27,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     const brand = await getBrandIfAccessible(
       id,
       memberId,
-      Boolean((session.user as { isAdmin?: boolean }).isAdmin)
+      Boolean((session.user as { isAdmin?: boolean }).isAdmin),
     );
 
     if (!brand) {
@@ -38,7 +39,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     console.error("Error fetching brand:", error);
     return NextResponse.json(
       { error: "Failed to fetch brand" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -64,7 +65,15 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     }
 
     const body = await req.json();
-    const { url, description, logo_url, background_image, slug, brand_colors, referral_campaign_id } = body;
+    const {
+      url,
+      description,
+      logo_url,
+      background_image,
+      slug,
+      brand_colors,
+      referral_campaign_id,
+    } = body;
 
     // Normalize the referral campaign choice: a positive int, or null to clear.
     let referralCampaignId: number | null | undefined;
@@ -102,21 +111,20 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       if (duplicate) {
         return NextResponse.json(
           { error: "This domain is already registered" },
-          { status: 409 }
+          { status: 409 },
         );
       }
     }
 
-    if (slug && slug !== existing.slug) {
-      const slugTaken = await prisma.member_urls.findFirst({
-        where: { slug, NOT: { id } },
+    let nextSlug: string | undefined;
+    if (slug !== undefined && slug !== existing.slug) {
+      const slugGuard = await guardBrandSlug({
+        slug,
+        website: url ?? existing.url,
+        excludeBrandId: id,
       });
-      if (slugTaken) {
-        return NextResponse.json(
-          { error: "Slug is not available" },
-          { status: 409 }
-        );
-      }
+      if (!slugGuard.ok) return slugGuard.response;
+      nextSlug = slugGuard.slug || undefined;
     }
 
     const updated = await prisma.member_urls.update({
@@ -126,9 +134,11 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
         ...(description !== undefined && { description }),
         ...(logo_url !== undefined && { logo_url }),
         ...(background_image !== undefined && { background_image }),
-        ...(slug !== undefined && { slug }),
+        ...(nextSlug !== undefined && { slug: nextSlug }),
         ...(brandColors && { brand_colors: brandColors }),
-        ...(referralCampaignId !== undefined && { referral_campaign_id: referralCampaignId }),
+        ...(referralCampaignId !== undefined && {
+          referral_campaign_id: referralCampaignId,
+        }),
       },
     });
 
@@ -137,7 +147,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     console.error("Error updating brand:", error);
     return NextResponse.json(
       { error: "Failed to update brand" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -173,7 +183,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     console.error("Error deleting brand:", error);
     return NextResponse.json(
       { error: "Failed to delete brand" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

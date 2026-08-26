@@ -10,6 +10,7 @@ import {
   createAnalysisJobForBrand,
   kickoffJob,
 } from "@/lib/analysis/orchestrator";
+import { guardBrandSlug } from "@/lib/brand-slug-guard";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
   const memberId = parseInt(session.user.id, 10);
   const isAdmin = Boolean((session.user as { isAdmin?: boolean }).isAdmin);
 
-  let body: { url?: string; brandId?: number };
+  let body: { url?: string; brandId?: number; slug?: string };
   try {
     body = await req.json();
   } catch {
@@ -42,18 +43,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Brand not found" }, { status: 404 });
     }
 
-    const { analysis, brandId, reused } = await createAnalysisJobForBrand(memberId, brand);
+    const { analysis, brandId, reused } = await createAnalysisJobForBrand(
+      memberId,
+      brand,
+    );
     if (!reused) {
       after(async () => {
         await kickoffJob(analysis.id);
       });
     }
-    return NextResponse.json({ jobId: analysis.id, brandId, reused }, { status: 201 });
+    return NextResponse.json(
+      { jobId: analysis.id, brandId, reused },
+      { status: 201 },
+    );
   }
 
   const raw = String(body.url || "").trim();
   if (!raw) {
-    return NextResponse.json({ error: "Website URL is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Website URL is required" },
+      { status: 400 },
+    );
   }
 
   // Validate it parses as a hostname.
@@ -62,25 +72,43 @@ export async function POST(req: NextRequest) {
   try {
     hostname = new URL(candidate).hostname;
   } catch {
-    return NextResponse.json({ error: "Enter a valid website URL" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Enter a valid website URL" },
+      { status: 400 },
+    );
   }
   if (!hostname.includes(".")) {
-    return NextResponse.json({ error: "Enter a valid website URL" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Enter a valid website URL" },
+      { status: 400 },
+    );
   }
 
   const canAdd = await canMemberAddBrand(memberId);
   if (!canAdd.ok) {
     return subscriptionRequiredResponse(
-      "Free accounts include 1 domain. Upgrade to Growth ($9/mo per brand) to analyze another."
+      "Free accounts include 1 domain. Upgrade to Growth ($9/mo per brand) to analyze another.",
     );
   }
 
-  const { analysis, brandId } = await createAnalysisJob(memberId, raw);
+  // The member picked a public address before starting; refuse a collision here
+  // rather than quietly renaming it at launch.
+  const slugGuard = await guardBrandSlug({ slug: body.slug, website: raw });
+  if (!slugGuard.ok) return slugGuard.response;
+
+  const { analysis, brandId, slug } = await createAnalysisJob(
+    memberId,
+    raw,
+    slugGuard.slug,
+  );
 
   // Fan out the pipeline after the response is sent.
   after(async () => {
     await kickoffJob(analysis.id);
   });
 
-  return NextResponse.json({ jobId: analysis.id, brandId }, { status: 201 });
+  return NextResponse.json(
+    { jobId: analysis.id, brandId, slug },
+    { status: 201 },
+  );
 }

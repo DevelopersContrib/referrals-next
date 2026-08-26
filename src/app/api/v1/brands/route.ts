@@ -8,6 +8,7 @@ import {
   getPagination,
 } from "@/lib/api/helpers";
 import { canMemberAddBrand } from "@/lib/member-subscription";
+import { checkBrandSlug, claimBrandSlug } from "@/lib/brand-access";
 
 export async function OPTIONS() {
   return handleCors();
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { url, description } = body;
+    const { url, description, slug } = body;
 
     if (!url) {
       return apiError("URL is required", 400);
@@ -65,8 +66,18 @@ export async function POST(req: NextRequest) {
     if (!canAdd.ok) {
       return apiError(
         "Free accounts include 1 domain. Upgrade to Growth ($9/mo per brand) to add another.",
-        403
+        403,
       );
+    }
+
+    if (slug) {
+      const check = await checkBrandSlug({ slug, website: url });
+      if (!check.available) {
+        return apiError(
+          `${check.message} Try "${check.suggestion}".`,
+          check.reason === "taken" ? 409 : 400,
+        );
+      }
     }
 
     let domain = "";
@@ -76,7 +87,7 @@ export async function POST(req: NextRequest) {
       domain = url.replace(/^https?:\/\//, "").split("/")[0];
     }
 
-    const brand = await prisma.member_urls.create({
+    const created = await prisma.member_urls.create({
       data: {
         url,
         description: description || null,
@@ -84,8 +95,9 @@ export async function POST(req: NextRequest) {
         domain,
       },
     });
+    const claimed = await claimBrandSlug(created.id, slug, domain);
 
-    return apiSuccess(brand, 201);
+    return apiSuccess({ ...created, slug: claimed }, 201);
   } catch (error) {
     console.error("Create brand error:", error);
     return apiError("Internal server error", 500);

@@ -53,15 +53,20 @@ Same shell rules on member routes (not admin, not marketing). Walk `/dashboard`,
 - [x] Embed + code blocks contained (`max-w-full overflow-x-auto`, copy moved out of the code area)
 - [x] `/stats` shell left to Kareen — only the broken `truncate` on campaign links was fixed
 
-## J4 — Slug checker before create (2h) — HIGH
+## J4 — Slug checker before create (2h) — HIGH ✅
 
 Two brands shared `blacksesameph`; public page 404’d. Edit already calls `/api/brands/check-slug`. Create / onboarding / admin new do not.
 
-- [ ] Live available/taken + next unique suggestion **before** Analyze / create
-- [ ] Server refuses collisions (`uniqueBrandSlug` or 409)
-- [ ] No unique index on `slug` this sprint
+- [x] Live available/taken + next unique suggestion **before** Analyze / create (`SlugAvailabilityField` + `useSlugAvailability`, debounced 400ms)
+- [x] Server refuses collisions — 409 + `suggestion` on analyze, `POST /api/brands`, v1, admin create, and every brand `PUT`
+- [x] No unique index on `slug` this sprint — uniqueness enforced by `claimBrandSlug` (write, re-read, oldest id keeps the slug)
+- [x] The address is reserved at Analyze, not at launch, so what the member is shown is what they get
 
-**Files:** `brand-analyzer.tsx`, `brand-form.tsx`, admin new brand, `POST /api/brands`, analyze + launch
+**Files:** `src/lib/brand-slug.ts` (new, client-safe rules), `src/lib/brand-slug-guard.ts` (new), `brand-access.ts`, `brand-analyzer.tsx`, `brand-edit-panel.tsx`, admin new brand, `analysis/orchestrator.ts`, `check-slug` + brand create/update routes
+
+**Smoke:** `npx tsx scripts/smoke-brand-slug.ts` (offline rules) · `--db` (duplicate report + suggestions against live data) · `--live --member-id N` (creates two brands on one domain, asserts different slugs, cleans up).
+
+The `--db` run on Aug 26 found 7 pre-existing duplicate slugs (`giovaniyucom`, `coopservices-com`, `interservice-com`, `ipserver-com-8080`, `natureservices-com-8080`, `servicecentre-com`, `servicetech-com`). Those predate the fix and still resolve newest-wins via `findPublicBrandBySlug`; new brands can no longer join them. Backfilling them is a separate ticket.
 
 ## J5 — Full-page campaign embed snippet (1.5h) — MEDIUM
 
@@ -257,25 +262,25 @@ Launched AI campaigns have `banner_image_url`. `buildPublicCampaignMetadata` sho
 
 # Hours
 
-| ID                                  | Owner      | Hours    | Pri          |
-| ----------------------------------- | ---------- | -------- | ------------ |
-| J1 Shell overflow                   | Jayson     | 4.0      | Critical     |
-| J2 Campaign / Integrations fit      | Jayson     | 2.5      | High         |
-| J3 Dashboard responsive ✅          | Jayson     | 3.5      | High         |
-| J4 Slug checker                     | Jayson     | 2.0      | High         |
-| J5 Full-page embed                  | Jayson     | 1.5      | Medium       |
-| **J6 Free-forever upgrade CTA**     | **Jayson** | **1.5**  | **High**     |
-| **K1 Make `/stats` awesome**        | **Kareen** | **8.0**  | **High**     |
-| **K2 `/billing` plan cards**        | **Kareen** | **3.0**  | **High**     |
-| **R1 Onboarding ≠ 10 minutes** ✅   | **Ronan**  | **4.5**  | **Critical** |
-| R2 Shopify env ✅                   | Ronan      | 2.0      | High         |
-| R3 Paid → engagement ✅             | Ronan      | 2.5      | High         |
-| R4 Campaign email smoke ✅            | Ronan      | 2.0      | Medium       |
-| R5 Public OG / sitemap ✅           | Ronan      | 1.0      | Low          |
-| **Total**                           |            | **38.0** |              |
+| ID                                | Owner      | Hours    | Pri          |
+| --------------------------------- | ---------- | -------- | ------------ |
+| J1 Shell overflow                 | Jayson     | 4.0      | Critical     |
+| J2 Campaign / Integrations fit    | Jayson     | 2.5      | High         |
+| J3 Dashboard responsive ✅        | Jayson     | 3.5      | High         |
+| J4 Slug checker ✅                | Jayson     | 2.0      | High         |
+| J5 Full-page embed                | Jayson     | 1.5      | Medium       |
+| **J6 Free-forever upgrade CTA**   | **Jayson** | **1.5**  | **High**     |
+| **K1 Make `/stats` awesome**      | **Kareen** | **8.0**  | **High**     |
+| **K2 `/billing` plan cards**      | **Kareen** | **3.0**  | **High**     |
+| **R1 Onboarding ≠ 10 minutes** ✅ | **Ronan**  | **4.5**  | **Critical** |
+| R2 Shopify env ✅                 | Ronan      | 2.0      | High         |
+| R3 Paid → engagement ✅           | Ronan      | 2.5      | High         |
+| R4 Campaign email smoke ✅        | Ronan      | 2.0      | Medium       |
+| R5 Public OG / sitemap ✅         | Ronan      | 1.0      | Low          |
+| **Total**                         |            | **38.0** |              |
 
 ### How to verify
 
-1. Jayson: `document.documentElement.scrollWidth === clientWidth` at 375–1280; `free_capped` dashboard banner is a real upgrade card (not the amber strip).
+1. Jayson: `document.documentElement.scrollWidth === clientWidth` at 375–1280; `free_capped` dashboard banner is a real upgrade card (not the amber strip). Slug: type `blacksesameph.com` on `/brands/new` — the address reads taken and offers `blacksesameph-com-2`; Analyze stays disabled until you take it.
 2. Kareen: `/stats` funnel + multi-series chart; `/billing` Free vs Growth cards. No checkout/PayPal files.
 3. Ronan: onboard a new domain — brand results on screen in ~15s, **never 10 minutes**; `npx tsx scripts/smoke-campaign-email.ts --live --to <inbox>` → entry + reward emails; pay → engagement enrollment row.

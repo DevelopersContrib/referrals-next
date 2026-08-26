@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminApiGuard } from "@/lib/require-platform-admin";
 import { prisma } from "@/lib/prisma";
+import { guardBrandSlug } from "@/lib/brand-slug-guard";
 
 type RouteParams = { params: Promise<{ brandId: string }> };
 
@@ -22,7 +23,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     console.error("Error fetching brand:", error);
     return NextResponse.json(
       { error: "Failed to fetch brand" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -53,9 +54,18 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     }
     if (body.description !== undefined) data.description = body.description;
     if (body.logo_url !== undefined) data.logo_url = body.logo_url;
-    if (body.background_image !== undefined) data.background_image = body.background_image;
-    if (body.slug !== undefined) data.slug = body.slug;
+    if (body.background_image !== undefined)
+      data.background_image = body.background_image;
     if (body.member_id !== undefined) data.member_id = body.member_id;
+
+    if (body.slug !== undefined && body.slug !== existing.slug) {
+      const slugGuard = await guardBrandSlug({
+        slug: body.slug,
+        excludeBrandId: id,
+      });
+      if (!slugGuard.ok) return slugGuard.response;
+      data.slug = slugGuard.slug || null;
+    }
 
     const updated = await prisma.member_urls.update({ where: { id }, data });
 
@@ -64,7 +74,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     console.error("Error updating brand:", error);
     return NextResponse.json(
       { error: "Failed to update brand" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -85,7 +95,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     console.error("Error deleting brand:", error);
     return NextResponse.json(
       { error: "Failed to delete brand" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

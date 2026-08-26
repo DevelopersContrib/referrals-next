@@ -1,6 +1,12 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { authenticateApiKey, apiSuccess, apiError, handleCors } from "@/lib/api/helpers";
+import {
+  authenticateApiKey,
+  apiSuccess,
+  apiError,
+  handleCors,
+} from "@/lib/api/helpers";
+import { checkBrandSlug } from "@/lib/brand-access";
 
 export async function OPTIONS() {
   return handleCors();
@@ -8,7 +14,7 @@ export async function OPTIONS() {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ brandId: string }> }
+  { params }: { params: Promise<{ brandId: string }> },
 ) {
   try {
     const memberId = await authenticateApiKey(req);
@@ -36,7 +42,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ brandId: string }> }
+  { params }: { params: Promise<{ brandId: string }> },
 ) {
   try {
     const memberId = await authenticateApiKey(req);
@@ -58,6 +64,18 @@ export async function PUT(
     const body = await req.json();
     const { url, description, logo_url, background_image, slug } = body;
 
+    let nextSlug: string | undefined;
+    if (slug !== undefined && slug !== existing.slug) {
+      const check = await checkBrandSlug({ slug, excludeBrandId: id });
+      if (!check.available) {
+        return apiError(
+          `${check.message} Try "${check.suggestion}".`,
+          check.reason === "taken" ? 409 : 400,
+        );
+      }
+      nextSlug = check.slug;
+    }
+
     const updated = await prisma.member_urls.update({
       where: { id },
       data: {
@@ -65,7 +83,7 @@ export async function PUT(
         ...(description !== undefined && { description }),
         ...(logo_url !== undefined && { logo_url }),
         ...(background_image !== undefined && { background_image }),
-        ...(slug !== undefined && { slug }),
+        ...(nextSlug !== undefined && { slug: nextSlug }),
         ...(url !== undefined && {
           domain: (() => {
             try {
@@ -87,7 +105,7 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ brandId: string }> }
+  { params }: { params: Promise<{ brandId: string }> },
 ) {
   try {
     const memberId = await authenticateApiKey(req);

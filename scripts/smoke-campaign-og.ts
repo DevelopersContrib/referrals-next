@@ -65,35 +65,57 @@ function mockPayload(heroImageUrl: string | null): PublicCampaignViewPayload {
   };
 }
 
+function firstOgImageUrl(
+  images: NonNullable<NonNullable<ReturnType<typeof buildPublicCampaignMetadata>["openGraph"]>["images"]> | undefined
+): string {
+  if (!images) return "";
+  const list = Array.isArray(images) ? images : [images];
+  for (const item of list) {
+    if (typeof item === "string") return item;
+    if (item && typeof item === "object" && "url" in item && item.url) {
+      return String(item.url);
+    }
+  }
+  return "";
+}
+
+function metadataTwitterCard(
+  twitter: ReturnType<typeof buildPublicCampaignMetadata>["twitter"]
+): string | undefined {
+  if (!twitter || typeof twitter !== "object") return undefined;
+  const card = (twitter as { card?: unknown }).card;
+  return typeof card === "string" ? card : undefined;
+}
+
+function metadataTwitterImages(
+  twitter: ReturnType<typeof buildPublicCampaignMetadata>["twitter"]
+): string {
+  if (!twitter || typeof twitter !== "object") return "";
+  const images = (twitter as { images?: unknown }).images;
+  if (typeof images === "string") return images;
+  if (Array.isArray(images)) return String(images[0] || "");
+  return "";
+}
+
 function checkMetadataBuilder() {
   console.log("\n1. buildPublicCampaignMetadata");
 
   const heroUrl = "https://cdn.example.com/campaign-hero.jpg";
   const withHero = buildPublicCampaignMetadata(mockPayload(heroUrl));
-  const ogImages = withHero.openGraph?.images;
-  const ogImageUrl =
-    ogImages && !Array.isArray(ogImages) && "url" in ogImages
-      ? String(ogImages.url)
-      : Array.isArray(ogImages)
-        ? String(ogImages[0]?.url || "")
-        : "";
+  const ogImageUrl = firstOgImageUrl(withHero.openGraph?.images);
 
   if (ogImageUrl !== heroUrl) {
     fail(`openGraph.images missing hero (${ogImageUrl || "empty"})`);
   }
   pass(`openGraph.images → ${ogImageUrl}`);
 
-  if (withHero.twitter?.card !== "summary_large_image") {
-    fail(`expected twitter:card summary_large_image, got ${withHero.twitter?.card ?? "none"}`);
+  const twitterCard = metadataTwitterCard(withHero.twitter);
+  if (twitterCard !== "summary_large_image") {
+    fail(`expected twitter:card summary_large_image, got ${twitterCard ?? "none"}`);
   }
   pass("twitter:card → summary_large_image");
 
-  const twitterImages = withHero.twitter?.images;
-  const twitterImageUrl = Array.isArray(twitterImages)
-    ? String(twitterImages[0] || "")
-    : twitterImages
-      ? String(twitterImages)
-      : "";
+  const twitterImageUrl = metadataTwitterImages(withHero.twitter);
   if (twitterImageUrl !== heroUrl) {
     fail(`twitter.images missing hero (${twitterImageUrl || "empty"})`);
   }
@@ -103,7 +125,7 @@ function checkMetadataBuilder() {
   if (withoutHero.openGraph?.images) {
     fail("openGraph.images should be omitted when heroImageUrl is null");
   }
-  if (withoutHero.twitter?.card === "summary_large_image") {
+  if (metadataTwitterCard(withoutHero.twitter) === "summary_large_image") {
     fail("twitter large-image card should not be set without hero");
   }
   pass("no hero → no og:image / large-image twitter card");

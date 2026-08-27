@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import type { CampaignEmbedSnippets } from "@/lib/campaign-embed-snippets";
+import { CampaignPageEmbedPreview } from "@/components/campaigns/campaign-page-embed-preview";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CopyIcon } from "lucide-react";
@@ -94,9 +95,28 @@ export function IntegrationEmbedSections({
         id: "iframe",
         title: "Embed (iframe)",
         description:
-          "Paste anywhere HTML is accepted — landing pages, CMS blocks, and static pages. No JavaScript required.",
+          "Compact widget iframe — paste anywhere HTML is accepted. Use this for a sidebar, blog post, or any page that already has your content.",
         code: snippets.iframe,
       },
+      ...(snippets.fullPage
+        ? [
+            {
+              id: "fullpage",
+              title: "Full page",
+              description: (
+                <>
+                  Entire public campaign at{" "}
+                  <code className="rounded bg-slate-100 px-1">
+                    /p/{"{slug}"}/campaign/{campaignId}
+                  </code>{" "}
+                  — headline, join form, stats, and leaderboard. Best for a
+                  dedicated /refer page.
+                </>
+              ),
+              code: snippets.fullPage,
+            } satisfies SectionDef,
+          ]
+        : []),
       {
         id: "node",
         title: "Node.js",
@@ -111,7 +131,7 @@ export function IntegrationEmbedSections({
         code: snippets.node,
       },
     ],
-    [snippets, widgetHref],
+    [snippets, widgetHref, campaignId],
   );
 
   return (
@@ -130,6 +150,9 @@ export function IntegrationEmbedSections({
             </div>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
+            {s.id === "fullpage" && snippets.pageUrl ? (
+              <CampaignPageEmbedPreview pageUrl={snippets.pageUrl} />
+            ) : null}
             {Array.isArray(s.code) ? (
               s.code.map((block) => (
                 <div key={block.label}>

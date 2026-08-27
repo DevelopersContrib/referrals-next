@@ -14,8 +14,10 @@ import {
 } from "lucide-react";
 import {
   buildCampaignEmbedSnippets,
+  publicCampaignUrl,
   trimEmbedBase,
 } from "@/lib/campaign-embed-snippets";
+import { CampaignPageEmbedPreview } from "@/components/campaigns/campaign-page-embed-preview";
 import { IntegrationEmbedSections } from "@/components/campaigns/integration-embed-sections";
 
 export interface CampaignIntegrationPanelProps {
@@ -48,12 +50,9 @@ export function CampaignIntegrationPanel({
   );
   const id = campaignId;
   const seg = (publicSegment ?? brandSlug ?? brandId).toString().trim();
-  const publicPath = `${root}/public/${encodeURIComponent(seg)}/campaign/${id}`;
+  const publicPath = publicCampaignUrl(root, seg, id);
 
-  const snippets = useMemo(
-    () => buildCampaignEmbedSnippets(baseUrl, id),
-    [baseUrl, id],
-  );
+  const snippets = buildCampaignEmbedSnippets(baseUrl, id, seg);
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const copy = useCallback(async (text: string, key: string) => {
@@ -96,7 +95,7 @@ export function CampaignIntegrationPanel({
                 </h2>
                 <p className="mt-1 max-w-2xl text-sm text-slate-600">
                   {isPostCreate
-                    ? "Copy a snippet below — a JavaScript loader, an iframe embed, or a Node.js example. Placement comes from your "
+                    ? "Copy a snippet below — JavaScript, a compact widget iframe, a full-page campaign iframe, or Node.js. Placement comes from your "
                     : "Copy a snippet for your stack. Configure placement in "}
                   <Link
                     href={`/brands/${brandId}/campaigns/${id}/widget`}
@@ -158,8 +157,13 @@ export function CampaignIntegrationPanel({
               JavaScript
             </TabsTrigger>
             <TabsTrigger value="iframe" className="text-xs sm:text-sm">
-              Embed
+              Widget
             </TabsTrigger>
+            {snippets.fullPage ? (
+              <TabsTrigger value="fullpage" className="text-xs sm:text-sm">
+                Full page
+              </TabsTrigger>
+            ) : null}
             <TabsTrigger value="node" className="text-xs sm:text-sm">
               Node.js
             </TabsTrigger>
@@ -186,9 +190,8 @@ export function CampaignIntegrationPanel({
 
           <TabsContent value="iframe" className="mt-0 space-y-3">
             <p className="text-sm text-muted-foreground">
-              Paste anywhere HTML is accepted — landing pages, CMS blocks,
-              email-safe pages (where iframes are allowed). No JavaScript
-              required.
+              Compact widget iframe (about 560px tall). Paste into a sidebar,
+              blog post, or CMS block. No JavaScript required.
             </p>
             <CodeBlock
               code={snippets.iframe}
@@ -196,6 +199,26 @@ export function CampaignIntegrationPanel({
               copied={copiedKey === "iframe"}
             />
           </TabsContent>
+
+          {snippets.fullPage ? (
+            <TabsContent value="fullpage" className="mt-0 space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Full public campaign page — headline, join form, stats, and
+                leaderboard — at{" "}
+                <code className="rounded bg-slate-100 px-1 text-xs">
+                  /p/{seg}/campaign/{id}
+                </code>
+                . Give it a dedicated /refer page so visitors can scroll the
+                whole landing.
+              </p>
+              <CampaignPageEmbedPreview pageUrl={snippets.pageUrl} />
+              <CodeBlock
+                code={snippets.fullPage}
+                onCopy={() => void copy(snippets.fullPage, "fullpage")}
+                copied={copiedKey === "fullpage"}
+              />
+            </TabsContent>
+          ) : null}
 
           <TabsContent value="node" className="mt-0 space-y-3">
             <p className="text-sm text-muted-foreground">

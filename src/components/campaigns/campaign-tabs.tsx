@@ -76,7 +76,7 @@ export function CampaignTabs({
 }: CampaignTabsProps) {
   const [value, setValue] = useState<TabValue>("analytics");
 
-  // Deep-link: #integrations or #integrations/iframe (Install / embed → Embed tab).
+  // Deep-link: #integrations, #integrations/iframe, or #integrations/fullpage.
   useEffect(() => {
     const apply = () => {
       const hash = window.location.hash.replace(/^#/, "");

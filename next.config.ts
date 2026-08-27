@@ -154,7 +154,8 @@ const nextConfig: NextConfig = {
       },
       // CORS for legacy /widget/* paths (rewritten to /api/widget/*)
       {
-        source: "/widget/:action(signup|share|click|impression|invite|reward|vote)",
+        source:
+          "/widget/:action(signup|share|click|impression|invite|reward|vote)",
         headers: [
           { key: "Access-Control-Allow-Origin", value: "*" },
           { key: "Access-Control-Allow-Methods", value: "GET, POST, OPTIONS" },
@@ -174,7 +175,25 @@ const nextConfig: NextConfig = {
         source: "/sw.js",
         headers: [
           { key: "Cache-Control", value: "no-store, max-age=0" },
-          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          {
+            key: "Content-Type",
+            value: "application/javascript; charset=utf-8",
+          },
+        ],
+      },
+      // Full-page campaign embed (/p/{slug}/campaign/{id}) must load in
+      // third-party iframes. Scoped to public campaign URLs only — do not
+      // apply frame-ancestors * to dashboard or other authenticated routes.
+      {
+        source: "/p/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: "frame-ancestors *" },
+        ],
+      },
+      {
+        source: "/public/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: "frame-ancestors *" },
         ],
       },
     ];

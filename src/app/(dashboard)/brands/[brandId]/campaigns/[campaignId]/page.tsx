@@ -543,6 +543,7 @@ export default async function CampaignDashboardPage({
             campaignId={campaign.id}
             baseUrl={siteOrigin}
             publicUrl={publicPageLink}
+            publicSegment={slugOrId}
             brandDomain={brand?.domain || ""}
           />
         }

@@ -16,9 +16,11 @@ import {
   buildCampaignEmbedSnippets,
   trimEmbedBase,
 } from "@/lib/campaign-embed-snippets";
+import { CampaignPageEmbedPreview } from "@/components/campaigns/campaign-page-embed-preview";
 import {
   Code2Icon,
   SquareCodeIcon,
+  AppWindowIcon,
   ServerIcon,
   ShoppingBagIcon,
   GlobeIcon,
@@ -36,6 +38,8 @@ interface IntegrationGuideProps {
   campaignId: number;
   baseUrl: string;
   publicUrl: string;
+  /** Brand slug (or numeric id) used in /p/{slug}/campaign/{id}. */
+  publicSegment?: string;
   /** This campaign's brand domain — used as the `from` for network referrals. */
   brandDomain?: string;
 }
@@ -60,11 +64,23 @@ export function IntegrationGuide({
   campaignId,
   baseUrl,
   publicUrl,
+  publicSegment,
   brandDomain,
 }: IntegrationGuideProps) {
+  const segment = useMemo(() => {
+    if (publicSegment?.trim()) return publicSegment.trim();
+    try {
+      const { pathname } = new URL(publicUrl);
+      const match = pathname.match(/\/p\/([^/]+)\/campaign\//);
+      return match ? decodeURIComponent(match[1]) : "";
+    } catch {
+      return "";
+    }
+  }, [publicSegment, publicUrl]);
+
   const snippets = useMemo(
-    () => buildCampaignEmbedSnippets(baseUrl, campaignId),
-    [baseUrl, campaignId],
+    () => buildCampaignEmbedSnippets(baseUrl, campaignId, segment),
+    [baseUrl, campaignId, segment],
   );
   const widgetHref = `/brands/${brandId}/campaigns/${campaignId}/widget`;
   const root = trimEmbedBase(baseUrl || "https://referrals.com");
@@ -139,7 +155,7 @@ export function IntegrationGuide({
         tint: "text-sky-500 bg-sky-500/10",
         tagline: "No JavaScript",
         blurb:
-          "Paste anywhere HTML is accepted — landing pages, CMS blocks, and static pages. No JavaScript required.",
+          "Compact widget iframe — paste anywhere HTML is accepted. Use this for a sidebar, blog post, or any page that already has your content. No JavaScript required.",
         steps: [
           "Copy the iframe snippet below.",
           "Paste it into any HTML block on your page.",
@@ -148,6 +164,35 @@ export function IntegrationGuide({
         code: snippets.iframe,
         codeLabel: "HTML",
       },
+      ...(snippets.fullPage
+        ? [
+            {
+              id: "fullpage",
+              label: "Full page",
+              icon: AppWindowIcon,
+              tint: "text-violet-500 bg-violet-500/10",
+              tagline: "Entire campaign page",
+              blurb: (
+                <>
+                  Embed the full public campaign — headline, join form, stats,
+                  and leaderboard — as a full-height iframe at{" "}
+                  <code className="rounded bg-slate-100 px-1 text-xs">
+                    /p/{segment}/campaign/{campaignId}
+                  </code>
+                  . Use this for a dedicated /refer page instead of a compact
+                  widget. Widget snippets stay available next door.
+                </>
+              ),
+              steps: [
+                "Copy the full-page iframe snippet below.",
+                "Paste it into a dedicated landing page or a full-width CMS section.",
+                "Keep width at 100% and height at least 100vh so the join form and leaderboard are usable.",
+              ],
+              code: snippets.fullPage,
+              codeLabel: "HTML",
+            } satisfies IntegrationDef,
+          ]
+        : []),
       {
         id: "node",
         label: "Node.js",
@@ -225,7 +270,7 @@ export function IntegrationGuide({
         copyLabel: "Copy link",
       },
     ],
-    [snippets, widgetHref, publicUrl, networkApi],
+    [snippets, widgetHref, publicUrl, networkApi, segment, campaignId],
   );
 
   // Starts on the default so server and client markup agree; the hash effect
@@ -240,7 +285,8 @@ export function IntegrationGuide({
     [integrations],
   );
 
-  // #integrations/iframe (or /embed) opens the Embed tab from Install / embed.
+  // #integrations/iframe (or /embed) opens Embed; /fullpage|/full-page|/page
+  // opens the full-page campaign iframe.
   useEffect(() => {
     const apply = () => {
       const raw = window.location.hash.replace(/^#/, "");
@@ -250,7 +296,12 @@ export function IntegrationGuide({
         setActiveId("javascript");
         return;
       }
-      const id = sub === "embed" ? "iframe" : sub;
+      const aliases: Record<string, string> = {
+        embed: "iframe",
+        "full-page": "fullpage",
+        page: "fullpage",
+      };
+      const id = aliases[sub] ?? sub;
       if (knownIds.has(id)) setActiveId(id);
     };
     apply();
@@ -399,29 +450,34 @@ export function IntegrationGuide({
         {/* Code / link — the label and Copy sit in a header bar so the button
             never covers the snippet once the column narrows. */}
         {active.code && (
-          <div className="mt-5 min-w-0 max-w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-inner">
-            <div className="flex items-center justify-between gap-2 border-b border-slate-800 px-3 py-2">
-              <p className="min-w-0 truncate text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                {active.codeLabel ?? "Snippet"}
-              </p>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                className="h-8 shrink-0 gap-1.5 border border-slate-700 bg-slate-800 text-slate-100 hover:bg-slate-700"
-                onClick={() => copy(active.code!)}
-              >
-                {copied ? (
-                  <CheckIcon className="size-3.5" />
-                ) : (
-                  <CopyIcon className="size-3.5" />
-                )}
-                {copied ? "Copied" : (active.copyLabel ?? "Copy")}
-              </Button>
+          <div className="mt-5 space-y-4">
+            {active.id === "fullpage" && snippets.pageUrl ? (
+              <CampaignPageEmbedPreview pageUrl={snippets.pageUrl} />
+            ) : null}
+            <div className="min-w-0 max-w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-inner">
+              <div className="flex items-center justify-between gap-2 border-b border-slate-800 px-3 py-2">
+                <p className="min-w-0 truncate text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  {active.codeLabel ?? "Snippet"}
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="h-8 shrink-0 gap-1.5 border border-slate-700 bg-slate-800 text-slate-100 hover:bg-slate-700"
+                  onClick={() => copy(active.code!)}
+                >
+                  {copied ? (
+                    <CheckIcon className="size-3.5" />
+                  ) : (
+                    <CopyIcon className="size-3.5" />
+                  )}
+                  {copied ? "Copied" : (active.copyLabel ?? "Copy")}
+                </Button>
+              </div>
+              <pre className="max-h-[min(60vh,400px)] max-w-full overflow-auto overscroll-x-contain p-4 text-xs leading-relaxed text-slate-100 sm:text-sm">
+                <code className="block">{active.code}</code>
+              </pre>
             </div>
-            <pre className="max-h-[min(60vh,400px)] max-w-full overflow-auto overscroll-x-contain p-4 text-xs leading-relaxed text-slate-100 sm:text-sm">
-              <code className="block">{active.code}</code>
-            </pre>
           </div>
         )}
 

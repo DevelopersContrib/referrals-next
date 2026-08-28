@@ -18,7 +18,7 @@ export default async function DashboardLayout({
       where: { id: memberId },
       select: { is_verified: true },
     }),
-    getMemberEntitlement(memberId),
+    getMemberEntitlement(memberId, { applyAdminBypass: false }),
     prisma.member_urls.findMany({
       where: { member_id: memberId },
       orderBy: { date_added: "desc" },

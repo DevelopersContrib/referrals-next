@@ -41,7 +41,7 @@ export function subscriptionRequiredResponse(message?: string) {
       code: "REQUIRES_SUBSCRIPTION",
       upgradePlanId: DEFAULT_PAID_PLAN_ID,
     },
-    { status: 403 }
+    { status: 403 },
   );
 }
 
@@ -51,7 +51,7 @@ export function participantCapResponse(extraHeaders?: HeadersInit) {
       error: `This free program has reached ${FREE_PARTICIPANT_CAP} participants. The brand owner can upgrade to grow further.`,
       code: "PARTICIPANT_CAP",
     },
-    { status: 403, headers: extraHeaders }
+    { status: 403, headers: extraHeaders },
   );
 }
 
@@ -64,7 +64,10 @@ export function trialExpiryFrom(now = new Date()) {
   return new Date(now.getTime() + TRIAL_DAYS * 86400000);
 }
 
-export function daysLeftUntil(expiry: Date | null | undefined, now = new Date()) {
+export function daysLeftUntil(
+  expiry: Date | null | undefined,
+  now = new Date(),
+) {
   if (!expiry) return null;
   const ms = new Date(expiry).getTime() - now.getTime();
   if (ms <= 0) return 0;
@@ -77,8 +80,15 @@ export function daysLeftUntil(expiry: Date | null | undefined, now = new Date())
  * - paid: price > 0 + future plan_expiry → full Growth + hide branding
  * - free_capped: everyone else (post-trial / legacy) → capped free, branding on
  */
-export async function getMemberEntitlement(memberId: number): Promise<MemberEntitlement> {
-  if (skipPaidSubscriptionGate() || (await memberIdIsPlatformAdmin(memberId))) {
+export async function getMemberEntitlement(
+  memberId: number,
+  options?: { applyAdminBypass?: boolean },
+): Promise<MemberEntitlement> {
+  const applyAdminBypass = options?.applyAdminBypass !== false;
+  if (
+    applyAdminBypass &&
+    (skipPaidSubscriptionGate() || (await memberIdIsPlatformAdmin(memberId)))
+  ) {
     return {
       status: "paid",
       planId: DEFAULT_PAID_PLAN_ID,
@@ -157,7 +167,9 @@ export async function getMemberEntitlement(memberId: number): Promise<MemberEnti
 }
 
 /** Full Growth (trial or paid). Prefer this for feature gates. */
-export async function isMemberGrowthEntitled(memberId: number): Promise<boolean> {
+export async function isMemberGrowthEntitled(
+  memberId: number,
+): Promise<boolean> {
   const e = await getMemberEntitlement(memberId);
   return e.isGrowth;
 }
@@ -184,7 +196,7 @@ export async function countMemberParticipants(memberId: number) {
      FROM campaign_participants cp
      JOIN member_campaigns mc ON mc.id = cp.campaign_id
      WHERE mc.member_id = ?`,
-    memberId
+    memberId,
   );
   return Number(rows[0]?.c ?? 0);
 }
@@ -194,7 +206,11 @@ export async function canMemberAddBrand(memberId: number) {
   if (e.isGrowth) return { ok: true as const, entitlement: e };
   const n = await countMemberBrands(memberId);
   if (n >= FREE_DOMAIN_CAP) {
-    return { ok: false as const, entitlement: e, reason: "domain_cap" as const };
+    return {
+      ok: false as const,
+      entitlement: e,
+      reason: "domain_cap" as const,
+    };
   }
   return { ok: true as const, entitlement: e };
 }
@@ -204,7 +220,11 @@ export async function canMemberAcceptParticipant(memberId: number) {
   if (e.isGrowth) return { ok: true as const, entitlement: e };
   const n = await countMemberParticipants(memberId);
   if (n >= FREE_PARTICIPANT_CAP) {
-    return { ok: false as const, entitlement: e, reason: "participant_cap" as const };
+    return {
+      ok: false as const,
+      entitlement: e,
+      reason: "participant_cap" as const,
+    };
   }
   return { ok: true as const, entitlement: e };
 }

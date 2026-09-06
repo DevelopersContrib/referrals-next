@@ -35,7 +35,7 @@ const ROTATING = [
   "Understanding your products…",
   "Finding your audience…",
   "Discovering social profiles…",
-  "Designing your referral program…",
+  "Building your brand profile…",
 ];
 
 function progressOf(modules: ModuleView[]): number {

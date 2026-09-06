@@ -253,6 +253,12 @@ export async function createAnalysisJobForBrand(
 
 /** Fire a fire-and-forget request to the per-module runner endpoint. */
 async function triggerModule(jobId: number, module: ModuleName) {
+  // No secret configured — skip the HTTP hop and run inline (local dev).
+  if (!process.env.ANALYSIS_INTERNAL_SECRET) {
+    void runModuleAndAdvance(jobId, module);
+    return;
+  }
+
   const url = `${appBaseUrl()}/api/brands/analyze/${jobId}/run/${module}`;
   try {
     const res = await fetch(url, {
@@ -298,7 +304,7 @@ export async function scheduleReady(jobId: number) {
 
     const claimed = await prisma.brand_analysis_module.updateMany({
       where: { id: m.id, status: "pending" },
-      data: { status: "queued" },
+      data: { status: "queued", started_at: new Date() },
     });
     if (claimed.count === 1) {
       void triggerModule(jobId, m.module);
@@ -483,12 +489,14 @@ function arrLen(v: unknown): number {
 /** Cron sweeper: re-trigger modules that stalled or failed (under the attempt cap). */
 export async function sweepStuckModules() {
   const runningCutoff = new Date(Date.now() - 2 * 60 * 1000);
+  const queuedCutoff = new Date(Date.now() - 20 * 1000);
 
   const stuck = await prisma.brand_analysis_module.findMany({
     where: {
       attempts: { lt: MAX_ATTEMPTS },
       OR: [
-        { status: "queued" },
+        { status: "queued", started_at: { lt: queuedCutoff } },
+        { status: "queued", started_at: null },
         { status: "running", started_at: { lt: runningCutoff } },
         { status: "failed" },
       ],

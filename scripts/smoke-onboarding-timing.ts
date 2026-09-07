@@ -14,7 +14,6 @@ import { crawlSite } from "../src/lib/analysis/crawler";
 import {
   MODULES,
   ONBOARDING_MODULES,
-  type ModuleName,
 } from "../src/lib/analysis/types";
 
 loadEnv({ path: ".env.local", quiet: true });
@@ -51,7 +50,8 @@ async function offline(urlArg: string) {
   console.log("\n=== Onboarding timing smoke (offline) ===\n");
 
   console.log("1. Onboarding module graph");
-  if (ONBOARDING_MODULES.includes("campaigns" as ModuleName)) {
+  const onboardingModules = ONBOARDING_MODULES as readonly string[];
+  if (onboardingModules.includes("campaigns")) {
     fail("ONBOARDING_MODULES must not include campaigns on first analyze");
   }
   pass(`ONBOARDING_MODULES = [${ONBOARDING_MODULES.join(", ")}]`);

@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { verifyWebhookSignature } from "@/lib/paypal";
 import { postVnocAttribution, resolveVnocPlan } from "@/lib/vnoc-attribution";
 import { logPayPalWebhook } from "@/lib/billing-webhook-log";
+import {
+  activatePaidSubscriptionFromWebhook,
+  extendPaidSubscriptionPeriod,
+} from "@/lib/billing-activation";
 
 interface PayPalWebhookEvent {
   event_type?: string;
@@ -123,6 +127,18 @@ export async function POST(req: NextRequest) {
             where: { paypal_agreement_id: agreementId },
             data: { agreement_activate: new Date().toISOString() },
           });
+
+          const activation = await activatePaidSubscriptionFromWebhook(agreementId);
+          if (
+            !activation.ok &&
+            activation.error !== "checkout_attempt_not_found"
+          ) {
+            console.error(
+              "[billing/webhook] subscription activation failed:",
+              agreementId,
+              activation.error,
+            );
+          }
         }
         break;
       }
@@ -130,9 +146,26 @@ export async function POST(req: NextRequest) {
       case "PAYMENT.SALE.COMPLETED": {
         const agreementId = resource?.billing_agreement_id;
         if (agreementId) {
-          const plan = await prisma.member_plan.findFirst({
+          let plan = await prisma.member_plan.findFirst({
             where: { paypal_agreement_id: agreementId },
           });
+
+          if (!plan) {
+            const activation =
+              await activatePaidSubscriptionFromWebhook(agreementId);
+            if (activation.ok) {
+              plan = await prisma.member_plan.findFirst({
+                where: { paypal_agreement_id: agreementId },
+              });
+            } else if (activation.error !== "checkout_attempt_not_found") {
+              console.error(
+                "[billing/webhook] sale activation failed:",
+                agreementId,
+                activation.error,
+              );
+            }
+          }
+
           if (plan) {
             await prisma.member_payment.create({
               data: {
@@ -145,16 +178,7 @@ export async function POST(req: NextRequest) {
               },
             });
 
-            // Extend plan expiry by 30 days
-            const member = await prisma.members.findUnique({ where: { id: plan.member_id } });
-            const currentExpiry = member?.plan_expiry ? new Date(member.plan_expiry) : new Date();
-            const newExpiry = new Date(Math.max(currentExpiry.getTime(), Date.now()));
-            newExpiry.setDate(newExpiry.getDate() + 30);
-
-            await prisma.members.update({
-              where: { id: plan.member_id },
-              data: { plan_expiry: newExpiry },
-            });
+            await extendPaidSubscriptionPeriod(agreementId, 30);
 
             // Report the paid charge to VNOC (idempotent by transaction id).
             const amountUsd = parseFloat(resource.amount?.total || "0");

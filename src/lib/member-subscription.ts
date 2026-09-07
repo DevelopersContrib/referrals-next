@@ -32,6 +32,13 @@ export type MemberEntitlement = {
   hideBranding: boolean;
 };
 
+export type BrandEntitlement = MemberEntitlement & {
+  brandId: number;
+  memberId: number;
+  /** VNOC network brands are always free — never inherit another brand's pay. */
+  isVnoc: boolean;
+};
+
 export function subscriptionRequiredResponse(message?: string) {
   return NextResponse.json(
     {
@@ -166,6 +173,162 @@ export async function getMemberEntitlement(
   };
 }
 
+/**
+ * Per-brand entitlement. Account trial applies to all brands; paid Growth is
+ * stamped per brand (url_plan + member_urls.plan_expiry). VNOC brands stay free.
+ */
+export async function getBrandEntitlement(
+  brandId: number,
+  options?: { applyAdminBypass?: boolean },
+): Promise<BrandEntitlement | null> {
+  const brand = await prisma.member_urls.findUnique({
+    where: { id: brandId },
+    select: {
+      id: true,
+      member_id: true,
+      plan_expiry: true,
+      in_vnoc: true,
+    },
+  });
+  if (!brand) return null;
+
+  const memberId = brand.member_id;
+  const isVnoc = Boolean(brand.in_vnoc);
+  const applyAdminBypass = options?.applyAdminBypass !== false;
+
+  if (
+    applyAdminBypass &&
+    (skipPaidSubscriptionGate() || (await memberIdIsPlatformAdmin(memberId)))
+  ) {
+    return {
+      brandId,
+      memberId,
+      isVnoc,
+      status: "paid",
+      planId: DEFAULT_PAID_PLAN_ID,
+      planExpiry: null,
+      daysLeft: null,
+      isGrowth: true,
+      isPaid: true,
+      hideBranding: true,
+    };
+  }
+
+  const member = await prisma.members.findUnique({
+    where: { id: memberId },
+    select: { plan_id: true, plan_expiry: true, is_verified: true },
+  });
+
+  if (!member?.is_verified) {
+    return {
+      brandId,
+      memberId,
+      isVnoc,
+      status: "unverified",
+      planId: member?.plan_id ?? null,
+      planExpiry: member?.plan_expiry ?? null,
+      daysLeft: daysLeftUntil(member?.plan_expiry),
+      isGrowth: false,
+      isPaid: false,
+      hideBranding: false,
+    };
+  }
+
+  const accountTrial = await getMemberEntitlement(memberId, {
+    applyAdminBypass: false,
+  });
+  if (accountTrial.status === "trial") {
+    return {
+      brandId,
+      memberId,
+      isVnoc,
+      status: "trial",
+      planId: accountTrial.planId,
+      planExpiry: accountTrial.planExpiry,
+      daysLeft: accountTrial.daysLeft,
+      isGrowth: true,
+      isPaid: false,
+      hideBranding: false,
+    };
+  }
+
+  if (isVnoc) {
+    return {
+      brandId,
+      memberId,
+      isVnoc,
+      status: "free_capped",
+      planId: null,
+      planExpiry: null,
+      daysLeft: 0,
+      isGrowth: false,
+      isPaid: false,
+      hideBranding: false,
+    };
+  }
+
+  const brandExpiry = brand.plan_expiry ? new Date(brand.plan_expiry) : null;
+  const brandPaidActive =
+    brandExpiry != null && brandExpiry.getTime() > Date.now();
+
+  if (brandPaidActive) {
+    const urlPlan = await prisma.url_plan.findFirst({
+      where: { url_id: brandId },
+      orderBy: { id: "desc" },
+      select: { payment_id: true },
+    });
+    const planId = urlPlan?.payment_id ?? null;
+    let price = 0;
+    if (planId) {
+      const plan = await prisma.plans.findUnique({
+        where: { id: planId },
+        select: { price: true },
+      });
+      price = plan?.price ?? 0;
+    }
+
+    if (price > 0) {
+      return {
+        brandId,
+        memberId,
+        isVnoc,
+        status: "paid",
+        planId,
+        planExpiry: brandExpiry,
+        daysLeft: daysLeftUntil(brandExpiry),
+        isGrowth: true,
+        isPaid: true,
+        hideBranding: true,
+      };
+    }
+  }
+
+  return {
+    brandId,
+    memberId,
+    isVnoc,
+    status: "free_capped",
+    planId: null,
+    planExpiry: brandExpiry,
+    daysLeft: daysLeftUntil(brandExpiry),
+    isGrowth: false,
+    isPaid: false,
+    hideBranding: false,
+  };
+}
+
+/** Full Growth for a brand (account trial or that brand paid). */
+export async function isBrandGrowthEntitled(brandId: number): Promise<boolean> {
+  const e = await getBrandEntitlement(brandId);
+  return e?.isGrowth ?? false;
+}
+
+/** Paid Growth for a single brand (not account trial). */
+export async function isBrandOnPaidPlan(brandId: number): Promise<boolean> {
+  const e = await getBrandEntitlement(brandId);
+  return e?.isPaid ?? false;
+}
+
 /** Full Growth (trial or paid). Prefer this for feature gates. */
 export async function isMemberGrowthEntitled(
   memberId: number,
@@ -203,7 +366,8 @@ export async function countMemberParticipants(memberId: number) {
 
 export async function canMemberAddBrand(memberId: number) {
   const e = await getMemberEntitlement(memberId);
-  if (e.isGrowth) return { ok: true as const, entitlement: e };
+  // Account trial unlocks multi-brand; per-brand pay does not bypass the free cap.
+  if (e.status === "trial") return { ok: true as const, entitlement: e };
   const n = await countMemberBrands(memberId);
   if (n >= FREE_DOMAIN_CAP) {
     return {
@@ -215,6 +379,39 @@ export async function canMemberAddBrand(memberId: number) {
   return { ok: true as const, entitlement: e };
 }
 
+export async function countBrandParticipants(brandId: number) {
+  const rows = await prisma.$queryRawUnsafe<{ c: bigint }[]>(
+    `SELECT COUNT(*) AS c
+     FROM campaign_participants cp
+     JOIN member_campaigns mc ON mc.id = cp.campaign_id
+     WHERE mc.url_id = ?`,
+    brandId,
+  );
+  return Number(rows[0]?.c ?? 0);
+}
+
+export async function canBrandAcceptParticipant(brandId: number) {
+  const e = await getBrandEntitlement(brandId);
+  if (!e) {
+    return {
+      ok: false as const,
+      entitlement: null,
+      reason: "brand_not_found" as const,
+    };
+  }
+  if (e.isGrowth) return { ok: true as const, entitlement: e };
+  const n = await countBrandParticipants(brandId);
+  if (n >= FREE_PARTICIPANT_CAP) {
+    return {
+      ok: false as const,
+      entitlement: e,
+      reason: "participant_cap" as const,
+    };
+  }
+  return { ok: true as const, entitlement: e };
+}
+
+/** @deprecated Prefer canBrandAcceptParticipant for widget/API caps. */
 export async function canMemberAcceptParticipant(memberId: number) {
   const e = await getMemberEntitlement(memberId);
   if (e.isGrowth) return { ok: true as const, entitlement: e };
@@ -229,7 +426,13 @@ export async function canMemberAcceptParticipant(memberId: number) {
   return { ok: true as const, entitlement: e };
 }
 
-/** Visitor-facing: show Powered-by unless the campaign owner is paid. */
+/** Visitor-facing: show Powered-by unless this brand is on paid Growth. */
+export async function brandMustShowBranding(brandId: number) {
+  const e = await getBrandEntitlement(brandId);
+  return !(e?.hideBranding ?? false);
+}
+
+/** @deprecated Prefer brandMustShowBranding(brandId) — account pay no longer hides branding globally. */
 export async function memberMustShowBranding(memberId: number) {
   const e = await getMemberEntitlement(memberId);
   return !e.hideBranding;

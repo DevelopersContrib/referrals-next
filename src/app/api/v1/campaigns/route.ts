@@ -7,7 +7,7 @@ import {
   handleCors,
   getPagination,
 } from "@/lib/api/helpers";
-import { isMemberGrowthEntitled } from "@/lib/member-subscription";
+import { isBrandGrowthEntitled } from "@/lib/member-subscription";
 
 export async function OPTIONS() {
   return handleCors();
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       return apiError("Brand not found or does not belong to you", 404);
     }
 
-    const paid = await isMemberGrowthEntitled(memberId);
+    const paid = await isBrandGrowthEntitled(brand.id);
     const resolvedPublish =
       publish === "public" || publish === "private"
         ? publish

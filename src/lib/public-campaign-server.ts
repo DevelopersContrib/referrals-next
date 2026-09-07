@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { memberMustShowBranding } from "@/lib/member-subscription";
+import { brandMustShowBranding } from "@/lib/member-subscription";
 import {
   kindLook,
   readSuggestionPayload,
@@ -135,7 +135,7 @@ export async function fetchPublicCampaignViewData(
       })
     : null;
 
-  const showBranding = await memberMustShowBranding(campaign.member_id);
+  const showBranding = await brandMustShowBranding(campaign.url_id);
 
   const participantCount = await prisma.campaign_participants.count({
     where: { campaign_id: campaign.id },

@@ -51,15 +51,15 @@ function offline() {
   pass("activatePaidSubscription calls handlePaidEngagementTransition");
   pass("alreadyProcessed guard present for webhook replay");
 
-  console.log("\n2. PayPal webhook does not send engagement mail");
+  console.log("\n2. PayPal webhook activates via checkout attempt");
   const webhook = readRepoFile("src/app/api/billing/webhook/route.ts");
+  if (!webhook.includes("activatePaidSubscriptionFromWebhook")) {
+    fail("PayPal webhook must call activatePaidSubscriptionFromWebhook");
+  }
   if (webhook.includes("handlePaidEngagementTransition")) {
     fail("PayPal webhook must not call handlePaidEngagementTransition directly");
   }
-  if (webhook.includes("engagement")) {
-    fail("PayPal webhook should not import engagement enrollment");
-  }
-  pass("webhook route has no engagement enrollment (runs in activatePaidSubscription only)");
+  pass("webhook delegates activation to activatePaidSubscriptionFromWebhook");
 
   console.log("\n3. Checkout routes share activation");
   for (const route of ["src/app/api/billing/confirm/route.ts", "src/app/api/billing/execute/route.ts"]) {

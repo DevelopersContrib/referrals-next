@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { uniqueBrandSlug } from "@/lib/brand-access";
 import { getRewardKind } from "@/lib/reward-types";
 import {
-  isMemberGrowthEntitled,
+  isBrandGrowthEntitled,
   subscriptionRequiredResponse,
 } from "@/lib/member-subscription";
 import {
@@ -71,7 +71,7 @@ export async function POST(
     return NextResponse.json({ error: "No campaign suggestion found" }, { status: 404 });
   }
 
-  const paid = await isMemberGrowthEntitled(memberId);
+  const paid = await isBrandGrowthEntitled(brand.id);
   const resolvedPublish =
     body.publish === "public" || body.publish === "private"
       ? body.publish

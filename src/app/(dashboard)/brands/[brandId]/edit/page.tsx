@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { isMemberOnPaidPlan } from "@/lib/member-subscription";
+import { isBrandOnPaidPlan } from "@/lib/member-subscription";
 import { BrandEditPanel } from "@/components/brands/brand-edit-panel";
 import { BrandReferralLink } from "@/components/brands/brand-referral-link";
 import { ChevronRightIcon, HomeIcon } from "lucide-react";
@@ -16,9 +16,8 @@ export default async function EditBrandPage({ params }: EditBrandPageProps) {
   if (!session?.user?.id) redirect("/signin");
 
   const { brandId } = await params;
-  const memberId = parseInt(session.user.id, 10);
-  // Whitelabel / remove branding is paid-only (not trial)
-  const isPremium = await isMemberOnPaidPlan(memberId);
+  // Whitelabel / remove branding is paid-only for this brand (not trial).
+  const isPremium = await isBrandOnPaidPlan(parseInt(brandId, 10));
 
   return (
     <div className="space-y-6">

@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ExternalLinkIcon } from "lucide-react";
 import { BrandLogo } from "@/components/brands/brand-logo";
-import { memberMustShowBranding } from "@/lib/member-subscription";
+import { brandMustShowBranding } from "@/lib/member-subscription";
 import { findPublicBrandBySlug } from "@/lib/public-campaign-server";
 
 const LOGO_URL =
@@ -21,7 +21,7 @@ export default async function PublicBrandPage({
 
   if (!brand) notFound();
 
-  const showBranding = await memberMustShowBranding(brand.member_id);
+  const showBranding = await brandMustShowBranding(brand.id);
 
   const campaigns = await prisma.member_campaigns.findMany({
     where: { url_id: brand.id, publish: "public" },

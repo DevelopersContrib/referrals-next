@@ -5,9 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   ArrowRightIcon,
-  BarChart3Icon,
   CheckCircle2Icon,
-  GlobeIcon,
   RocketIcon,
   SparklesIcon,
 } from "lucide-react";
@@ -19,12 +17,6 @@ const GROWTH_PLAN_HREF = `/billing/plan/${DEFAULT_PAID_PLAN_ID}`;
 const DOSIS: React.CSSProperties = {
   fontFamily: "var(--font-dosis), sans-serif",
 };
-
-const GROWTH_CHIPS = [
-  { id: "branding", label: "Remove branding", Icon: SparklesIcon },
-  { id: "brands", label: "More brands", Icon: GlobeIcon },
-  { id: "stats", label: "Advanced stats", Icon: BarChart3Icon },
-] as const;
 
 type Props = {
   isVerified: boolean;
@@ -50,10 +42,8 @@ function PaidOnboardingBannerInner(props: Props) {
     : props;
 
   if (isVerified && status === "paid") return null;
-
-  if (isVerified && status === "free_capped") {
-    return <FreeCappedUpgradeCard />;
-  }
+  // Free forever is account-level (capped), not a per-brand SKU — no upgrade strip.
+  if (isVerified && status === "free_capped") return null;
 
   if (isVerified && status === "trial") {
     const isEndingSoon = daysLeft != null && daysLeft <= 3;
@@ -70,53 +60,6 @@ function PaidOnboardingBannerInner(props: Props) {
       status={status}
       daysLeft={daysLeft}
     />
-  );
-}
-
-function FreeCappedUpgradeCard() {
-  return (
-    <section
-      aria-labelledby="growth-upgrade-heading"
-      className="@container relative mb-5 overflow-hidden rounded-2xl border border-portlet-border bg-white shadow-sm"
-    >
-      <GradientAccent />
-      <div className="flex flex-col gap-5 p-5 sm:p-6 md:flex-row md:items-center md:justify-between md:gap-8 md:ps-7">
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wider text-brand-violet">
-            Free forever
-          </p>
-          <h2
-            id="growth-upgrade-heading"
-            className="mt-1 text-balance text-xl font-bold tracking-tight text-foreground sm:text-2xl"
-            style={DOSIS}
-          >
-            Keep your widget. Unlock Growth.
-          </h2>
-          <p className="mt-2 max-w-xl text-pretty text-sm leading-relaxed text-sidebar-foreground">
-            Your campaign stays live. Growth removes Referrals.com branding and
-            unlocks more brands, leaderboards, and full stats.
-          </p>
-          <ul
-            className="mt-3 flex flex-wrap gap-2"
-            aria-label="Included with Growth"
-          >
-            {GROWTH_CHIPS.map(({ id, label, Icon }) => (
-              <li
-                key={id}
-                className="inline-flex items-center gap-1.5 rounded-full border border-portlet-border bg-dashboard-bg px-2.5 py-1 text-xs font-medium text-sidebar-foreground"
-              >
-                <Icon
-                  className="size-3.5 shrink-0 text-brand-violet"
-                  aria-hidden
-                />
-                {label}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <UpgradeCta className="md:w-auto">Upgrade to Growth — $9/mo</UpgradeCta>
-      </div>
-    </section>
   );
 }
 
@@ -320,23 +263,15 @@ function formatTrialTimeLeft(daysLeft: number | null | undefined) {
   return `${daysLeft} days left`;
 }
 
-type BannerPreview = "free_capped" | "trial";
+type BannerPreview = "trial";
 
 function readDevPreview(value: string | null): BannerPreview | null {
   if (process.env.NODE_ENV !== "development") return null;
-  if (value === "free_capped" || value === "trial") return value;
+  if (value === "trial") return value;
   return null;
 }
 
-function previewOnboarding(preview: BannerPreview): Props {
-  if (preview === "free_capped") {
-    return {
-      isVerified: true,
-      isGrowth: false,
-      status: "free_capped",
-      daysLeft: 0,
-    };
-  }
+function previewOnboarding(_preview: BannerPreview): Props {
   return {
     isVerified: true,
     isGrowth: true,

@@ -11,8 +11,8 @@ Do **not** edit `.env`. Do **not** touch PayPal checkout UI (`/billing/plan/[pla
 
 | Who | Focus | Hours |
 |-----|--------|-------|
-| **Jayson** | Billing cards + upgrade CTAs (verified broken) | 8.0 |
-| **Ronan** | Conversion callback this API can actually receive; then caps / activate | 16.5 |
+| **Jayson** | Billing cards + upgrade CTAs (verified broken) | 9.5 |
+| **Ronan** | Conversion callback this API can actually receive; then caps / activate / brand pay | 19.5 |
 
 ---
 
@@ -36,7 +36,9 @@ Do **not** edit `.env`. Do **not** touch PayPal checkout UI (`/billing/plan/[pla
 
 | Claim | Verdict |
 |---|---|
-| One PayPal payment unlocks all brands | **True.** `getMemberEntitlement` / `canMemberAddBrand` are account-level `isGrowth`. `url_plan` is written in `billing-activation.ts` and **never read** (only deleted on account delete). |
+| One PayPal payment unlocks all brands | **True today.** `getMemberEntitlement` / `canMemberAddBrand` are account-level `isGrowth`. **R7** is the fix: treat $9 as the brand that checked out. |
+| Per-brand payment attribution | **Half-wired, unused.** Checkout already threads `brandId` (`/billing/plan/2?brandId=` → subscribe / confirm / execute → `activatePaidSubscription`). If present, writes `url_plan` (`url_id`, PayPal ids). **Never** writes `member_urls.plan_expiry`. Dashboard / `/brands` badges read `member_urls.plan_expiry`, so a paid brand still says **Free**. `url_plan` is only deleted on account delete — **no gate reads it**. Webhook path has no `brandId` unless R5 looks up `billing_checkout_attempts.brand_id`. Missing `?brandId=` → account paid, no brand row. |
+| VNOC brands are free | **True product rule (Maida, Sept 7).** `member_urls.in_vnoc` / `vnoc_id` = network / free. No upgrade CTA. Do not sell Growth against them. |
 | 500-participant cap is widget-only | **True.** `canMemberAcceptParticipant` is only called from `/api/widget/signup`. Bypass: `POST /api/v1/signups`, Zapier create, `POST .../campaigns/[id]/participants`. |
 | PayPal activate if tab closes | **True hole.** Webhook `BILLING.SUBSCRIPTION.ACTIVATED` only stamps `agreement_activate`. `PAYMENT.SALE.COMPLETED` extends expiry **only if** `member_plan` already exists. |
 | “30 days Growth when they upgrade” | **True lie.** Copy on `/referral-program` + invite card. `activatePaidSubscription` does not extend the referrer’s `plan_expiry`. `referral_coupons` has **zero** callers. |
@@ -68,10 +70,27 @@ Verified: `brand-analyzer.tsx` links `/billing`.
 
 ## J3 — Upgrade nag + orphan page (2h) — MEDIUM
 
-Verified: dashboard card always visible (`dashboard/page.tsx` ~423). `/brands/[brandId]/upgrade` has no inbound links and dumps raw plans.
+Verified: dashboard card was always-on (`dashboard/page.tsx`). `/brands/[brandId]/upgrade` has no inbound links and dumps raw plans.
 
-- Hide dashboard card when `paid`
+- Do **not** show an account-level “Free forever / Keep your widget” strip (there is no free-per-brand SKU; VNOC is free)
 - Redirect `/brands/[id]/upgrade` → `/billing/plan/2?brandId=`
+- Per-brand CTA lives in **J5** (depends on **R7** for “upgraded”)
+
+## J5 — Upgrade CTA only on brands that need to pay (1.5h) — HIGH
+
+**Depends on R7** for “this brand is upgraded.” Until R7 lands, treat upgraded = `url_plan` row **or** future `member_urls.plan_expiry`.
+
+Show Growth CTA **only** when all are true:
+
+- Brand is **not** VNOC (`in_vnoc` is not true **and** `vnoc_id` is null)
+- Brand has **no** active paid attribution (`url_plan` / `plan_expiry`)
+- Owner is not already `paid` on that brand
+
+Hide for: VNOC (badge **Free** / Network — not Upgrade), already-paid brand (**Active**), trial keep-Growth account banner (existing trial card is OK).
+
+- Surfaces: dashboard brand cards, `/brands` plan column, brand edit “Upgrade to Premium”
+- CTA → existing `/billing/plan/2?brandId=` — do not invent checkout
+- Copy: never “Free forever” on a brand. VNOC = free. Everyone else unpaid = upgrade Growth $9/mo for **this** brand.
 
 ## J4 — Billing mobile (1h) — MEDIUM
 
@@ -150,6 +169,33 @@ Verified: per-campaign table always on; 30-day upgrade copy is a lie until you e
 - [x] “Per brand” copy sweep skipped — R1–R5 did not slip; account-level Growth stays as-is for now (park full copy reconcile)
 - [x] +30d on paid referral did **not** ship — `/referral-program` + `SignupInviteCard` now say 14-day Growth trial (no 30-day promise)
 
+## R7 — Attribute the $9 payment to a brand (3h) — CRITICAL
+
+**Why:** We already collect `brandId` at checkout. We do not stamp the brand, so UI cannot tell paid vs unpaid vs VNOC-free. Product: **$9 is per brand.** VNOC domains are free (no charge). There is no “free per brand” SKU.
+
+**Today (do not re-verify):**
+
+1. `brandId` rides checkout: page search param → `PayPalCheckout` → `/api/billing/subscribe|confirm|execute` → `activatePaidSubscription({ brandId })` → `billing_checkout_attempts.brand_id`
+2. If `brandId` is set and belongs to the member: insert `url_plan` only
+3. Always: `member_plan` + `member_payment` + `members.plan_id` / `members.plan_expiry` (account unlock — this is the lie)
+4. Never: `member_urls.plan_expiry`
+5. Never: read `url_plan` in `getMemberEntitlement` / branding / domain cap
+6. Webhook has subscription id only — brand is on the checkout attempt row
+
+**Do:**
+
+- On activate (and **R5** webhook activate): if `brandId` present, write `url_plan` **and** `member_urls.plan_expiry` (same expiry as the member payment). Idempotent — do not stack duplicate `url_plan` for the same `url_id` + agreement.
+- If activate has no `brandId`, load `billing_checkout_attempts.brand_id` by `paypal_subscription_id` / `attempt_id` (this is how webhook attributes the brand).
+- `getBrandEntitlement(brandId)` (or equivalent):  
+  - VNOC (`in_vnoc` or `vnoc_id`) → free, no paywall, no upgrade  
+  - Active `url_plan` **or** future `member_urls.plan_expiry` → that brand is paid  
+  - Else → not upgraded
+- **Do not** let one `url_plan` unlock every other brand. Account-level `isGrowth` may stay for trial; **paid** Growth features that are sold per brand (hide Powered-by, extra domain beyond the first unpaid, brand “Active” badge) must use the brand helper.
+- VNOC: never create `url_plan` / never send them to checkout
+- Do not edit `paypal-checkout.tsx`
+
+**Done when:** Pay `/billing/plan/2?brandId=123` → `url_plan.url_id = 123` and `member_urls.plan_expiry` future → that card is Active. Brand 456 (non-VNOC, no row) still shows Upgrade. A VNOC brand never shows Upgrade and needs no payment. Checkout with no `brandId` still activates the **account** (don’t break PayPal) but logs `brand_missing` so we can fix CTAs.
+
 ---
 
 # Hours
@@ -160,20 +206,22 @@ Verified: per-campaign table always on; 30-day upgrade copy is a lie until you e
 | J2 Cap CTA → `/billing/plan/2` | Jayson | 2.0 | High | Yes |
 | J3 Upgrade nag / orphan | Jayson | 2.0 | Medium | Yes |
 | J4 Billing mobile | Jayson | 1.0 | Medium | Yes |
+| J5 Per-brand / VNOC upgrade CTA ✅ | Jayson | 1.5 | High | Yes |
 | **R1 Network conversion POST** ✅ | **Ronan** | **5.0** | **Critical** | **Yes** |
 | **R2 `/t/` cookie + keep `?ref=`** ✅ | **Ronan** | **1.5** | **High** | **Yes** |
 | **R3 Widget signup fires reward** ✅ | **Ronan** | **2.0** | **High** | **Yes** |
 | **R4 Cap all ingress** ✅ | **Ronan** | **2.5** | **Critical** | **Yes** |
 | **R5 Webhook activate** ✅ | **Ronan** | **2.5** | **Critical** | **Yes** |
 | R6 Copy + `/stats` table ✅ | Ronan | 3.0 | High | Yes |
-| **Total** | | **24.5** | | |
+| **R7 Attribute $9 to a brand** | **Ronan** | **3.0** | **Critical** | **Yes** |
+| **Total** | | **29.0** | | |
 
-Parked (verified but not this week unless R1–R5 finish early): per-brand `url_plan` gate; +30d on paid invitee; widget.js static/dynamic reconcile; `/api/brand` auto-provision; leaderboard paywall.
+Parked (verified but not this week unless R1–R5 + R7 finish early): +30d on paid invitee; widget.js static/dynamic reconcile; `/api/brand` auto-provision; leaderboard paywall.
 
 ### How to verify
 
-1. Jayson: `/billing` = Free vs Growth. Second brand → `/billing/plan/2`. Paid user: no upgrade nag.
-2. Ronan: Hop `/t/<code>` → destination `?ref=<id>` → `POST /api/v1/network/conversions` with network key → referrer credited + reward. Widget `?ref=` signup also rewards. Zapier/API signup hits 500-cap. PayPal activate with confirm killed still grants Growth.
+1. Jayson: `/billing` = Free vs Growth. Second brand → `/billing/plan/2`. Upgrade CTA only on non-VNOC unpaid brands. VNOC = Free, no CTA. Paid brand = Active.
+2. Ronan: Hop `/t/<code>` → destination `?ref=<id>` → `POST /api/v1/network/conversions` with network key → referrer credited + reward. Widget `?ref=` signup also rewards. Zapier/API signup hits 500-cap. PayPal activate with confirm killed still grants Growth. Checkout `?brandId=` stamps that brand (`url_plan` + `plan_expiry`); other brands stay unpaid.
 
 ---
 
@@ -181,14 +229,16 @@ Parked (verified but not this week unless R1–R5 finish early): per-brand `url_
 
 1. J1 — `/billing` Free vs Growth · Jayson · 3h · High  
 2. J2 — Second-brand → `/billing/plan/2` · Jayson · 2h · High  
-3. J3 — Hide paid upgrade nag; redirect orphan upgrade page · Jayson · 2h · Medium  
+3. J3 — Hide account “Free forever” strip; redirect orphan upgrade page · Jayson · 2h · Medium  
 4. J4 — Billing mobile · Jayson · 1h · Medium  
-5. **R1 — POST /api/v1/network/conversions** ✅ (network key, `ref` = `/t/` participant id) · Ronan · 5h · Critical  
-6. R2 — `/t/` also set 30-day ref cookie ✅ · Ronan · 1.5h · High  
-7. R3 — Widget signup fires reward for the referrer ✅ · Ronan · 2h · High  
-8. R4 — Participant cap on API/Zapier/manual ✅ · Ronan · 2.5h · Critical  
-9. R5 — Webhook calls `activatePaidSubscription` ✅ · Ronan · 2.5h · Critical  
-10. R6 — `/stats` free = totals; kill 30-day copy if reward month not shipped ✅ · Ronan · 3h · High  
+5. J5 — Upgrade CTA only on non-VNOC unpaid brands ✅ · Jayson · 1.5h · High  
+6. **R1 — POST /api/v1/network/conversions** ✅ (network key, `ref` = `/t/` participant id) · Ronan · 5h · Critical  
+7. R2 — `/t/` also set 30-day ref cookie ✅ · Ronan · 1.5h · High  
+8. R3 — Widget signup fires reward for the referrer ✅ · Ronan · 2h · High  
+9. R4 — Participant cap on API/Zapier/manual ✅ · Ronan · 2.5h · Critical  
+10. R5 — Webhook calls `activatePaidSubscription` ✅ · Ronan · 2.5h · Critical  
+11. R6 — `/stats` free = totals; kill 30-day copy if reward month not shipped ✅ · Ronan · 3h · High  
+12. **R7 — Attribute $9 to `brandId` (`url_plan` + `member_urls.plan_expiry`; VNOC = free)** · Ronan · 3h · Critical  
 
 ---
 

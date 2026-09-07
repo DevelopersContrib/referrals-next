@@ -11,11 +11,17 @@
  *
  * Requires .env.local with DATABASE_URL, AWS SES, NEXT_PUBLIC_APP_URL.
  */
+import { readFileSync } from "fs";
+import { join } from "path";
+import { config as loadEnv } from "dotenv";
 import { prisma } from "../src/lib/prisma";
 import {
   formatRewardDescription,
   substituteCampaignEmailTemplate,
 } from "../src/lib/campaign-email";
+
+loadEnv({ path: ".env.local", quiet: true });
+loadEnv({ quiet: true });
 
 function arg(name: string, fallback = ""): string {
   const i = process.argv.indexOf(`--${name}`);
@@ -80,8 +86,42 @@ function checkTemplateSubstitution() {
   pass(`reward description: ${rewardDesc.replace(/\n/g, " · ")}`);
 }
 
+function checkWidgetEmailWiring() {
+  console.log("\n2. Widget email wiring");
+
+  const signup = readFileSync(
+    join(process.cwd(), "src/app/api/widget/signup/route.ts"),
+    "utf8",
+  );
+  if (!signup.includes("sendCampaignEntryEmail")) {
+    fail("widget signup route must call sendCampaignEntryEmail");
+  }
+  if (!signup.includes("fromName: brand?.domain || campaign.name")) {
+    fail("widget signup must set fromName to brand domain or campaign name");
+  }
+  if (!signup.includes("[widget/signup] Failed to send entry email")) {
+    fail("widget signup must catch entry email failures without failing signup");
+  }
+  pass("signup: entry email + fromName + try/catch");
+
+  const reward = readFileSync(
+    join(process.cwd(), "src/app/api/widget/reward/route.ts"),
+    "utf8",
+  );
+  if (!reward.includes("sendCampaignRewardEmail")) {
+    fail("widget reward route must call sendCampaignRewardEmail");
+  }
+  if (!reward.includes("fromName: brand?.domain || campaign.name")) {
+    fail("widget reward must set fromName to brand domain or campaign name");
+  }
+  if (!reward.includes("[widget/reward] Failed to send reward email")) {
+    fail("widget reward must catch reward email failures without failing claim");
+  }
+  pass("reward: reward email + fromName + try/catch");
+}
+
 function checkSesEnv(required: boolean) {
-  console.log("\n2. SES env");
+  console.log("\n3. SES env");
   const region = process.env.AWS_REGION || process.env.AWS_SES_REGION || "";
   const key = process.env.AWS_ACCESS_KEY_ID?.trim() || "";
   const secret = process.env.AWS_SECRET_ACCESS_KEY?.trim() || "";
@@ -235,15 +275,16 @@ async function runLive() {
   console.log(`to:   ${to}`);
 
   checkTemplateSubstitution();
+  checkWidgetEmailWiring();
   checkSesEnv(true);
 
-  console.log("\n3. Campaign");
+  console.log("\n4. Campaign");
   const campaign = await findSmokeCampaign(campaignIdArg);
   pass(
     `using campaign ${campaign.id} "${campaign.name}" goal=${campaign.goal_type ?? "?"} visits=${campaign.num_visits ?? "-"} signups=${campaign.num_signups ?? "-"}`
   );
 
-  console.log("\n4. Widget signup → entry email");
+  console.log("\n5. Widget signup → entry email");
   const participantName = "Smoke Ronan";
   const { res: signupRes, data: signupData } = await postJson(baseUrl, "/api/widget/signup", {
     campaignId: campaign.id,
@@ -274,10 +315,10 @@ async function runLive() {
   );
   pass(`entry subject preview: ${previewSubject}`);
 
-  console.log("\n5. Meet goal");
+  console.log("\n6. Meet goal");
   await meetGoalViaWidget(baseUrl, campaign, participantId);
 
-  console.log("\n6. Widget reward → reward email");
+  console.log("\n7. Widget reward → reward email");
   const { res: rewardRes, data: rewardData } = await postJson(baseUrl, "/api/widget/reward", {
     campaignId: campaign.id,
     participantId,
@@ -334,6 +375,7 @@ async function main() {
 
   console.log("\n=== Campaign email smoke (offline) ===\n");
   checkTemplateSubstitution();
+  checkWidgetEmailWiring();
   checkSesEnv(false);
   console.log("\nOffline checks passed.");
   console.log("Run live widget + SES send:");

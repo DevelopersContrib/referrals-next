@@ -2,13 +2,18 @@
  * Public campaign OG preview smoke (R5).
  * Mimics what Slack / iMessage crawlers read from the page HTML.
  *
- * Offline — metadata builder:
+ * Offline — metadata builder + sitemap wiring:
  *   npx tsx scripts/smoke-campaign-og.ts
  *
  * Live — fetch public campaign URL + validate og:image is reachable:
  *   npx tsx scripts/smoke-campaign-og.ts --live
  *   npx tsx scripts/smoke-campaign-og.ts --live --url https://www.referrals.com/p/liamcom/campaign/146
+ *
+ * Live sitemap — public campaign URLs listed:
+ *   npx tsx scripts/smoke-campaign-og.ts --live --sitemap --base-url https://www.referrals.com
  */
+import { readFileSync } from "fs";
+import { join } from "path";
 import { buildPublicCampaignMetadata } from "../src/components/campaigns/public-campaign-page";
 import type { PublicCampaignViewPayload } from "../src/lib/public-campaign-server";
 
@@ -131,6 +136,38 @@ function checkMetadataBuilder() {
   pass("no hero → no og:image / large-image twitter card");
 }
 
+function checkSitemapWiring() {
+  console.log("\n2. Sitemap includes public campaign URLs");
+  const src = readFileSync(join(process.cwd(), "src/app/sitemap.xml/route.ts"), "utf8");
+
+  if (!src.includes('publish: "public"')) {
+    fail('sitemap route must query publish: "public" campaigns');
+  }
+  pass('sitemap queries publish: "public" campaigns');
+
+  if (!src.includes("/p/${slug}/campaign/${c.id}")) {
+    fail("sitemap must emit /p/{slug}/campaign/{id} URLs");
+  }
+  pass("sitemap emits /p/{slug}/campaign/{id} URLs");
+}
+
+async function checkLiveSitemap(baseUrl: string) {
+  console.log("\n4. Sitemap live fetch");
+  const url = `${baseUrl.replace(/\/+$/, "")}/sitemap.xml`;
+  const res = await fetch(url, { redirect: "follow" });
+  if (!res.ok) {
+    fail(`sitemap fetch failed (${res.status}): ${url}`);
+  }
+  pass(`sitemap ${res.status} → ${url}`);
+
+  const xml = await res.text();
+  const campaignPath = xml.match(/\/p\/[^<]+\/campaign\/\d+/);
+  if (!campaignPath) {
+    fail("sitemap.xml contains no /p/{slug}/campaign/{id} entries");
+  }
+  pass(`sample campaign URL in sitemap: ${campaignPath[0]}`);
+}
+
 function metaContent(html: string, key: string): string | null {
   const patterns = [
     new RegExp(`<meta[^>]+(?:property|name)=["']${key}["'][^>]+content=["']([^"']+)["']`, "i"),
@@ -166,12 +203,23 @@ async function checkImageReachable(imageUrl: string) {
 
 async function runLive() {
   const url = (arg("url", DEFAULT_LIVE_URL) || DEFAULT_LIVE_URL).trim();
+  const baseUrl = (
+    arg("base-url", process.env.NEXT_PUBLIC_APP_URL || "https://www.referrals.com") ||
+    "https://www.referrals.com"
+  ).trim();
   console.log("\n=== Campaign OG live smoke ===");
   console.log(`url: ${url}`);
 
   checkMetadataBuilder();
+  checkSitemapWiring();
 
-  console.log("\n2. Fetch public page (Slack / iMessage crawler path)");
+  if (hasFlag("sitemap")) {
+    await checkLiveSitemap(baseUrl);
+    console.log("\nSitemap live checks passed.\n");
+    return;
+  }
+
+  console.log("\n3. Fetch public page (Slack / iMessage crawler path)");
   const res = await fetch(url, { redirect: "follow" });
   if (!res.ok) {
     fail(`page fetch failed (${res.status})`);
@@ -216,7 +264,7 @@ async function runLive() {
     pass(`twitter:image → ${twitterImage}`);
   }
 
-  console.log("\n3. Image fetch (preview card requirement)");
+  console.log("\n4. Image fetch (preview card requirement)");
   await checkImageReachable(ogImage);
 
   console.log("\nAll live OG checks passed.");
@@ -232,9 +280,12 @@ async function main() {
 
   console.log("\n=== Campaign OG smoke (offline) ===");
   checkMetadataBuilder();
+  checkSitemapWiring();
   console.log("\nOffline checks passed.");
   console.log("Live crawler + image fetch:");
-  console.log(`  npx tsx scripts/smoke-campaign-og.ts --live --url ${DEFAULT_LIVE_URL}\n`);
+  console.log(`  npx tsx scripts/smoke-campaign-og.ts --live --url ${DEFAULT_LIVE_URL}`);
+  console.log("Live sitemap:");
+  console.log("  npx tsx scripts/smoke-campaign-og.ts --live --sitemap --base-url https://www.referrals.com\n");
 }
 
 main().catch((e) => {

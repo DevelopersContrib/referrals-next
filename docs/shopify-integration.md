@@ -49,10 +49,16 @@ cp .env.local.example .env.local
 
 ## Smoke test
 
-Validates credentials are present and the OAuth authorize URL is well-formed (no live shop connection required):
+**Offline** — authorize URL shape only (no secrets; good for CI):
 
 ```bash
 npx tsx scripts/smoke-shopify-oauth.ts
+```
+
+**Live** — also validates `.env.local` credentials:
+
+```bash
+npx tsx scripts/smoke-shopify-oauth.ts --live
 ```
 
 Optional overrides:

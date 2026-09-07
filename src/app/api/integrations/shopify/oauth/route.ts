@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ShopifyIntegration } from "@/lib/integrations/shopify";
+import { ShopifyIntegration, normalizeShopifyShop } from "@/lib/integrations/shopify";
 
 /**
  * Handle Shopify OAuth callback.
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const shopName = shop.replace(".myshopify.com", "");
+    const shopName = normalizeShopifyShop(shop);
 
     // Find a campaign integration to update, or get the member's first campaign
     const campaigns = await prisma.member_campaigns.findMany({

@@ -1,6 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import {
+  buildShopifyAuthorizeUrl,
+  normalizeShopifyShop,
+} from "@/lib/integrations/shopify";
 
 export default function ShopifyIntegrationPage() {
   const [shopName, setShopName] = useState("");
@@ -38,17 +42,28 @@ export default function ShopifyIntegrationPage() {
     e.preventDefault();
     if (!shopName) return;
 
-    const cleanShop = shopName.replace(".myshopify.com", "");
+    const cleanShop = normalizeShopifyShop(shopName);
     const state = Math.random().toString(36).substring(2, 15);
     const redirectUri = `${window.location.origin}/api/integrations/shopify/oauth`;
 
     // Store state for validation
     sessionStorage.setItem("shopify_oauth_state", state);
 
-    // Redirect to Shopify OAuth
-    const scopes = "read_products,read_orders";
     const clientId = process.env.NEXT_PUBLIC_SHOPIFY_CLIENT_ID || "";
-    const authUrl = `https://${cleanShop}.myshopify.com/admin/oauth/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
+    if (!clientId) {
+      setMessage({
+        type: "error",
+        text: "Shopify is not configured (NEXT_PUBLIC_SHOPIFY_CLIENT_ID missing).",
+      });
+      return;
+    }
+
+    const authUrl = buildShopifyAuthorizeUrl({
+      shopName: cleanShop,
+      clientId,
+      redirectUri,
+      state,
+    });
 
     window.location.href = authUrl;
   }

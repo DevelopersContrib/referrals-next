@@ -9,6 +9,31 @@ export function shopifyClientSecret(): string {
   return process.env.SHOPIFY_CLIENT_SECRET || process.env.SHOPIFY_API_SECRET || "";
 }
 
+export const SHOPIFY_OAUTH_SCOPES = "read_products,read_orders";
+
+export function normalizeShopifyShop(shopName: string): string {
+  return shopName.replace(/\.myshopify\.com$/i, "").trim();
+}
+
+/** Pure authorize URL builder — shared by server, client, and smoke scripts. */
+export function buildShopifyAuthorizeUrl(opts: {
+  shopName: string;
+  clientId: string;
+  redirectUri: string;
+  state: string;
+  scopes?: string;
+}): string {
+  const cleanShop = normalizeShopifyShop(opts.shopName);
+  const scopes = opts.scopes ?? SHOPIFY_OAUTH_SCOPES;
+  const params = new URLSearchParams({
+    client_id: opts.clientId,
+    scope: scopes,
+    redirect_uri: opts.redirectUri,
+    state: opts.state,
+  });
+  return `https://${cleanShop}.myshopify.com/admin/oauth/authorize?${params.toString()}`;
+}
+
 interface ShopifyProduct {
   id: number;
   title: string;
@@ -33,7 +58,7 @@ export class ShopifyIntegration implements Integration {
   private accessToken: string;
 
   constructor(shopName: string, accessToken: string) {
-    this.shopName = shopName.replace(".myshopify.com", "");
+    this.shopName = normalizeShopifyShop(shopName);
     this.accessToken = accessToken;
   }
 
@@ -82,7 +107,7 @@ export class ShopifyIntegration implements Integration {
     code: string
   ): Promise<IntegrationResult<ShopifyOAuthTokens>> {
     try {
-      const cleanShop = shopName.replace(".myshopify.com", "");
+      const cleanShop = normalizeShopifyShop(shopName);
       const resp = await fetch(
         `https://${cleanShop}.myshopify.com/admin/oauth/access_token`,
         {
@@ -121,9 +146,12 @@ export class ShopifyIntegration implements Integration {
    * Build the OAuth authorization URL
    */
   static getOAuthUrl(shopName: string, redirectUri: string, state: string): string {
-    const cleanShop = shopName.replace(".myshopify.com", "");
-    const scopes = "read_products,read_orders";
-    return `https://${cleanShop}.myshopify.com/admin/oauth/authorize?client_id=${shopifyClientId()}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
+    return buildShopifyAuthorizeUrl({
+      shopName,
+      clientId: shopifyClientId(),
+      redirectUri,
+      state,
+    });
   }
 
   /**

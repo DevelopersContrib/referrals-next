@@ -233,14 +233,23 @@ export function BrandResults({ status }: { status: AnalysisStatus }) {
 
         {status.campaigns.length === 0 ? (
           <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-8 text-center text-sm text-gray-500">
-            We couldn&apos;t generate campaigns automatically.{" "}
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="font-medium text-[#FF5C62] underline"
-            >
-              Go to your dashboard
-            </button>{" "}
-            to create one manually.
+            Design a referral campaign with AI when you&apos;re ready.{" "}
+            {status.brandId ? (
+              <Link
+                href={`/brands/${status.brandId}/campaigns/ai`}
+                className="font-medium text-[#FF5C62] underline"
+              >
+                Open the AI campaign builder
+              </Link>
+            ) : (
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="font-medium text-[#FF5C62] underline"
+              >
+                Go to your dashboard
+              </button>
+            )}
+            .
           </div>
         ) : (
           <div className="mt-5 grid gap-5 lg:grid-cols-3">

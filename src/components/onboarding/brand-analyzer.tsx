@@ -18,6 +18,7 @@ const LOGO_URL =
 type Phase = "input" | "analyzing" | "results";
 
 const EXAMPLES = ["stripe.com", "notion.so", "glossier.com"];
+const MAX_ANALYSIS_WAIT_MS = 30_000;
 
 function looksLikeUrl(v: string): boolean {
   const t = v.trim();
@@ -44,6 +45,7 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
 
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stoppedRef = useRef(false);
+  const analyzeStartedRef = useRef<number | null>(null);
 
   const valid = looksLikeUrl(url);
   const slug = customSlug ?? slugFromWebsite(url);
@@ -51,29 +53,52 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
   const slugBlocked =
     availability.status === "taken" || availability.status === "invalid";
 
-  const poll = useCallback(async (id: number) => {
+  const showResults = useCallback(() => {
     if (stoppedRef.current) return;
-    try {
-      const res = await fetch(`/api/brands/analyze/${id}`, {
-        cache: "no-store",
-      });
-      if (res.ok) {
-        const data = (await res.json()) as AnalysisStatus;
-        setStatus(data);
-        const intelDone = data.modules?.some(
-          (m) => m.module === "intelligence" && m.status === "done",
-        );
-        if (intelDone || data.status === "done" || data.status === "failed") {
-          stoppedRef.current = true;
-          setTimeout(() => setPhase("results"), 700);
-          return;
-        }
-      }
-    } catch {
-      /* transient — keep polling */
-    }
-    pollRef.current = setTimeout(() => poll(id), 1600);
+    stoppedRef.current = true;
+    if (pollRef.current) clearTimeout(pollRef.current);
+    setTimeout(() => setPhase("results"), 700);
   }, []);
+
+  const poll = useCallback(
+    async (id: number) => {
+      if (stoppedRef.current) return;
+      try {
+        const res = await fetch(`/api/brands/analyze/${id}`, {
+          cache: "no-store",
+        });
+        if (res.ok) {
+          const data = (await res.json()) as AnalysisStatus;
+          setStatus(data);
+          const intel = data.modules?.find((m) => m.module === "intelligence");
+          const intelTerminal =
+            intel?.status === "done" || intel?.status === "failed";
+          const hasPartial =
+            Boolean(data.intelligence) ||
+            Boolean(data.crawl) ||
+            Boolean(data.vnoc?.name || data.vnoc?.logoUrl);
+          const elapsed =
+            analyzeStartedRef.current != null
+              ? Date.now() - analyzeStartedRef.current
+              : 0;
+
+          if (
+            intelTerminal ||
+            data.status === "done" ||
+            data.status === "failed" ||
+            (elapsed >= MAX_ANALYSIS_WAIT_MS && hasPartial)
+          ) {
+            showResults();
+            return;
+          }
+        }
+      } catch {
+        /* transient — keep polling */
+      }
+      pollRef.current = setTimeout(() => poll(id), 1600);
+    },
+    [showResults],
+  );
 
   useEffect(() => {
     return () => {
@@ -115,6 +140,7 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
       }
 
       stoppedRef.current = false;
+      analyzeStartedRef.current = Date.now();
       setJobId(data.jobId);
       setPhase("analyzing");
       poll(data.jobId);
@@ -162,7 +188,8 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
         </h1>
         <p className="mt-4 max-w-xl text-lg text-gray-600">
           Drop in your website and our AI reads your brand, finds your social
-          presence, and designs three referral campaigns — ready to launch.
+          presence, and scores your referral readiness — usually in about 15
+          seconds.
         </p>
 
         <form onSubmit={handleAnalyze} className="mt-8">

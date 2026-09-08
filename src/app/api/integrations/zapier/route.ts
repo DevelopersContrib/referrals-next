@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticateApiKey } from "@/lib/api/helpers";
+import {
+  assertCanAcceptParticipant,
+  participantCapApiError,
+} from "@/lib/member-subscription";
 
 /**
  * Handle Zapier webhook triggers.
@@ -77,6 +81,7 @@ export async function POST(req: NextRequest) {
         // Verify campaign ownership
         const campaign = await prisma.member_campaigns.findFirst({
           where: { id: campaign_id, member_id: memberId },
+          select: { id: true, url_id: true },
         });
 
         if (!campaign) {
@@ -86,9 +91,11 @@ export async function POST(req: NextRequest) {
           );
         }
 
+        const normalizedEmail = String(data.email).toLowerCase().trim();
+
         // Check for duplicate
         const existing = await prisma.campaign_participants.findFirst({
-          where: { campaign_id, email: data.email },
+          where: { campaign_id, email: normalizedEmail },
         });
 
         if (existing) {
@@ -99,10 +106,17 @@ export async function POST(req: NextRequest) {
           });
         }
 
+        const cap = await assertCanAcceptParticipant(campaign.url_id, {
+          email: normalizedEmail,
+        });
+        if (!cap.ok) {
+          return participantCapApiError();
+        }
+
         const participant = await prisma.campaign_participants.create({
           data: {
             campaign_id,
-            email: data.email,
+            email: normalizedEmail,
             name: data.name,
             date_signedup: new Date(),
           },

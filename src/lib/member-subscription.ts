@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { memberIdIsPlatformAdmin } from "@/lib/platform-admin";
+import { isNetworkSyntheticParticipantEmail } from "@/lib/domain-referrer";
+import { corsHeaders } from "@/lib/api/helpers";
 import {
   DEFAULT_PAID_PLAN_ID,
   FREE_DOMAIN_CAP,
@@ -52,13 +54,29 @@ export function subscriptionRequiredResponse(message?: string) {
   );
 }
 
+export function participantCapMessage() {
+  return `This free program has reached ${FREE_PARTICIPANT_CAP} participants. The brand owner can upgrade to grow further.`;
+}
+
 export function participantCapResponse(extraHeaders?: HeadersInit) {
   return NextResponse.json(
     {
-      error: `This free program has reached ${FREE_PARTICIPANT_CAP} participants. The brand owner can upgrade to grow further.`,
+      error: participantCapMessage(),
       code: "PARTICIPANT_CAP",
     },
     { status: 403, headers: extraHeaders },
+  );
+}
+
+/** v1 / public API shape — includes CORS headers. */
+export function participantCapApiError() {
+  return NextResponse.json(
+    {
+      success: false,
+      error: participantCapMessage(),
+      code: "PARTICIPANT_CAP",
+    },
+    { status: 403, headers: corsHeaders() },
   );
 }
 
@@ -358,7 +376,8 @@ export async function countMemberParticipants(memberId: number) {
     `SELECT COUNT(*) AS c
      FROM campaign_participants cp
      JOIN member_campaigns mc ON mc.id = cp.campaign_id
-     WHERE mc.member_id = ?`,
+     WHERE mc.member_id = ?
+       AND LOWER(cp.email) NOT LIKE '%@network.referrals.com'`,
     memberId,
   );
   return Number(rows[0]?.c ?? 0);
@@ -384,7 +403,8 @@ export async function countBrandParticipants(brandId: number) {
     `SELECT COUNT(*) AS c
      FROM campaign_participants cp
      JOIN member_campaigns mc ON mc.id = cp.campaign_id
-     WHERE mc.url_id = ?`,
+     WHERE mc.url_id = ?
+       AND LOWER(cp.email) NOT LIKE '%@network.referrals.com'`,
     brandId,
   );
   return Number(rows[0]?.c ?? 0);
@@ -409,6 +429,22 @@ export async function canBrandAcceptParticipant(brandId: number) {
     };
   }
   return { ok: true as const, entitlement: e };
+}
+
+/** Shared cap gate for every participant create path. */
+export async function assertCanAcceptParticipant(
+  brandId: number,
+  opts?: { email?: string },
+) {
+  if (opts?.email && isNetworkSyntheticParticipantEmail(opts.email)) {
+    return { ok: true as const };
+  }
+  const cap = await canBrandAcceptParticipant(brandId);
+  if (cap.ok) return { ok: true as const };
+  return {
+    ok: false as const,
+    reason: cap.reason ?? ("participant_cap" as const),
+  };
 }
 
 /** @deprecated Prefer canBrandAcceptParticipant for widget/API caps. */

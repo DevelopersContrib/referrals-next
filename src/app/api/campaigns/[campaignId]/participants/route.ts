@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getCampaignByIdIfAccessible } from "@/lib/brand-access";
 import { prisma } from "@/lib/prisma";
-
+import {
+  assertCanAcceptParticipant,
+  participantCapResponse,
+} from "@/lib/member-subscription";
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ campaignId: string }> }
@@ -28,9 +31,8 @@ export async function GET(
   const sortOrder = (searchParams.get("sortOrder") || "desc") as "asc" | "desc";
 
   const skip = (page - 1) * limit;
-//test comment
-  try {
-    const where: Record<string, unknown> = { campaign_id: id };
+
+  try {    const where: Record<string, unknown> = { campaign_id: id };
     if (search) {
       where.OR = [
         { name: { contains: search } },
@@ -117,7 +119,8 @@ export async function POST(
   const id = parseInt(campaignId, 10);
   const isAdmin = Boolean((session.user as { isAdmin?: boolean }).isAdmin);
 
-  if (!(await getCampaignByIdIfAccessible(id, memberId, isAdmin))) {
+  const campaign = await getCampaignByIdIfAccessible(id, memberId, isAdmin);
+  if (!campaign) {
     return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
   }
 
@@ -132,9 +135,11 @@ export async function POST(
       );
     }
 
+    const normalizedEmail = String(email).toLowerCase().trim();
+
     // Check if participant already exists
     const existing = await prisma.campaign_participants.findFirst({
-      where: { campaign_id: id, email },
+      where: { campaign_id: id, email: normalizedEmail },
     });
     if (existing) {
       return NextResponse.json(
@@ -143,10 +148,17 @@ export async function POST(
       );
     }
 
+    const cap = await assertCanAcceptParticipant(campaign.url_id, {
+      email: normalizedEmail,
+    });
+    if (!cap.ok) {
+      return participantCapResponse();
+    }
+
     const participant = await prisma.campaign_participants.create({
       data: {
         campaign_id: id,
-        email,
+        email: normalizedEmail,
         name,
         date_signedup: new Date(),
       },

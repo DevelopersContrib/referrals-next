@@ -17,6 +17,10 @@ import { normalizeDomain } from "@/lib/domain-brand";
  */
 export const NETWORK_EMAIL_DOMAIN = "network.referrals.com";
 
+export function isNetworkSyntheticParticipantEmail(email: string): boolean {
+  return email.toLowerCase().trim().endsWith(`@${NETWORK_EMAIL_DOMAIN}`);
+}
+
 export interface DomainReferrerLink {
   campaignId: number;
   participantId: number;

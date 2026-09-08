@@ -4,7 +4,7 @@ import { sendCampaignEntryEmail } from "@/lib/campaign-email";
 import { syncParticipantToMailchimp } from "@/lib/integrations/mailchimp-sync";
 import { ZapierIntegration } from "@/lib/integrations/zapier";
 import {
-  canBrandAcceptParticipant,
+  assertCanAcceptParticipant,
   participantCapResponse,
 } from "@/lib/member-subscription";
 import {
@@ -65,7 +65,9 @@ export async function POST(request: NextRequest) {
     let isNewParticipant = false;
 
     if (!participant) {
-      const cap = await canBrandAcceptParticipant(campaign.url_id);
+      const cap = await assertCanAcceptParticipant(campaign.url_id, {
+        email: email.toLowerCase().trim(),
+      });
       if (!cap.ok) {
         return participantCapResponse(corsHeaders);
       }

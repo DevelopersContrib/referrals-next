@@ -57,11 +57,11 @@ export function SignupInviteCard({
       }
     >
       <p className="text-sm font-semibold text-gray-900">
-        Invite a business — earn 30 days of Growth
+        Invite a business — they get a 14-day Growth trial
       </p>
       <p className="mt-1 text-xs text-gray-600">
-        When they upgrade to paid Growth, you get a free month. Share your link
-        now — you don&apos;t have to wait.
+        Share your link so they can launch a referral program with no credit
+        card. You don&apos;t have to wait.
       </p>
       <div className="mt-3 flex min-h-11 items-stretch gap-2">
         <input

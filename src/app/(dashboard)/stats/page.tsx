@@ -74,7 +74,9 @@ export default async function StatsPage() {
 		advancedAnalytics
 			? getMemberParticipantsSeries(memberId, fromDate, toDate)
 			: Promise.resolve([]),
-		getCampaignStatsForMember(memberId),
+		advancedAnalytics
+			? getCampaignStatsForMember(memberId)
+			: Promise.resolve([]),
 	]);
 
 	const statCards = [
@@ -138,7 +140,7 @@ export default async function StatsPage() {
 				</Card>
 			)}
 
-			{campaignStats.length > 0 && (
+			{advancedAnalytics && campaignStats.length > 0 && (
 				<Card>
 					<CardHeader>
 						<CardTitle>Per-Campaign Breakdown</CardTitle>

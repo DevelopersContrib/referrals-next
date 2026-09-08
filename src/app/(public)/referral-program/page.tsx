@@ -73,8 +73,8 @@ export default function ReferralProgramPage() {
                 Earn Rewards
               </h3>
               <p className="mt-2 text-sm text-gray-600">
-                Earn free months of Growth for every new user who upgrades to a
-                paid plan.
+                When someone signs up using your referral link, they start with
+                the standard 14-day Growth trial — no credit card required.
               </p>
             </div>
           </div>
@@ -89,8 +89,8 @@ export default function ReferralProgramPage() {
               <li className="flex gap-3">
                 <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-600" />
                 <span>
-                  <strong>30 days of free Growth</strong> for every referred
-                  user who upgrades to a paid plan.
+                  <strong>Your referrals get 14 days of Growth</strong> when
+                  they join through your link — full features, no credit card.
                 </span>
               </li>
               <li className="flex gap-3">
@@ -103,9 +103,8 @@ export default function ReferralProgramPage() {
               <li className="flex gap-3">
                 <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-600" />
                 <span>
-                  <strong>Your referrals benefit too</strong> &mdash; they get
-                  the standard 14-day Growth trial when they join through your
-                  link.
+                  <strong>After the trial</strong> they can stay on free
+                  forever (capped) or upgrade to Growth for $9/mo per brand.
                 </span>
               </li>
             </ul>

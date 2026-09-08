@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { decryptShareCode, parseShareCode } from "@/lib/encryption";
 import { recordShareClick, resolveSocialTypeId, appOrigin } from "@/lib/widget-share-tracking";
 import { referralsSignupCampaignId } from "@/lib/signup-referral";
+import { redirectWithReferralCookie } from "@/lib/referral-attribution-cookie";
 
 /**
  * GET /t/[code] - Share link click tracking and redirect.
@@ -35,21 +36,14 @@ export async function GET(
       signup.searchParams.set("rref", String(participantId));
       signup.searchParams.set("utm_source", "referral");
       signup.searchParams.set("utm_medium", "member");
-      const res = NextResponse.redirect(signup.toString(), 302);
-      res.cookies.set("rref", String(participantId), {
-        maxAge: 60 * 60 * 24 * 30,
-        httpOnly: false,
-        sameSite: "lax",
-        path: "/",
-      });
-      return res;
+      return redirectWithReferralCookie(signup, participantId, appUrl, "rref");
     }
 
     const redirectUrl = await getRedirectUrl(campaignId);
     const destination = new URL(redirectUrl);
     destination.searchParams.set("ref", String(participantId));
 
-    return NextResponse.redirect(destination.toString(), 302);
+    return redirectWithReferralCookie(destination, participantId, appUrl, "ref");
   } catch (error) {
     console.error("[/t] Share link error:", error);
     return NextResponse.redirect(appUrl, 302);

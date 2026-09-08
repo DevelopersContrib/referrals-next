@@ -11,6 +11,7 @@ import { slugFromWebsite } from "@/lib/brand-slug";
 import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
 import { AnalysisPipeline } from "./analysis-pipeline";
 import { BrandResults } from "./brand-results";
+import { DomainUpgradeCard } from "./domain-upgrade-card";
 import type { AnalysisStatus } from "./analysis-types";
 
 const LOGO_URL =
@@ -301,21 +302,7 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
           </div>
         </form>
 
-        {needsUpgrade && (
-          <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 animate-in fade-in">
-            <p className="font-semibold text-amber-900">Add another domain</p>
-            <p className="mt-1 text-sm text-amber-800">
-              Your Growth trial includes full features. Adding more domains
-              after trial (or beyond free caps) is $9/month each — upgrade to
-              continue.
-            </p>
-            <Link href={upgradeHref} className="mt-3 inline-block">
-              <Button className="bg-amber-600 hover:bg-amber-700">
-                Upgrade to add this domain
-              </Button>
-            </Link>
-          </div>
-        )}
+        {needsUpgrade && <DomainUpgradeCard href={upgradeHref} />}
 
         <p className="mt-8 text-xs text-gray-400">
           No credit card. No forms. Just your website — we do the rest.

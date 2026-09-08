@@ -210,132 +210,135 @@ export default async function BillingPage({
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 md:items-stretch">
-          {/* Free forever */}
-          <div
-            className={cn(
-              "flex flex-col rounded-2xl border bg-white p-6 shadow-md sm:p-8",
-              isOnFree
-                ? "border-2 border-[#FF5C62]/70 shadow-rose-100"
-                : "border-rose-100/90",
-            )}
-          >
-            <div className="mb-6 rounded-xl bg-gradient-to-br from-rose-500/10 to-orange-50/30 p-4">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="text-xl font-bold text-gray-900">
-                  Free forever
-                </h3>
-                {isOnFree && (
-                  <span className="shrink-0 rounded-full bg-[#FF5C62] px-2.5 py-1 text-xs font-semibold text-white">
-                    Current
+        <div className="w-full max-w-3xl pt-2 sm:max-w-4xl">
+          <div className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 md:items-stretch">
+            {/* Free forever */}
+            <div
+              className={cn(
+                "flex w-full min-w-0 flex-col rounded-2xl border bg-white p-5 shadow-md sm:p-6 lg:p-8",
+                isOnFree
+                  ? "border-2 border-[#FF5C62]/70 shadow-rose-100"
+                  : "border-rose-100/90",
+              )}
+            >
+              <div className="mb-6 rounded-xl bg-gradient-to-br from-rose-500/10 to-orange-50/30 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Free forever
+                  </h3>
+                  {isOnFree && (
+                    <span className="shrink-0 rounded-full bg-[#FF5C62] px-2.5 py-1 text-xs font-semibold text-white">
+                      Current
+                    </span>
+                  )}
+                  {isOnTrial && (
+                    <span className="shrink-0 rounded-full border border-rose-200 bg-white px-2.5 py-1 text-xs font-semibold text-[#FF5C62]">
+                      After trial
+                    </span>
+                  )}
+                </div>
+                <div className="mt-3 flex flex-wrap items-baseline gap-1">
+                  <span className="text-4xl font-bold tracking-tight text-gray-900">
+                    $0
                   </span>
-                )}
-                {isOnTrial && (
-                  <span className="shrink-0 rounded-full border border-rose-200 bg-white px-2.5 py-1 text-xs font-semibold text-[#FF5C62]">
-                    After trial
-                  </span>
-                )}
+                  <span className="text-gray-500">/after 14-day trial</span>
+                </div>
+                <p className="mt-2 text-sm text-gray-600">
+                  Widget stays live. Caps apply. Branding on.
+                </p>
               </div>
-              <div className="mt-3 flex flex-wrap items-baseline gap-1">
-                <span className="text-4xl font-bold tracking-tight text-gray-900">
-                  $0
+
+              <ul className="flex-1 space-y-3">
+                {freeFeatures.map((feature) => (
+                  <li
+                    key={feature}
+                    className="flex items-start gap-3 text-sm text-gray-700"
+                  >
+                    <CheckIcon color="#FF5C62" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+
+              {isOnFree ? (
+                <span className="mt-8 flex min-h-11 items-center justify-center rounded-xl border border-rose-100 bg-rose-50/60 px-6 py-3.5 text-center text-sm font-semibold text-[#FF5C62]">
+                  You are on Free forever
                 </span>
-                <span className="text-gray-500">/after 14-day trial</span>
-              </div>
-              <p className="mt-2 text-sm text-gray-600">
-                Widget stays live. Caps apply. Branding on.
-              </p>
+              ) : isOnTrial ? (
+                <span className="mt-8 flex min-h-11 items-center justify-center rounded-xl border border-rose-100 bg-rose-50/40 px-6 py-3.5 text-center text-sm font-medium text-gray-600">
+                  Your plan after the trial ends
+                </span>
+              ) : (
+                <span className="mt-8 flex min-h-11 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 px-6 py-3.5 text-center text-sm font-medium text-gray-500">
+                  Always available — no charge
+                </span>
+              )}
             </div>
 
-            <ul className="flex-1 space-y-3">
-              {freeFeatures.map((feature) => (
-                <li
-                  key={feature}
-                  className="flex items-start gap-3 text-sm text-gray-700"
-                >
-                  <CheckIcon color="#FF5C62" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
-
-            {isOnFree ? (
-              <span className="mt-8 flex min-h-11 items-center justify-center rounded-xl border border-rose-100 bg-rose-50/60 px-6 py-3.5 text-center text-sm font-semibold text-[#FF5C62]">
-                You are on Free forever
-              </span>
-            ) : isOnTrial ? (
-              <span className="mt-8 flex min-h-11 items-center justify-center rounded-xl border border-rose-100 bg-rose-50/40 px-6 py-3.5 text-center text-sm font-medium text-gray-600">
-                Your plan after the trial ends
-              </span>
-            ) : (
-              <span className="mt-8 flex min-h-11 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 px-6 py-3.5 text-center text-sm font-medium text-gray-500">
-                Always available — no charge
-              </span>
-            )}
-          </div>
-
-          {/* Growth */}
-          <div
-            className={cn(
-              "relative flex flex-col rounded-2xl border bg-white p-6 shadow-xl shadow-violet-200/40 sm:p-8",
-              isOnGrowth
-                ? "border-2 border-[#926efb] ring-2 ring-[#926efb]/25"
-                : "border-violet-200/80 ring-2 ring-[#926efb]/25",
-            )}
-          >
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-[#926efb] via-[#b794f9] to-[#FF5C62]" />
-            {isOnTrial && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-4 py-1 text-xs font-bold text-white shadow-md">
-                Included in your 14-day trial
-              </span>
-            )}
-            {isOnGrowth && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-4 py-1 text-xs font-bold text-white shadow-md">
-                Current plan
-              </span>
-            )}
-
-            <div className="mb-6 rounded-xl bg-gradient-to-br from-violet-500/10 to-rose-50/20 p-4">
-              <h3 className="text-xl font-bold text-gray-900">Growth</h3>
-              <div className="mt-3 flex flex-wrap items-baseline gap-1">
-                <span className="text-4xl font-bold tracking-tight text-gray-900">
-                  $9
+            {/* Growth */}
+            <div
+              className={cn(
+                "relative flex w-full min-w-0 flex-col rounded-2xl border bg-white p-5 shadow-xl shadow-violet-200/40 sm:p-6 lg:p-8",
+                isOnGrowth
+                  ? "border-2 border-[#926efb] ring-2 ring-[#926efb]/25"
+                  : "border-violet-200/80 ring-2 ring-[#926efb]/25",
+              )}
+            >
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-[#926efb] via-[#b794f9] to-[#FF5C62]" />
+              {isOnTrial && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-4 py-1 text-xs font-bold text-white shadow-md">
+                  Included in your 14-day trial
                 </span>
-                <span className="text-gray-500">/month per brand</span>
+              )}
+              {isOnGrowth && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-4 py-1 text-xs font-bold text-white shadow-md">
+                  Current plan
+                </span>
+              )}
+
+              <div className="mb-6 rounded-xl bg-gradient-to-br from-violet-500/10 to-rose-50/20 p-4">
+                <h3 className="text-xl font-bold text-gray-900">Growth</h3>
+                <div className="mt-3 flex flex-wrap items-baseline gap-1">
+                  <span className="text-4xl font-bold tracking-tight text-gray-900">
+                    $9
+                  </span>
+                  <span className="text-gray-500">/month per brand</span>
+                </div>
+                <p className="mt-2 text-sm text-gray-600">
+                  Full product — remove branding, unlock domains &amp;
+                  analytics.
+                </p>
               </div>
-              <p className="mt-2 text-sm text-gray-600">
-                Full product — remove branding, unlock domains &amp; analytics.
-              </p>
-            </div>
 
-            <ul className="flex-1 space-y-3">
-              {growthFeatures.map((feature) => (
-                <li
-                  key={feature}
-                  className="flex items-start gap-3 text-sm text-gray-700"
+              <ul className="flex-1 space-y-3">
+                {growthFeatures.map((feature) => (
+                  <li
+                    key={feature}
+                    className="flex items-start gap-3 text-sm text-gray-700"
+                  >
+                    <CheckIcon color="#926efb" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+
+              {isOnGrowth ? (
+                <span className="mt-8 flex min-h-11 items-center justify-center rounded-xl border border-violet-200 bg-violet-50 px-6 py-3.5 text-center text-sm font-semibold text-[#7c3aed]">
+                  You are on Growth
+                </span>
+              ) : (
+                <Link
+                  href={growthCheckoutHref}
+                  className="mt-8 flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-6 py-3.5 text-center text-sm font-semibold text-white shadow-md shadow-violet-300/40 transition-all hover:brightness-105 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#926efb]"
                 >
-                  <CheckIcon color="#926efb" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
-
-            {isOnGrowth ? (
-              <span className="mt-8 flex min-h-11 items-center justify-center rounded-xl border border-violet-200 bg-violet-50 px-6 py-3.5 text-center text-sm font-semibold text-[#7c3aed]">
-                You are on Growth
-              </span>
-            ) : (
-              <Link
-                href={growthCheckoutHref}
-                className="mt-8 flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-6 py-3.5 text-center text-sm font-semibold text-white shadow-md shadow-violet-300/40 transition-all hover:brightness-105 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#926efb]"
-              >
-                {isOnTrial
-                  ? "Keep Growth after trial"
-                  : humanStatus === "cancelled"
-                    ? "Resubscribe to Growth"
-                    : "Upgrade to Growth"}
-              </Link>
-            )}
+                  {isOnTrial
+                    ? "Keep Growth after trial"
+                    : humanStatus === "cancelled"
+                      ? "Resubscribe to Growth"
+                      : "Upgrade to Growth"}
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </section>

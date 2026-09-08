@@ -12,6 +12,7 @@ import {
   buildTrackedShareUrl,
   ensureParticipantShare,
 } from "@/lib/widget-share-tracking";
+import { tryRewardReferrerAfterSignup } from "@/lib/campaign-reward";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -181,6 +182,25 @@ export async function POST(request: NextRequest) {
       }).catch((err) =>
         console.error("[widget/signup] Zapier webhook error:", err)
       );
+
+      if (participant.invited_by) {
+        try {
+          await tryRewardReferrerAfterSignup({
+            campaign,
+            referrerParticipantId: participant.invited_by,
+            socialType: participant.invited_social ?? SHARE_SOCIAL_DIRECT,
+            inviteeParticipantId: campaign.reward_invited
+              ? participant.id
+              : undefined,
+            notify: true,
+          });
+        } catch (rewardError) {
+          console.error(
+            "[widget/signup] Failed to reward referrer:",
+            rewardError,
+          );
+        }
+      }
     }
 
     // Get referral stats

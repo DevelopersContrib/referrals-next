@@ -1,16 +1,8 @@
-import { timingSafeEqual } from "crypto";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError, handleCors } from "@/lib/api/helpers";
 import { normalizeDomain } from "@/lib/domain-brand";
-
-function networkKeyMatches(provided: string | null, expected: string | undefined) {
-  if (!provided || !expected) return false;
-  const a = Buffer.from(provided);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
-}
+import { networkKeyMatches } from "@/lib/network-auth";
 
 export async function OPTIONS() {
   return handleCors();

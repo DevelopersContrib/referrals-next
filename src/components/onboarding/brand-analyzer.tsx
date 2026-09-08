@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { SlugAvailabilityField } from "@/components/brands/slug-availability-field";
 import { useSlugAvailability } from "@/hooks/use-slug-availability";
 import { slugFromWebsite } from "@/lib/brand-slug";
+import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
 import { AnalysisPipeline } from "./analysis-pipeline";
 import { BrandResults } from "./brand-results";
 import type { AnalysisStatus } from "./analysis-types";
@@ -19,6 +20,30 @@ type Phase = "input" | "analyzing" | "results";
 
 const EXAMPLES = ["stripe.com", "notion.so", "glossier.com"];
 const MAX_ANALYSIS_WAIT_MS = 30_000;
+const DEFAULT_UPGRADE_HREF = `/billing/plan/${DEFAULT_PAID_PLAN_ID}`;
+
+function upgradeCheckoutHref(data: {
+  upgradePlanId?: unknown;
+  brandId?: unknown;
+}): string {
+  const planId =
+    typeof data.upgradePlanId === "number" &&
+    Number.isFinite(data.upgradePlanId) &&
+    data.upgradePlanId > 0
+      ? data.upgradePlanId
+      : DEFAULT_PAID_PLAN_ID;
+  const rawBrandId =
+    typeof data.brandId === "number"
+      ? data.brandId
+      : typeof data.brandId === "string"
+        ? parseInt(data.brandId, 10)
+        : NaN;
+  const brandId =
+    Number.isFinite(rawBrandId) && rawBrandId > 0 ? rawBrandId : null;
+  return brandId
+    ? `/billing/plan/${planId}?brandId=${brandId}`
+    : `/billing/plan/${planId}`;
+}
 
 function looksLikeUrl(v: string): boolean {
   const t = v.trim();
@@ -38,6 +63,7 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsUpgrade, setNeedsUpgrade] = useState(false);
+  const [upgradeHref, setUpgradeHref] = useState(DEFAULT_UPGRADE_HREF);
   const [jobId, setJobId] = useState<number | null>(null);
   const [status, setStatus] = useState<AnalysisStatus | null>(null);
   /** Set once the member edits the address; until then it tracks the website. */
@@ -114,6 +140,7 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
     setSubmitting(true);
     setError(null);
     setNeedsUpgrade(false);
+    setUpgradeHref(DEFAULT_UPGRADE_HREF);
 
     try {
       const res = await fetch("/api/brands/analyze", {
@@ -125,6 +152,7 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
 
       if (!res.ok) {
         if (data.code === "REQUIRES_SUBSCRIPTION") {
+          setUpgradeHref(upgradeCheckoutHref(data));
           setNeedsUpgrade(true);
         } else if (data.suggestion) {
           // Someone claimed the address between the check and this request.
@@ -281,7 +309,7 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
               after trial (or beyond free caps) is $9/month each — upgrade to
               continue.
             </p>
-            <Link href="/billing" className="mt-3 inline-block">
+            <Link href={upgradeHref} className="mt-3 inline-block">
               <Button className="bg-amber-600 hover:bg-amber-700">
                 Upgrade to add this domain
               </Button>

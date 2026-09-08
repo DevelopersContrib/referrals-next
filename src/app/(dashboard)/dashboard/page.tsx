@@ -1,8 +1,13 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { countMemberBrands } from "@/lib/member-subscription";
+import {
+  countMemberBrands,
+  getMemberEntitlement,
+} from "@/lib/member-subscription";
 import { enrollMemberInSignupReferral } from "@/lib/signup-referral";
 import { SignupInviteCard } from "@/components/auth/signup-invite-card";
+import { DashboardUpgradeCard } from "@/components/dashboard/dashboard-upgrade-card";
+import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -10,7 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   PlusIcon,
   GlobeIcon,
-  BarChart3Icon,
   UsersIcon,
   MousePointerClickIcon,
   ShareIcon,
@@ -117,6 +121,23 @@ export default async function DashboardPage() {
   if ((await countMemberBrands(memberId)) === 0) {
     redirect("/onboarding");
   }
+
+  const [entitlement, growthPlan] = await Promise.all([
+    getMemberEntitlement(memberId, { applyAdminBypass: false }),
+    prisma.plans.findUnique({
+      where: { id: DEFAULT_PAID_PLAN_ID },
+      select: {
+        name: true,
+        price: true,
+        unit: true,
+        days: true,
+        no_of_domains: true,
+        campaigns_participants: true,
+      },
+    }),
+  ]);
+  // REF-J3: hide always-on upgrade nag for Growth (trial or paid).
+  const showUpgradeNag = !entitlement.isGrowth;
 
   let data;
   try {
@@ -420,31 +441,16 @@ export default async function DashboardPage() {
 
         {/* Right Column: Quick Links + Social */}
         <div className="space-y-6 lg:col-span-5">
-          {/* Plan Notification */}
-          <div className="rounded-lg border border-brand/20 bg-brand/5 p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand/10">
-                <BarChart3Icon className="size-5 text-brand" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold text-[#575962]">
-                  Upgrade Your Plan
-                </h3>
-                <p className="mt-0.5 text-xs text-[#a7abc3]">
-                  Unlock advanced analytics, custom branding, and priority
-                  support.
-                </p>
-                <Link href="/billing">
-                  <Button
-                    size="sm"
-                    className="mt-2 gap-1 bg-brand text-white hover:bg-brand-hover"
-                  >
-                    View Plans <ArrowRightIcon className="size-3" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
+          {showUpgradeNag && (
+            <DashboardUpgradeCard
+              planName={growthPlan?.name}
+              price={growthPlan?.price}
+              unit={growthPlan?.unit}
+              days={growthPlan?.days}
+              noOfDomains={growthPlan?.no_of_domains}
+              campaignsParticipants={growthPlan?.campaigns_participants}
+            />
+          )}
 
           {/* Quick Links Grid */}
           <div>

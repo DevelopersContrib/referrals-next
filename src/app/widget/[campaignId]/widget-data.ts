@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { memberMustShowBranding } from "@/lib/member-subscription";
+import { brandMustShowBranding } from "@/lib/member-subscription";
 
 export async function getWidgetData(campaignId: number) {
   const [campaign, widget, reward, socialContent, allowedSocials, leaderboard] =
@@ -46,7 +46,7 @@ export async function getWidgetData(campaignId: number) {
   if (!campaign) return null;
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://referrals.com";
-  const showBranding = await memberMustShowBranding(campaign.member_id);
+  const showBranding = await brandMustShowBranding(campaign.url_id);
 
   return {
     config: {

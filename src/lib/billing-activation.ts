@@ -36,6 +36,7 @@ export async function activatePaidSubscription(opts: {
   brandId?: number | null;
   subscriptionId: string;
   attemptId?: string | null;
+  checkoutMode?: "in_page" | "redirect" | "webhook";
 }): Promise<ActivationResult> {
   const { memberId, subscriptionId } = opts;
   const existingAttempt = await prisma.billing_checkout_attempts.findFirst({
@@ -56,7 +57,12 @@ export async function activatePaidSubscription(opts: {
       ? opts.attemptId!
       : newCheckoutAttemptId());
   const checkoutMode =
-    existingAttempt?.checkout_mode === "redirect" ? "redirect" : "in_page";
+    opts.checkoutMode ??
+    (existingAttempt?.checkout_mode === "redirect"
+      ? "redirect"
+      : existingAttempt?.checkout_mode === "webhook"
+        ? "webhook"
+        : "in_page");
 
   const log = (
     eventName: "activation_started" | "activated" | "server_error",
@@ -177,6 +183,10 @@ export async function activatePaidSubscription(opts: {
           date_added: now,
         },
       });
+      await prisma.member_urls.update({
+        where: { id: brandId },
+        data: { plan_expiry: expiry },
+      });
     }
 
     await prisma.member_payment.create({
@@ -191,10 +201,12 @@ export async function activatePaidSubscription(opts: {
       },
     });
 
-    await prisma.members.update({
-      where: { id: memberId },
-      data: { plan_id: plan.id, plan_expiry: expiry },
-    });
+    if (!brandId) {
+      await prisma.members.update({
+        where: { id: memberId },
+        data: { plan_id: plan.id, plan_expiry: expiry },
+      });
+    }
 
     const priceUsd = plan.price ?? 0;
     const billing = (plan.days || 30) >= 365 ? "year" : "month";
@@ -227,4 +239,95 @@ export async function activatePaidSubscription(opts: {
     });
     return { ok: false, error: "execution_failed" };
   }
+}
+
+/**
+ * Webhook path: resolve brand_id from the checkout attempt and activate once.
+ * Idempotent — safe on ACTIVATED and first SALE.COMPLETED.
+ */
+export async function activatePaidSubscriptionFromWebhook(
+  subscriptionId: string,
+): Promise<ActivationResult | { ok: false; error: "checkout_attempt_not_found" }> {
+  const existingPlan = await prisma.member_plan.findFirst({
+    where: { paypal_agreement_id: subscriptionId },
+    select: { id: true },
+  });
+  if (existingPlan) {
+    return { ok: true, alreadyProcessed: true };
+  }
+
+  const attempt = await prisma.billing_checkout_attempts.findFirst({
+    where: { paypal_subscription_id: subscriptionId },
+    orderBy: { id: "desc" },
+    select: {
+      attempt_id: true,
+      member_id: true,
+      plan_id: true,
+      brand_id: true,
+    },
+  });
+  if (!attempt) {
+    return { ok: false, error: "checkout_attempt_not_found" };
+  }
+
+  return activatePaidSubscription({
+    memberId: attempt.member_id,
+    planId: attempt.plan_id,
+    brandId: attempt.brand_id,
+    subscriptionId,
+    attemptId: attempt.attempt_id,
+    checkoutMode: "webhook",
+  });
+}
+
+/** Extend paid period on renewal — per-brand when url_plan exists, else member-level. */
+export async function extendPaidSubscriptionPeriod(
+  agreementId: string,
+  days = 30,
+) {
+  const now = Date.now();
+  const urlPlans = await prisma.url_plan.findMany({
+    where: { paypal_agreement_id: agreementId },
+    select: { url_id: true },
+  });
+
+  if (urlPlans.length > 0) {
+    for (const { url_id } of urlPlans) {
+      const brand = await prisma.member_urls.findUnique({
+        where: { id: url_id },
+        select: { plan_expiry: true },
+      });
+      const currentExpiry = brand?.plan_expiry
+        ? new Date(brand.plan_expiry)
+        : new Date();
+      const newExpiry = new Date(Math.max(currentExpiry.getTime(), now));
+      newExpiry.setDate(newExpiry.getDate() + days);
+      await prisma.member_urls.update({
+        where: { id: url_id },
+        data: { plan_expiry: newExpiry },
+      });
+    }
+    return;
+  }
+
+  const memberPlan = await prisma.member_plan.findFirst({
+    where: { paypal_agreement_id: agreementId },
+    select: { member_id: true },
+  });
+  if (!memberPlan) return;
+
+  const member = await prisma.members.findUnique({
+    where: { id: memberPlan.member_id },
+    select: { plan_expiry: true },
+  });
+  const currentExpiry = member?.plan_expiry
+    ? new Date(member.plan_expiry)
+    : new Date();
+  const newExpiry = new Date(Math.max(currentExpiry.getTime(), now));
+  newExpiry.setDate(newExpiry.getDate() + days);
+
+  await prisma.members.update({
+    where: { id: memberPlan.member_id },
+    data: { plan_expiry: newExpiry },
+  });
 }

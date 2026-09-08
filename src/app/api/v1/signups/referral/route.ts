@@ -7,6 +7,7 @@ import {
   handleCors,
 } from "@/lib/api/helpers";
 import { logApiCall } from "@/lib/api/log-call";
+import { tryRewardReferrerAfterSignup } from "@/lib/campaign-reward";
 
 export async function OPTIONS() {
   return handleCors();
@@ -106,10 +107,24 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Check if reward should be given
-    const rewardConfig = await prisma.campaign_reward.findFirst({
-      where: { campaign_id: campaignId },
+    const rewardResult = await tryRewardReferrerAfterSignup({
+      campaign,
+      referrerParticipantId: participantId,
+      socialType,
+      inviteeParticipantId:
+        campaign.reward_invited && invitedId ? invitedId : undefined,
     });
+
+    if (rewardResult) {
+      return apiSuccess(
+        {
+          message: "User added",
+          id: newParticipantId,
+          reward: rewardResult.referrer,
+        },
+        201,
+      );
+    }
 
     const existingReward = await prisma.participants_rewards.findFirst({
       where: {
@@ -118,162 +133,17 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const numSignups = campaign.num_signups || 1;
-    const rewardType = campaign.reward_type;
-    const isEqualReward = rewardType === 1 || rewardType === 3;
-
-    const referralCount = await prisma.campaign_participants.count({
-      where: {
-        campaign_id: campaignId,
-        invited_by: participantId,
-      },
-    });
-
-    const shouldReward =
-      !existingReward &&
-      (isEqualReward || referralCount >= numSignups);
-
-    if (shouldReward && rewardConfig) {
-      const rewardResult = await processReward(
-        campaignId,
-        participantId,
-        rewardType,
-        socialType,
-        rewardConfig
-      );
-
-      // If two-way reward is enabled, also reward the new participant
-      if (campaign.reward_invited && invitedId) {
-        await processReward(
-          campaignId,
-          newParticipantId,
-          rewardType,
-          socialType,
-          rewardConfig
-        );
-      }
-
-      return apiSuccess({
-        message: "User added",
+    return apiSuccess(
+      {
+        message: existingReward
+          ? "User added, reward already received"
+          : "User added",
         id: newParticipantId,
-        reward: rewardResult,
-      }, 201);
-    }
-
-    return apiSuccess({
-      message: existingReward ? "User added, reward already received" : "User added",
-      id: newParticipantId,
-    }, 201);
+      },
+      201,
+    );
   } catch (error) {
     console.error("Referral signup error:", error);
     return apiError("Internal server error", 500);
-  }
-}
-
-async function processReward(
-  campaignId: number,
-  participantId: number,
-  rewardType: number,
-  socialType: number,
-  rewardConfig: {
-    custom_message: string | null;
-    cash_value: number | null;
-    token_address: string | null;
-    token_symbol: string | null;
-    token_amount: string | null;
-  }
-) {
-  switch (rewardType) {
-    case 1: {
-      // Coupon reward
-      const coupon = await prisma.campaign_coupons.findFirst({
-        where: { campaign_id: campaignId, is_used: false },
-      });
-
-      if (coupon) {
-        await prisma.campaign_coupons.update({
-          where: { id: coupon.id },
-          data: { is_used: true },
-        });
-
-        await prisma.participants_rewards.create({
-          data: {
-            participant_id: participantId,
-            campaign_id: campaignId,
-            reward_type: rewardType,
-            social_type: socialType,
-            coupon: coupon.code,
-          },
-        });
-
-        // Check coupon shortage
-        const remaining = await prisma.campaign_coupons.count({
-          where: { campaign_id: campaignId, is_used: false },
-        });
-
-        return {
-          type: "coupon",
-          code: coupon.code,
-          remaining,
-        };
-      }
-
-      return { type: "coupon", code: null, message: "No more coupons available" };
-    }
-
-    case 3: {
-      // Custom message reward
-      await prisma.participants_rewards.create({
-        data: {
-          participant_id: participantId,
-          campaign_id: campaignId,
-          reward_type: rewardType,
-          social_type: socialType,
-          custom_message: rewardConfig.custom_message,
-        },
-      });
-
-      return { type: "custom", message: rewardConfig.custom_message };
-    }
-
-    case 4: {
-      // Token reward — ledger now (token_transaction stays NULL = unminted),
-      // mint/transfer later. token_amount = count of tokens; the $ value lives
-      // on campaign_reward.worth_value.
-      const amount = rewardConfig.token_amount
-        ? parseFloat(rewardConfig.token_amount)
-        : null;
-      await prisma.participants_rewards.create({
-        data: {
-          participant_id: participantId,
-          campaign_id: campaignId,
-          reward_type: rewardType,
-          social_type: socialType,
-          token_address: rewardConfig.token_address,
-          token_symbol: rewardConfig.token_symbol,
-          token_amount: amount,
-        },
-      });
-
-      return { type: "token", symbol: rewardConfig.token_symbol, amount };
-    }
-
-    case 5: {
-      // Cash reward
-      await prisma.participants_rewards.create({
-        data: {
-          participant_id: participantId,
-          campaign_id: campaignId,
-          reward_type: rewardType,
-          social_type: socialType,
-          cash_value: rewardConfig.cash_value,
-        },
-      });
-
-      return { type: "cash", value: rewardConfig.cash_value };
-    }
-
-    default:
-      return { type: "unknown", rewardType };
   }
 }

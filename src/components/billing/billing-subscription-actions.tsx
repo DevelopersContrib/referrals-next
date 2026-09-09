@@ -74,13 +74,13 @@ export function BillingSubscriptionActions({
 	}
 
 	return (
-		<div className="mt-4 flex flex-wrap gap-3">
+		<div className="mt-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap">
 			{canCancel && (
 				<>
 					<Button
 						type="button"
 						variant="outline"
-						className="min-h-11 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+						className="min-h-11 w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto"
 						onClick={() => setCancelOpen(true)}
 					>
 						Cancel Subscription
@@ -123,7 +123,7 @@ export function BillingSubscriptionActions({
 			{canReactivate && (
 				<Button
 					type="button"
-					className="min-h-11 bg-brand hover:bg-brand-hover"
+					className="min-h-11 w-full bg-brand hover:bg-brand-hover sm:w-auto"
 					onClick={handleReactivate}
 					disabled={reactivating}
 				>

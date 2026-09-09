@@ -56,7 +56,7 @@ export default async function PlanCheckoutPage({
   ];
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-5 pb-24 sm:pb-6">
+    <div className="mx-auto w-full min-w-0 max-w-4xl space-y-5 pb-24 sm:pb-6">
       <Link
         href="/billing"
         className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand"
@@ -65,7 +65,8 @@ export default async function PlanCheckoutPage({
         Back to billing
       </Link>
 
-      <div className="grid gap-5 md:grid-cols-2 md:items-stretch">
+      {/* Stack through 768; side-by-side from lg (1024) so tablet stays single column */}
+      <div className="grid min-w-0 gap-5 lg:grid-cols-2 lg:items-stretch">
         {/* Plan details — matches /billing Available Plans cards */}
         <div
           className={cn(
@@ -181,7 +182,7 @@ export default async function PlanCheckoutPage({
               </div>
               <Link
                 href="/billing"
-                className="flex min-h-11 items-center justify-center rounded-xl bg-[#FF5C62] px-4 py-3 text-center text-sm font-semibold text-white transition-all hover:bg-[#ff4f58] hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5C62]"
+                className="flex min-h-11 w-full items-center justify-center rounded-xl bg-[#FF5C62] px-4 py-3 text-center text-sm font-semibold text-white transition-all hover:bg-[#ff4f58] hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5C62]"
               >
                 View plans
               </Link>

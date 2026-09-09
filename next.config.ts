@@ -1,6 +1,12 @@
+import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Pin Turbopack to this app — a ~/pnpm-lock.yaml otherwise wins as workspace root.
+  turbopack: {
+    root: path.join(__dirname),
+  },
+
   async rewrites() {
     return {
       // beforeFiles runs *before* the filesystem/public check, so this wins

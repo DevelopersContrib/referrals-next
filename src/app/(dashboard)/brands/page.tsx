@@ -23,6 +23,11 @@ import {
   HomeIcon,
   ExternalLinkIcon,
 } from "lucide-react";
+import {
+  brandShouldShowUpgradeCta,
+  getBrandEntitlement,
+} from "@/lib/member-subscription";
+import { BrandUpgradeCta } from "@/components/brands/brand-upgrade-cta";
 
 export default async function BrandsPage() {
   const session = await auth();
@@ -34,6 +39,15 @@ export default async function BrandsPage() {
     where: { member_id: memberId },
     orderBy: { date_added: "desc" },
   });
+
+  const brandEntitlements = await Promise.all(
+    brands.map((brand) =>
+      getBrandEntitlement(brand.id, { applyAdminBypass: false }),
+    ),
+  );
+  const entitlementByBrandId = new Map(
+    brands.map((brand, index) => [brand.id, brandEntitlements[index]] as const),
+  );
 
   return (
     <div className="space-y-6">
@@ -85,10 +99,10 @@ export default async function BrandsPage() {
         </div>
       </div>
 
-      {/* Brand Table */}
-      <div className="portlet overflow-hidden p-0">
+      {/* Brands — mobile cards + desktop table */}
+      <div className="min-w-0">
         {brands.length === 0 ? (
-          <div className="py-16 text-center">
+          <div className="portlet py-16 text-center">
             <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-[#f2f3f8]">
               <GlobeIcon className="size-8 text-[#a7abc3]" />
             </div>
@@ -99,124 +113,241 @@ export default async function BrandsPage() {
               Add your first brand to start running referral campaigns.
             </p>
             <Link href="/brands/new" className="mt-4 inline-block">
-              <Button className="gap-2 bg-brand text-white hover:bg-brand-hover">
+              <Button className="min-h-11 gap-2 bg-brand text-white hover:bg-brand-hover">
                 <PlusIcon className="size-4" />
                 Add Your First Brand
               </Button>
             </Link>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b border-[#ebeef0] bg-[#f7f8fa]">
-                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
-                  Brand Name
-                </TableHead>
-                <TableHead className="hidden text-[11px] font-bold uppercase tracking-wider text-[#a7abc3] lg:table-cell">
-                  Website
-                </TableHead>
-                <TableHead className="hidden text-[11px] font-bold uppercase tracking-wider text-[#a7abc3] xl:table-cell">
-                  Date Added
-                </TableHead>
-                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
-                  Status
-                </TableHead>
-                <TableHead className="text-right text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {brands.map((brand) => (
-                <TableRow
-                  key={brand.id}
-                  className="border-b border-[#ebeef0] transition-colors hover:bg-[#f7f8fa]"
-                >
-                  <TableCell>
-                    <div className="flex items-center gap-3">
+          <>
+            {/* Mobile / tablet card stack */}
+            <ul className="flex flex-col gap-3 lg:hidden">
+              {brands.map((brand) => {
+                const brandEntitlement = entitlementByBrandId.get(brand.id);
+                const showBrandUpgrade =
+                  brandShouldShowUpgradeCta(brandEntitlement);
+                const planActive = Boolean(
+                  brandEntitlement?.isPaid || brandEntitlement?.isGrowth,
+                );
+                const planLabel =
+                  brandEntitlement?.status === "trial"
+                    ? "Trial"
+                    : planActive
+                      ? "Active"
+                      : "Free";
+                return (
+                  <li
+                    key={brand.id}
+                    className="min-w-0 overflow-hidden rounded-2xl border border-[#ebeef0] bg-white shadow-sm"
+                  >
+                    <div className="flex items-start gap-3 p-4">
                       <BrandLogo
                         domain={brand.domain}
                         logoUrl={brand.logo_url}
-                        imgClassName="size-9 rounded-md border border-[#ebeef0] object-contain p-1"
-                        fallbackClassName="flex size-9 items-center justify-center rounded-md bg-brand/10 text-sm font-bold uppercase text-brand"
+                        imgClassName="size-11 shrink-0 rounded-lg border border-[#ebeef0] object-contain p-1"
+                        fallbackClassName="flex size-11 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-base font-bold uppercase text-brand"
                       />
-                      <div className="min-w-0">
-                        <Link
-                          href={`/brands/${brand.id}`}
-                          className="block truncate font-semibold text-[#575962] hover:text-brand transition-colors"
-                        >
-                          {brand.domain}
-                        </Link>
-                        <a
-                          href={brand.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-0.5 flex min-w-0 max-w-[220px] items-center gap-1 text-xs text-[#36a3f7] hover:underline lg:hidden"
-                        >
-                          <span className="min-w-0 truncate">{brand.url}</span>
-                          <ExternalLinkIcon className="size-3 shrink-0" />
-                        </a>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <Link
+                              href={`/brands/${brand.id}`}
+                              className="block truncate font-semibold text-[#575962] hover:text-brand"
+                            >
+                              {brand.domain}
+                            </Link>
+                            <a
+                              href={brand.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-0.5 flex min-w-0 items-center gap-1 text-xs text-[#36a3f7] hover:underline"
+                            >
+                              <span className="min-w-0 truncate">
+                                {brand.url}
+                              </span>
+                              <ExternalLinkIcon className="size-3 shrink-0" />
+                            </a>
+                          </div>
+                          <Badge
+                            className={
+                              planActive
+                                ? "shrink-0 border-0 bg-[#28a745]/10 font-medium text-[#28a745]"
+                                : "shrink-0 border-0 bg-[#f2f3f8] font-medium text-[#a7abc3]"
+                            }
+                          >
+                            {planLabel}
+                          </Badge>
+                        </div>
+                        <p className="mt-2 text-xs text-[#a7abc3]">
+                          Added{" "}
+                          {new Date(brand.date_added).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            },
+                          )}
+                        </p>
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <a
-                      href={brand.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex min-w-0 max-w-[200px] items-center gap-1 text-sm text-[#36a3f7] hover:underline"
-                    >
-                      <span className="min-w-0 truncate">{brand.url}</span>
-                      <ExternalLinkIcon className="size-3 shrink-0" />
-                    </a>
-                  </TableCell>
-                  <TableCell className="hidden text-sm text-[#a7abc3] xl:table-cell">
-                    {new Date(brand.date_added).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </TableCell>
-                  <TableCell>
-                    {brand.plan_expiry &&
-                    new Date(brand.plan_expiry) > new Date() ? (
-                      <Badge className="border-0 bg-[#28a745]/10 text-[#28a745] font-medium">
-                        Active
-                      </Badge>
-                    ) : (
-                      <Badge className="border-0 bg-[#f2f3f8] text-[#a7abc3] font-medium">
-                        Free
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex flex-col items-stretch gap-1.5 lg:flex-row lg:justify-end">
-                      <Link href={`/brands/${brand.id}`}>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="min-h-11 w-full gap-1.5 border-[#ebeef0] text-[#575962] hover:border-brand hover:text-brand sm:w-auto"
-                        >
-                          <LayoutDashboardIcon className="size-3.5" />
-                          Dashboard
-                        </Button>
-                      </Link>
-                      <Link href={`/brands/${brand.id}/edit`}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="min-h-11 w-full gap-1.5 text-[#a7abc3] hover:text-brand sm:w-auto"
-                        >
-                          <SettingsIcon className="size-3.5" />
-                          Edit
-                        </Button>
-                      </Link>
+                    <div className="flex flex-col gap-2 border-t border-[#ebeef0] bg-[#fafbfc] p-3">
+                      {showBrandUpgrade && (
+                        <BrandUpgradeCta brandId={brand.id} variant="card" />
+                      )}
+                      <div className="grid grid-cols-2 gap-2">
+                        <Link href={`/brands/${brand.id}`}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="min-h-11 w-full gap-1.5 border-[#ebeef0] text-[#575962]"
+                          >
+                            <LayoutDashboardIcon className="size-3.5" />
+                            Open
+                          </Button>
+                        </Link>
+                        <Link href={`/brands/${brand.id}/edit`}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="min-h-11 w-full gap-1.5 text-[#a7abc3] hover:text-brand"
+                          >
+                            <SettingsIcon className="size-3.5" />
+                            Edit
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {/* Desktop table */}
+            <div className="portlet hidden overflow-hidden p-0 lg:block">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-[#ebeef0] bg-[#f7f8fa]">
+                    <TableHead className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
+                      Brand Name
+                    </TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
+                      Website
+                    </TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
+                      Date Added
+                    </TableHead>
+                    <TableHead className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
+                      Status
+                    </TableHead>
+                    <TableHead className="text-right text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {brands.map((brand) => {
+                    const brandEntitlement = entitlementByBrandId.get(brand.id);
+                    const showBrandUpgrade =
+                      brandShouldShowUpgradeCta(brandEntitlement);
+                    const planActive = Boolean(
+                      brandEntitlement?.isPaid || brandEntitlement?.isGrowth,
+                    );
+                    return (
+                      <TableRow
+                        key={brand.id}
+                        className="border-b border-[#ebeef0] transition-colors hover:bg-[#f7f8fa]"
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <BrandLogo
+                              domain={brand.domain}
+                              logoUrl={brand.logo_url}
+                              imgClassName="size-9 rounded-md border border-[#ebeef0] object-contain p-1"
+                              fallbackClassName="flex size-9 items-center justify-center rounded-md bg-brand/10 text-sm font-bold uppercase text-brand"
+                            />
+                            <Link
+                              href={`/brands/${brand.id}`}
+                              className="truncate font-semibold text-[#575962] hover:text-brand"
+                            >
+                              {brand.domain}
+                            </Link>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <a
+                            href={brand.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex min-w-0 max-w-[220px] items-center gap-1 text-sm text-[#36a3f7] hover:underline"
+                          >
+                            <span className="min-w-0 truncate">
+                              {brand.url}
+                            </span>
+                            <ExternalLinkIcon className="size-3 shrink-0" />
+                          </a>
+                        </TableCell>
+                        <TableCell className="text-sm text-[#a7abc3]">
+                          {new Date(brand.date_added).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            },
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {planActive ? (
+                            <Badge className="border-0 bg-[#28a745]/10 font-medium text-[#28a745]">
+                              {brandEntitlement?.status === "trial"
+                                ? "Trial"
+                                : "Active"}
+                            </Badge>
+                          ) : (
+                            <Badge className="border-0 bg-[#f2f3f8] font-medium text-[#a7abc3]">
+                              Free
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            {showBrandUpgrade && (
+                              <BrandUpgradeCta
+                                brandId={brand.id}
+                                variant="row"
+                              />
+                            )}
+                            <Link href={`/brands/${brand.id}`}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="min-h-11 gap-1.5 border-[#ebeef0] text-[#575962] hover:border-brand hover:text-brand"
+                              >
+                                <LayoutDashboardIcon className="size-3.5" />
+                                Dashboard
+                              </Button>
+                            </Link>
+                            <Link href={`/brands/${brand.id}/edit`}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="min-h-11 gap-1.5 text-[#a7abc3] hover:text-brand"
+                              >
+                                <SettingsIcon className="size-3.5" />
+                                Edit
+                              </Button>
+                            </Link>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </>
         )}
       </div>
     </div>

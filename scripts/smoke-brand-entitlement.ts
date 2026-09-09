@@ -29,10 +29,15 @@ function main() {
   if (!subscription.includes("isVnoc")) {
     fail("getBrandEntitlement must expose VNOC handling");
   }
+  if (!subscription.includes("export function brandShouldShowUpgradeCta")) {
+    fail("brandShouldShowUpgradeCta must exist for REF-J5 brand CTAs");
+  }
   if (!subscription.includes("export async function brandMustShowBranding")) {
     fail("brandMustShowBranding must exist");
   }
-  if (!subscription.includes("export async function canBrandAcceptParticipant")) {
+  if (
+    !subscription.includes("export async function canBrandAcceptParticipant")
+  ) {
     fail("canBrandAcceptParticipant must exist");
   }
   if (!subscription.includes('e.status === "trial"')) {
@@ -45,7 +50,9 @@ function main() {
     fail("activatePaidSubscription must stamp member_urls.plan_expiry");
   }
   if (!activation.includes("if (!brandId)")) {
-    fail("activatePaidSubscription must skip members.plan_* when brandId is set");
+    fail(
+      "activatePaidSubscription must skip members.plan_* when brandId is set",
+    );
   }
   if (!activation.includes("activatePaidSubscriptionFromWebhook")) {
     fail("activatePaidSubscriptionFromWebhook must exist");

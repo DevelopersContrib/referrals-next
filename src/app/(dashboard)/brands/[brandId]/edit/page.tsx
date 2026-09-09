@@ -2,7 +2,10 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { isBrandOnPaidPlan } from "@/lib/member-subscription";
+import {
+  brandShouldShowUpgradeCta,
+  getBrandEntitlement,
+} from "@/lib/member-subscription";
 import { BrandEditPanel } from "@/components/brands/brand-edit-panel";
 import { BrandReferralLink } from "@/components/brands/brand-referral-link";
 import { ChevronRightIcon, HomeIcon } from "lucide-react";
@@ -16,8 +19,13 @@ export default async function EditBrandPage({ params }: EditBrandPageProps) {
   if (!session?.user?.id) redirect("/signin");
 
   const { brandId } = await params;
+  const brandIdNum = parseInt(brandId, 10);
+  const entitlement = await getBrandEntitlement(brandIdNum, {
+    applyAdminBypass: false,
+  });
   // Whitelabel / remove branding is paid-only for this brand (not trial).
-  const isPremium = await isBrandOnPaidPlan(parseInt(brandId, 10));
+  const isPremium = Boolean(entitlement?.isPaid);
+  const showUpgradeCta = brandShouldShowUpgradeCta(entitlement);
 
   return (
     <div className="space-y-6">
@@ -40,7 +48,11 @@ export default async function EditBrandPage({ params }: EditBrandPageProps) {
           <div className="py-16 text-center text-[#a7abc3]">Loading...</div>
         }
       >
-        <BrandEditPanel brandId={brandId} isPremium={isPremium} />
+        <BrandEditPanel
+          brandId={brandId}
+          isPremium={isPremium}
+          showUpgradeCta={showUpgradeCta}
+        />
       </Suspense>
 
       <BrandReferralLink brandId={brandId} />

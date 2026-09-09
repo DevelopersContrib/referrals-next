@@ -150,8 +150,8 @@ export default async function BillingPage({
   const canReactivate = isCancelled && hasActivePaidAccess;
 
   return (
-    <div className="space-y-8">
-      <div>
+    <div className="min-w-0 max-w-full space-y-8">
+      <div className="min-w-0">
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">
           Billing & Subscription
         </h1>
@@ -164,14 +164,14 @@ export default async function BillingPage({
         <BillingErrorBanner initialError={error} />
       </Suspense>
 
-      <Card className="border-rose-100/80 shadow-sm">
+      <Card className="min-w-0 border-rose-100/80 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold">
             Current status
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-center gap-3">
+        <CardContent className="min-w-0">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
             <Badge
               variant={statusBadgeVariant(humanStatus)}
               className={cn(
@@ -186,7 +186,9 @@ export default async function BillingPage({
               {statusLabel(humanStatus)}
             </Badge>
             {detail && (
-              <span className="text-sm text-muted-foreground">{detail}</span>
+              <span className="min-w-0 break-words text-sm text-muted-foreground">
+                {detail}
+              </span>
             )}
           </div>
           <BillingSubscriptionActions
@@ -196,7 +198,7 @@ export default async function BillingPage({
         </CardContent>
       </Card>
 
-      <section>
+      <section className="min-w-0">
         <div className="mb-5">
           <h2 className="text-lg font-semibold text-gray-900">
             Available Plans
@@ -206,8 +208,9 @@ export default async function BillingPage({
           </p>
         </div>
 
-        <div className="w-full max-w-5xl">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3">
+        {/* Stack through 768 (lg starts at 1024); desktop keeps 2–3 cols */}
+        <div className="w-full min-w-0 max-w-5xl">
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6 xl:grid-cols-3">
             {plans.map((plan) => {
               const price = plan.price || 0;
               const isPaidPlan = price > 0;
@@ -241,8 +244,8 @@ export default async function BillingPage({
                         : "bg-gradient-to-br from-rose-500/10 to-orange-50/30",
                     )}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-lg font-bold tracking-tight text-gray-900">
+                    <div className="flex min-w-0 items-start justify-between gap-2">
+                      <h3 className="min-w-0 break-words text-lg font-bold tracking-tight text-gray-900">
                         {plan.name}
                       </h3>
                       {isCurrent && (
@@ -284,7 +287,7 @@ export default async function BillingPage({
                   {isCurrent ? (
                     <span
                       className={cn(
-                        "mt-6 flex min-h-11 items-center justify-center rounded-xl border px-4 py-3 text-center text-sm font-semibold",
+                        "mt-6 flex min-h-11 w-full items-center justify-center rounded-xl border px-4 py-3 text-center text-sm font-semibold",
                         isPaidPlan
                           ? "border-violet-200 bg-violet-50 text-[#7c3aed]"
                           : "border-rose-100 bg-rose-50/60 text-[#FF5C62]",
@@ -295,12 +298,12 @@ export default async function BillingPage({
                   ) : isPaidPlan ? (
                     <Link
                       href={`/billing/plan/${plan.id}`}
-                      className="mt-6 flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-4 py-3 text-center text-sm font-semibold text-white shadow-md shadow-violet-300/40 transition-all hover:brightness-105 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#926efb]"
+                      className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-4 py-3 text-center text-sm font-semibold text-white shadow-md shadow-violet-300/40 transition-all hover:brightness-105 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#926efb]"
                     >
                       Pay with card or PayPal
                     </Link>
                   ) : (
-                    <span className="mt-6 flex min-h-11 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-center text-sm font-medium text-gray-500">
+                    <span className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-center text-sm font-medium text-gray-500">
                       Included in trial / free forever
                     </span>
                   )}
@@ -311,15 +314,15 @@ export default async function BillingPage({
         </div>
       </section>
 
-      <Card>
+      <Card className="min-w-0">
         <CardHeader>
           <CardTitle>Payment History</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="min-w-0">
           {payments.length === 0 ? (
             <p className="text-sm text-muted-foreground">No payments yet.</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="min-w-0 max-w-full overflow-x-auto">
               <table className="w-full min-w-[480px] text-sm">
                 <thead>
                   <tr className="border-b">

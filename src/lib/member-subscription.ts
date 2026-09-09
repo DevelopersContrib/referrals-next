@@ -335,6 +335,18 @@ export async function getBrandEntitlement(
   };
 }
 
+/**
+ * REF-J5: show a brand Upgrade CTA only for unpaid, non-VNOC brands that are
+ * not already on Growth (trial or paid). Never for VNOC or paid stamps.
+ */
+export function brandShouldShowUpgradeCta(
+  e:
+    Pick<BrandEntitlement, "isVnoc" | "isPaid" | "isGrowth"> | null | undefined,
+): boolean {
+  if (!e) return false;
+  return !e.isVnoc && !e.isPaid && !e.isGrowth;
+}
+
 /** Full Growth for a brand (account trial or that brand paid). */
 export async function isBrandGrowthEntitled(brandId: number): Promise<boolean> {
   const e = await getBrandEntitlement(brandId);

@@ -1,12 +1,15 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
+  brandShouldShowUpgradeCta,
   countMemberBrands,
+  getBrandEntitlement,
   getMemberEntitlement,
 } from "@/lib/member-subscription";
 import { enrollMemberInSignupReferral } from "@/lib/signup-referral";
 import { SignupInviteCard } from "@/components/auth/signup-invite-card";
 import { DashboardUpgradeCard } from "@/components/dashboard/dashboard-upgrade-card";
+import { BrandUpgradeCta } from "@/components/brands/brand-upgrade-cta";
 import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -158,6 +161,15 @@ export default async function DashboardPage() {
   }
 
   const { brands, campaignCountByBrand, stats } = data;
+
+  const brandEntitlements = await Promise.all(
+    brands.map((brand) =>
+      getBrandEntitlement(brand.id, { applyAdminBypass: false }),
+    ),
+  );
+  const entitlementByBrandId = new Map(
+    brands.map((brand, index) => [brand.id, brandEntitlements[index]] as const),
+  );
 
   const statCards = [
     {
@@ -320,29 +332,43 @@ export default async function DashboardPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
             {brands.map((brand) => {
               const campaignCount = campaignCountByBrand.get(brand.id) || 0;
+              const brandEntitlement = entitlementByBrandId.get(brand.id);
+              const showBrandUpgrade =
+                brandShouldShowUpgradeCta(brandEntitlement);
+              const planActive = Boolean(
+                brandEntitlement?.isPaid || brandEntitlement?.isGrowth,
+              );
+              const planLabel =
+                brandEntitlement?.status === "trial"
+                  ? "Trial"
+                  : planActive
+                    ? "Active"
+                    : "Free";
               return (
-                <div key={brand.id} className="group relative block rounded-lg">
+                <article
+                  key={brand.id}
+                  className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-[#ebeef0] bg-white shadow-sm transition hover:border-violet-200/80 hover:shadow-md"
+                >
                   <div
-                    className="brand-overlay-card relative z-0"
+                    className="brand-overlay-card relative min-h-[180px] flex-1"
                     style={{
                       background: brand.logo_url
                         ? `url(${brand.logo_url}) center/cover no-repeat`
                         : "linear-gradient(135deg, #2c2e3e 0%, #1a1c2d 100%)",
                     }}
                   >
-                    {/* Brand Info */}
-                    <div className="p-5">
+                    <div className="relative z-0 flex h-full flex-col justify-end p-4 sm:p-5">
                       {brand.logo_url ? (
                         <img
                           src={brand.logo_url}
                           alt={brand.domain}
-                          className="mb-3 h-8 w-auto brightness-0 invert opacity-90"
+                          className="mb-3 h-8 w-auto max-w-[60%] object-contain brightness-0 invert opacity-90"
                         />
                       ) : (
-                        <h3 className="mb-2 wrap-break-word text-xl font-bold text-white drop-shadow-lg">
+                        <h3 className="mb-2 wrap-break-word text-lg font-bold text-white drop-shadow-lg sm:text-xl">
                           {brand.domain}
                         </h3>
                       )}
@@ -350,9 +376,8 @@ export default async function DashboardPage() {
                         {brand.url}
                       </p>
 
-                      {/* Stats Grid */}
-                      <div className="grid grid-cols-3 gap-2 rounded-md bg-black/30 p-2.5 backdrop-blur-sm">
-                        <div className="text-center">
+                      <div className="grid grid-cols-3 gap-2 rounded-xl bg-black/35 p-2.5 backdrop-blur-sm">
+                        <div className="min-w-0 text-center">
                           <p className="text-base font-bold text-white">
                             {campaignCount}
                           </p>
@@ -360,24 +385,23 @@ export default async function DashboardPage() {
                             Campaigns
                           </p>
                         </div>
-                        <div className="text-center">
-                          <p className="text-base font-bold text-white">
-                            {brand.plan_expiry &&
-                            new Date(brand.plan_expiry) > new Date() ? (
-                              <Badge className="bg-[#28a745]/80 text-white text-[10px] border-0">
-                                Active
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-white/20 text-white text-[10px] border-0">
-                                Free
-                              </Badge>
-                            )}
+                        <div className="min-w-0 text-center">
+                          <p className="flex justify-center text-base font-bold text-white">
+                            <Badge
+                              className={
+                                planActive
+                                  ? "border-0 bg-[#28a745]/80 text-[10px] text-white"
+                                  : "border-0 bg-white/20 text-[10px] text-white"
+                              }
+                            >
+                              {planLabel}
+                            </Badge>
                           </p>
                           <p className="text-[10px] uppercase tracking-wider text-white/60">
                             Plan
                           </p>
                         </div>
-                        <div className="text-center">
+                        <div className="min-w-0 text-center">
                           <p className="text-base font-bold text-white">
                             {new Date(brand.date_added).toLocaleDateString(
                               "en-US",
@@ -390,30 +414,40 @@ export default async function DashboardPage() {
                         </div>
                       </div>
                     </div>
+                    <Link
+                      href={`/brands/${brand.id}`}
+                      className="absolute inset-0 z-[1] rounded-t-2xl"
+                      aria-label={`View brand ${brand.domain ?? brand.url}`}
+                    />
                   </div>
-                  <Link
-                    href={`/brands/${brand.id}`}
-                    className="absolute inset-0 z-[1] rounded-lg"
-                    aria-label={`View brand ${brand.domain ?? brand.url}`}
-                  />
-                  <div className="pointer-events-none absolute right-3 top-3 z-[2]">
+
+                  <div className="relative z-[2] flex flex-col gap-2 border-t border-[#ebeef0] bg-white p-3 sm:flex-row sm:items-center">
+                    {showBrandUpgrade && (
+                      <BrandUpgradeCta
+                        brandId={brand.id}
+                        variant="card"
+                        className="sm:flex-1"
+                      />
+                    )}
                     <Link
                       href={`/brands/${brand.id}/campaigns/new`}
-                      className="pointer-events-auto"
+                      className={
+                        showBrandUpgrade
+                          ? "inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-[#ebeef0] bg-[#f7f8fa] px-3 text-sm font-medium text-[#575962] transition hover:border-brand hover:text-brand sm:w-auto sm:shrink-0"
+                          : "inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-brand px-3 text-sm font-semibold text-white transition hover:bg-brand-hover"
+                      }
                     >
-                      <span className="inline-flex items-center gap-1 rounded-md bg-brand/90 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm transition hover:bg-brand">
-                        <PlusIcon className="size-3" />
-                        Campaign
-                      </span>
+                      <PlusIcon className="size-4 shrink-0" />
+                      New campaign
                     </Link>
                   </div>
-                </div>
+                </article>
               );
             })}
 
             {/* Add Brand Card */}
             <Link href="/brands/new" className="group block">
-              <div className="flex min-h-[220px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#ebeef0] bg-white transition-all group-hover:border-brand group-hover:bg-brand/5">
+              <div className="flex min-h-[220px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#ebeef0] bg-white transition-all group-hover:border-brand group-hover:bg-brand/5">
                 <div className="flex size-14 items-center justify-center rounded-full bg-[#f2f3f8] transition-colors group-hover:bg-brand/10">
                   <PlusIcon className="size-7 text-[#a7abc3] transition-colors group-hover:text-brand" />
                 </div>

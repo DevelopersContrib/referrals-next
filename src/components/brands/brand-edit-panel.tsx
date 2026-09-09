@@ -22,6 +22,7 @@ import { slugFromWebsite } from "@/lib/brand-slug";
 import { SlugAvailabilityField } from "@/components/brands/slug-availability-field";
 import { useSlugAvailability } from "@/hooks/use-slug-availability";
 import { ImageInput } from "@/components/media/image-input";
+import { BrandUpgradeCta } from "@/components/brands/brand-upgrade-cta";
 import {
   ArrowLeftIcon,
   Trash2Icon,
@@ -29,7 +30,6 @@ import {
   LayoutDashboardIcon,
   PlusIcon,
   BarChart3Icon,
-  CreditCardIcon,
   Loader2Icon,
   SparklesIcon,
 } from "lucide-react";
@@ -104,11 +104,14 @@ const SOCIAL_FIELDS: Array<{
 interface BrandEditPanelProps {
   brandId: string;
   isPremium?: boolean;
+  /** REF-J5: unpaid non-VNOC only — never show without brandId in the href. */
+  showUpgradeCta?: boolean;
 }
 
 export function BrandEditPanel({
   brandId,
   isPremium = false,
+  showUpgradeCta = false,
 }: BrandEditPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -775,15 +778,11 @@ export function BrandEditPanel({
                 Brand Stats
               </Link>
             </li>
-            <li>
-              <Link
-                href="/billing"
-                className="flex items-center gap-2 text-[#575962] hover:text-brand"
-              >
-                <CreditCardIcon className="size-4 text-brand" />
-                Upgrade to Premium
-              </Link>
-            </li>
+            {showUpgradeCta && (
+              <li>
+                <BrandUpgradeCta brandId={brandId} variant="sidebar" />
+              </li>
+            )}
           </ul>
         </aside>
       </div>

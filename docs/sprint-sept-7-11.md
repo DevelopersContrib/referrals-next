@@ -81,7 +81,9 @@ Verified: dashboard card always visible (`dashboard/page.tsx` ~423). `/brands/[b
 
 # Ronan — Close the loop, then the paywalls
 
-## R1 — Network conversion endpoint this API can receive (5h) — CRITICAL
+**Sprint status (Ronan):** R1 ✅ · R2 ✅ · R3 ✅ · R4 ✅ (smoke: `scripts/smoke-participant-cap.ts`) · R5 ✅ (smoke: `scripts/smoke-paid-engagement.ts`) · R6 ✅ (smoke: `/stats` gate + 14-day referral copy)
+
+## R1 — Network conversion endpoint this API can receive (5h) — CRITICAL ✅
 
 **Why:** `/t/` already drops `?ref=<participantId>` on the destination. Nothing out there can legally POST a conversion today.
 
@@ -100,14 +102,19 @@ Add **one** additive route, e.g. `POST /api/v1/network/conversions` (do not brea
 
 **Done when:** `curl` with the network key + `{ email, name, ref: <id from a /t/ hop> }` → 201, referrer `invited_by` set, reward row if threshold met. Bad key → 401. Unknown ref → 200/400 without leaking other campaigns.
 
-## R2 — `/t/` should leave a cookie the lander can read (1.5h) — HIGH
+- [x] `POST /api/v1/network/conversions` — network key auth, `ref` = participant id or share code (`src/app/api/v1/network/conversions/route.ts`)
+- [x] Shared `processReward` via `recordNetworkConversion` (`src/lib/network-conversion.ts`, `src/lib/campaign-reward.ts`)
+- [x] `NETWORK_WRITE_KEY` in `.env.local.example` only
+- [x] Smoke: `npx tsx scripts/smoke-network-conversion.ts`
+
+## R2 — `/t/` should leave a cookie the lander can read (1.5h) — HIGH ✅
 
 Verified: `/t/` sets `ref` on the **redirect URL** only (not a cookie) except the platform signup campaign (`rref` cookie).
 
-- Also set a 30-day `ref` (or `rref`) cookie on the **redirect response** when hopping to an external host — `SameSite=None; Secure` if the lander is a different site, otherwise the lander will not see it. If third-party cookies are dead, the query param is the source of truth (R1).
-- Do not change click increment behavior
+- [x] Also set a 30-day `ref` (or `rref`) cookie on the **redirect response** when hopping to an external host — `SameSite=None; Secure` if the lander is a different site, otherwise the lander will not see it. If third-party cookies are dead, the query param is the source of truth (R1). (`redirectWithReferralCookie` in `src/lib/referral-attribution-cookie.ts`)
+- [x] Do not change click increment behavior
 
-## R3 — Fire reward when the widget loop actually hits the goal (2h) — HIGH
+## R3 — Fire reward when the widget loop actually hits the goal (2h) — HIGH ✅
 
 Verified: widget signup sets `invited_by` but never claims a reward.
 
@@ -116,29 +123,32 @@ Verified: widget signup sets `invited_by` but never claims a reward.
 
 **Done when:** Friend joins via widget `?ref=<id>` → referrer gets the reward row without anyone calling v1.
 
-## R4 — Participant cap on every create (2.5h) — CRITICAL
+- [x] Server-side reward after new widget signup with `invited_by` (`tryRewardReferrerAfterSignup` in `src/app/api/widget/signup/route.ts`)
+- [x] Smoke: `npx tsx scripts/smoke-widget-referrer-reward.ts`
+
+## R4 — Participant cap on every create (2.5h) — CRITICAL ✅
 
 Verified widget-only.
 
-- `assertCanAcceptParticipant` on `/api/v1/signups`, Zapier participant create, `POST .../campaigns/[id]/participants`
-- Domain-referrer synthetic participants: **do not** count toward the cap (they are `@network.referrals.com`, not real leads)
-- Growth unlimited
+- [x] `assertCanAcceptParticipant` on `/api/v1/signups`, Zapier participant create, `POST .../campaigns/[id]/participants`
+- [x] Domain-referrer synthetic participants: **do not** count toward the cap (they are `@network.referrals.com`, not real leads)
+- [x] Growth unlimited
 
-## R5 — Webhook calls `activatePaidSubscription` (2.5h) — CRITICAL
+## R5 — Webhook calls `activatePaidSubscription` (2.5h) — CRITICAL ✅
 
 Verified: ACTIVATED does not activate.
 
-- Idempotent activate on `BILLING.SUBSCRIPTION.ACTIVATED` / first `PAYMENT.SALE.COMPLETED` if no `member_plan`
-- Do not double-enroll engagement
-- Do not edit `paypal-checkout.tsx`
+- [x] Idempotent activate on `BILLING.SUBSCRIPTION.ACTIVATED` / first `PAYMENT.SALE.COMPLETED` if no `member_plan` (`activatePaidSubscriptionFromWebhook` in `src/app/api/billing/webhook/route.ts`)
+- [x] Do not double-enroll engagement
+- [x] Do not edit `paypal-checkout.tsx`
 
-## R6 — One pricing story + `/stats` table gate (3h) — HIGH
+## R6 — One pricing story + `/stats` table gate (3h) — HIGH ✅
 
 Verified: per-campaign table always on; 30-day upgrade copy is a lie until you extend `plan_expiry` on pay (park that as follow-up if this week fills up).
 
-- Free `/stats`: totals only — hide per-campaign breakdown
-- If R1–R5 slip on “per brand”, remove “per brand” from `/pricing`, invite card, knowledgebase Friday
-- If +30d on paid referral does **not** ship, change `/referral-program` to “invitee gets a 14-day trial” (do not promise 30 days)
+- [x] Free `/stats`: totals only — hide per-campaign breakdown (`advancedAnalytics` gate in `src/app/(dashboard)/stats/page.tsx`)
+- [x] “Per brand” copy sweep skipped — R1–R5 did not slip; account-level Growth stays as-is for now (park full copy reconcile)
+- [x] +30d on paid referral did **not** ship — `/referral-program` + `SignupInviteCard` now say 14-day Growth trial (no 30-day promise)
 
 ---
 
@@ -150,12 +160,12 @@ Verified: per-campaign table always on; 30-day upgrade copy is a lie until you e
 | J2 Cap CTA → `/billing/plan/2` | Jayson | 2.0 | High | Yes |
 | J3 Upgrade nag / orphan | Jayson | 2.0 | Medium | Yes |
 | J4 Billing mobile | Jayson | 1.0 | Medium | Yes |
-| **R1 Network conversion POST** | **Ronan** | **5.0** | **Critical** | **Yes** |
-| **R2 `/t/` cookie + keep `?ref=`** | **Ronan** | **1.5** | **High** | **Yes** |
-| **R3 Widget signup fires reward** | **Ronan** | **2.0** | **High** | **Yes** |
-| **R4 Cap all ingress** | **Ronan** | **2.5** | **Critical** | **Yes** |
-| **R5 Webhook activate** | **Ronan** | **2.5** | **Critical** | **Yes** |
-| R6 Copy + `/stats` table | Ronan | 3.0 | High | Yes |
+| **R1 Network conversion POST** ✅ | **Ronan** | **5.0** | **Critical** | **Yes** |
+| **R2 `/t/` cookie + keep `?ref=`** ✅ | **Ronan** | **1.5** | **High** | **Yes** |
+| **R3 Widget signup fires reward** ✅ | **Ronan** | **2.0** | **High** | **Yes** |
+| **R4 Cap all ingress** ✅ | **Ronan** | **2.5** | **Critical** | **Yes** |
+| **R5 Webhook activate** ✅ | **Ronan** | **2.5** | **Critical** | **Yes** |
+| R6 Copy + `/stats` table ✅ | Ronan | 3.0 | High | Yes |
 | **Total** | | **24.5** | | |
 
 Parked (verified but not this week unless R1–R5 finish early): per-brand `url_plan` gate; +30d on paid invitee; widget.js static/dynamic reconcile; `/api/brand` auto-provision; leaderboard paywall.
@@ -173,18 +183,18 @@ Parked (verified but not this week unless R1–R5 finish early): per-brand `url_
 2. J2 — Second-brand → `/billing/plan/2` · Jayson · 2h · High  
 3. J3 — Hide paid upgrade nag; redirect orphan upgrade page · Jayson · 2h · Medium  
 4. J4 — Billing mobile · Jayson · 1h · Medium  
-5. **R1 — POST /api/v1/network/conversions** (network key, `ref` = `/t/` participant id) · Ronan · 5h · Critical  
-6. R2 — `/t/` also set 30-day ref cookie · Ronan · 1.5h · High  
-7. R3 — Widget signup fires reward for the referrer · Ronan · 2h · High  
-8. R4 — Participant cap on API/Zapier/manual · Ronan · 2.5h · Critical  
-9. R5 — Webhook calls `activatePaidSubscription` · Ronan · 2.5h · Critical  
-10. R6 — `/stats` free = totals; kill 30-day copy if reward month not shipped · Ronan · 3h · High  
+5. **R1 — POST /api/v1/network/conversions** ✅ (network key, `ref` = `/t/` participant id) · Ronan · 5h · Critical  
+6. R2 — `/t/` also set 30-day ref cookie ✅ · Ronan · 1.5h · High  
+7. R3 — Widget signup fires reward for the referrer ✅ · Ronan · 2h · High  
+8. R4 — Participant cap on API/Zapier/manual ✅ · Ronan · 2.5h · Critical  
+9. R5 — Webhook calls `activatePaidSubscription` ✅ · Ronan · 2.5h · Critical  
+10. R6 — `/stats` free = totals; kill 30-day copy if reward month not shipped ✅ · Ronan · 3h · High  
 
 ---
 
 # Cursor prompt — affiliate-content worker + config-lander
 
-**Do not edit `referrals.com/referrals-next`.** Ronan/Cursor own that. Wait until **R1** is deployed.
+**Do not edit `referrals.com/referrals-next`.** Ronan/Cursor own that. **R1 ✅ shipped in-repo** — deploy to prod, then run this in affiliate-content / config-lander.
 
 After `POST https://www.referrals.com/api/v1/network/conversions` is live:
 

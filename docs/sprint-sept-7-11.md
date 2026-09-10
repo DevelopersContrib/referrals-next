@@ -38,7 +38,7 @@ Do **not** edit `.env`. Do **not** touch PayPal checkout UI (`/billing/plan/[pla
 |---|---|
 | One PayPal payment unlocks all brands | **True today.** `getMemberEntitlement` / `canMemberAddBrand` are account-level `isGrowth`. **R7** is the fix: treat $9 as the brand that checked out. |
 | Per-brand payment attribution | **Half-wired, unused.** Checkout already threads `brandId` (`/billing/plan/2?brandId=` → subscribe / confirm / execute → `activatePaidSubscription`). If present, writes `url_plan` (`url_id`, PayPal ids). **Never** writes `member_urls.plan_expiry`. Dashboard / `/brands` badges read `member_urls.plan_expiry`, so a paid brand still says **Free**. `url_plan` is only deleted on account delete — **no gate reads it**. Webhook path has no `brandId` unless R5 looks up `billing_checkout_attempts.brand_id`. Missing `?brandId=` → account paid, no brand row. |
-| VNOC brands are free | **True product rule (Maida, Sept 7).** `member_urls.in_vnoc` / `vnoc_id` = network / free. No upgrade CTA. Do not sell Growth against them. |
+| Who is free | **VNOC only (Maida, Sept 7).** `in_vnoc` or `vnoc_id` = free, no $9, no upgrade CTA. **Every external (non-VNOC) brand should pay** Growth $9/mo. There is no free-forever SKU for an outside domain. Today the app still gives every account capped free after trial — that is the lie **R6/R7/J5** fix. |
 | 500-participant cap is widget-only | **True.** `canMemberAcceptParticipant` is only called from `/api/widget/signup`. Bypass: `POST /api/v1/signups`, Zapier create, `POST .../campaigns/[id]/participants`. |
 | PayPal activate if tab closes | **True hole.** Webhook `BILLING.SUBSCRIPTION.ACTIVATED` only stamps `agreement_activate`. `PAYMENT.SALE.COMPLETED` extends expiry **only if** `member_plan` already exists. |
 | “30 days Growth when they upgrade” | **True lie.** Copy on `/referral-program` + invite card. `activatePaidSubscription` does not extend the referrer’s `plan_expiry`. `referral_coupons` has **zero** callers. |
@@ -57,8 +57,9 @@ Do **not** edit `.env`. Do **not** touch PayPal checkout UI (`/billing/plan/[pla
 
 Verified: `src/app/(dashboard)/billing/page.tsx` maps the `plans` table.
 
-- Two cards: Free forever $0 vs Growth $9/mo (copy from Ronan **R6** if he has landed R5; until then keep “per brand”)
-- Human status: trial / free / paid / cancelled. Do not badge healthy free as Expired
+- Do **not** sell “Free forever” as a plan for external brands. VNOC = free. External = Growth $9/mo per brand.
+- Until **R6** lands copy, `/billing` can show Growth + “Network / VNOC brands stay free” — not a $0 external SKU
+- Human status: trial / unpaid external / paid / VNOC-free / cancelled. Do not badge healthy VNOC as Expired
 - CTA → existing `/billing/plan/2`. Hide PayPal agreement IDs
 
 ## J2 — Domain-cap CTA → checkout (2h) — HIGH
@@ -72,7 +73,7 @@ Verified: `brand-analyzer.tsx` links `/billing`.
 
 Verified: dashboard card was always-on (`dashboard/page.tsx`). `/brands/[brandId]/upgrade` has no inbound links and dumps raw plans.
 
-- Do **not** show an account-level “Free forever / Keep your widget” strip (there is no free-per-brand SKU; VNOC is free)
+- Do **not** show an account-level “Free forever / Keep your widget” strip
 - Redirect `/brands/[id]/upgrade` → `/billing/plan/2?brandId=`
 - Per-brand CTA lives in **J5** (depends on **R7** for “upgraded”)
 
@@ -86,11 +87,11 @@ Show Growth CTA **only** when all are true:
 - Brand has **no** active paid attribution (`url_plan` / `plan_expiry`)
 - Owner is not already `paid` on that brand
 
-Hide for: VNOC (badge **Free** / Network — not Upgrade), already-paid brand (**Active**), trial keep-Growth account banner (existing trial card is OK).
+Hide for: **VNOC only** (badge **Free** / Network — not Upgrade), already-paid external (**Active**). Trial: keep-Growth is OK; after trial every unpaid **external** brand still needs the CTA.
 
 - Surfaces: dashboard brand cards, `/brands` plan column, brand edit “Upgrade to Premium”
 - CTA → existing `/billing/plan/2?brandId=` — do not invent checkout
-- Copy: never “Free forever” on a brand. VNOC = free. Everyone else unpaid = upgrade Growth $9/mo for **this** brand.
+- Copy: never “Free forever” on an external brand. VNOC = the only free. External unpaid = Growth $9/mo for **this** brand.
 
 ## J4 — Billing mobile (1h) — MEDIUM
 
@@ -166,12 +167,12 @@ Verified: ACTIVATED does not activate.
 Verified: per-campaign table always on; 30-day upgrade copy is a lie until you extend `plan_expiry` on pay (park that as follow-up if this week fills up).
 
 - [x] Free `/stats`: totals only — hide per-campaign breakdown (`advancedAnalytics` gate in `src/app/(dashboard)/stats/page.tsx`)
-- [x] “Per brand” copy sweep skipped — R1–R5 did not slip; account-level Growth stays as-is for now (park full copy reconcile)
+- Kill “free forever” for **external** brands on `/pricing`, homepage, signup, knowledgebase. Story: 14-day trial, then **$9/mo per external brand**. **VNOC domains stay free.** (park full copy reconcile if not finished)
 - [x] +30d on paid referral did **not** ship — `/referral-program` + `SignupInviteCard` now say 14-day Growth trial (no 30-day promise)
 
 ## R7 — Attribute the $9 payment to a brand (3h) — CRITICAL
 
-**Why:** We already collect `brandId` at checkout. We do not stamp the brand, so UI cannot tell paid vs unpaid vs VNOC-free. Product: **$9 is per brand.** VNOC domains are free (no charge). There is no “free per brand” SKU.
+**Why:** We already collect `brandId` at checkout. We do not stamp the brand, so UI cannot tell paid vs unpaid vs VNOC-free. Product (Maida, Sept 7): **VNOC domains are the only free brands. Every external brand pays $9/mo.** Trial is temporary Growth, not a free SKU.
 
 **Today (do not re-verify):**
 
@@ -187,10 +188,10 @@ Verified: per-campaign table always on; 30-day upgrade copy is a lie until you e
 - On activate (and **R5** webhook activate): if `brandId` present, write `url_plan` **and** `member_urls.plan_expiry` (same expiry as the member payment). Idempotent — do not stack duplicate `url_plan` for the same `url_id` + agreement.
 - If activate has no `brandId`, load `billing_checkout_attempts.brand_id` by `paypal_subscription_id` / `attempt_id` (this is how webhook attributes the brand).
 - `getBrandEntitlement(brandId)` (or equivalent):  
-  - VNOC (`in_vnoc` or `vnoc_id`) → free, no paywall, no upgrade  
-  - Active `url_plan` **or** future `member_urls.plan_expiry` → that brand is paid  
-  - Else → not upgraded
-- **Do not** let one `url_plan` unlock every other brand. Account-level `isGrowth` may stay for trial; **paid** Growth features that are sold per brand (hide Powered-by, extra domain beyond the first unpaid, brand “Active” badge) must use the brand helper.
+  - VNOC (`in_vnoc` or `vnoc_id`) → **only free path** — no paywall, no upgrade  
+  - Active `url_plan` **or** future `member_urls.plan_expiry` → that **external** brand is paid  
+  - Else (external, no pay) → must pay. Do not treat as free-forever.
+- **Do not** let one `url_plan` unlock every other external brand. Account-level `isGrowth` may stay for the **14-day trial only**; after trial, each external brand is paid or unpaid on its own row.
 - VNOC: never create `url_plan` / never send them to checkout
 - Do not edit `paypal-checkout.tsx`
 

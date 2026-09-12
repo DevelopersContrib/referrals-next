@@ -5,6 +5,8 @@
 **Created:** Sept 6, 2026 · **Verified in-repo Sept 6** (do not add unverified tickets)
 **Theme:** Close the referral reward loop, then stop selling a lie on $9/mo
 
+**Next:** Sept 14–18 pay-only funnel — [`docs/sprint-sept-14-18.md`](sprint-sept-14-18.md) (no free except VNOC; $9/mo per external brand).
+
 One board. **Kareen is not on this sprint.** Jayson = UI. Ronan = API / paywalls / stats / copy.
 
 Do **not** edit `.env`. Do **not** touch PayPal checkout UI (`/billing/plan/[planId]`, `paypal-checkout.tsx`). Shared MySQL: additive SQL only. Public widgets must never 403 visitors just because the owner is `free_capped`. No unique index on `member_urls.slug`.
@@ -170,7 +172,11 @@ Verified: per-campaign table always on; 30-day upgrade copy is a lie until you e
 - Kill “free forever” for **external** brands on `/pricing`, homepage, signup, knowledgebase. Story: 14-day trial, then **$9/mo per external brand**. **VNOC domains stay free.** (park full copy reconcile if not finished)
 - [x] +30d on paid referral did **not** ship — `/referral-program` + `SignupInviteCard` now say 14-day Growth trial (no 30-day promise)
 
-## R7 — Attribute the $9 payment to a brand (3h) — CRITICAL
+## R7 — Attribute the $9 payment to a brand (3h) — CRITICAL ✅
+
+**Shipped (verified Sept 11):** activate writes `url_plan` + `member_urls.plan_expiry` when `brandId` is set; skips `members.plan_expiry` in that case; webhook loads `brand_id` from the checkout attempt; `getBrandEntitlement` + J5 CTAs. Smoke: `scripts/smoke-brand-entitlement.ts`.
+
+**Leftovers → Sept 14–18 R2:** `brand_missing` log when no `brandId`; never stamp VNOC (`in_vnoc` / `vnoc_id`).
 
 **Why:** We already collect `brandId` at checkout. We do not stamp the brand, so UI cannot tell paid vs unpaid vs VNOC-free. Product (Maida, Sept 7): **VNOC domains are the only free brands. Every external brand pays $9/mo.** Trial is temporary Growth, not a free SKU.
 
@@ -214,7 +220,7 @@ Verified: per-campaign table always on; 30-day upgrade copy is a lie until you e
 | **R4 Cap all ingress** ✅ | **Ronan** | **2.5** | **Critical** | **Yes** |
 | **R5 Webhook activate** ✅ | **Ronan** | **2.5** | **Critical** | **Yes** |
 | R6 Copy + `/stats` table ✅ | Ronan | 3.0 | High | Yes |
-| **R7 Attribute $9 to a brand** | **Ronan** | **3.0** | **Critical** | **Yes** |
+| **R7 Attribute $9 to a brand** ✅ | **Ronan** | **3.0** | **Critical** | **Yes** |
 | **Total** | | **29.0** | | |
 
 Parked (verified but not this week unless R1–R5 + R7 finish early): +30d on paid invitee; widget.js static/dynamic reconcile; `/api/brand` auto-provision; leaderboard paywall.
@@ -239,7 +245,19 @@ Parked (verified but not this week unless R1–R5 + R7 finish early): +30d on pa
 9. R4 — Participant cap on API/Zapier/manual ✅ · Ronan · 2.5h · Critical  
 10. R5 — Webhook calls `activatePaidSubscription` ✅ · Ronan · 2.5h · Critical  
 11. R6 — `/stats` free = totals; kill 30-day copy if reward month not shipped ✅ · Ronan · 3h · High  
-12. **R7 — Attribute $9 to `brandId` (`url_plan` + `member_urls.plan_expiry`; VNOC = free)** · Ronan · 3h · Critical  
+12. **R7 — Attribute $9 to `brandId` (`url_plan` + `member_urls.plan_expiry`)** ✅ · Ronan · 3h · Critical  
+
+**Sept 14–18 (no free except VNOC — [`sprint-sept-14-18.md`](sprint-sept-14-18.md))**
+
+14. **J1 — Kill “free forever” on pricing/signup/homepage** · Jayson · 4h · Critical  
+15. J2 — Unpaid external CTA → `/billing/plan/2?brandId=` · Jayson · 4h · High  
+16. **J3 — `/billing` Available Plans redesign** (Individuals vs Partners) · Jayson · 4h · Critical  
+17. J4 — Public `/pricing` + homepage match billing · Jayson · 3h · High  
+18. **J5 — Brand list clickable → `/brands/{id}` dashboard** · Jayson · 1.5h · High  
+19. **R1 — After trial, external is not a free product** · Ronan · 4h · Critical  
+20. **R2 — R7 leftovers: `brand_missing` log + never stamp VNOC** · Ronan · 1.5h · Critical  
+21. R3 — Trial-end: pay $9 for this brand · Ronan · 4h · High  
+22. **R4 — Shared plan-catalog helper; any paid planId stamps brand** · Ronan · 2.5h · High  
 
 ---
 

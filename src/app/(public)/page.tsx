@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { PLAN_CATALOG_COPY, type CatalogPlan } from "@/lib/plan-catalog";
 import { HeroCampaignSlideshow } from "@/components/marketing/hero-campaign-slideshow";
+import { PublicPlanCatalog } from "@/components/marketing/public-plan-catalog";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata: Metadata = {
@@ -35,8 +38,18 @@ const campaignTemplates = [
     iconColor: "text-[#FF5C62]",
     bgColor: "bg-[#FF5C62]/10",
     icon: (
-      <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+      <svg
+        className="h-8 w-8"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"
+        />
       </svg>
     ),
   },
@@ -48,8 +61,18 @@ const campaignTemplates = [
     iconColor: "text-[#926efb]",
     bgColor: "bg-[#926efb]/10",
     icon: (
-      <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+      <svg
+        className="h-8 w-8"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
+        />
       </svg>
     ),
   },
@@ -61,8 +84,18 @@ const campaignTemplates = [
     iconColor: "text-[#FF5C62]",
     bgColor: "bg-[#FF5C62]/10",
     icon: (
-      <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.023 6.023 0 01-2.77.896m5.25-6.624V2.721" />
+      <svg
+        className="h-8 w-8"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.023 6.023 0 01-2.77.896m5.25-6.624V2.721"
+        />
       </svg>
     ),
   },
@@ -74,8 +107,18 @@ const campaignTemplates = [
     iconColor: "text-[#926efb]",
     bgColor: "bg-[#926efb]/10",
     icon: (
-      <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+      <svg
+        className="h-8 w-8"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+        />
       </svg>
     ),
   },
@@ -84,31 +127,38 @@ const campaignTemplates = [
 const features = [
   {
     title: "Drive Engagement",
-    description: "Boost leads, increase sales, and amplify your brand reach through referral-driven engagement.",
+    description:
+      "Boost leads, increase sales, and amplify your brand reach through referral-driven engagement.",
   },
   {
     title: "User-Friendly",
-    description: "Simple, intuitive interface designed for quick setup. Launch your first campaign in minutes.",
+    description:
+      "Simple, intuitive interface designed for quick setup. Launch your first campaign in minutes.",
   },
   {
     title: "Broad Compatibility",
-    description: "Supports WordPress, Shopify, PHP, HTML and more. Works with any website or platform.",
+    description:
+      "Supports WordPress, Shopify, PHP, HTML and more. Works with any website or platform.",
   },
   {
     title: "Efficient Marketing",
-    description: "Reduce customer acquisition costs while increasing your online presence and conversions.",
+    description:
+      "Reduce customer acquisition costs while increasing your online presence and conversions.",
   },
   {
     title: "Reliable Performance",
-    description: "99.99% uptime guarantee with enterprise-grade infrastructure and global CDN delivery.",
+    description:
+      "99.99% uptime guarantee with enterprise-grade infrastructure and global CDN delivery.",
   },
   {
     title: "Comprehensive Integration",
-    description: "Syncs with Google Analytics, Facebook Pixel, MailChimp, Zapier and 5,000+ apps.",
+    description:
+      "Syncs with Google Analytics, Facebook Pixel, MailChimp, Zapier and 5,000+ apps.",
   },
   {
     title: "Data Compliance",
-    description: "Fully GDPR compliant with built-in consent management and data protection features.",
+    description:
+      "Fully GDPR compliant with built-in consent management and data protection features.",
   },
   {
     title: "Unlimited Potential",
@@ -117,30 +167,176 @@ const features = [
   },
   {
     title: "Ready-Made Templates",
-    description: "Access high-quality referral templates to launch campaigns quickly without design skills.",
+    description:
+      "Access high-quality referral templates to launch campaigns quickly without design skills.",
   },
   {
     title: "Dedicated Support",
-    description: "Step-by-step guides, knowledgebase articles, and responsive support when you need it.",
+    description:
+      "Step-by-step guides, knowledgebase articles, and responsive support when you need it.",
   },
   {
     title: "Exclusive Market Access",
-    description: "Feature deals and promotions to our growing network of 500k+ active subscribers.",
+    description:
+      "Feature deals and promotions to our growing network of 500k+ active subscribers.",
   },
 ];
 
 const featureIcons = [
-  <svg key="1" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>,
-  <svg key="2" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" /></svg>,
-  <svg key="3" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" /></svg>,
-  <svg key="4" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  <svg key="5" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>,
-  <svg key="6" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>,
-  <svg key="7" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>,
-  <svg key="8" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>,
-  <svg key="9" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>,
-  <svg key="10" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>,
-  <svg key="11" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>,
+  <svg
+    key="1"
+    className="h-6 w-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"
+    />
+  </svg>,
+  <svg
+    key="2"
+    className="h-6 w-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z"
+    />
+  </svg>,
+  <svg
+    key="3"
+    className="h-6 w-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z"
+    />
+  </svg>,
+  <svg
+    key="4"
+    className="h-6 w-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>,
+  <svg
+    key="5"
+    className="h-6 w-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+    />
+  </svg>,
+  <svg
+    key="6"
+    className="h-6 w-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"
+    />
+  </svg>,
+  <svg
+    key="7"
+    className="h-6 w-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+    />
+  </svg>,
+  <svg
+    key="8"
+    className="h-6 w-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
+    />
+  </svg>,
+  <svg
+    key="9"
+    className="h-6 w-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
+    />
+  </svg>,
+  <svg
+    key="10"
+    className="h-6 w-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
+    />
+  </svg>,
+  <svg
+    key="11"
+    className="h-6 w-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={1.5}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"
+    />
+  </svg>,
 ];
 
 const testimonials = [
@@ -238,7 +434,8 @@ async function getHeroStats(): Promise<HeroStats> {
       }),
     ]);
 
-    const rawConversionRate = participants > 0 ? (shares / participants) * 100 : 0;
+    const rawConversionRate =
+      participants > 0 ? (shares / participants) * 100 : 0;
     const conversionRate = clamp(Number(rawConversionRate.toFixed(1)), 1, 99.9);
 
     return {
@@ -256,7 +453,13 @@ async function getHeroStats(): Promise<HeroStats> {
 }
 
 export default async function HomePage() {
-  const stats = await getHeroStats();
+  const [stats, session, plans] = await Promise.all([
+    getHeroStats(),
+    auth(),
+    prisma.plans.findMany({ orderBy: { id: "asc" } }),
+  ]);
+  const isLoggedIn = Boolean(session?.user?.id);
+  const catalogPlans = plans as CatalogPlan[];
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -291,8 +494,7 @@ export default async function HomePage() {
           "@type": "Offer",
           price: "0",
           priceCurrency: "USD",
-          description:
-            "14-day Growth trial free, then capped free forever or $9/month per brand.",
+          description: PLAN_CATALOG_COPY.trialFootnote,
         },
         aggregateRating: {
           "@type": "AggregateRating",
@@ -331,8 +533,8 @@ export default async function HomePage() {
 
             <p className="mt-3 max-w-2xl text-sm text-gray-700 sm:mt-4 sm:text-base md:text-lg">
               Design a referral engine your customers want to share. Launch in
-              minutes, track every invite, and turn word of mouth into a repeatable
-              revenue channel.
+              minutes, track every invite, and turn word of mouth into a
+              repeatable revenue channel.
             </p>
 
             <div className="mt-5 flex flex-col gap-2 sm:mt-6 sm:flex-row sm:gap-3">
@@ -368,11 +570,15 @@ export default async function HomePage() {
               </p>
               <div className="mt-3 space-y-2 text-sm text-gray-700">
                 <p>
-                  <span className="font-semibold text-gray-900">{formatInt(stats.recentSignups)}</span>{" "}
+                  <span className="font-semibold text-gray-900">
+                    {formatInt(stats.recentSignups)}
+                  </span>{" "}
                   people joined in the last 30 minutes.
                 </p>
                 <p>
-                  <span className="font-semibold text-gray-900">{formatInt(stats.shares)}</span>{" "}
+                  <span className="font-semibold text-gray-900">
+                    {formatInt(stats.shares)}
+                  </span>{" "}
                   total shares are already tracked on Referrals.com.
                 </p>
               </div>
@@ -398,7 +604,10 @@ export default async function HomePage() {
       <section className="bg-gradient-to-b from-white to-rose-50/40 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "var(--font-dosis), sans-serif" }}>
+            <h2
+              className="text-3xl font-bold text-gray-900 sm:text-4xl"
+              style={{ fontFamily: "var(--font-dosis), sans-serif" }}
+            >
               Flexible Campaigns
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-600">
@@ -412,7 +621,9 @@ export default async function HomePage() {
                 key={template.title}
                 className="group rounded-xl border border-rose-100 bg-white p-6 transition-all hover:border-rose-200 hover:shadow-lg hover:shadow-rose-100/70"
               >
-                <div className={`mb-4 inline-flex rounded-lg p-3 ${template.bgColor}`}>
+                <div
+                  className={`mb-4 inline-flex rounded-lg p-3 ${template.bgColor}`}
+                >
                   <span className={template.iconColor}>{template.icon}</span>
                 </div>
                 <div className="mb-2 flex items-center gap-2">
@@ -440,7 +651,10 @@ export default async function HomePage() {
       <section className="bg-gradient-to-b from-rose-50/30 to-orange-50/30 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "var(--font-dosis), sans-serif" }}>
+            <h2
+              className="text-3xl font-bold text-gray-900 sm:text-4xl"
+              style={{ fontFamily: "var(--font-dosis), sans-serif" }}
+            >
               Powerful Features to Amplify
               <br className="hidden sm:block" /> Your Online Presence
             </h2>
@@ -466,7 +680,9 @@ export default async function HomePage() {
                 </p>
                 <div className="mt-4 rounded-lg border border-rose-100 bg-rose-50/60 p-3">
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="text-xs font-medium text-gray-500">Feature mockup</span>
+                    <span className="text-xs font-medium text-gray-500">
+                      Feature mockup
+                    </span>
                     <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                   </div>
                   <div className="h-1.5 rounded-full bg-rose-100">
@@ -486,7 +702,10 @@ export default async function HomePage() {
       <section className="bg-gradient-to-b from-white to-rose-50/40 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "var(--font-dosis), sans-serif" }}>
+            <h2
+              className="text-3xl font-bold text-gray-900 sm:text-4xl"
+              style={{ fontFamily: "var(--font-dosis), sans-serif" }}
+            >
               What Our Users Say
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-600">
@@ -532,89 +751,40 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Section 5 - Pricing */}
-      <section className="bg-gradient-to-b from-rose-50/30 to-orange-50/30 py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* Section 5 - Pricing (same catalog as /billing + /pricing) */}
+      <section
+        id="pricing"
+        className="scroll-mt-24 bg-gradient-to-b from-rose-50/30 to-orange-50/30 py-20"
+      >
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "var(--font-dosis), sans-serif" }}>
-              Simple, Transparent Pricing
+            <h2
+              className="text-3xl font-bold text-gray-900 sm:text-4xl"
+              style={{ fontFamily: "var(--font-dosis), sans-serif" }}
+            >
+              Simple, transparent pricing
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-              Choose a plan that fits — 14-day Growth trial, then free forever (capped)
+              {PLAN_CATALOG_COPY.trialFootnote} Same Individuals &amp; Partners
+              catalog as in-app billing — including annual ~$/mo.
             </p>
           </div>
 
-          <div className="mx-auto mt-12 grid max-w-4xl gap-8 lg:grid-cols-2">
-            {/* Free */}
-            <div className="rounded-2xl border border-rose-100 bg-white p-8 shadow-sm">
-              <h3 className="text-xl font-semibold text-gray-900">Free forever</h3>
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-gray-900">$0</span>
-                <span className="text-gray-500">/after 14-day trial</span>
-              </div>
-              <p className="mt-2 text-sm text-gray-600">
-                Widget stays live — 1 domain, 500 participants, branding on.
-              </p>
-              <ul className="mt-6 space-y-3">
-                {[
-                  "Live embeddable widget",
-                  "Basic analytics",
-                  "Share & click tracking",
-                  "Data never wiped",
-                  "Referrals.com branding",
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-3 text-sm text-gray-700">
-                    <svg className="h-5 w-5 flex-shrink-0 text-[#FF5C62]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/signup"
-                className="mt-8 block rounded-xl bg-[#FF5C62] px-6 py-3 text-center text-sm font-semibold text-white transition-all hover:bg-[#ff4f58] hover:shadow-lg hover:shadow-[#FF5C62]/25"
-              >
-                Start free trial
-              </Link>
-            </div>
+          <div className="mt-12">
+            <PublicPlanCatalog
+              plans={catalogPlans}
+              isLoggedIn={isLoggedIn}
+              variant="compact"
+            />
+          </div>
 
-            {/* Growth */}
-            <div className="relative rounded-2xl border border-[#926efb]/30 bg-white p-8 shadow-sm">
-              <span className="absolute -top-3 right-6 rounded-full bg-[#926efb] px-3 py-1 text-xs font-semibold text-white">
-                14-day trial
-              </span>
-              <h3 className="text-xl font-semibold text-gray-900">Growth</h3>
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-gray-900">$9</span>
-                <span className="text-gray-500">/month per brand</span>
-              </div>
-              <p className="mt-2 text-sm text-gray-600">
-                Full product during trial — then upgrade to keep Growth.
-              </p>
-              <ul className="mt-6 space-y-3">
-                {[
-                  "Remove Referrals.com branding",
-                  "Unlimited domains & campaigns",
-                  "Leaderboards & advanced analytics",
-                  "Included free for 14 days",
-                  "Month-to-month, cancel anytime",
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-3 text-sm text-gray-700">
-                    <svg className="h-5 w-5 flex-shrink-0 text-[#926efb]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/pricing"
-                className="mt-8 block rounded-xl bg-[#926efb] px-6 py-3 text-center text-sm font-semibold text-white transition-all hover:bg-[#7c5ce0] hover:shadow-lg hover:shadow-[#926efb]/25"
-              >
-                See Pricing
-              </Link>
-            </div>
+          <div className="mt-10 text-center">
+            <Link
+              href="/pricing"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#926efb]/30 bg-white px-6 py-3 text-sm font-semibold text-[#926efb] shadow-sm transition hover:border-[#926efb] hover:bg-[#926efb]/5"
+            >
+              See full pricing details
+            </Link>
           </div>
         </div>
       </section>
@@ -622,7 +792,10 @@ export default async function HomePage() {
       {/* Section 6 - Integrations */}
       <section className="bg-gradient-to-b from-white to-rose-50/40 py-20">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl" style={{ fontFamily: "var(--font-dosis), sans-serif" }}>
+          <h2
+            className="text-3xl font-bold text-gray-900 sm:text-4xl"
+            style={{ fontFamily: "var(--font-dosis), sans-serif" }}
+          >
             Works with your favorite tools
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-gray-600">
@@ -645,7 +818,10 @@ export default async function HomePage() {
       {/* Section 7 - Final CTA */}
       <section className="bg-gradient-to-r from-[#FF5C62] to-[#ff4f58] py-20">
         <div className="mx-auto max-w-4xl px-4 text-center">
-          <h2 className="text-3xl font-bold text-white sm:text-4xl" style={{ fontFamily: "var(--font-dosis), sans-serif" }}>
+          <h2
+            className="text-3xl font-bold text-white sm:text-4xl"
+            style={{ fontFamily: "var(--font-dosis), sans-serif" }}
+          >
             Ready to skyrocket your growth?
           </h2>
           <p className="mt-4 text-lg text-white/80">
@@ -653,10 +829,10 @@ export default async function HomePage() {
             word-of-mouth growth.
           </p>
           <Link
-            href="/signup"
+            href={isLoggedIn ? "/billing" : "/signup"}
             className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#FF5C62] shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
           >
-            Sign Up Now
+            {isLoggedIn ? "Choose a plan" : "Start free trial"}
           </Link>
         </div>
       </section>

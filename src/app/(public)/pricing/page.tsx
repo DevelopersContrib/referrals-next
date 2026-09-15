@@ -1,20 +1,24 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { PricingHeroMockup } from "@/components/marketing/pricing-hero-mockup";
+import { PublicPlanCatalog } from "@/components/marketing/public-plan-catalog";
 import { RoiCalculator } from "@/components/marketing/roi-calculator";
 import { JsonLd } from "@/components/seo/json-ld";
+import { auth } from "@/lib/auth";
+import { PLAN_CATALOG_COPY, type CatalogPlan } from "@/lib/plan-catalog";
+import { prisma } from "@/lib/prisma";
 import { faqPageJsonLd } from "@/lib/structured-data";
-import { PLAN_CATALOG_COPY } from "@/lib/plan-catalog";
 
 export const metadata: Metadata = {
-  title: "Pricing — 14-day Growth trial, then free forever | Referrals.com",
+  title: "Pricing — 14-day Growth trial, then $9/mo per brand | Referrals.com",
   description:
-    "Start with 14 days of full Growth features — no credit card. Then stay free forever with caps, or keep Growth for $9/month per brand.",
+    "Start with 14 days of full Growth features — no credit card. Then keep Growth for $9/month per brand. VNOC / network domains stay free.",
   alternates: { canonical: "https://referrals.com/pricing" },
   openGraph: {
-    title: "Pricing — 14-day Growth trial, then free forever | Referrals.com",
+    title:
+      "Pricing — 14-day Growth trial, then $9/mo per brand | Referrals.com",
     description:
-      "14 days of full Growth features free. Then capped free forever, or $9/month per brand to keep Growth.",
+      "Same plans as in-app billing: Individuals, Partners, annual ~$/mo. 14-day Growth trial, then pay per brand.",
     url: "https://referrals.com/pricing",
     siteName: "Referrals.com",
     images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
@@ -22,56 +26,37 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "Pricing — 14-day Growth trial, then free forever | Referrals.com",
+    title:
+      "Pricing — 14-day Growth trial, then $9/mo per brand | Referrals.com",
     description:
-      "14 days of full Growth features free. Then capped free forever, or $9/month per brand.",
+      "14-day Growth trial, then $9/month per brand. VNOC / network domains stay free.",
   },
 };
-
-const growthFeatures = [
-  "Unlimited domains & campaigns",
-  "Gamification & leaderboards",
-  "Remove Referrals.com branding",
-  "Advanced analytics",
-  "All social sharing channels",
-  "Custom reward rules",
-  "Anti-fraud tracking",
-  "Widget templates & embeds",
-  "Email campaigns via SES",
-  "API access",
-  "Zapier & integrations",
-  "GDPR compliance",
-];
-
-const freeAfterTrialFeatures = [
-  "Widget keeps working on your site",
-  "1 domain",
-  "Up to 500 tracked participants",
-  "Basic analytics",
-  "Referrals.com branding on widget",
-  "Data stays intact — never wiped",
-];
 
 const faqs = [
   {
     q: "How much does Referrals.com cost?",
-    a: "You get 14 days of full Growth features with no credit card. After that you stay on free forever (1 domain, 500 participants, Referrals branding) or upgrade to Growth for $9/month per brand.",
+    a: "You get 14 days of full Growth with no credit card. After that, external brands need a paid plan (from $9/mo per brand). VNOC / network domains stay free.",
   },
   {
     q: "What happens after the 14-day trial?",
-    a: "Your live widget keeps working. You drop to capped free: 1 domain, ~500 participants, basic analytics, and Referrals.com branding. Upgrade anytime to remove branding and unlock Growth.",
+    a: PLAN_CATALOG_COPY.unpaidFootnote,
   },
   {
-    q: "What's included in Growth ($9/mo)?",
+    q: "What's included in Growth?",
     a: "Full product per brand: multi-domain, leaderboards, advanced analytics, and no Referrals.com branding on your widgets.",
   },
   {
     q: "Do I need a credit card to start?",
-    a: "No. Sign up, run the full Growth trial for 14 days, then stay free or subscribe when you're ready.",
+    a: "No. Sign up, run the full Growth trial for 14 days, then choose a plan when you're ready.",
   },
   {
     q: "Is there an annual plan?",
-    a: "Growth is month-to-month at $9 per brand. Cancel anytime.",
+    a: "Yes — annual plans show a ~$/mo equivalent on the cards below. Monthly plans are billed month-to-month.",
+  },
+  {
+    q: "Are partner plans different?",
+    a: "Partner & agency plans are multi-brand packages for resellers. They appear in a separate section below Individuals.",
   },
 ];
 
@@ -102,10 +87,20 @@ const pricingTestimonials = [
 const trustPills = [
   "14-day Growth trial",
   "No credit card",
-  PLAN_CATALOG_COPY.trialFootnote.split(" — ")[0],
+  "Same plans as billing",
 ];
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const session = await auth();
+  const isLoggedIn = Boolean(session?.user?.id);
+
+  const plans = (await prisma.plans.findMany({
+    orderBy: { id: "asc" },
+  })) as CatalogPlan[];
+
+  const primaryCtaHref = isLoggedIn ? "/billing" : "/signup";
+  const primaryCtaLabel = isLoggedIn ? "Choose a plan" : "Start free trial";
+
   return (
     <div className="bg-gradient-to-b from-white via-rose-50/50 to-orange-50/40">
       <JsonLd data={faqPageJsonLd(faqs)} />
@@ -117,19 +112,18 @@ export default function PricingPage() {
           <div className="grid min-w-0 items-center gap-6 sm:gap-8 lg:grid-cols-[1fr_minmax(0,400px)] lg:gap-12">
             <div className="min-w-0 text-center lg:text-left">
               <span className="inline-flex rounded-full border border-rose-200/80 bg-white/80 px-3 py-1 text-xs font-semibold text-[#FF5C62] shadow-sm backdrop-blur">
-                Reverse trial · then free forever
+                14-day Growth trial · then $9/mo per brand
               </span>
               <h1 className="mt-3 text-[1.65rem] font-bold leading-tight tracking-tight text-gray-900 min-[380px]:text-[1.85rem] sm:mt-4 sm:text-4xl md:text-5xl lg:text-[3.25rem] lg:leading-[1.08]">
-                14 days of{" "}
+                Plans that match{" "}
                 <span className="bg-gradient-to-r from-[#FF5C62] via-[#ff7a6f] to-[#926efb] bg-clip-text text-transparent">
-                  full Growth
+                  your billing
                 </span>
-                . Then free forever.
               </h1>
               <p className="mx-auto mt-3 max-w-xl text-sm text-gray-600 sm:mt-4 sm:text-base md:text-lg lg:mx-0">
-                No credit card. After the trial your widget keeps working on a
-                capped free plan — or keep Growth for $9/month per brand (remove
-                branding, unlock domains &amp; analytics).
+                Individuals and Partners — the same catalog you see after
+                signup. Start with a Growth trial (no card). External brands
+                then pay per brand; {PLAN_CATALOG_COPY.vnocFootnote}
               </p>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-2 sm:mt-5 lg:justify-start">
                 {trustPills.map((label) => (
@@ -143,17 +137,17 @@ export default function PricingPage() {
               </div>
               <div className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:mt-6 sm:gap-3 lg:justify-start">
                 <Link
-                  href="/signup"
+                  href={primaryCtaHref}
                   className="rounded-xl bg-[#FF5C62] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:bg-[#ff4f58]"
                 >
-                  Start free trial
+                  {primaryCtaLabel}
                 </Link>
-                <Link
-                  href="/features"
+                <a
+                  href="#plans"
                   className="rounded-xl border border-gray-200 bg-white px-6 py-3 text-base font-semibold text-gray-800 shadow-sm transition hover:border-rose-200 hover:shadow-md"
                 >
-                  See all features
-                </Link>
+                  Compare plans
+                </a>
               </div>
             </div>
             <div className="mx-auto w-full max-w-md lg:mx-0 lg:max-w-none">
@@ -163,97 +157,22 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="relative pb-6 pt-10">
+      <section id="plans" className="relative scroll-mt-24 pb-8 pt-10">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-rose-200 to-transparent" />
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 md:grid-cols-2 md:items-stretch">
-            <div className="flex flex-col rounded-2xl border border-rose-100/90 bg-white p-8 shadow-md">
-              <div className="mb-6 rounded-xl bg-gradient-to-br from-rose-500/10 to-orange-50/30 p-4">
-                <h2 className="text-xl font-bold text-gray-900">Free forever</h2>
-                <div className="mt-3 flex items-baseline gap-1">
-                  <span className="text-4xl font-bold tracking-tight text-gray-900">$0</span>
-                  <span className="text-gray-500">/after 14-day trial</span>
-                </div>
-                <p className="mt-2 text-sm text-gray-600">
-                  Widget stays live. Caps apply. Branding on.
-                </p>
-              </div>
-              <ul className="flex-1 space-y-3">
-                {freeAfterTrialFeatures.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3 text-sm text-gray-700">
-                    <CheckIcon color="#FF5C62" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/signup"
-                className="mt-8 block rounded-xl bg-[#FF5C62] px-6 py-3.5 text-center text-sm font-semibold text-white transition-all hover:bg-[#ff4f58] hover:shadow-lg"
-              >
-                Start free trial
-              </Link>
-            </div>
-
-            <div className="relative flex flex-col rounded-2xl border border-violet-200/80 bg-white p-8 shadow-xl shadow-violet-200/40 ring-2 ring-[#926efb]/25">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-[#926efb] via-[#b794f9] to-[#FF5C62]" />
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-4 py-1 text-xs font-bold text-white shadow-md">
-                Included in your 14-day trial
-              </span>
-              <div className="mb-6 rounded-xl bg-gradient-to-br from-violet-500/10 to-rose-50/20 p-4">
-                <h2 className="text-xl font-bold text-gray-900">Growth</h2>
-                <div className="mt-3 flex items-baseline gap-1">
-                  <span className="text-4xl font-bold tracking-tight text-gray-900">$9</span>
-                  <span className="text-gray-500">/month per brand</span>
-                </div>
-                <p className="mt-2 text-sm text-gray-600">
-                  Full product — remove branding, unlock domains &amp; analytics.
-                </p>
-              </div>
-              <ul className="flex-1 space-y-3">
-                {growthFeatures.slice(0, 8).map((feature) => (
-                  <li key={feature} className="flex items-start gap-3 text-sm text-gray-700">
-                    <CheckIcon color="#926efb" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/signup"
-                className="mt-8 block rounded-xl bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-6 py-3.5 text-center text-sm font-semibold text-white shadow-md shadow-violet-300/40 transition-all hover:brightness-105 hover:shadow-lg"
-              >
-                Start Growth trial
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="relative py-20">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,rgba(146,110,251,0.08),transparent)]" />
-        <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 text-center sm:mb-10">
             <span className="text-xs font-bold uppercase tracking-wider text-[#926efb]">
-              Growth trial includes everything
+              Available plans
             </span>
             <h2 className="mt-2 text-3xl font-bold text-gray-900 sm:text-4xl">
-              Full product for 14 days
+              Choose the plan that fits
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-gray-600">
-              After trial you keep a working free widget — or stay on Growth for
-              $9/mo per brand.
+            <p className="mx-auto mt-3 max-w-2xl text-gray-600">
+              Most Popular marks the best starting Growth plan. Annual cards
+              show a ~$/mo equivalent.
             </p>
           </div>
-          <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {growthFeatures.map((feature) => (
-              <div
-                key={feature}
-                className="flex items-center gap-3 rounded-xl border border-rose-100 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm"
-              >
-                <CheckIcon color="#FF5C62" />
-                {feature}
-              </div>
-            ))}
-          </div>
+          <PublicPlanCatalog plans={plans} isLoggedIn={isLoggedIn} />
         </div>
       </section>
 
@@ -264,8 +183,8 @@ export default function PricingPage() {
               See your referral upside
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-gray-600">
-              Estimate the new revenue a referral program could drive — start with
-              a free Growth trial.
+              Estimate the new revenue a referral program could drive — start
+              with a free Growth trial.
             </p>
           </div>
           <div className="mt-12">
@@ -281,7 +200,7 @@ export default function PricingPage() {
               Questions, answered
             </h2>
             <p className="mt-3 text-gray-600">
-              14-day Growth trial, then free forever (capped) or $9/mo per brand.
+              {PLAN_CATALOG_COPY.trialFootnote}
             </p>
           </div>
           <dl className="mt-12 space-y-4">
@@ -291,7 +210,9 @@ export default function PricingPage() {
                 className="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
               >
                 <dt className="font-semibold text-gray-900">{item.q}</dt>
-                <dd className="mt-2 text-sm leading-relaxed text-gray-600">{item.a}</dd>
+                <dd className="mt-2 text-sm leading-relaxed text-gray-600">
+                  {item.a}
+                </dd>
               </div>
             ))}
           </dl>
@@ -324,7 +245,9 @@ export default function PricingPage() {
                     {testimonial.initials}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">{testimonial.name}</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {testimonial.name}
+                    </p>
                     <p className="text-xs text-gray-500">{testimonial.role}</p>
                   </div>
                 </div>
@@ -340,15 +263,15 @@ export default function PricingPage() {
             Start your 14-day Growth trial
           </h2>
           <p className="mt-4 text-lg text-white/90">
-            No credit card. Full product for 14 days — then free forever (capped)
-            or $9/mo per brand.
+            No credit card. Full product for 14 days — then pick a plan from the
+            catalog above.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
             <Link
-              href="/signup"
+              href={primaryCtaHref}
               className="inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#ff646c] shadow-lg transition-all hover:bg-gray-50 hover:shadow-xl"
             >
-              Start free trial
+              {primaryCtaLabel}
             </Link>
             <Link
               href="/contact"
@@ -360,21 +283,5 @@ export default function PricingPage() {
         </div>
       </section>
     </div>
-  );
-}
-
-function CheckIcon({ color }: { color: string }) {
-  return (
-    <svg
-      className="mt-0.5 h-5 w-5 flex-shrink-0"
-      style={{ color }}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-      aria-hidden
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-    </svg>
   );
 }

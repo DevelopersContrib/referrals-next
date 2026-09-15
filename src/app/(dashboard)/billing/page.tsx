@@ -131,10 +131,16 @@ function PlanCard({
         !isCurrent && !isPaidPlan && "border-rose-100/90",
       )}
     >
+      {/*
+        Badge stays INSIDE the card. SidebarInset uses overflow-x-clip which
+        also clips overflow-y, so absolute -top-* badges get cut in half.
+      */}
       {isPopular && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-3 py-1 text-xs font-bold text-white shadow-md">
-          Most Popular
-        </span>
+        <div className="mb-3 flex justify-center">
+          <span className="rounded-full bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-3.5 py-1 text-xs font-bold tracking-wide text-white shadow-md shadow-violet-300/40">
+            Most Popular
+          </span>
+        </div>
       )}
 
       {isPaidPlan && (
@@ -323,8 +329,7 @@ export default async function BillingPage({
         <div className="w-full min-w-0 max-w-5xl space-y-10">
           {(() => {
             const catalogPlans = plans as CatalogPlan[];
-            const { individuals, partners } =
-              splitPlanAudiences(catalogPlans);
+            const { individuals, partners } = splitPlanAudiences(catalogPlans);
 
             return (
               <>

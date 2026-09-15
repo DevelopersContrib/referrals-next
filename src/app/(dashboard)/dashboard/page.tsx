@@ -341,84 +341,101 @@ export default async function DashboardPage() {
               const planActive = Boolean(
                 brandEntitlement?.isPaid || brandEntitlement?.isGrowth,
               );
-              const planLabel =
-                brandEntitlement?.status === "trial"
+              const planLabel = brandEntitlement?.isVnoc
+                ? "Network"
+                : brandEntitlement?.status === "trial"
                   ? "Trial"
                   : planActive
                     ? "Active"
-                    : "Free";
+                    : brandEntitlement?.status === "unpaid"
+                      ? "Unpaid"
+                      : "Free";
               return (
                 <article
                   key={brand.id}
-                  className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-[#ebeef0] bg-white shadow-sm transition hover:border-violet-200/80 hover:shadow-md"
+                  className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-[#ebeef0] bg-white shadow-sm transition hover:border-brand/40 hover:shadow-md"
                 >
+                  {/*
+                    brand-overlay-card forces direct children to position:relative,
+                    so wrap internals in one child. Body Link stays absolute and
+                    covers empty space; website URL keeps pointer-events-auto.
+                  */}
                   <div
-                    className="brand-overlay-card relative min-h-[180px] flex-1"
+                    className="brand-overlay-card relative min-h-[180px] flex-1 cursor-pointer"
                     style={{
                       background: brand.logo_url
                         ? `url(${brand.logo_url}) center/cover no-repeat`
                         : "linear-gradient(135deg, #2c2e3e 0%, #1a1c2d 100%)",
                     }}
                   >
-                    <div className="relative z-0 flex h-full flex-col justify-end p-4 sm:p-5">
-                      {brand.logo_url ? (
-                        <img
-                          src={brand.logo_url}
-                          alt={brand.domain}
-                          className="mb-3 h-8 w-auto max-w-[60%] object-contain brightness-0 invert opacity-90"
-                        />
-                      ) : (
-                        <h3 className="mb-2 wrap-break-word text-lg font-bold text-white drop-shadow-lg sm:text-xl">
+                    <div className="relative flex min-h-[180px] w-full flex-1 flex-col justify-end">
+                      <Link
+                        href={`/brands/${brand.id}`}
+                        className="absolute inset-0 z-[1]"
+                        aria-label={`Open ${brand.domain ?? brand.url} dashboard`}
+                      />
+                      <div className="pointer-events-none relative z-[2] flex flex-col justify-end p-4 sm:p-5">
+                        {brand.logo_url ? (
+                          <img
+                            src={brand.logo_url}
+                            alt=""
+                            className="mb-3 h-8 w-auto max-w-[60%] object-contain brightness-0 invert opacity-90"
+                          />
+                        ) : null}
+                        <Link
+                          href={`/brands/${brand.id}`}
+                          className="pointer-events-auto mb-2 block wrap-break-word text-lg font-bold text-white drop-shadow-lg hover:underline sm:text-xl"
+                        >
                           {brand.domain}
-                        </h3>
-                      )}
-                      <p className="mb-3 truncate text-xs text-white/70">
-                        {brand.url}
-                      </p>
+                        </Link>
+                        <a
+                          href={brand.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="pointer-events-auto mb-3 inline-flex max-w-full items-center gap-1 truncate text-xs text-white/80 underline-offset-2 hover:text-white hover:underline"
+                        >
+                          <span className="min-w-0 truncate">{brand.url}</span>
+                        </a>
 
-                      <div className="grid grid-cols-3 gap-2 rounded-xl bg-black/35 p-2.5 backdrop-blur-sm">
-                        <div className="min-w-0 text-center">
-                          <p className="text-base font-bold text-white">
-                            {campaignCount}
-                          </p>
-                          <p className="text-[10px] uppercase tracking-wider text-white/60">
-                            Campaigns
-                          </p>
-                        </div>
-                        <div className="min-w-0 text-center">
-                          <p className="flex justify-center text-base font-bold text-white">
-                            <Badge
-                              className={
-                                planActive
-                                  ? "border-0 bg-[#28a745]/80 text-[10px] text-white"
-                                  : "border-0 bg-white/20 text-[10px] text-white"
-                              }
-                            >
-                              {planLabel}
-                            </Badge>
-                          </p>
-                          <p className="text-[10px] uppercase tracking-wider text-white/60">
-                            Plan
-                          </p>
-                        </div>
-                        <div className="min-w-0 text-center">
-                          <p className="text-base font-bold text-white">
-                            {new Date(brand.date_added).toLocaleDateString(
-                              "en-US",
-                              { month: "short", year: "2-digit" },
-                            )}
-                          </p>
-                          <p className="text-[10px] uppercase tracking-wider text-white/60">
-                            Added
-                          </p>
+                        <div className="grid grid-cols-3 gap-2 rounded-xl bg-black/35 p-2.5 backdrop-blur-sm">
+                          <div className="min-w-0 text-center">
+                            <p className="text-base font-bold text-white">
+                              {campaignCount}
+                            </p>
+                            <p className="text-[10px] uppercase tracking-wider text-white/60">
+                              Campaigns
+                            </p>
+                          </div>
+                          <div className="min-w-0 text-center">
+                            <p className="flex justify-center text-base font-bold text-white">
+                              <Badge
+                                className={
+                                  planActive
+                                    ? "border-0 bg-[#28a745]/80 text-[10px] text-white"
+                                    : "border-0 bg-white/20 text-[10px] text-white"
+                                }
+                              >
+                                {planLabel}
+                              </Badge>
+                            </p>
+                            <p className="text-[10px] uppercase tracking-wider text-white/60">
+                              Plan
+                            </p>
+                          </div>
+                          <div className="min-w-0 text-center">
+                            <p className="text-base font-bold text-white">
+                              {new Date(brand.date_added).toLocaleDateString(
+                                "en-US",
+                                { month: "short", year: "2-digit" },
+                              )}
+                            </p>
+                            <p className="text-[10px] uppercase tracking-wider text-white/60">
+                              Added
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <Link
-                      href={`/brands/${brand.id}`}
-                      className="absolute inset-0 z-[1] rounded-t-2xl"
-                      aria-label={`View brand ${brand.domain ?? brand.url}`}
-                    />
                   </div>
 
                   <div className="relative z-[2] flex flex-col gap-2 border-t border-[#ebeef0] bg-white p-3 sm:flex-row sm:items-center">

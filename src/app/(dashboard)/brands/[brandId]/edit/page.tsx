@@ -29,7 +29,7 @@ export default async function EditBrandPage({ params }: EditBrandPageProps) {
 
   return (
     <div className="space-y-6">
-      <nav className="flex items-center gap-1.5 text-sm text-[#a7abc3]">
+      <nav className="flex items-center gap-1.5 text-sm text-[#6b7280]">
         <Link
           href="/dashboard"
           className="flex items-center gap-1 transition-colors hover:text-brand"
@@ -37,10 +37,12 @@ export default async function EditBrandPage({ params }: EditBrandPageProps) {
           <HomeIcon className="size-3.5" />
           Home
         </Link>
-        <ChevronRightIcon className="size-3" />
-        <span>Manage Brand</span>
-        <ChevronRightIcon className="size-3" />
-        <span className="font-medium text-[#575962]">Edit Brand</span>
+        <ChevronRightIcon className="size-3 shrink-0 text-[#9ca3af]" />
+        <Link href="/brands" className="transition-colors hover:text-brand">
+          Manage Brand
+        </Link>
+        <ChevronRightIcon className="size-3 shrink-0 text-[#9ca3af]" />
+        <span className="font-medium text-[#374151]">Edit Brand</span>
       </nav>
 
       <Suspense

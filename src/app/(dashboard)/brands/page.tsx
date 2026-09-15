@@ -142,57 +142,65 @@ export default async function BrandsPage() {
                 return (
                   <li
                     key={brand.id}
-                    className="min-w-0 overflow-hidden rounded-2xl border border-[#ebeef0] bg-white shadow-sm"
+                    className="min-w-0 overflow-hidden rounded-2xl border border-[#ebeef0] bg-white shadow-sm transition hover:border-brand/40 hover:shadow-md"
                   >
-                    <div className="flex items-start gap-3 p-4">
-                      <BrandLogo
-                        domain={brand.domain}
-                        logoUrl={brand.logo_url}
-                        imgClassName="size-11 shrink-0 rounded-lg border border-[#ebeef0] object-contain p-1"
-                        fallbackClassName="flex size-11 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-base font-bold uppercase text-brand"
+                    <div className="relative flex cursor-pointer items-start gap-3 p-4">
+                      {/* Body → brand dashboard; website URL stays clickable above. */}
+                      <Link
+                        href={`/brands/${brand.id}`}
+                        className="absolute inset-0 z-[1]"
+                        aria-label={`Open ${brand.domain} dashboard`}
                       />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <Link
-                              href={`/brands/${brand.id}`}
-                              className="block truncate font-semibold text-[#575962] hover:text-brand"
+                      <div className="pointer-events-none relative z-[2] flex min-w-0 flex-1 items-start gap-3">
+                        <BrandLogo
+                          domain={brand.domain}
+                          logoUrl={brand.logo_url}
+                          imgClassName="size-11 shrink-0 rounded-lg border border-[#ebeef0] object-contain p-1"
+                          fallbackClassName="flex size-11 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-base font-bold uppercase text-brand"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <Link
+                                href={`/brands/${brand.id}`}
+                                className="pointer-events-auto block truncate font-semibold text-[#575962] hover:text-brand"
+                              >
+                                {brand.domain}
+                              </Link>
+                              <a
+                                href={brand.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="pointer-events-auto mt-0.5 flex min-w-0 items-center gap-1 text-xs text-[#36a3f7] hover:underline"
+                              >
+                                <span className="min-w-0 truncate">
+                                  {brand.url}
+                                </span>
+                                <ExternalLinkIcon className="size-3 shrink-0" />
+                              </a>
+                            </div>
+                            <Badge
+                              className={
+                                planActive
+                                  ? "shrink-0 border-0 bg-[#28a745]/10 font-medium text-[#28a745]"
+                                  : "shrink-0 border-0 bg-[#f2f3f8] font-medium text-[#a7abc3]"
+                              }
                             >
-                              {brand.domain}
-                            </Link>
-                            <a
-                              href={brand.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-0.5 flex min-w-0 items-center gap-1 text-xs text-[#36a3f7] hover:underline"
-                            >
-                              <span className="min-w-0 truncate">
-                                {brand.url}
-                              </span>
-                              <ExternalLinkIcon className="size-3 shrink-0" />
-                            </a>
+                              {planLabel}
+                            </Badge>
                           </div>
-                          <Badge
-                            className={
-                              planActive
-                                ? "shrink-0 border-0 bg-[#28a745]/10 font-medium text-[#28a745]"
-                                : "shrink-0 border-0 bg-[#f2f3f8] font-medium text-[#a7abc3]"
-                            }
-                          >
-                            {planLabel}
-                          </Badge>
+                          <p className="mt-2 text-xs text-[#a7abc3]">
+                            Added{" "}
+                            {new Date(brand.date_added).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              },
+                            )}
+                          </p>
                         </div>
-                        <p className="mt-2 text-xs text-[#a7abc3]">
-                          Added{" "}
-                          {new Date(brand.date_added).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            },
-                          )}
-                        </p>
                       </div>
                     </div>
                     <div className="flex flex-col gap-2 border-t border-[#ebeef0] bg-[#fafbfc] p-3">
@@ -260,9 +268,19 @@ export default async function BrandsPage() {
                     return (
                       <TableRow
                         key={brand.id}
-                        className="border-b border-[#ebeef0] transition-colors hover:bg-[#f7f8fa]"
+                        className="cursor-pointer border-b border-[#ebeef0] transition-colors hover:bg-[#f7f8fa]"
                       >
-                        <TableCell>
+                        <TableCell className="relative">
+                          {/*
+                            Cell overlay + real brand-name Link (keyboard).
+                            Website / actions cells stay separate targets.
+                          */}
+                          <Link
+                            href={`/brands/${brand.id}`}
+                            className="absolute inset-0 z-[1]"
+                            aria-hidden
+                            tabIndex={-1}
+                          />
                           <div className="flex items-center gap-3">
                             <BrandLogo
                               domain={brand.domain}
@@ -272,13 +290,13 @@ export default async function BrandsPage() {
                             />
                             <Link
                               href={`/brands/${brand.id}`}
-                              className="truncate font-semibold text-[#575962] hover:text-brand"
+                              className="relative z-[2] truncate font-semibold text-[#575962] hover:text-brand"
                             >
                               {brand.domain}
                             </Link>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="relative z-[2]">
                           <a
                             href={brand.url}
                             target="_blank"
@@ -291,7 +309,13 @@ export default async function BrandsPage() {
                             <ExternalLinkIcon className="size-3 shrink-0" />
                           </a>
                         </TableCell>
-                        <TableCell className="text-sm text-[#a7abc3]">
+                        <TableCell className="relative text-sm text-[#a7abc3]">
+                          <Link
+                            href={`/brands/${brand.id}`}
+                            className="absolute inset-0 z-[1]"
+                            aria-hidden
+                            tabIndex={-1}
+                          />
                           {new Date(brand.date_added).toLocaleDateString(
                             "en-US",
                             {
@@ -301,7 +325,13 @@ export default async function BrandsPage() {
                             },
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="relative">
+                          <Link
+                            href={`/brands/${brand.id}`}
+                            className="absolute inset-0 z-[1]"
+                            aria-hidden
+                            tabIndex={-1}
+                          />
                           <Badge
                             className={
                               planActive
@@ -324,7 +354,7 @@ export default async function BrandsPage() {
                                     : "Free"}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="relative z-[2] text-right">
                           <div className="flex flex-wrap items-center justify-end gap-2">
                             {showBrandUpgrade && (
                               <BrandUpgradeCta

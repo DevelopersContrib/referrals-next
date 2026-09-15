@@ -405,11 +405,11 @@ export function BrandEditPanel({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="subheader flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <Link
             href={`/brands/${brandId}`}
-            className="mb-2 inline-flex items-center gap-1.5 text-sm font-medium text-white/90 hover:text-white"
+            className="mb-2 inline-flex items-center gap-1.5 text-sm font-medium text-white/90 transition-colors hover:text-white"
           >
             <ArrowLeftIcon className="size-4" />
             Back to {brand.domain} Dashboard
@@ -418,7 +418,7 @@ export function BrandEditPanel({
         </div>
         <Button
           variant="destructive"
-          className="gap-2"
+          className="min-h-11 gap-2 border-0 bg-white font-semibold text-destructive shadow-sm hover:bg-white/90 hover:text-destructive"
           onClick={() => setDeleteOpen(true)}
         >
           <Trash2Icon className="size-4" />

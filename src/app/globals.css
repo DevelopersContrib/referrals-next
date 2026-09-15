@@ -223,6 +223,7 @@
       rgba(0, 0, 0, 0.7) 100%
     );
     z-index: 1;
+    pointer-events: none;
   }
   .brand-overlay-card > * {
     position: relative;

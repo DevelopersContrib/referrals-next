@@ -95,7 +95,7 @@ export default async function StatsPage() {
 				<p className="mt-1 text-muted-foreground">
 					{advancedAnalytics
 						? "Overall performance metrics across all your campaigns."
-						: "Basic totals on free forever. Upgrade to Growth for charts and deeper analytics."}
+						: "Basic totals only. Upgrade a brand to Growth for charts and deeper analytics."}
 				</p>
 			</div>
 

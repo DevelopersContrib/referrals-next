@@ -4,8 +4,8 @@ import { RF_DOMAIN_KEY, RF_ENGAGEMENT_CAMPAIGN } from "@/lib/engagement";
 import { FREE_PARTICIPANT_CAP } from "@/lib/billing-constants";
 
 export type SegmentRules = {
-  /** free | paid | trial | free_capped | any */
-  plan?: "free" | "paid" | "trial" | "free_capped" | "any";
+  /** free | paid | trial | free_capped | unpaid | any */
+  plan?: "free" | "paid" | "trial" | "free_capped" | "unpaid" | "any";
   /** Has at least one member_campaigns row (mapped from Handyman hasQuotes) */
   hasQuotes?: boolean;
   /** Free/trial members near participant cap (~80% of FREE_PARTICIPANT_CAP) */
@@ -62,8 +62,8 @@ function buildSegmentWhere(
     clauses.push(
       "(m.plan_id IS NOT NULL AND m.plan_id <= 1 AND m.plan_expiry IS NOT NULL AND m.plan_expiry > NOW())"
     );
-  } else if (rules.plan === "free_capped") {
-    // Post-trial / expired free — not on active paid
+  } else if (rules.plan === "free_capped" || rules.plan === "unpaid") {
+    // Post-trial / expired — not on active paid
     clauses.push(
       `((m.plan_expiry IS NULL OR m.plan_expiry < NOW()) AND NOT (m.plan_id > 1 AND m.plan_expiry IS NOT NULL AND m.plan_expiry > NOW()))`
     );

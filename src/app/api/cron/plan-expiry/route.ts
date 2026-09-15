@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/ses";
 import { authenticateCron } from "@/lib/api/helpers";
-import { DEFAULT_PAID_PLAN_ID, TRIAL_PLAN_ID } from "@/lib/billing-constants";
+import {
+  DEFAULT_PAID_PLAN_ID,
+  TRIAL_PLAN_ID,
+} from "@/lib/billing-constants";
+import {
+  getPrimaryCheckoutBrand,
+  isVnocBrand,
+} from "@/lib/member-subscription";
 
 export async function GET(req: NextRequest) {
   if (!authenticateCron(req)) {
@@ -14,7 +21,6 @@ export async function GET(req: NextRequest) {
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://referrals.com";
-    const upgradeUrl = `${appUrl}/billing/plan/${DEFAULT_PAID_PLAN_ID}`;
 
     const expiringMembers = await prisma.members.findMany({
       where: {
@@ -29,7 +35,7 @@ export async function GET(req: NextRequest) {
 
     for (const member of expiringMembers) {
       const daysLeft = Math.ceil(
-        (member.plan_expiry!.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        (member.plan_expiry!.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
       );
 
       const plan = member.plan_id
@@ -43,6 +49,13 @@ export async function GET(req: NextRequest) {
         (plan.price ?? 0) <= 0 ||
         (member.plan_id != null && member.plan_id <= TRIAL_PLAN_ID);
 
+      const checkoutBrand = isTrial
+        ? await getPrimaryCheckoutBrand(member.id)
+        : null;
+      const brandQuery = checkoutBrand ? `?brandId=${checkoutBrand.id}` : "";
+      const upgradeUrl = `${appUrl}/billing/plan/${DEFAULT_PAID_PLAN_ID}${brandQuery}`;
+      const brandLabel = checkoutBrand?.domain ?? "your brand";
+
       const subject = isTrial
         ? `Your Growth trial ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`
         : `Your Referrals.com plan expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`;
@@ -53,14 +66,15 @@ export async function GET(req: NextRequest) {
               <h2>Growth trial ending soon</h2>
               <p>Hi ${member.name},</p>
               <p>Your <strong>14-day Growth trial</strong> ends in <strong>${daysLeft} day${daysLeft !== 1 ? "s" : ""}</strong> (${member.plan_expiry!.toLocaleDateString()}).</p>
-              <p>After that your widget <strong>keeps working</strong> on free forever — with caps (1 domain, 500 participants, Referrals.com branding). You’ll lose leaderboards, multi-domain, advanced analytics, and branding removal.</p>
+              <p>Pay <strong>$9/mo for ${brandLabel}</strong> to keep Growth on that brand — remove branding, unlock analytics, and add more domains.</p>
+              <p>Your live widget keeps working for visitors with Referrals.com branding on. Without payment, that brand moves to unpaid (not a free plan).</p>
               <p>
                 <a href="${upgradeUrl}"
                    style="display: inline-block; padding: 12px 24px; background-color: #FF5C62; color: white; text-decoration: none; border-radius: 6px;">
-                  Keep Growth — $9/mo per brand
+                  Keep ${brandLabel} — $9/mo
                 </a>
               </p>
-              <p style="color:#666;font-size:13px;">No credit card was required for the trial. Upgrade anytime from Billing.</p>
+              <p style="color:#666;font-size:13px;">VNOC / network domains stay free. No credit card was required for the trial.</p>
             </div>
           `
         : `
@@ -98,9 +112,19 @@ export async function GET(req: NextRequest) {
           lte: sevenDaysFromNow,
         },
       },
+      select: {
+        id: true,
+        domain: true,
+        member_id: true,
+        plan_expiry: true,
+        in_vnoc: true,
+        vnoc_id: true,
+      },
     });
 
     for (const url of expiringUrls) {
+      if (isVnocBrand(url)) continue;
+
       const member = await prisma.members.findUnique({
         where: { id: url.member_id },
       });
@@ -108,23 +132,25 @@ export async function GET(req: NextRequest) {
       if (!member) continue;
 
       const daysLeft = Math.ceil(
-        (url.plan_expiry!.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        (url.plan_expiry!.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
       );
+      const brandUpgradeUrl = `${appUrl}/billing/plan/${DEFAULT_PAID_PLAN_ID}?brandId=${url.id}`;
 
       try {
         await sendEmail({
           to: member.email,
-          subject: `Brand plan for ${url.domain} expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
+          subject: `Keep ${url.domain} — plan expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
           fromName: "Referrals.com",
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2>Brand Plan Expiry Reminder</h2>
+              <h2>Brand plan expiring</h2>
               <p>Hi ${member.name},</p>
-              <p>The plan for your brand <strong>${url.domain}</strong> expires in <strong>${daysLeft} day${daysLeft !== 1 ? "s" : ""}</strong>.</p>
+              <p>Growth for <strong>${url.domain}</strong> expires in <strong>${daysLeft} day${daysLeft !== 1 ? "s" : ""}</strong>.</p>
+              <p>Renew to keep branding off and full analytics for this brand.</p>
               <p>
-                <a href="${upgradeUrl}"
+                <a href="${brandUpgradeUrl}"
                    style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px;">
-                  Renew Plan
+                  Keep ${url.domain} — renew
                 </a>
               </p>
             </div>

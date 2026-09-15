@@ -130,12 +130,15 @@ export default async function BrandsPage() {
                 const planActive = Boolean(
                   brandEntitlement?.isPaid || brandEntitlement?.isGrowth,
                 );
-                const planLabel =
-                  brandEntitlement?.status === "trial"
+                const planLabel = brandEntitlement?.isVnoc
+                  ? "Network"
+                  : brandEntitlement?.status === "trial"
                     ? "Trial"
                     : planActive
                       ? "Active"
-                      : "Free";
+                      : brandEntitlement?.status === "unpaid"
+                        ? "Unpaid"
+                        : "Free";
                 return (
                   <li
                     key={brand.id}
@@ -299,17 +302,27 @@ export default async function BrandsPage() {
                           )}
                         </TableCell>
                         <TableCell>
-                          {planActive ? (
-                            <Badge className="border-0 bg-[#28a745]/10 font-medium text-[#28a745]">
-                              {brandEntitlement?.status === "trial"
+                          <Badge
+                            className={
+                              planActive
+                                ? "shrink-0 border-0 bg-[#28a745]/10 font-medium text-[#28a745]"
+                                : brandEntitlement?.isVnoc
+                                  ? "shrink-0 border-0 bg-[#f2f3f8] font-medium text-[#575962]"
+                                  : brandEntitlement?.status === "unpaid"
+                                    ? "shrink-0 border-0 bg-amber-100 font-medium text-amber-800"
+                                    : "shrink-0 border-0 bg-[#f2f3f8] font-medium text-[#a7abc3]"
+                            }
+                          >
+                            {brandEntitlement?.isVnoc
+                              ? "Network"
+                              : brandEntitlement?.status === "trial"
                                 ? "Trial"
-                                : "Active"}
-                            </Badge>
-                          ) : (
-                            <Badge className="border-0 bg-[#f2f3f8] font-medium text-[#a7abc3]">
-                              Free
-                            </Badge>
-                          )}
+                                : planActive
+                                  ? "Active"
+                                  : brandEntitlement?.status === "unpaid"
+                                    ? "Unpaid"
+                                    : "Free"}
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex flex-wrap items-center justify-end gap-2">

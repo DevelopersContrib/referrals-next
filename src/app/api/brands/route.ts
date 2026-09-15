@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     const canAdd = await canMemberAddBrand(memberId);
     if (!canAdd.ok) {
       return subscriptionRequiredResponse(
-        "Free accounts include 1 domain. Start or renew Growth ($9/mo per brand) to add another.",
+        "Free accounts include 1 domain. Pay $9/mo per brand to add another.",
       );
     }
 

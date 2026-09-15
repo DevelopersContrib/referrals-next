@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSubscription } from "@/lib/paypal";
 import { postVnocAttribution, resolveVnocPlan } from "@/lib/vnoc-attribution";
 import { handlePaidEngagementTransition } from "@/lib/engagement";
+import { isVnocBrand } from "@/lib/member-subscription";
 import {
   logCheckoutEvent,
   newCheckoutAttemptId,
@@ -65,8 +66,12 @@ export async function activatePaidSubscription(opts: {
         : "in_page");
 
   const log = (
-    eventName: "activation_started" | "activated" | "server_error",
-    extra?: { errorCode?: string; errorMessage?: string; replay?: boolean }
+    eventName:
+      | "activation_started"
+      | "activated"
+      | "brand_missing"
+      | "server_error",
+    extra?: { errorCode?: string; errorMessage?: string; replay?: boolean },
   ) =>
     logCheckoutEvent({
       attemptId,
@@ -145,9 +150,11 @@ export async function activatePaidSubscription(opts: {
     }
 
     const brandId = opts.brandId ?? null;
+    let stampBrandId: number | null = brandId;
     if (brandId) {
       const brand = await prisma.member_urls.findFirst({
         where: { id: brandId, member_id: memberId },
+        select: { id: true, in_vnoc: true, vnoc_id: true },
       });
       if (!brand) {
         await log("server_error", {
@@ -155,6 +162,9 @@ export async function activatePaidSubscription(opts: {
           errorMessage: "Brand does not belong to the authenticated member",
         });
         return { ok: false, error: "brand_not_found" };
+      }
+      if (isVnocBrand(brand)) {
+        stampBrandId = null;
       }
     }
 
@@ -172,10 +182,10 @@ export async function activatePaidSubscription(opts: {
       },
     });
 
-    if (brandId) {
+    if (stampBrandId) {
       await prisma.url_plan.create({
         data: {
-          url_id: brandId,
+          url_id: stampBrandId,
           member_id: memberId,
           paypal_plan_id: paypalPlanId,
           paypal_agreement_id: subscriptionId,
@@ -184,7 +194,7 @@ export async function activatePaidSubscription(opts: {
         },
       });
       await prisma.member_urls.update({
-        where: { id: brandId },
+        where: { id: stampBrandId },
         data: { plan_expiry: expiry },
       });
     }
@@ -201,7 +211,7 @@ export async function activatePaidSubscription(opts: {
       },
     });
 
-    if (!brandId) {
+    if (!stampBrandId) {
       await prisma.members.update({
         where: { id: memberId },
         data: { plan_id: plan.id, plan_expiry: expiry },
@@ -223,6 +233,12 @@ export async function activatePaidSubscription(opts: {
     );
 
     await log("activated");
+    if (!brandId) {
+      await log("brand_missing", {
+        errorMessage:
+          "Checkout completed without brandId — account activated only",
+      });
+    }
     if (!alreadyProcessed) {
       try {
         await handlePaidEngagementTransition(memberId);

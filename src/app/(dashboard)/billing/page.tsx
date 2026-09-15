@@ -8,9 +8,18 @@ import Link from "next/link";
 import { BillingErrorBanner } from "@/components/billing/billing-error-banner";
 import { BillingSubscriptionActions } from "@/components/billing/billing-subscription-actions";
 import { getMemberEntitlement } from "@/lib/member-subscription";
+import {
+  getPlanFeatures,
+  isMostPopularIndividual,
+  PLAN_CATALOG_COPY,
+  planBillingLabel,
+  splitPlanAudiences,
+  formatPlanPrice,
+  type CatalogPlan,
+} from "@/lib/plan-catalog";
 import { cn } from "@/lib/utils";
 
-type HumanBillingStatus = "trial" | "free" | "paid" | "cancelled";
+type HumanBillingStatus = "trial" | "free" | "unpaid" | "paid" | "cancelled";
 
 function resolveHumanStatus(
   entitlementStatus: string,
@@ -19,6 +28,7 @@ function resolveHumanStatus(
   if (isCancelled) return "cancelled";
   if (entitlementStatus === "trial") return "trial";
   if (entitlementStatus === "paid") return "paid";
+  if (entitlementStatus === "unpaid") return "unpaid";
   return "free";
 }
 
@@ -45,6 +55,8 @@ function statusLabel(status: HumanBillingStatus): string {
       return "Paid";
     case "cancelled":
       return "Cancelled";
+    case "unpaid":
+      return "Unpaid";
     default:
       return "Free";
   }
@@ -55,8 +67,12 @@ function statusDetail(
   planExpiry: Date | null,
   daysLeft: number | null,
 ): string | null {
+  if (status === "unpaid") {
+    return "Trial ended — pay $9/mo per brand to keep Growth";
+  }
+
   if (status === "free") {
-    return "Free forever · caps apply";
+    return PLAN_CATALOG_COPY.vnocFootnote;
   }
 
   if (!planExpiry) return null;
@@ -82,25 +98,120 @@ function statusDetail(
   return null;
 }
 
-function formatBrandLimit(value: number | null | undefined): string {
-  if (value == null || value <= 0) return "Unlimited brands";
-  return `Up to ${value} brand${value === 1 ? "" : "s"}`;
-}
+function PlanCard({
+  plan,
+  plans,
+  activePlanId,
+}: {
+  plan: CatalogPlan;
+  plans: CatalogPlan[];
+  activePlanId: number;
+}) {
+  const price = plan.price || 0;
+  const isPaidPlan = price > 0;
+  const isCurrent = activePlanId === plan.id;
+  const isPopular = isMostPopularIndividual(plan, plans);
+  const accent = isPaidPlan ? "#926efb" : "#FF5C62";
+  const features = getPlanFeatures(plan);
 
-function formatParticipantLimit(value: number | null | undefined): string {
-  if (value == null || value <= 0) {
-    return "Unlimited participants/campaign";
-  }
-  return `${value} participants/campaign`;
-}
+  return (
+    <div
+      className={cn(
+        "relative flex w-full min-w-0 flex-col rounded-2xl border bg-white p-5 shadow-md sm:p-6",
+        isPopular &&
+          "border-2 border-[#926efb] shadow-lg shadow-violet-200/50 ring-2 ring-[#926efb]/20",
+        isCurrent &&
+          isPaidPlan &&
+          !isPopular &&
+          "border-2 border-[#926efb] ring-2 ring-[#926efb]/20",
+        isCurrent &&
+          !isPaidPlan &&
+          "border-2 border-[#FF5C62]/70 shadow-rose-100",
+        !isCurrent && isPaidPlan && !isPopular && "border-violet-200/80",
+        !isCurrent && !isPaidPlan && "border-rose-100/90",
+      )}
+    >
+      {isPopular && (
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-3 py-1 text-xs font-bold text-white shadow-md">
+          Most Popular
+        </span>
+      )}
 
-function formatPlanDays(value: number | null | undefined): string {
-  const days = value || 30;
-  return `${days} day${days === 1 ? "" : "s"}`;
-}
+      {isPaidPlan && (
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-[#926efb] via-[#b794f9] to-[#FF5C62]" />
+      )}
 
-function formatPrice(price: number | null | undefined): string {
-  return `$${(price || 0).toFixed(2)}`;
+      <div
+        className={cn(
+          "mb-5 rounded-xl p-4",
+          isPaidPlan
+            ? "bg-gradient-to-br from-violet-500/10 to-rose-50/20"
+            : "bg-gradient-to-br from-rose-500/10 to-orange-50/30",
+        )}
+      >
+        <div className="flex min-w-0 items-start justify-between gap-2">
+          <h3 className="min-w-0 break-words text-lg font-bold tracking-tight text-gray-900">
+            {plan.name}
+          </h3>
+          {isCurrent && (
+            <span
+              className={cn(
+                "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold text-white",
+                isPaidPlan ? "bg-[#926efb]" : "bg-[#FF5C62]",
+              )}
+            >
+              Current
+            </span>
+          )}
+        </div>
+        <div className="mt-3 flex flex-wrap items-baseline gap-1">
+          <span className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            {formatPlanPrice(plan)}
+          </span>
+          <span className="text-sm text-gray-500">/{plan.unit || "month"}</span>
+        </div>
+        {isPaidPlan && (
+          <p className="mt-2 text-xs text-gray-500">{planBillingLabel(plan)}</p>
+        )}
+      </div>
+
+      <ul className="flex-1 space-y-3">
+        {features.map((feature) => (
+          <li
+            key={feature}
+            className="flex items-start gap-3 text-sm text-gray-700"
+          >
+            <CheckIcon color={accent} />
+            {feature}
+          </li>
+        ))}
+      </ul>
+
+      {isCurrent ? (
+        <span
+          className={cn(
+            "mt-6 flex min-h-11 w-full items-center justify-center rounded-xl border px-4 py-3 text-center text-sm font-semibold",
+            isPaidPlan
+              ? "border-violet-200 bg-violet-50 text-[#7c3aed]"
+              : "border-rose-100 bg-rose-50/60 text-[#FF5C62]",
+          )}
+        >
+          Current plan
+        </span>
+      ) : isPaidPlan ? (
+        <Link
+          href={`/billing/plan/${plan.id}`}
+          className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-4 py-3 text-center text-sm font-semibold text-white shadow-md shadow-violet-300/40 transition-all hover:brightness-105 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#926efb]"
+        >
+          Get {plan.name}
+        </Link>
+      ) : (
+        <span className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-center text-sm font-medium text-gray-500">
+          {PLAN_CATALOG_COPY.trialFootnote}
+        </span>
+      )}
+    </div>
+  );
 }
 
 export default async function BillingPage({
@@ -209,108 +320,60 @@ export default async function BillingPage({
         </div>
 
         {/* Stack through 768 (lg starts at 1024); desktop keeps 2–3 cols */}
-        <div className="w-full min-w-0 max-w-5xl">
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6 xl:grid-cols-3">
-            {plans.map((plan) => {
-              const price = plan.price || 0;
-              const isPaidPlan = price > 0;
-              const isCurrent = activePlanId === plan.id;
-              const accent = isPaidPlan ? "#926efb" : "#FF5C62";
+        <div className="w-full min-w-0 max-w-5xl space-y-10">
+          {(() => {
+            const catalogPlans = plans as CatalogPlan[];
+            const { individuals, partners } =
+              splitPlanAudiences(catalogPlans);
 
-              return (
-                <div
-                  key={plan.id}
-                  className={cn(
-                    "relative flex w-full min-w-0 flex-col rounded-2xl border bg-white p-5 shadow-md sm:p-6",
-                    isCurrent &&
-                      isPaidPlan &&
-                      "border-2 border-[#926efb] ring-2 ring-[#926efb]/20",
-                    isCurrent &&
-                      !isPaidPlan &&
-                      "border-2 border-[#FF5C62]/70 shadow-rose-100",
-                    !isCurrent && isPaidPlan && "border-violet-200/80",
-                    !isCurrent && !isPaidPlan && "border-rose-100/90",
-                  )}
-                >
-                  {isPaidPlan && (
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-[#926efb] via-[#b794f9] to-[#FF5C62]" />
-                  )}
+            return (
+              <>
+                <div>
+                  <h3 className="mb-1 text-base font-semibold text-gray-900">
+                    For Individuals
+                  </h3>
+                  <p className="mb-4 text-sm text-muted-foreground">
+                    {PLAN_CATALOG_COPY.trialFootnote}
+                  </p>
+                  <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6 xl:grid-cols-3">
+                    {individuals.map((plan) => (
+                      <PlanCard
+                        key={plan.id}
+                        plan={plan}
+                        plans={catalogPlans}
+                        activePlanId={activePlanId}
+                      />
+                    ))}
+                  </div>
+                </div>
 
-                  <div
-                    className={cn(
-                      "mb-5 rounded-xl p-4",
-                      isPaidPlan
-                        ? "bg-gradient-to-br from-violet-500/10 to-rose-50/20"
-                        : "bg-gradient-to-br from-rose-500/10 to-orange-50/30",
-                    )}
-                  >
-                    <div className="flex min-w-0 items-start justify-between gap-2">
-                      <h3 className="min-w-0 break-words text-lg font-bold tracking-tight text-gray-900">
-                        {plan.name}
-                      </h3>
-                      {isCurrent && (
-                        <span
-                          className={cn(
-                            "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold text-white",
-                            isPaidPlan ? "bg-[#926efb]" : "bg-[#FF5C62]",
-                          )}
-                        >
-                          Current
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-3 flex flex-wrap items-baseline gap-1">
-                      <span className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-                        {formatPrice(plan.price)}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        /{plan.unit || "month"}
-                      </span>
+                {partners.length > 0 && (
+                  <div>
+                    <h3 className="mb-1 text-base font-semibold text-gray-900">
+                      For Partners &amp; Agencies
+                    </h3>
+                    <p className="mb-4 text-sm text-muted-foreground">
+                      Multi-brand plans for agencies and resellers.
+                    </p>
+                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6 xl:grid-cols-3">
+                      {partners.map((plan) => (
+                        <PlanCard
+                          key={plan.id}
+                          plan={plan}
+                          plans={catalogPlans}
+                          activePlanId={activePlanId}
+                        />
+                      ))}
                     </div>
                   </div>
+                )}
 
-                  <ul className="flex-1 space-y-3">
-                    <li className="flex items-start gap-3 text-sm text-gray-700">
-                      <CheckIcon color={accent} />
-                      {formatBrandLimit(plan.no_of_domains)}
-                    </li>
-                    <li className="flex items-start gap-3 text-sm text-gray-700">
-                      <CheckIcon color={accent} />
-                      {formatParticipantLimit(plan.campaigns_participants)}
-                    </li>
-                    <li className="flex items-start gap-3 text-sm text-gray-700">
-                      <CheckIcon color={accent} />
-                      {formatPlanDays(plan.days)}
-                    </li>
-                  </ul>
-
-                  {isCurrent ? (
-                    <span
-                      className={cn(
-                        "mt-6 flex min-h-11 w-full items-center justify-center rounded-xl border px-4 py-3 text-center text-sm font-semibold",
-                        isPaidPlan
-                          ? "border-violet-200 bg-violet-50 text-[#7c3aed]"
-                          : "border-rose-100 bg-rose-50/60 text-[#FF5C62]",
-                      )}
-                    >
-                      Current plan
-                    </span>
-                  ) : isPaidPlan ? (
-                    <Link
-                      href={`/billing/plan/${plan.id}`}
-                      className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-4 py-3 text-center text-sm font-semibold text-white shadow-md shadow-violet-300/40 transition-all hover:brightness-105 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#926efb]"
-                    >
-                      Pay with card or PayPal
-                    </Link>
-                  ) : (
-                    <span className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-center text-sm font-medium text-gray-500">
-                      Included in trial / free forever
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                <p className="text-xs text-muted-foreground">
+                  {PLAN_CATALOG_COPY.vnocFootnote}
+                </p>
+              </>
+            );
+          })()}
         </div>
       </section>
 

@@ -4,6 +4,7 @@ import { PricingHeroMockup } from "@/components/marketing/pricing-hero-mockup";
 import { RoiCalculator } from "@/components/marketing/roi-calculator";
 import { JsonLd } from "@/components/seo/json-ld";
 import { faqPageJsonLd } from "@/lib/structured-data";
+import { PLAN_CATALOG_COPY } from "@/lib/plan-catalog";
 
 export const metadata: Metadata = {
   title: "Pricing — 14-day Growth trial, then free forever | Referrals.com",
@@ -101,7 +102,7 @@ const pricingTestimonials = [
 const trustPills = [
   "14-day Growth trial",
   "No credit card",
-  "Free forever after (capped)",
+  PLAN_CATALOG_COPY.trialFootnote.split(" — ")[0],
 ];
 
 export default function PricingPage() {

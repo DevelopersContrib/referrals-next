@@ -126,7 +126,9 @@ Verified today: `/dashboard` “Your Brands” only overlays the image block. `/
 
 # Ronan — Stop the free product
 
-## R1 — After trial, external is not free (4h) — CRITICAL
+**Sprint status (Ronan):** **CLOSED** · R1 ✅ · R2 ✅ · R3 ✅ · R4 ✅ (smoke: `scripts/smoke-brand-entitlement.ts`)
+
+## R1 — After trial, external is not free (4h) — CRITICAL ✅
 
 `free_capped` must mean **unpaid / must buy**, not “keep using the product.”
 
@@ -137,7 +139,7 @@ Verified today: `/dashboard` “Your Brands” only overlays the image block. `/
 
 **Done when:** a post-trial external brand without `url_plan` is not treated as a happy free customer.
 
-## R2 — R7 leftovers: `brand_missing` + never stamp VNOC (1.5h) — CRITICAL
+## R2 — R7 leftovers: `brand_missing` + never stamp VNOC (1.5h) — CRITICAL ✅
 
 Sept R7 **stamp is shipped**. Do not rebuild activate. Close these holes only:
 
@@ -149,7 +151,7 @@ Sept R7 **stamp is shipped**. Do not rebuild activate. Close these holes only:
 
 **Done when:** unpaid VNOC never gets an `url_plan` even if `brandId` is posted. Checkout without `brandId` leaves a `brand_missing` log row.
 
-## R3 — Trial-end tells the truth (4h) — HIGH
+## R3 — Trial-end tells the truth (4h) — HIGH ✅
 
 `src/app/api/cron/plan-expiry/route.ts` + dashboard trial card.
 
@@ -158,7 +160,7 @@ Sept R7 **stamp is shipped**. Do not rebuild activate. Close these holes only:
 - If they do not pay: widget stays live for visitors (branding on); owner sees unpaid, not “Free forever”
 - Link: `/billing/plan/2?brandId=` when known
 
-## R4 — Shared plan catalog + any paid plan stamps a brand (2.5h) — HIGH
+## R4 — Shared plan catalog + any paid plan stamps a brand (2.5h) — HIGH ✅
 
 Jayson must not hard-code Partner vs Individual in two pages.
 
@@ -183,10 +185,10 @@ Add `src/lib/plan-catalog.ts` (or similar) used by `/billing` and `/pricing`:
 | **J3 `/billing` plans redesign** | **Jayson** | **4.0** | **Critical** | **Yes** |
 | J4 Public pricing matches billing | Jayson | 3.0 | High | Yes |
 | J5 Brand list → brand dashboard | Jayson | 1.5 | High | Yes |
-| **R1 No free product after trial** | **Ronan** | **4.0** | **Critical** | **Yes** |
-| **R2 R7 leftovers (VNOC + `brand_missing`)** | **Ronan** | **1.5** | **Critical** | **Yes** |
-| R3 Trial-end copy + cron | Ronan | 4.0 | High | Yes |
-| R4 Shared plan catalog + any planId stamps brand | Ronan | 2.5 | High | Yes |
+| **R1 No free product after trial** ✅ | **Ronan** | **4.0** | **Critical** | **Yes** |
+| **R2 R7 leftovers (VNOC + `brand_missing`)** ✅ | **Ronan** | **1.5** | **Critical** | **Yes** |
+| R3 Trial-end copy + cron ✅ | Ronan | 4.0 | High | Yes |
+| R4 Shared plan catalog + any planId stamps brand ✅ | Ronan | 2.5 | High | Yes |
 | **Total** | | **28.5** | | |
 
 Parked: +30d on paid invitee; widget.js static/dynamic; `/api/brand` auto-provision; VNOC uncapped; lander worker (other repo).
@@ -210,7 +212,7 @@ Parked: +30d on paid invitee; widget.js static/dynamic; `/api/brand` auto-provis
 3. **J3 — `/billing` Available Plans redesign** (Individuals vs Partners, Most Popular) · Jayson · 4h · Critical  
 4. J4 — Public `/pricing` + homepage match billing catalog · Jayson · 3h · High  
 5. **J5 — Brand list clickable → that brand’s `/brands/{id}` dashboard** · Jayson · 1.5h · High  
-6. **R1 — After trial, external is not a free product** · Ronan · 4h · Critical  
-7. **R2 — R7 leftovers: `brand_missing` log + never stamp VNOC** · Ronan · 1.5h · Critical  
-8. R3 — Trial-end email/banner: pay $9 for this brand · Ronan · 4h · High  
-9. **R4 — Shared `plan-catalog` helper; any paid planId stamps brand** · Ronan · 2.5h · High  
+6. **R1 — After trial, external is not a free product** ✅ · Ronan · 4h · Critical  
+7. **R2 — R7 leftovers: `brand_missing` log + never stamp VNOC** ✅ · Ronan · 1.5h · Critical  
+8. R3 — Trial-end email/banner: pay $9 for this brand ✅ · Ronan · 4h · High  
+9. **R4 — Shared `plan-catalog` helper; any paid planId stamps brand** ✅ · Ronan · 2.5h · High  

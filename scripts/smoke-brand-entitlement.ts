@@ -1,5 +1,5 @@
 /**
- * REF-R7 — per-brand pay stamp + getBrandEntitlement (offline wiring).
+ * REF-R7 + Sept 14–18 R1–R4 — per-brand pay + unpaid external + VNOC guard.
  *
  *   npx tsx scripts/smoke-brand-entitlement.ts
  */
@@ -20,7 +20,7 @@ function readRepoFile(relPath: string): string {
 }
 
 function main() {
-  console.log("\n=== REF-R7 brand entitlement smoke (offline) ===\n");
+  console.log("\n=== Brand entitlement smoke (offline) ===\n");
 
   const subscription = readRepoFile("src/lib/member-subscription.ts");
   if (!subscription.includes("export async function getBrandEntitlement")) {
@@ -28,6 +28,12 @@ function main() {
   }
   if (!subscription.includes("isVnoc")) {
     fail("getBrandEntitlement must expose VNOC handling");
+  }
+  if (!subscription.includes("export function isVnocBrand")) {
+    fail("isVnocBrand must check in_vnoc and vnoc_id");
+  }
+  if (!subscription.includes('status: "unpaid"')) {
+    fail("post-trial external brands must use unpaid status");
   }
   if (!subscription.includes("export function brandShouldShowUpgradeCta")) {
     fail("brandShouldShowUpgradeCta must exist for REF-J5 brand CTAs");
@@ -43,16 +49,25 @@ function main() {
   if (!subscription.includes('e.status === "trial"')) {
     fail("canMemberAddBrand must only bypass domain cap for account trial");
   }
+  if (!subscription.includes("export async function getPrimaryCheckoutBrand")) {
+    fail("getPrimaryCheckoutBrand must exist for trial/unpaid CTAs");
+  }
   pass("member-subscription exports per-brand entitlement helpers");
 
   const activation = readRepoFile("src/lib/billing-activation.ts");
   if (!activation.includes("member_urls.update")) {
     fail("activatePaidSubscription must stamp member_urls.plan_expiry");
   }
-  if (!activation.includes("if (!brandId)")) {
+  if (!activation.includes("if (!stampBrandId)")) {
     fail(
-      "activatePaidSubscription must skip members.plan_* when brandId is set",
+      "activatePaidSubscription must skip members.plan_* when brand stamp applies",
     );
+  }
+  if (!activation.includes("isVnocBrand")) {
+    fail("activatePaidSubscription must refuse VNOC brand stamps");
+  }
+  if (!activation.includes('"brand_missing"')) {
+    fail("activatePaidSubscription must log brand_missing when brandId absent");
   }
   if (!activation.includes("activatePaidSubscriptionFromWebhook")) {
     fail("activatePaidSubscriptionFromWebhook must exist");
@@ -61,6 +76,30 @@ function main() {
     fail("extendPaidSubscriptionPeriod must exist");
   }
   pass("billing-activation stamps brand + webhook helpers");
+
+  const catalog = readRepoFile("src/lib/plan-catalog.ts");
+  if (!catalog.includes("export function splitPlanAudiences")) {
+    fail("plan-catalog must export splitPlanAudiences");
+  }
+  if (!catalog.includes("export function getPlanFeatures")) {
+    fail("plan-catalog must export getPlanFeatures");
+  }
+  pass("plan-catalog helper exists");
+
+  const billingPage = readRepoFile("src/app/(dashboard)/billing/page.tsx");
+  if (!billingPage.includes('from "@/lib/plan-catalog"')) {
+    fail("billing page must import plan-catalog");
+  }
+  pass("billing page imports plan-catalog");
+
+  const cron = readRepoFile("src/app/api/cron/plan-expiry/route.ts");
+  if (cron.includes("free forever")) {
+    fail("plan-expiry cron must not promise free forever");
+  }
+  if (!cron.includes("brandId=")) {
+    fail("plan-expiry trial emails must link with brandId when known");
+  }
+  pass("plan-expiry cron copy + brand checkout link");
 
   const webhook = readRepoFile("src/app/api/billing/webhook/route.ts");
   if (!webhook.includes("activatePaidSubscriptionFromWebhook")) {
@@ -80,7 +119,7 @@ function main() {
   }
   pass("widget uses brandMustShowBranding");
 
-  console.log("\nAll REF-R7 offline checks passed.\n");
+  console.log("\nAll offline checks passed.\n");
 }
 
 main();

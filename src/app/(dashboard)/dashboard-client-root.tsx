@@ -12,8 +12,10 @@ type Props = {
   onboarding: {
     isVerified: boolean;
     isGrowth: boolean;
-    status: "trial" | "free_capped" | "paid" | "unverified";
+    status: "trial" | "free_capped" | "unpaid" | "paid" | "unverified";
     daysLeft: number | null;
+    checkoutBrandId?: number | null;
+    checkoutBrandDomain?: string | null;
   };
 };
 
@@ -30,6 +32,8 @@ export function DashboardClientRoot({ children, brands, onboarding }: Props) {
               isGrowth={onboarding.isGrowth}
               status={onboarding.status}
               daysLeft={onboarding.daysLeft}
+              checkoutBrandId={onboarding.checkoutBrandId}
+              checkoutBrandDomain={onboarding.checkoutBrandDomain}
             />
             {children}
           </main>

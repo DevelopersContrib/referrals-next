@@ -13,6 +13,7 @@ export type CheckoutEventName =
   | "server_error"
   | "activation_started"
   | "activated"
+  | "brand_missing"
   | "webhook_received"
   | "redirect_created";
 
@@ -32,6 +33,7 @@ const STATUS_BY_EVENT: Partial<Record<CheckoutEventName, string>> = {
   approved: "approved",
   activation_started: "activating",
   activated: "activated",
+  brand_missing: "activated",
   cancelled: "cancelled",
   abandoned: "abandoned",
   client_error: "failed",

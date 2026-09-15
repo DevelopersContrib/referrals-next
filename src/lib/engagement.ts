@@ -264,7 +264,7 @@ export async function handlePaidEngagementTransition(memberId: number): Promise<
   const upgradeSegmentKeys = segments
     .filter((s) => {
       const plan = parseRulesFromJson(s.rules_json).plan;
-      return plan === "trial" || plan === "free_capped" || plan === "free";
+      return plan === "trial" || plan === "free_capped" || plan === "unpaid" || plan === "free";
     })
     .map((s) => s.segment_key);
 

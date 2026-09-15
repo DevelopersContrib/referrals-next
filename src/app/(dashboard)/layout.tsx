@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getMemberEntitlement } from "@/lib/member-subscription";
+import { getMemberEntitlement, getPrimaryCheckoutBrand } from "@/lib/member-subscription";
 import { DashboardClientRoot } from "./dashboard-client-root";
 
 export default async function DashboardLayout({
@@ -13,7 +13,7 @@ export default async function DashboardLayout({
   if (!session?.user?.id) redirect("/signin");
 
   const memberId = parseInt(session.user.id, 10);
-  const [member, entitlement, brands] = await Promise.all([
+  const [member, entitlement, brands, checkoutBrand] = await Promise.all([
     prisma.members.findUnique({
       where: { id: memberId },
       select: { is_verified: true },
@@ -25,6 +25,7 @@ export default async function DashboardLayout({
       select: { id: true, domain: true },
       take: 20,
     }),
+    getPrimaryCheckoutBrand(memberId),
   ]);
 
   return (
@@ -35,6 +36,8 @@ export default async function DashboardLayout({
         isGrowth: entitlement.isGrowth,
         status: entitlement.status,
         daysLeft: entitlement.daysLeft,
+        checkoutBrandId: checkoutBrand?.id ?? null,
+        checkoutBrandDomain: checkoutBrand?.domain ?? null,
       }}
     >
       {children}

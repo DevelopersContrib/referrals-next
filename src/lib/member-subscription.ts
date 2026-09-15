@@ -19,7 +19,12 @@ export {
   TRIAL_PLAN_ID,
 } from "@/lib/billing-constants";
 
-export type EntitlementStatus = "trial" | "free_capped" | "paid" | "unverified";
+export type EntitlementStatus =
+  | "trial"
+  | "free_capped"
+  | "unpaid"
+  | "paid"
+  | "unverified";
 
 export type MemberEntitlement = {
   status: EntitlementStatus;
@@ -55,7 +60,15 @@ export function subscriptionRequiredResponse(message?: string) {
 }
 
 export function participantCapMessage() {
-  return `This free program has reached ${FREE_PARTICIPANT_CAP} participants. The brand owner can upgrade to grow further.`;
+  return `This program has reached ${FREE_PARTICIPANT_CAP} participants. The brand owner can upgrade to grow further.`;
+}
+
+/** VNOC network brands — always free, never enter the $9/mo funnel. */
+export function isVnocBrand(brand: {
+  in_vnoc?: boolean | null;
+  vnoc_id?: number | null;
+}): boolean {
+  return Boolean(brand.in_vnoc) || brand.vnoc_id != null;
 }
 
 export function participantCapResponse(extraHeaders?: HeadersInit) {
@@ -103,7 +116,8 @@ export function daysLeftUntil(
  * Reverse-trial entitlement:
  * - trial: plan_id trial/free + future plan_expiry → full Growth
  * - paid: price > 0 + future plan_expiry → full Growth + hide branding
- * - free_capped: everyone else (post-trial / legacy) → capped free, branding on
+ * - unpaid: post-trial external — must buy per brand (not a free SKU)
+ * - free_capped: legacy alias kept for engagement segments; maps to unpaid at gates
  */
 export async function getMemberEntitlement(
   memberId: number,
@@ -181,7 +195,7 @@ export async function getMemberEntitlement(
   }
 
   return {
-    status: "free_capped",
+    status: "unpaid",
     planId,
     planExpiry: expiry,
     daysLeft: 0,
@@ -206,12 +220,13 @@ export async function getBrandEntitlement(
       member_id: true,
       plan_expiry: true,
       in_vnoc: true,
+      vnoc_id: true,
     },
   });
   if (!brand) return null;
 
   const memberId = brand.member_id;
-  const isVnoc = Boolean(brand.in_vnoc);
+  const isVnoc = isVnocBrand(brand);
   const applyAdminBypass = options?.applyAdminBypass !== false;
 
   if (
@@ -325,7 +340,7 @@ export async function getBrandEntitlement(
     brandId,
     memberId,
     isVnoc,
-    status: "free_capped",
+    status: "unpaid",
     planId: null,
     planExpiry: brandExpiry,
     daysLeft: daysLeftUntil(brandExpiry),
@@ -333,6 +348,18 @@ export async function getBrandEntitlement(
     isPaid: false,
     hideBranding: false,
   };
+}
+
+/**
+ * First non-VNOC brand for checkout CTAs (trial end, unpaid nags).
+ */
+export async function getPrimaryCheckoutBrand(memberId: number) {
+  const brands = await prisma.member_urls.findMany({
+    where: { member_id: memberId },
+    orderBy: { date_added: "asc" },
+    select: { id: true, domain: true, in_vnoc: true, vnoc_id: true },
+  });
+  return brands.find((b) => !isVnocBrand(b)) ?? null;
 }
 
 /**

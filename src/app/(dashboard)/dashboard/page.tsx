@@ -5,6 +5,7 @@ import {
   countMemberBrands,
   getBrandEntitlement,
   getMemberEntitlement,
+  getPrimaryCheckoutBrand,
 } from "@/lib/member-subscription";
 import { enrollMemberInSignupReferral } from "@/lib/signup-referral";
 import { SignupInviteCard } from "@/components/auth/signup-invite-card";
@@ -125,7 +126,7 @@ export default async function DashboardPage() {
     redirect("/onboarding");
   }
 
-  const [entitlement, growthPlan] = await Promise.all([
+  const [entitlement, growthPlan, checkoutBrand] = await Promise.all([
     getMemberEntitlement(memberId, { applyAdminBypass: false }),
     prisma.plans.findUnique({
       where: { id: DEFAULT_PAID_PLAN_ID },
@@ -138,6 +139,7 @@ export default async function DashboardPage() {
         campaigns_participants: true,
       },
     }),
+    getPrimaryCheckoutBrand(memberId),
   ]);
   // REF-J3: hide always-on upgrade nag for Growth (trial or paid).
   const showUpgradeNag = !entitlement.isGrowth;
@@ -500,6 +502,7 @@ export default async function DashboardPage() {
               days={growthPlan?.days}
               noOfDomains={growthPlan?.no_of_domains}
               campaignsParticipants={growthPlan?.campaigns_participants}
+              brandId={checkoutBrand?.id ?? null}
             />
           )}
 

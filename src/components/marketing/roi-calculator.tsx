@@ -15,7 +15,7 @@ export function RoiCalculator() {
   const newCustomers = Math.round(invited * (convRate / 100));
   const newRevenue = newCustomers * aov;
   const domainsNeeded = 1;
-  const cost = 0; // Growth trial is free; capped free forever after
+  const cost = domainsNeeded * 9; // $9/mo per brand after trial
   const roi = cost > 0 ? Math.round((newRevenue / cost) * 100) : null;
 
   const inputs: {
@@ -28,11 +28,49 @@ export function RoiCalculator() {
     suffix?: string;
     prefix?: string;
   }[] = [
-    { label: "Monthly customers", value: customers, set: setCustomers, min: 50, max: 10000, step: 50 },
-    { label: "Average order value", value: aov, set: setAov, min: 5, max: 1000, step: 5, prefix: "$" },
-    { label: "% who share", value: shareRate, set: setShareRate, min: 1, max: 100, step: 1, suffix: "%" },
-    { label: "Invites per sharer", value: invitesPer, set: setInvitesPer, min: 1, max: 20, step: 1 },
-    { label: "Invite conversion", value: convRate, set: setConvRate, min: 1, max: 100, step: 1, suffix: "%" },
+    {
+      label: "Monthly customers",
+      value: customers,
+      set: setCustomers,
+      min: 50,
+      max: 10000,
+      step: 50,
+    },
+    {
+      label: "Average order value",
+      value: aov,
+      set: setAov,
+      min: 5,
+      max: 1000,
+      step: 5,
+      prefix: "$",
+    },
+    {
+      label: "% who share",
+      value: shareRate,
+      set: setShareRate,
+      min: 1,
+      max: 100,
+      step: 1,
+      suffix: "%",
+    },
+    {
+      label: "Invites per sharer",
+      value: invitesPer,
+      set: setInvitesPer,
+      min: 1,
+      max: 20,
+      step: 1,
+    },
+    {
+      label: "Invite conversion",
+      value: convRate,
+      set: setConvRate,
+      min: 1,
+      max: 100,
+      step: 1,
+      suffix: "%",
+    },
   ];
 
   return (
@@ -67,11 +105,15 @@ export function RoiCalculator() {
         <p className="text-sm font-medium uppercase tracking-wide text-white/80">
           Estimated new revenue / month
         </p>
-        <p className="mt-2 text-4xl font-bold sm:text-5xl">{fmtMoney(newRevenue)}</p>
+        <p className="mt-2 text-4xl font-bold sm:text-5xl">
+          {fmtMoney(newRevenue)}
+        </p>
         <div className="mt-6 space-y-2 text-sm text-white/90">
           <div className="flex justify-between border-b border-white/20 pb-2">
             <span>New referred customers</span>
-            <span className="font-semibold">{newCustomers.toLocaleString("en-US")}/mo</span>
+            <span className="font-semibold">
+              {newCustomers.toLocaleString("en-US")}/mo
+            </span>
           </div>
           <div className="flex justify-between border-b border-white/20 pb-2">
             <span>Domains needed</span>
@@ -79,13 +121,13 @@ export function RoiCalculator() {
           </div>
           <div className="flex justify-between">
             <span>Your cost</span>
-            <span className="font-semibold">$0 during Growth trial</span>
+            <span className="font-semibold">${cost}/mo after trial</span>
           </div>
         </div>
         <p className="mt-6 text-xs text-white/75">
           {roi !== null
-            ? `That's roughly ${roi.toLocaleString("en-US")}% ROI.`
-            : "14-day Growth trial is free — then stay free forever (capped) or $9/mo per brand."}
+            ? `That's roughly ${roi.toLocaleString("en-US")}% ROI at $9/mo per brand. 14-day Growth trial is free first. VNOC / network domains stay free.`
+            : "14-day Growth trial is free — then $9/mo per brand. VNOC / network domains stay free."}
         </p>
       </div>
     </div>

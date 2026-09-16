@@ -14,13 +14,23 @@ export const useCases: UseCase[] = [
     slug: "saas",
     label: "SaaS",
     headline: "Referral programs for SaaS companies",
-    subhead: "Turn happy users into your highest-converting acquisition channel.",
+    subhead:
+      "Turn happy users into your highest-converting acquisition channel.",
     intro:
       "SaaS growth compounds when your existing users invite their peers. Referrals.com makes it simple to launch double-sided reward campaigns, track every share, and reward users automatically — no engineering sprint required.",
     benefits: [
-      { title: "Lower CAC", body: "Referred users convert higher and churn less, cutting your blended acquisition cost." },
-      { title: "In-product widgets", body: "Drop a referral widget into your app or onboarding in minutes." },
-      { title: "Automated rewards", body: "Trigger credits, discounts, or custom rewards the moment a referral converts." },
+      {
+        title: "Lower CAC",
+        body: "Referred users convert higher and churn less, cutting your blended acquisition cost.",
+      },
+      {
+        title: "In-product widgets",
+        body: "Drop a referral widget into your app or onboarding in minutes.",
+      },
+      {
+        title: "Automated rewards",
+        body: "Trigger credits, discounts, or custom rewards the moment a referral converts.",
+      },
     ],
     steps: [
       "Connect your product domain",
@@ -29,21 +39,37 @@ export const useCases: UseCase[] = [
       "Track shares, conversions, and rewards in real time",
     ],
     faqs: [
-      { q: "Can I reward account credits?", a: "Yes — set custom reward rules that fire on conversion, including account credits, discounts, or cash." },
-      { q: "Does it work with our onboarding flow?", a: "Absolutely. Embed the widget anywhere with a snippet, or trigger invites via the API." },
+      {
+        q: "Can I reward account credits?",
+        a: "Yes — set custom reward rules that fire on conversion, including account credits, discounts, or cash.",
+      },
+      {
+        q: "Does it work with our onboarding flow?",
+        a: "Absolutely. Embed the widget anywhere with a snippet, or trigger invites via the API.",
+      },
     ],
   },
   {
     slug: "ecommerce",
     label: "Ecommerce",
     headline: "Referral programs for ecommerce brands",
-    subhead: "Reward customers for bringing their friends — and watch AOV climb.",
+    subhead:
+      "Reward customers for bringing their friends — and watch AOV climb.",
     intro:
       "Give shoppers a reason to share. With Referrals.com you can launch give-$10-get-$10 campaigns, coupon rewards, and gamified contests that turn one purchase into many.",
     benefits: [
-      { title: "Give-get coupons", body: "Issue unique discount codes to both referrer and friend automatically." },
-      { title: "Shopify-ready", body: "Connect your store and sync rewards without custom code." },
-      { title: "Gamified contests", body: "Run leaderboards and milestone rewards to drive repeat sharing." },
+      {
+        title: "Give-get coupons",
+        body: "Issue unique discount codes to both referrer and friend automatically.",
+      },
+      {
+        title: "Shopify-ready",
+        body: "Connect your store and sync rewards without custom code.",
+      },
+      {
+        title: "Gamified contests",
+        body: "Run leaderboards and milestone rewards to drive repeat sharing.",
+      },
     ],
     steps: [
       "Connect your store domain",
@@ -52,8 +78,14 @@ export const useCases: UseCase[] = [
       "Watch referred orders roll in",
     ],
     faqs: [
-      { q: "Can I issue unique coupon codes?", a: "Yes — upload a coupon pool or generate codes, delivered automatically to referrer and friend." },
-      { q: "Does it integrate with Shopify?", a: "Yes, connect your store and reward referred purchases without custom development." },
+      {
+        q: "Can I issue unique coupon codes?",
+        a: "Yes — upload a coupon pool or generate codes, delivered automatically to referrer and friend.",
+      },
+      {
+        q: "Does it integrate with Shopify?",
+        a: "Yes, connect your store and reward referred purchases without custom development.",
+      },
     ],
   },
   {
@@ -64,9 +96,18 @@ export const useCases: UseCase[] = [
     intro:
       "Manage referral programs across all your clients with per-domain billing that scales with your book of business. Every client gets the full feature set — you only pay $9/month per additional domain.",
     benefits: [
-      { title: "Multi-client", body: "Spin up a fully-featured program per client domain in minutes." },
-      { title: "White-label ready", body: "Remove Referrals.com branding on paid domains for a clean client experience." },
-      { title: "Transparent pricing", body: "$9/month per domain — no per-seat fees, no tiers to explain to clients." },
+      {
+        title: "Multi-client",
+        body: "Spin up a fully-featured program per client domain in minutes.",
+      },
+      {
+        title: "White-label ready",
+        body: "Remove Referrals.com branding on paid domains for a clean client experience.",
+      },
+      {
+        title: "Transparent pricing",
+        body: "$9/month per domain — no per-seat fees, no tiers to explain to clients.",
+      },
     ],
     steps: [
       "Add each client as its own domain",
@@ -75,8 +116,14 @@ export const useCases: UseCase[] = [
       "Report on results with built-in analytics",
     ],
     faqs: [
-      { q: "How does billing work for multiple clients?", a: "Each client domain is a simple $9/month subscription — add or cancel as your roster changes." },
-      { q: "Can I remove your branding?", a: "Yes, paid domains support white-label widgets and public pages." },
+      {
+        q: "How does billing work for multiple clients?",
+        a: "Each client domain is a simple $9/month subscription — add or cancel as your roster changes.",
+      },
+      {
+        q: "Can I remove your branding?",
+        a: "Yes, paid domains support white-label widgets and public pages.",
+      },
     ],
   },
   {
@@ -87,9 +134,18 @@ export const useCases: UseCase[] = [
     intro:
       "Whether you run a newsletter, community, or content brand, Referrals.com helps you turn your audience into a growth engine with milestone rewards, leaderboards, and viral share mechanics.",
     benefits: [
-      { title: "Milestone rewards", body: "Reward fans for hitting share and referral milestones." },
-      { title: "Leaderboards", body: "Add friendly competition that keeps your community sharing." },
-      { title: "Every channel", body: "One-tap sharing to every major social platform." },
+      {
+        title: "Milestone rewards",
+        body: "Reward fans for hitting share and referral milestones.",
+      },
+      {
+        title: "Leaderboards",
+        body: "Add friendly competition that keeps your community sharing.",
+      },
+      {
+        title: "Every channel",
+        body: "One-tap sharing to every major social platform.",
+      },
     ],
     steps: [
       "Connect your site or landing page",
@@ -98,8 +154,14 @@ export const useCases: UseCase[] = [
       "Watch your reach multiply",
     ],
     faqs: [
-      { q: "Do I need a website?", a: "You can use a landing page — connect any domain you control to get started free." },
-      { q: "Can fans compete on a leaderboard?", a: "Yes, leaderboards and milestone rewards are included on every plan." },
+      {
+        q: "Do I need a website?",
+        a: "You can use a landing page — connect any domain you control to start your 14-day Growth trial.",
+      },
+      {
+        q: "Can fans compete on a leaderboard?",
+        a: "Yes, leaderboards and milestone rewards are included on every plan.",
+      },
     ],
   },
   {
@@ -108,11 +170,20 @@ export const useCases: UseCase[] = [
     headline: "Referral programs for startups",
     subhead: "Launch a word-of-mouth engine before you spend a dollar on ads.",
     intro:
-      "Early traction comes from people telling people. Get a fully-featured referral program live for free, prove the channel, and only pay as you scale to more products and domains.",
+      "Early traction comes from people telling people. Start a 14-day Growth trial, prove the channel, then keep Growth at $9/mo per brand as you scale products and domains.",
     benefits: [
-      { title: "Free to launch", body: "14-day Growth trial with full features — then free forever (capped) or $9/mo per brand." },
-      { title: "Fast setup", body: "Go live in an afternoon with templates and embeddable widgets." },
-      { title: "Scale later", body: "Keep Growth for $9/month per brand as you launch new products." },
+      {
+        title: "Free to launch",
+        body: "14-day Growth trial with full features — then $9/mo per brand. VNOC / network domains stay free.",
+      },
+      {
+        title: "Fast setup",
+        body: "Go live in an afternoon with templates and embeddable widgets.",
+      },
+      {
+        title: "Scale later",
+        body: "Keep Growth for $9/month per brand as you launch new products.",
+      },
     ],
     steps: [
       "Sign up and connect your domain",
@@ -121,8 +192,14 @@ export const useCases: UseCase[] = [
       "Measure what works, then scale",
     ],
     faqs: [
-      { q: "Is it really free to start?", a: "Yes — you get 14 days of full Growth features with no credit card. After that you stay free forever with caps (1 domain, 500 participants, Referrals branding) or upgrade to Growth for $9/mo per brand." },
-      { q: "What happens when we grow?", a: "Keep Growth for $9/month per brand — remove branding, unlock domains and advanced analytics. Cancel anytime." },
+      {
+        q: "Is it really free to start?",
+        a: "Yes — you get 14 days of full Growth features with no credit card. After that, external brands are $9/mo per brand. VNOC / network domains stay free.",
+      },
+      {
+        q: "What happens when we grow?",
+        a: "Keep Growth for $9/month per brand — remove branding, unlock domains and advanced analytics. Cancel anytime.",
+      },
     ],
   },
 ];

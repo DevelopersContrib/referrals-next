@@ -52,7 +52,7 @@ function mysqlDatetime(d: Date): string {
 
 function buildSegmentWhere(
   rules: SegmentRules,
-  opts?: { excludeCampaignKey?: string }
+  opts?: { excludeCampaignKey?: string },
 ): string {
   const now = Date.now();
   const clauses: string[] = ["m.email IS NOT NULL", "TRIM(m.email) <> ''"];
@@ -60,39 +60,49 @@ function buildSegmentWhere(
   if (rules.plan === "trial") {
     // Growth trial: free/trial plan id with future expiry
     clauses.push(
-      "(m.plan_id IS NOT NULL AND m.plan_id <= 1 AND m.plan_expiry IS NOT NULL AND m.plan_expiry > NOW())"
+      "(m.plan_id IS NOT NULL AND m.plan_id <= 1 AND m.plan_expiry IS NOT NULL AND m.plan_expiry > NOW())",
     );
   } else if (rules.plan === "free_capped" || rules.plan === "unpaid") {
     // Post-trial / expired — not on active paid
     clauses.push(
-      `((m.plan_expiry IS NULL OR m.plan_expiry < NOW()) AND NOT (m.plan_id > 1 AND m.plan_expiry IS NOT NULL AND m.plan_expiry > NOW()))`
+      `((m.plan_expiry IS NULL OR m.plan_expiry < NOW()) AND NOT (m.plan_id > 1 AND m.plan_expiry IS NOT NULL AND m.plan_expiry > NOW()))`,
     );
   } else if (rules.plan === "free") {
     // Legacy: anyone not on active paid (includes trial + capped)
     clauses.push(
-      "(m.plan_id IS NULL OR m.plan_id <= 1 OR m.plan_expiry IS NULL OR m.plan_expiry < NOW())"
+      "(m.plan_id IS NULL OR m.plan_id <= 1 OR m.plan_expiry IS NULL OR m.plan_expiry < NOW())",
     );
   } else if (rules.plan === "paid") {
     clauses.push(
-      "(m.plan_id > 1 AND m.plan_expiry IS NOT NULL AND m.plan_expiry > NOW())"
+      "(m.plan_id > 1 AND m.plan_expiry IS NOT NULL AND m.plan_expiry > NOW())",
     );
   }
 
-  if (typeof rules.registeredWithinDays === "number" && rules.registeredWithinDays > 0) {
+  if (
+    typeof rules.registeredWithinDays === "number" &&
+    rules.registeredWithinDays > 0
+  ) {
     const days = Math.min(Math.floor(rules.registeredWithinDays), 3650);
     const d = new Date(now - days * 86400000);
     clauses.push(`m.date_signedup >= '${mysqlDatetime(d)}'`);
   }
-  if (typeof rules.registeredBeforeDays === "number" && rules.registeredBeforeDays > 0) {
+  if (
+    typeof rules.registeredBeforeDays === "number" &&
+    rules.registeredBeforeDays > 0
+  ) {
     const days = Math.min(Math.floor(rules.registeredBeforeDays), 3650);
     const d = new Date(now - days * 86400000);
     clauses.push(`m.date_signedup < '${mysqlDatetime(d)}'`);
   }
 
   if (rules.hasQuotes === true) {
-    clauses.push("EXISTS (SELECT 1 FROM member_campaigns mc WHERE mc.member_id = m.id)");
+    clauses.push(
+      "EXISTS (SELECT 1 FROM member_campaigns mc WHERE mc.member_id = m.id)",
+    );
   } else if (rules.hasQuotes === false) {
-    clauses.push("NOT EXISTS (SELECT 1 FROM member_campaigns mc WHERE mc.member_id = m.id)");
+    clauses.push(
+      "NOT EXISTS (SELECT 1 FROM member_campaigns mc WHERE mc.member_id = m.id)",
+    );
   }
 
   if (rules.nearParticipantCap === true) {
@@ -106,12 +116,12 @@ function buildSegmentWhere(
 
   if (rules.inWelcomeSequence === true) {
     clauses.push(
-      `EXISTS (SELECT 1 FROM engagement_enrollments e WHERE e.user_id = m.id AND e.domain_key = '${RF_DOMAIN_KEY}' AND e.campaign_key = '${RF_ENGAGEMENT_CAMPAIGN}' AND e.status = 'active')`
+      `EXISTS (SELECT 1 FROM engagement_enrollments e WHERE e.user_id = m.id AND e.domain_key = '${RF_DOMAIN_KEY}' AND e.campaign_key = '${RF_ENGAGEMENT_CAMPAIGN}' AND e.status = 'active')`,
     );
   }
   if (rules.notInWelcomeSequence === true) {
     clauses.push(
-      `NOT EXISTS (SELECT 1 FROM engagement_enrollments e WHERE e.user_id = m.id AND e.domain_key = '${RF_DOMAIN_KEY}' AND e.campaign_key = '${RF_ENGAGEMENT_CAMPAIGN}')`
+      `NOT EXISTS (SELECT 1 FROM engagement_enrollments e WHERE e.user_id = m.id AND e.domain_key = '${RF_DOMAIN_KEY}' AND e.campaign_key = '${RF_ENGAGEMENT_CAMPAIGN}')`,
     );
   }
 
@@ -125,7 +135,7 @@ function buildSegmentWhere(
             AND e2.domain_key = '${RF_DOMAIN_KEY}'
             AND e2.campaign_key = '${ck}'
             AND e2.status IN ('active', 'completed')
-        )`
+        )`,
       );
     }
   }
@@ -133,7 +143,9 @@ function buildSegmentWhere(
   return clauses.join(" AND ");
 }
 
-export async function countSegmentMembers(rules: SegmentRules): Promise<number> {
+export async function countSegmentMembers(
+  rules: SegmentRules,
+): Promise<number> {
   const sql = `SELECT COUNT(*) AS c FROM members m WHERE ${buildSegmentWhere(rules)}`;
   const rows = await prisma.$queryRawUnsafe<{ c: bigint }[]>(sql);
   return Number(rows[0]?.c ?? 0);
@@ -141,7 +153,7 @@ export async function countSegmentMembers(rules: SegmentRules): Promise<number> 
 
 export async function listSegmentMemberIds(
   rules: SegmentRules,
-  opts?: { limit?: number; excludeCampaignKey?: string }
+  opts?: { limit?: number; excludeCampaignKey?: string },
 ): Promise<number[]> {
   const limit = Math.min(500, Math.max(1, opts?.limit ?? 200));
   // Prefer PRIMARY KEY order over date_signedup — large anti-joins + ORDER BY
@@ -160,12 +172,17 @@ export async function listSegmentMemberIds(
 export async function getSegmentByKey(segmentKey: string) {
   return prisma.engagement_segments.findUnique({
     where: {
-      domain_key_segment_key: { domain_key: RF_DOMAIN_KEY, segment_key: segmentKey },
+      domain_key_segment_key: {
+        domain_key: RF_DOMAIN_KEY,
+        segment_key: segmentKey,
+      },
     },
   });
 }
 
-export async function listSegments(domainKey = RF_DOMAIN_KEY): Promise<SegmentRow[]> {
+export async function listSegments(
+  domainKey = RF_DOMAIN_KEY,
+): Promise<SegmentRow[]> {
   const rows = await prisma.engagement_segments.findMany({
     where: { domain_key: domainKey },
     orderBy: { updated_at: "desc" },
@@ -191,14 +208,20 @@ export async function listSegments(domainKey = RF_DOMAIN_KEY): Promise<SegmentRo
 
 export async function deleteSegment(id: number) {
   const row = await prisma.engagement_segments.findUnique({ where: { id } });
-  if (!row || row.domain_key !== RF_DOMAIN_KEY) throw new Error("Segment not found");
+  if (!row || row.domain_key !== RF_DOMAIN_KEY)
+    throw new Error("Segment not found");
   await prisma.engagement_segments.delete({ where: { id } });
 }
 
-const FALLBACK_SEGMENTS: { name: string; description: string; rules: SegmentRules }[] = [
+const FALLBACK_SEGMENTS: {
+  name: string;
+  description: string;
+  rules: SegmentRules;
+}[] = [
   {
     name: "In Growth trial",
-    description: "Members in the 14-day Growth trial — loss-aversion upgrade window.",
+    description:
+      "Members in the 14-day Growth trial — loss-aversion upgrade window.",
     rules: { plan: "trial" },
   },
   {
@@ -228,7 +251,8 @@ const FALLBACK_SEGMENTS: { name: string; description: string; rules: SegmentRule
   },
   {
     name: "Trial · has campaigns",
-    description: "Trial members already running campaigns — strongest upgrade cohort.",
+    description:
+      "Trial members already running campaigns — strongest upgrade cohort.",
     rules: { plan: "trial", hasQuotes: true },
   },
   {
@@ -289,11 +313,12 @@ export async function aiCreateSegments(): Promise<{
   if (aiEnabled()) {
     const prompt = `You create audience SEGMENTS for Referrals.com (referral marketing SaaS). Personal 1:1 engagement — not blasts.
 
-Pricing model: 14-day Growth reverse trial → free forever (capped) → $9/mo Growth paid.
+Pricing model: 14-day Growth reverse trial → unpaid external ($9/mo per brand) or VNOC free → $9/mo Growth paid.
 - trial = in Growth trial (full features, future plan_expiry)
-- free_capped = post-trial / expired free (widget live, caps, branding on)
+- unpaid = post-trial external without payment (widget live for visitors, branding on — not a free-forever plan)
+- free_capped = VNOC / network only (or legacy capped free)
 - paid = active paid Growth
-- free = legacy alias for anyone not paid (prefer trial or free_capped instead)
+- free = legacy alias for anyone not paid (prefer trial, unpaid, or free_capped instead)
 
 Live stats:
 ${JSON.stringify(stats, null, 2)}
@@ -323,10 +348,15 @@ Prioritize trial ending / free_capped with campaigns (upgrade), near cap, then t
     });
     if (text) {
       try {
-        const json = text.replace(/^```json\s*/i, "").replace(/```$/i, "").trim();
+        const json = text
+          .replace(/^```json\s*/i, "")
+          .replace(/```$/i, "")
+          .trim();
         const parsed = JSON.parse(json) as AiSegment[];
         if (Array.isArray(parsed) && parsed.length) {
-          proposed = parsed.filter((s) => s?.name && s?.rules && typeof s.rules === "object");
+          proposed = parsed.filter(
+            (s) => s?.name && s?.rules && typeof s.rules === "object",
+          );
           usedAi = proposed.length > 0;
         }
       } catch {
@@ -344,7 +374,9 @@ Prioritize trial ending / free_capped with campaigns (upgrade), near cap, then t
     const rules: SegmentRules = { ...(s.rules || {}) };
     if (!rules.plan) rules.plan = "free";
     const existing = await prisma.engagement_segments.findUnique({
-      where: { domain_key_segment_key: { domain_key: RF_DOMAIN_KEY, segment_key: key } },
+      where: {
+        domain_key_segment_key: { domain_key: RF_DOMAIN_KEY, segment_key: key },
+      },
     });
     if (existing) {
       await prisma.engagement_segments.update({

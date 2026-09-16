@@ -11,10 +11,10 @@ One board. **Kareen is not on this sprint.** Jayson = marketing + CTAs. Ronan = 
 
 Do **not** edit `.env`. Do **not** touch PayPal checkout UI (`/billing/plan/[planId]`, `paypal-checkout.tsx`). Shared MySQL: additive SQL only. **Public widgets must never 403 visitors** because the owner did not pay. No unique index on `member_urls.slug`.
 
-| Who | Focus | Hours |
-|-----|--------|-------|
-| **Jayson** | Billing + public plan cards; unpaid CTAs; brand list → brand dashboard | 16.5 |
-| **Ronan** | Plan catalog helper + any paid plan stamps a brand; no free product after trial | 12.0 |
+| Who        | Focus                                                                           | Hours |
+| ---------- | ------------------------------------------------------------------------------- | ----- |
+| **Jayson** | Billing + public plan cards; unpaid CTAs; brand list → brand dashboard          | 16.5  |
+| **Ronan**  | Plan catalog helper + any paid plan stamps a brand; no free product after trial | 12.0  |
 
 ---
 
@@ -43,20 +43,20 @@ Do **not** offer a working free program after trial. Visitors on an unpaid exter
 
 # Verified (do not re-litigate)
 
-| Claim | Verdict |
-|---|---|
-| App still allows free after trial | **True.** `getMemberEntitlement` → `free_capped`. Widget stays live. |
-| $9 stamps one brand | **True (R7).** `url_plan` + `member_urls.plan_expiry`. No `brandId` still unlocks the **account**. |
-| VNOC can still get an `url_plan` | **True leftover.** Activate does not refuse `in_vnoc` / `vnoc_id`. Entitlement only reads `in_vnoc`. |
-| Checkout with no `brandId` | **True leftover.** No `brand_missing` log. |
-| “Free forever” is still on marketing | **True.** `/pricing`, homepage, signup, knowledgebase, `/stats` subtitle, trial emails. |
-| Public widget 403 on `free_capped` | **Must stay false.** Visitors are not the customer. |
+| Claim                                | Verdict                                                                                              |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| App still allows free after trial    | **True.** `getMemberEntitlement` → `free_capped`. Widget stays live.                                 |
+| $9 stamps one brand                  | **True (R7).** `url_plan` + `member_urls.plan_expiry`. No `brandId` still unlocks the **account**.   |
+| VNOC can still get an `url_plan`     | **True leftover.** Activate does not refuse `in_vnoc` / `vnoc_id`. Entitlement only reads `in_vnoc`. |
+| Checkout with no `brandId`           | **True leftover.** No `brand_missing` log.                                                           |
+| “Free forever” is still on marketing | **False (J1 ✅).** Public funnel is trial → $9/mo; VNOC footnote only.                               |
+| Public widget 403 on `free_capped`   | **Must stay false.** Visitors are not the customer.                                                  |
 
 ---
 
 # Jayson — Copy + CTAs
 
-## J1 — Kill “free forever” on the public funnel (4h) — CRITICAL
+## J1 — Kill “free forever” on the public funnel (4h) — CRITICAL ✅
 
 Surfaces: `/pricing`, homepage pricing, `/signup` + `SignupForm`, `/features`, knowledgebase plans, ROI calculator, `use-cases.ts`.
 
@@ -66,7 +66,7 @@ Surfaces: `/pricing`, homepage pricing, `/signup` + `SignupForm`, `/features`, k
 - Growth card: “$9/month **for this brand**” — not “unlimited domains for $9”
 - Do not invent a $0 external SKU on `/billing`
 
-**Done when:** a new visitor cannot find a free-forever plan for their own domain.
+**Done when:** a new visitor cannot find a free-forever plan for their own domain. ✅
 
 ## J2 — Unpaid external always has a buy path (4h) — HIGH
 
@@ -178,18 +178,18 @@ Add `src/lib/plan-catalog.ts` (or similar) used by `/billing` and `/pricing`:
 
 # Hours
 
-| ID | Owner | Hours | Pri | Verified? |
-|----|-------|-------|-----|-----------|
-| J1 Kill free-forever copy | Jayson | 4.0 | Critical | Yes |
-| J2 Buy path on unpaid external | Jayson | 4.0 | High | Yes |
-| **J3 `/billing` plans redesign** | **Jayson** | **4.0** | **Critical** | **Yes** |
-| J4 Public pricing matches billing | Jayson | 3.0 | High | Yes |
-| J5 Brand list → brand dashboard | Jayson | 1.5 | High | Yes |
-| **R1 No free product after trial** ✅ | **Ronan** | **4.0** | **Critical** | **Yes** |
-| **R2 R7 leftovers (VNOC + `brand_missing`)** ✅ | **Ronan** | **1.5** | **Critical** | **Yes** |
-| R3 Trial-end copy + cron ✅ | Ronan | 4.0 | High | Yes |
-| R4 Shared plan catalog + any planId stamps brand ✅ | Ronan | 2.5 | High | Yes |
-| **Total** | | **28.5** | | |
+| ID                                                  | Owner      | Hours    | Pri          | Verified? |
+| --------------------------------------------------- | ---------- | -------- | ------------ | --------- |
+| J1 Kill free-forever copy                           | Jayson     | 4.0      | Critical     | Yes ✅    |
+| J2 Buy path on unpaid external                      | Jayson     | 4.0      | High         | Yes       |
+| **J3 `/billing` plans redesign**                    | **Jayson** | **4.0**  | **Critical** | **Yes**   |
+| J4 Public pricing matches billing                   | Jayson     | 3.0      | High         | Yes       |
+| J5 Brand list → brand dashboard                     | Jayson     | 1.5      | High         | Yes       |
+| **R1 No free product after trial** ✅               | **Ronan**  | **4.0**  | **Critical** | **Yes**   |
+| **R2 R7 leftovers (VNOC + `brand_missing`)** ✅     | **Ronan**  | **1.5**  | **Critical** | **Yes**   |
+| R3 Trial-end copy + cron ✅                         | Ronan      | 4.0      | High         | Yes       |
+| R4 Shared plan catalog + any planId stamps brand ✅ | Ronan      | 2.5      | High         | Yes       |
+| **Total**                                           |            | **28.5** |              |           |
 
 Parked: +30d on paid invitee; widget.js static/dynamic; `/api/brand` auto-provision; VNOC uncapped; lander worker (other repo).
 
@@ -207,12 +207,12 @@ Parked: +30d on paid invitee; widget.js static/dynamic; `/api/brand` auto-provis
 
 # VNOC paste (this repo only)
 
-1. **J1 — Kill “free forever” on pricing/signup/homepage** · Jayson · 4h · Critical  
-2. J2 — Unpaid external CTA → `/billing/plan/2?brandId=` · Jayson · 4h · High  
-3. **J3 — `/billing` Available Plans redesign** (Individuals vs Partners, Most Popular) · Jayson · 4h · Critical  
-4. J4 — Public `/pricing` + homepage match billing catalog · Jayson · 3h · High  
-5. **J5 — Brand list clickable → that brand’s `/brands/{id}` dashboard** · Jayson · 1.5h · High  
-6. **R1 — After trial, external is not a free product** ✅ · Ronan · 4h · Critical  
-7. **R2 — R7 leftovers: `brand_missing` log + never stamp VNOC** ✅ · Ronan · 1.5h · Critical  
-8. R3 — Trial-end email/banner: pay $9 for this brand ✅ · Ronan · 4h · High  
-9. **R4 — Shared `plan-catalog` helper; any paid planId stamps brand** ✅ · Ronan · 2.5h · High  
+1. **J1 — Kill “free forever” on pricing/signup/homepage** ✅ · Jayson · 4h · Critical
+2. J2 — Unpaid external CTA → `/billing/plan/2?brandId=` · Jayson · 4h · High
+3. **J3 — `/billing` Available Plans redesign** (Individuals vs Partners, Most Popular) · Jayson · 4h · Critical
+4. J4 — Public `/pricing` + homepage match billing catalog · Jayson · 3h · High
+5. **J5 — Brand list clickable → that brand’s `/brands/{id}` dashboard** · Jayson · 1.5h · High
+6. **R1 — After trial, external is not a free product** ✅ · Ronan · 4h · Critical
+7. **R2 — R7 leftovers: `brand_missing` log + never stamp VNOC** ✅ · Ronan · 1.5h · Critical
+8. R3 — Trial-end email/banner: pay $9 for this brand ✅ · Ronan · 4h · High
+9. **R4 — Shared `plan-catalog` helper; any paid planId stamps brand** ✅ · Ronan · 2.5h · High

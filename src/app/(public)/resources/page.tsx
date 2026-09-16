@@ -34,7 +34,7 @@ const chapters = [
   },
   {
     title: "Launching and scaling",
-    body: "Use your 14-day Growth trial to prove the channel, then stay free forever (capped) or keep Growth at $9/mo per brand to scale domains. Embed widgets where intent is highest — post-purchase, onboarding, and account pages.",
+    body: "Use your 14-day Growth trial to prove the channel, then keep Growth at $9/mo per brand to scale domains. VNOC / network domains stay free. Embed widgets where intent is highest — post-purchase, onboarding, and account pages.",
   },
 ];
 
@@ -54,8 +54,8 @@ export default function ResourcesPage() {
             The complete guide to referral marketing
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
-            Everything you need to plan, launch, and scale a referral program that
-            actually drives growth.
+            Everything you need to plan, launch, and scale a referral program
+            that actually drives growth.
           </p>
         </div>
       </section>
@@ -64,9 +64,14 @@ export default function ResourcesPage() {
       <section className="mx-auto max-w-4xl px-4 pb-8">
         <div className="grid gap-6 md:grid-cols-2">
           {chapters.map((c) => (
-            <div key={c.title} className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">
+            <div
+              key={c.title}
+              className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm"
+            >
               <h2 className="text-lg font-semibold text-gray-900">{c.title}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-gray-600">{c.body}</p>
+              <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                {c.body}
+              </p>
             </div>
           ))}
         </div>
@@ -108,7 +113,10 @@ export default function ResourcesPage() {
             <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">
               Latest guides
             </h2>
-            <Link href="/blog" className="text-sm font-semibold text-[#926efb] hover:underline">
+            <Link
+              href="/blog"
+              className="text-sm font-semibold text-[#926efb] hover:underline"
+            >
               View all →
             </Link>
           </div>
@@ -125,7 +133,9 @@ export default function ResourcesPage() {
                 <h3 className="mt-2 font-semibold text-gray-900 group-hover:text-[#FF5C62]">
                   {post.title}
                 </h3>
-                <p className="mt-2 line-clamp-2 text-sm text-gray-600">{post.excerpt}</p>
+                <p className="mt-2 line-clamp-2 text-sm text-gray-600">
+                  {post.excerpt}
+                </p>
               </Link>
             ))}
           </div>
@@ -135,9 +145,12 @@ export default function ResourcesPage() {
       {/* CTA */}
       <section className="bg-gradient-to-r from-[#ff646c] via-[#ff5c62] to-[#926efb] py-16">
         <div className="mx-auto max-w-3xl px-4 text-center">
-          <h2 className="text-3xl font-bold text-white">Put it into practice</h2>
+          <h2 className="text-3xl font-bold text-white">
+            Put it into practice
+          </h2>
           <p className="mt-3 text-white/90">
-            Start a 14-day Growth trial free — then stay free forever (capped) or upgrade.
+            Start a 14-day Growth trial — then $9/mo per brand. VNOC / network
+            domains stay free.
           </p>
           <Link
             href="/signup"

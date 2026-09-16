@@ -167,7 +167,11 @@ export function SignupForm() {
                       stroke="currentColor"
                       strokeWidth={3}
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     {rule.label}
                   </li>
@@ -186,13 +190,16 @@ export function SignupForm() {
         </Button>
 
         <p className="text-center text-xs text-gray-500">
-          14-day Growth trial · No credit card · Then free forever (capped)
+          14-day Growth trial · No credit card · Then $9/mo per brand
         </p>
       </form>
 
       <p className="mt-6 text-center text-sm text-gray-600">
         Already have an account?{" "}
-        <Link href="/signin" className="font-medium text-[#FF5C62] hover:underline">
+        <Link
+          href="/signin"
+          className="font-medium text-[#FF5C62] hover:underline"
+        >
           Sign in
         </Link>
       </p>

@@ -58,7 +58,9 @@ export default async function UseCasePage({ params }: Props) {
           <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
             {data.headline}
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">{data.subhead}</p>
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
+            {data.subhead}
+          </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/signup"
@@ -78,7 +80,9 @@ export default async function UseCasePage({ params }: Props) {
 
       {/* Intro */}
       <section className="mx-auto max-w-3xl px-4 pb-4">
-        <p className="text-center text-lg leading-relaxed text-gray-700">{data.intro}</p>
+        <p className="text-center text-lg leading-relaxed text-gray-700">
+          {data.intro}
+        </p>
       </section>
 
       {/* Benefits */}
@@ -90,7 +94,9 @@ export default async function UseCasePage({ params }: Props) {
               className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm"
             >
               <h2 className="text-lg font-semibold text-gray-900">{b.title}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-gray-600">{b.body}</p>
+              <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                {b.body}
+              </p>
             </div>
           ))}
         </div>
@@ -122,9 +128,14 @@ export default async function UseCasePage({ params }: Props) {
         </h2>
         <dl className="mt-8 space-y-4">
           {data.faqs.map((f) => (
-            <div key={f.q} className="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
+            <div
+              key={f.q}
+              className="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm"
+            >
               <dt className="font-semibold text-gray-900">{f.q}</dt>
-              <dd className="mt-2 text-sm leading-relaxed text-gray-600">{f.a}</dd>
+              <dd className="mt-2 text-sm leading-relaxed text-gray-600">
+                {f.a}
+              </dd>
             </div>
           ))}
         </dl>
@@ -157,8 +168,8 @@ export default async function UseCasePage({ params }: Props) {
             Start your 14-day Growth trial
           </h2>
           <p className="mt-3 text-white/90">
-            Every Growth feature for 14 days. No credit card. Stay free forever
-            (capped) or keep Growth for $9/mo as you grow.
+            Every Growth feature for 14 days. No credit card. Then $9/mo per
+            brand. VNOC / network domains stay free.
           </p>
           <Link
             href="/signup"

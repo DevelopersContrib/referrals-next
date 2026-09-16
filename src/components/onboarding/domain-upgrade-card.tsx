@@ -100,8 +100,9 @@ export function DomainUpgradeCard({ href }: DomainUpgradeCardProps) {
             <span className="text-sm text-gray-500">/{unit} · per brand</span>
           </div>
           <p className="mt-2 text-sm text-gray-600">
-            {days}-day billing cycle. Cancel anytime — your widget keeps running
-            on free forever (capped) if you stop.
+            {days}-day billing cycle. Cancel anytime — the widget stays live for
+            visitors with branding on. After trial, external brands need Growth
+            ($9/mo per brand).
           </p>
         </div>
 

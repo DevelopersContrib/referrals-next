@@ -1,11 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   MailIcon,
@@ -32,7 +27,7 @@ const FAQS = [
   },
   {
     q: 'I\'m getting a 401 "Invalid or missing API key" error.',
-    a: 'Make sure you\'re sending the key in the X-API-Key header (not as a query parameter). The key should start with "ref_". Check that it hasn\'t been regenerated — generating a new key doesn\'t invalidate old ones, but double-check which key you\'re using.',
+    a: "Make sure you're sending the key in the X-API-Key header (not as a query parameter). The key should start with \"ref_\". Check that it hasn't been regenerated — generating a new key doesn't invalidate old ones, but double-check which key you're using.",
   },
   {
     q: "Can I have multiple API keys?",
@@ -40,7 +35,7 @@ const FAQS = [
   },
   {
     q: "Do I need a paid plan to use the API?",
-    a: 'Most API endpoints work during your Growth trial and on free forever (capped). Publishing campaigns as "public", multi-domain brands, and other Growth features require an active Growth trial or paid Growth subscription ($9/mo per brand).',
+    a: 'Most API endpoints work during your Growth trial and on paid Growth. Publishing campaigns as "public", multi-domain brands, and other Growth features require an active Growth trial or paid Growth subscription ($9/mo per brand). VNOC / network domains stay free.',
   },
   {
     q: "How do webhooks work?",
@@ -119,9 +114,7 @@ export default function SupportPage() {
             {["API v1", "Widget API", "Webhooks"].map((service) => (
               <div key={service} className="flex items-center gap-2">
                 <span className="size-2.5 rounded-full bg-emerald-500" />
-                <span className="text-sm">
-                  {service} — Operational
-                </span>
+                <span className="text-sm">{service} — Operational</span>
               </div>
             ))}
           </div>

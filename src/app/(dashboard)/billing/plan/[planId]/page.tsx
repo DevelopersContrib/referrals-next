@@ -114,8 +114,9 @@ export default async function PlanCheckoutPage({
               </span>
             </div>
             <p className="mt-2 text-sm text-gray-600">
-              {plan.days || 30}-day billing cycle. Cancel anytime — your widget
-              keeps running on free forever (capped) if you stop.
+              {plan.days || 30}-day billing cycle. Cancel anytime — the widget
+              stays live for visitors with branding on. After trial, external
+              brands need Growth ($9/mo per brand).
             </p>
           </div>
 
@@ -169,15 +170,15 @@ export default async function PlanCheckoutPage({
             <div className="flex flex-1 flex-col justify-center space-y-4">
               <div className="rounded-xl bg-gradient-to-br from-rose-500/10 to-orange-50/30 p-4">
                 <p className="text-xs font-semibold uppercase tracking-wider text-[#FF5C62]">
-                  Free plan
+                  Trial / network
                 </p>
                 <p className="mt-2 text-sm font-semibold text-gray-900">
-                  This plan has no charge.
+                  Not a paid checkout for external brands.
                 </p>
                 <p className="mt-1 text-sm text-gray-600">
-                  Your 14-day Growth trial starts automatically at signup, and
-                  free forever (capped) continues after it ends. Choose Growth
-                  to unlock branding removal and higher limits.
+                  Your 14-day Growth trial starts automatically at signup. After
+                  that, external brands need Growth ($9/mo per brand). VNOC /
+                  network domains stay free.
                 </p>
               </div>
               <Link

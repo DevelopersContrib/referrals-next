@@ -37,9 +37,7 @@ export default function ReferralProgramPage() {
 
       <div className="mt-8 space-y-10 sm:mt-12 sm:space-y-12">
         <section>
-          <h2 className="text-2xl font-semibold text-gray-900">
-            How It Works
-          </h2>
+          <h2 className="text-2xl font-semibold text-gray-900">How It Works</h2>
           <div className="mt-6 grid gap-6 sm:grid-cols-3">
             <div className="rounded-lg border p-6 text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-xl font-bold text-blue-600">
@@ -57,9 +55,7 @@ export default function ReferralProgramPage() {
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-xl font-bold text-blue-600">
                 2
               </div>
-              <h3 className="mt-4 font-semibold text-gray-900">
-                They Sign Up
-              </h3>
+              <h3 className="mt-4 font-semibold text-gray-900">They Sign Up</h3>
               <p className="mt-2 text-sm text-gray-600">
                 When someone signs up using your referral link, they
                 automatically become your referral.
@@ -69,9 +65,7 @@ export default function ReferralProgramPage() {
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-xl font-bold text-blue-600">
                 3
               </div>
-              <h3 className="mt-4 font-semibold text-gray-900">
-                Earn Rewards
-              </h3>
+              <h3 className="mt-4 font-semibold text-gray-900">Earn Rewards</h3>
               <p className="mt-2 text-sm text-gray-600">
                 When someone signs up using your referral link, they start with
                 the standard 14-day Growth trial — no credit card required.
@@ -103,8 +97,8 @@ export default function ReferralProgramPage() {
               <li className="flex gap-3">
                 <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-600" />
                 <span>
-                  <strong>After the trial</strong> they can stay on free
-                  forever (capped) or upgrade to Growth for $9/mo per brand.
+                  <strong>After the trial</strong> they continue on Growth for
+                  $9/mo per brand. VNOC / network domains stay free.
                 </span>
               </li>
             </ul>

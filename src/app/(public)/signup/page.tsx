@@ -6,11 +6,11 @@ import { SignupForm } from "@/components/auth/signup-form";
 export const metadata: Metadata = {
   title: "Start your 14-day Growth trial — Referrals.com",
   description:
-    "Create your Referrals.com account and get 14 days of full Growth features — no credit card. Then stay free forever (capped) or upgrade for $9/mo per brand.",
+    "Create your Referrals.com account and get 14 days of full Growth features — no credit card. Then $9/mo per brand. VNOC / network domains stay free.",
   openGraph: {
     title: "Start your 14-day Growth trial — Referrals.com",
     description:
-      "14-day Growth trial, no credit card. Then free forever (capped) or $9/mo per brand.",
+      "14-day Growth trial, no credit card. Then $9/mo per brand. VNOC / network domains stay free.",
     url: "https://referrals.com/signup",
     siteName: "Referrals.com",
     images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Start your 14-day Growth trial — Referrals.com",
     description:
-      "14-day Growth trial, no credit card. Then free forever (capped) or $9/mo per brand.",
+      "14-day Growth trial, no credit card. Then $9/mo per brand. VNOC / network domains stay free.",
   },
 };
 

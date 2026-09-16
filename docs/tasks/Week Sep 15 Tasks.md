@@ -67,4 +67,4 @@ Manual:
 
 ## Jayson (same sprint — not Ronan)
 
-J1 ✅ (free-forever copy killed on public funnel). J2–J5 (CTAs, billing redesign polish, pricing match, brand list links) remain on Jayson’s board in the sprint doc.
+J1 ✅ · J2 ✅ (unpaid external buy path + brandId on /stats). J3–J5 (billing redesign polish, pricing match, brand list links) remain on Jayson’s board in the sprint doc.

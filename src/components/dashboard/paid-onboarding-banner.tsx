@@ -118,7 +118,7 @@ function UnpaidBrandCard({
           </p>
         </div>
         <UpgradeCta href={upgradeHref} className="sm:w-auto">
-          Keep {domain} — $9/mo
+          Growth — $9/mo for this brand
         </UpgradeCta>
       </div>
     </section>
@@ -205,7 +205,7 @@ function SetupProgressCard({
           : "Explore Growth",
       done: status === "paid",
       href: upgradeHref,
-      cta: "View $9/mo plan",
+      cta: "Growth — $9/mo for this brand",
       hint:
         status === "trial"
           ? `Trial ends in ${daysLeft ?? "?"} day(s) — then $9/mo for ${brandLabel}.`

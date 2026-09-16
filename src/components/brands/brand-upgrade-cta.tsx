@@ -3,6 +3,8 @@ import { SparklesIcon } from "lucide-react";
 import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
 import { cn } from "@/lib/utils";
 
+export const GROWTH_BRAND_CTA_LABEL = "Growth — $9/mo for this brand";
+
 type BrandUpgradeCtaProps = {
   brandId: number | string;
   /** Visual density for card overlays vs list rows vs sidebars. */
@@ -11,8 +13,8 @@ type BrandUpgradeCtaProps = {
 };
 
 /**
- * REF-J5 — always includes brandId. Callers must gate with
- * brandShouldShowUpgradeCta so VNOC / paid / Growth brands never see this.
+ * Always includes brandId. Callers must gate with brandShouldShowUpgradeCta
+ * so VNOC / paid / Growth brands never see this.
  */
 export function BrandUpgradeCta({
   brandId,
@@ -34,7 +36,7 @@ export function BrandUpgradeCta({
         )}
       >
         <SparklesIcon className="size-4 shrink-0" aria-hidden />
-        Upgrade to Growth
+        {GROWTH_BRAND_CTA_LABEL}
       </Link>
     );
   }
@@ -51,7 +53,7 @@ export function BrandUpgradeCta({
         )}
       >
         <SparklesIcon className="size-4 shrink-0 text-[#926efb]" aria-hidden />
-        Upgrade to Growth
+        {GROWTH_BRAND_CTA_LABEL}
       </Link>
     );
   }
@@ -68,7 +70,7 @@ export function BrandUpgradeCta({
       )}
     >
       <SparklesIcon className="size-3.5 shrink-0" aria-hidden />
-      Upgrade
+      {GROWTH_BRAND_CTA_LABEL}
     </Link>
   );
 }

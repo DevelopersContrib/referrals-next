@@ -11,6 +11,8 @@ type DashboardUpgradeCardProps = {
   days?: number | null;
   noOfDomains?: number | null;
   campaignsParticipants?: number | null;
+  /** Prefer a concrete unpaid external brand so PayPal stamps this row. */
+  brandId?: number | null;
 };
 
 function buildIncludes(props: DashboardUpgradeCardProps): string[] {
@@ -36,12 +38,15 @@ export function DashboardUpgradeCard({
   days = 30,
   noOfDomains = 1,
   campaignsParticipants = null,
+  brandId = null,
 }: DashboardUpgradeCardProps) {
   const includes = buildIncludes({
     noOfDomains,
     campaignsParticipants,
   });
-  const href = `/billing/plan/${DEFAULT_PAID_PLAN_ID}`;
+  const href = brandId
+    ? `/billing/plan/${DEFAULT_PAID_PLAN_ID}?brandId=${brandId}`
+    : `/billing/plan/${DEFAULT_PAID_PLAN_ID}`;
   const displayPrice = Number(price ?? 0);
 
   return (
@@ -85,7 +90,7 @@ export function DashboardUpgradeCard({
         href={href}
         className="mt-6 flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-4 py-3 text-center text-sm font-semibold text-white shadow-md shadow-violet-300/40 transition-all hover:brightness-105 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#926efb]"
       >
-        Upgrade to Growth
+        Growth — $9/mo for this brand
       </Link>
     </div>
   );

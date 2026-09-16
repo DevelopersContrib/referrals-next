@@ -120,7 +120,7 @@ export function DomainUpgradeCard({ href }: DomainUpgradeCardProps) {
 
         <Link href={href} className="mt-6 block">
           <Button className="min-h-11 w-full rounded-xl bg-gradient-to-r from-[#926efb] to-[#7c3aed] text-sm font-semibold text-white shadow-md shadow-violet-300/40 hover:brightness-105">
-            Upgrade to add this domain
+            Growth — $9/mo for this brand
           </Button>
         </Link>
       </div>

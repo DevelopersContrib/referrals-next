@@ -68,7 +68,7 @@ Surfaces: `/pricing`, homepage pricing, `/signup` + `SignupForm`, `/features`, k
 
 **Done when:** a new visitor cannot find a free-forever plan for their own domain. ✅
 
-## J2 — Unpaid external always has a buy path (4h) — HIGH
+## J2 — Unpaid external always has a buy path (4h) — HIGH ✅
 
 Depends on **R1** for “this brand must pay.”
 
@@ -76,6 +76,8 @@ Depends on **R1** for “this brand must pay.”
 - CTA → existing `/billing/plan/2?brandId=` only
 - Copy: “Growth — $9/mo for this brand.” VNOC = Free / Network, no CTA. Paid = Active, no CTA
 - Trial banner: “Keep **this brand** — $9/mo” (not account-wide Free forever)
+
+**Done when:** unpaid external shows consistent Growth CTA with `brandId`; VNOC and paid show no upgrade. ✅
 
 ## J3 — `/billing` Available Plans redesign (4h) — CRITICAL
 
@@ -181,7 +183,7 @@ Add `src/lib/plan-catalog.ts` (or similar) used by `/billing` and `/pricing`:
 | ID                                                  | Owner      | Hours    | Pri          | Verified? |
 | --------------------------------------------------- | ---------- | -------- | ------------ | --------- |
 | J1 Kill free-forever copy                           | Jayson     | 4.0      | Critical     | Yes ✅    |
-| J2 Buy path on unpaid external                      | Jayson     | 4.0      | High         | Yes       |
+| J2 Buy path on unpaid external                      | Jayson     | 4.0      | High         | Yes ✅    |
 | **J3 `/billing` plans redesign**                    | **Jayson** | **4.0**  | **Critical** | **Yes**   |
 | J4 Public pricing matches billing                   | Jayson     | 3.0      | High         | Yes       |
 | J5 Brand list → brand dashboard                     | Jayson     | 1.5      | High         | Yes       |
@@ -208,7 +210,7 @@ Parked: +30d on paid invitee; widget.js static/dynamic; `/api/brand` auto-provis
 # VNOC paste (this repo only)
 
 1. **J1 — Kill “free forever” on pricing/signup/homepage** ✅ · Jayson · 4h · Critical
-2. J2 — Unpaid external CTA → `/billing/plan/2?brandId=` · Jayson · 4h · High
+2. **J2 — Unpaid external CTA → `/billing/plan/2?brandId=`** ✅ · Jayson · 4h · High
 3. **J3 — `/billing` Available Plans redesign** (Individuals vs Partners, Most Popular) · Jayson · 4h · Critical
 4. J4 — Public `/pricing` + homepage match billing catalog · Jayson · 3h · High
 5. **J5 — Brand list clickable → that brand’s `/brands/{id}` dashboard** · Jayson · 1.5h · High

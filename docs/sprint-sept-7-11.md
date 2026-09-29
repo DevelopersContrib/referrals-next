@@ -5,7 +5,7 @@
 **Created:** Sept 6, 2026 · **Verified in-repo Sept 6** (do not add unverified tickets)
 **Theme:** Close the referral reward loop, then stop selling a lie on $9/mo
 
-**Next:** Sept 14–18 pay-only funnel — [`docs/sprint-sept-14-18.md`](sprint-sept-14-18.md) (no free except VNOC; $9/mo per external brand).
+**Next (closed):** Sept 14–18 pay-only funnel — [`docs/sprint-sept-14-18.md`](sprint-sept-14-18.md) **CLOSED** (R1–R4 + J1–J5 ✅; re-verified Sept 28, 2026).
 
 One board. **Kareen is not on this sprint.** Jayson = UI. Ronan = API / paywalls / stats / copy.
 
@@ -176,7 +176,7 @@ Verified: per-campaign table always on; 30-day upgrade copy is a lie until you e
 
 **Shipped (verified Sept 11):** activate writes `url_plan` + `member_urls.plan_expiry` when `brandId` is set; skips `members.plan_expiry` in that case; webhook loads `brand_id` from the checkout attempt; `getBrandEntitlement` + J5 CTAs. Smoke: `scripts/smoke-brand-entitlement.ts`.
 
-**Leftovers → Sept 14–18 R2:** `brand_missing` log when no `brandId`; never stamp VNOC (`in_vnoc` / `vnoc_id`).
+**Leftovers → Sept 14–18 R2 ✅ (closed):** `brand_missing` log when no `brandId`; never stamp VNOC (`in_vnoc` / `vnoc_id`).
 
 **Why:** We already collect `brandId` at checkout. We do not stamp the brand, so UI cannot tell paid vs unpaid vs VNOC-free. Product (Maida, Sept 7): **VNOC domains are the only free brands. Every external brand pays $9/mo.** Trial is temporary Growth, not a free SKU.
 
@@ -249,15 +249,15 @@ Parked (verified but not this week unless R1–R5 + R7 finish early): +30d on pa
 
 **Sept 14–18 (no free except VNOC — [`sprint-sept-14-18.md`](sprint-sept-14-18.md))**
 
-14. **J1 — Kill “free forever” on pricing/signup/homepage** · Jayson · 4h · Critical  
-15. J2 — Unpaid external CTA → `/billing/plan/2?brandId=` · Jayson · 4h · High  
-16. **J3 — `/billing` Available Plans redesign** (Individuals vs Partners) · Jayson · 4h · Critical  
-17. J4 — Public `/pricing` + homepage match billing · Jayson · 3h · High  
-18. **J5 — Brand list clickable → `/brands/{id}` dashboard** · Jayson · 1.5h · High  
-19. **R1 — After trial, external is not a free product** · Ronan · 4h · Critical  
-20. **R2 — R7 leftovers: `brand_missing` log + never stamp VNOC** · Ronan · 1.5h · Critical  
-21. R3 — Trial-end: pay $9 for this brand · Ronan · 4h · High  
-22. **R4 — Shared plan-catalog helper; any paid planId stamps brand** · Ronan · 2.5h · High  
+14. **J1 — Kill “free forever” on pricing/signup/homepage** ✅ · Jayson · 4h · Critical  
+15. J2 — Unpaid external CTA → `/billing/plan/2?brandId=` ✅ · Jayson · 4h · High  
+16. **J3 — `/billing` Available Plans redesign** (Individuals vs Partners) ✅ · Jayson · 4h · Critical  
+17. J4 — Public `/pricing` + homepage match billing ✅ · Jayson · 3h · High  
+18. **J5 — Brand list clickable → `/brands/{id}` dashboard** ✅ · Jayson · 1.5h · High  
+19. **R1 — After trial, external is not a free product** ✅ · Ronan · 4h · Critical  
+20. **R2 — R7 leftovers: `brand_missing` log + never stamp VNOC** ✅ · Ronan · 1.5h · Critical  
+21. R3 — Trial-end: pay $9 for this brand ✅ · Ronan · 4h · High  
+22. **R4 — Shared plan-catalog helper; any paid planId stamps brand** ✅ · Ronan · 2.5h · High  
 
 ---
 

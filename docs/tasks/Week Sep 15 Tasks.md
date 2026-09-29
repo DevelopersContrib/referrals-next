@@ -1,6 +1,6 @@
 # Week Sep 15 Tasks — Ronan
 
-**Status:** **CLOSED** (Sept 14, 2026)  
+**Status:** **CLOSED** (Sept 14, 2026 · R1/R2 re-verified Sept 28, 2026)  
 **Sprint:** Sept 14–18, 2026 · **Owner:** Ronan  
 **Source:** [`docs/sprint-sept-14-18.md`](../sprint-sept-14-18.md)
 
@@ -67,4 +67,4 @@ Manual:
 
 ## Jayson (same sprint — not Ronan)
 
-J1 ✅ · J2 ✅ (unpaid external buy path + brandId on /stats). J3–J5 (billing redesign polish, pricing match, brand list links) remain on Jayson’s board in the sprint doc.
+J1 ✅ · J2 ✅ · J3 ✅ · J4 ✅ · J5 ✅ (see [`sprint-sept-14-18.md`](../sprint-sept-14-18.md)).

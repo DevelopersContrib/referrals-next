@@ -5,7 +5,9 @@
 **Created:** Sept 11, 2026 · **Product rule locked Sept 7 (Maida)**
 **Theme:** Stop giving the product away. Funnel every external brand to **$9/mo**. **No free** except VNOC.
 
-Prior board: [`docs/sprint-sept-7-11.md`](sprint-sept-7-11.md) (R1–R7 stamp shipped; R7 leftovers are **R2** this week).
+**Sprint status:** **CLOSED** (re-verified in-repo Sept 28, 2026). Ronan R1–R4 ✅ · Jayson J1–J5 ✅ · smoke: `npx tsx scripts/smoke-brand-entitlement.ts`.
+
+Prior board: [`docs/sprint-sept-7-11.md`](sprint-sept-7-11.md) (R1–R7 stamp shipped; R7 leftovers closed in **R2** below).
 
 One board. **Kareen is not on this sprint.** Jayson = marketing + CTAs. Ronan = entitlement / paywall / brand stamp.
 
@@ -18,9 +20,9 @@ Do **not** edit `.env`. Do **not** touch PayPal checkout UI (`/billing/plan/[pla
 
 ---
 
-# Why people do not buy today
+# Why people did not buy (fixed by R1)
 
-The widget **keeps working after trial for $0** (`free_capped`: 1 domain, 500 participants, branding on). Then we ask for $9. There is no reason to pay.
+**Before R1:** the widget kept working after trial for $0 (owners treated like happy free customers). **After R1:** post-trial externals are **`unpaid`** (must buy per brand); widget stays live for visitors with branding on; VNOC-only brands stay **`free_capped`** / Network.
 
 **Locked rule:** VNOC (`in_vnoc` / `vnoc_id`) is the **only** free brand. External brands: 14-day Growth trial, then **$9/mo per brand**. No free-forever SKU. Trial is not a plan — it ends.
 
@@ -41,16 +43,17 @@ Do **not** offer a working free program after trial. Visitors on an unpaid exter
 
 ---
 
-# Verified (do not re-litigate)
+# Verified (closed — do not re-litigate)
 
-| Claim                                | Verdict                                                                                              |
+| Claim                                | Verdict (Sept 28, 2026)                                                                              |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| App still allows free after trial    | **True.** `getMemberEntitlement` → `free_capped`. Widget stays live.                                 |
-| $9 stamps one brand                  | **True (R7).** `url_plan` + `member_urls.plan_expiry`. No `brandId` still unlocks the **account**.   |
-| VNOC can still get an `url_plan`     | **True leftover.** Activate does not refuse `in_vnoc` / `vnoc_id`. Entitlement only reads `in_vnoc`. |
-| Checkout with no `brandId`           | **True leftover.** No `brand_missing` log.                                                           |
+| App still allows free after trial    | **False (R1 ✅).** `getMemberEntitlement` → `unpaid`; external brands → `unpaid` without paid stamp. |
+| $9 stamps one brand                  | **True (R7 + R4).** `url_plan` + `member_urls.plan_expiry`. No `brandId` still unlocks the **account**. |
+| VNOC can still get an `url_plan`     | **False (R2 ✅).** `activatePaidSubscription` skips stamp when `isVnocBrand` (`in_vnoc` or `vnoc_id`). |
+| Checkout with no `brandId`           | **False (R2 ✅).** Logs `brand_missing` in `billing_checkout_events`; account still activates.       |
 | “Free forever” is still on marketing | **False (J1 ✅).** Public funnel is trial → $9/mo; VNOC footnote only.                               |
-| Public widget 403 on `free_capped`   | **Must stay false.** Visitors are not the customer.                                                  |
+| Public widget 403 when owner unpaid  | **False.** Embed loads; signup blocked only at participant cap, not for non-payment.                 |
+| Unique index on `member_urls.slug`   | **False.** App-level `claimBrandSlug` only (see `scripts/smoke-brand-slug.ts --db`).                  |
 
 ---
 
@@ -211,9 +214,9 @@ Parked: +30d on paid invitee; widget.js static/dynamic; `/api/brand` auto-provis
 
 1. **J1 — Kill “free forever” on pricing/signup/homepage** ✅ · Jayson · 4h · Critical
 2. **J2 — Unpaid external CTA → `/billing/plan/2?brandId=`** ✅ · Jayson · 4h · High
-3. **J3 — `/billing` Available Plans redesign** (Individuals vs Partners, Most Popular) · Jayson · 4h · Critical
-4. J4 — Public `/pricing` + homepage match billing catalog · Jayson · 3h · High
-5. **J5 — Brand list clickable → that brand’s `/brands/{id}` dashboard** · Jayson · 1.5h · High
+3. **J3 — `/billing` Available Plans redesign** (Individuals vs Partners, Most Popular) ✅ · Jayson · 4h · Critical
+4. J4 — Public `/pricing` + homepage match billing catalog ✅ · Jayson · 3h · High
+5. **J5 — Brand list clickable → that brand’s `/brands/{id}` dashboard** ✅ · Jayson · 1.5h · High
 6. **R1 — After trial, external is not a free product** ✅ · Ronan · 4h · Critical
 7. **R2 — R7 leftovers: `brand_missing` log + never stamp VNOC** ✅ · Ronan · 1.5h · Critical
 8. R3 — Trial-end email/banner: pay $9 for this brand ✅ · Ronan · 4h · High

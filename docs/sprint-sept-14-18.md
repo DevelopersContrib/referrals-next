@@ -16,22 +16,22 @@ Do **not** edit `.env`. Do **not** touch PayPal checkout UI (`/billing/plan/[pla
 | Who        | Focus                                                                           | Hours |
 | ---------- | ------------------------------------------------------------------------------- | ----- |
 | **Jayson** | Billing + public plan cards; unpaid CTAs; brand list → brand dashboard          | 16.5  |
-| **Ronan**  | Plan catalog helper + any paid plan stamps a brand; no free product after trial | 12.0  |
+| **Ronan**  | Plan catalog helper + any paid plan stamps a brand; no free publishing | 12.0  |
 
 ---
 
 # Why people did not buy (fixed by R1)
 
-**Before R1:** the widget kept working after trial for $0 (owners treated like happy free customers). **After R1:** post-trial externals are **`unpaid`** (must buy per brand); widget stays live for visitors with branding on; VNOC-only brands stay **`free_capped`** / Network.
+**Before R1:** the widget kept working for $0 (owners treated like happy free customers). **After R1:** unpaid brands must buy per brand.
 
-**Locked rule:** VNOC (`in_vnoc` / `vnoc_id`) is the **only** free brand. External brands: 14-day Growth trial, then **$9/mo per brand**. No free-forever SKU. Trial is not a plan — it ends.
+**Locked rule:** Every brand, including network domains, stays private until **$9/mo**. No free-forever SKU and no free publishing period.
 
 ---
 
 # Funnel (this is the week)
 
 ```
-Signup (no card) → 14-day Growth on first external brand
+Signup (no card) → private first brand
   → use the live widget / first referrals
   → day 12–14: “Keep this brand — $9/mo”
   → PayPal /billing/plan/2?brandId=
@@ -39,7 +39,7 @@ Signup (no card) → 14-day Growth on first external brand
 VNOC brands: never enter this funnel
 ```
 
-Do **not** offer a working free program after trial. Visitors on an unpaid external widget still load (branding on). The **owner** cannot add brands, hide branding, see full stats, or stay on Growth without paying that brand.
+Do **not** offer a working free program. An unpaid brand stays private until the owner pays $9/mo for it.
 
 ---
 
@@ -47,7 +47,7 @@ Do **not** offer a working free program after trial. Visitors on an unpaid exter
 
 | Claim                                | Verdict (Sept 28, 2026)                                                                              |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| App still allows free after trial    | **False (R1 ✅).** `getMemberEntitlement` → `unpaid`; external brands → `unpaid` without paid stamp. |
+| App still allows free publishing     | **False (R1 ✅).** `getMemberEntitlement` → `unpaid`; brands → `unpaid` without paid stamp. |
 | $9 stamps one brand                  | **True (R7 + R4).** `url_plan` + `member_urls.plan_expiry`. No `brandId` still unlocks the **account**. |
 | VNOC can still get an `url_plan`     | **False (R2 ✅).** `activatePaidSubscription` skips stamp when `isVnocBrand` (`in_vnoc` or `vnoc_id`). |
 | Checkout with no `brandId`           | **False (R2 ✅).** Logs `brand_missing` in `billing_checkout_events`; account still activates.       |
@@ -63,7 +63,7 @@ Do **not** offer a working free program after trial. Visitors on an unpaid exter
 
 Surfaces: `/pricing`, homepage pricing, `/signup` + `SignupForm`, `/features`, knowledgebase plans, ROI calculator, `use-cases.ts`.
 
-- One offer: **14-day Growth trial**, then **$9/mo per brand**
+- One offer: set up a brand, then **$9/mo per brand** to publish it
 - One footnote: **VNOC / network domains stay free**
 - Delete “then free forever (capped)” as a plan people can keep
 - Growth card: “$9/month **for this brand**” — not “unlimited domains for $9”
@@ -190,7 +190,7 @@ Add `src/lib/plan-catalog.ts` (or similar) used by `/billing` and `/pricing`:
 | **J3 `/billing` plans redesign**                    | **Jayson** | **4.0**  | **Critical** | **Yes**   |
 | J4 Public pricing matches billing                   | Jayson     | 3.0      | High         | Yes       |
 | J5 Brand list → brand dashboard                     | Jayson     | 1.5      | High         | Yes       |
-| **R1 No free product after trial** ✅               | **Ronan**  | **4.0**  | **Critical** | **Yes**   |
+| **R1 No free publishing** ✅                    | **Ronan**  | **4.0**  | **Critical** | **Yes**   |
 | **R2 R7 leftovers (VNOC + `brand_missing`)** ✅     | **Ronan**  | **1.5**  | **Critical** | **Yes**   |
 | R3 Trial-end copy + cron ✅                         | Ronan      | 4.0      | High         | Yes       |
 | R4 Shared plan catalog + any planId stamps brand ✅ | Ronan      | 2.5      | High         | Yes       |

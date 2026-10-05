@@ -103,7 +103,7 @@ export default function HowItWorksPage() {
           href="/signup"
           className="inline-block rounded-lg bg-blue-600 px-8 py-3 text-sm font-medium text-white hover:bg-blue-700"
         >
-          Get Started Free
+          Create account
         </Link>
       </div>
     </div>

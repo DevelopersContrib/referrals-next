@@ -23,7 +23,7 @@ export default async function EditBrandPage({ params }: EditBrandPageProps) {
   const entitlement = await getBrandEntitlement(brandIdNum, {
     applyAdminBypass: false,
   });
-  // Whitelabel / remove branding is paid-only for this brand (not trial).
+  // Whitelabel / remove branding is paid-only for this brand.
   const isPremium = Boolean(entitlement?.isPaid);
   const showUpgradeCta = brandShouldShowUpgradeCta(entitlement);
 

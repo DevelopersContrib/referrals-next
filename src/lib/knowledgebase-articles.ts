@@ -83,9 +83,9 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
     category: "Getting Started",
     description: "How to sign up for Referrals.com and get started.",
     paragraphs: [
-      "Visit referrals.com/signup to start your 14-day Growth trial. You'll need your name, email address, and a password. During signup you can also enter your first brand's website URL — Referrals.com will fetch your logo and site details automatically. No credit card is required.",
-      "After confirming your email, your Growth trial begins and you can sign in at /signin. From there add your brand, create campaigns, and embed your referral widget.",
-      "During the trial you get full Growth features (multi-domain, public campaigns, advanced analytics). After 14 days, external brands need Growth at $9/mo per brand.",
+      "Visit referrals.com/signup. You'll need your name, email address, and a password. During signup you can also enter your first brand's website URL — Referrals.com will fetch your logo and site details automatically.",
+      "After confirming your email, sign in at /signin. From there add your brand, create a private campaign, and embed your referral widget.",
+      "A brand stays private until you pay $9/mo to publish it and accept signups. That price applies to every brand, including network domains.",
     ],
   },
   {
@@ -95,7 +95,7 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
     description: "Add a brand by entering your website URL.",
     paragraphs: [
       "From your dashboard, click Create Brand or go to /brands/new. Enter your website URL (e.g. https://yoursite.com). Referrals.com validates the domain and pulls in your site title and logo.",
-      "Each brand represents one website or business. During your Growth trial (or on paid Growth) you can manage multiple brands from one account. After trial, each external brand is $9/mo.",
+      "Each brand represents one website or business. You can manage multiple brands from one account. Publishing a brand is $9/mo, including network domains.",
       "Once your brand is created, open its dashboard at /brands/[id] to view stats, manage campaigns, and access the widget editor.",
     ],
   },
@@ -184,7 +184,7 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
     paragraphs: [
       "Referrals.com offers pre-built templates for common referral mechanics — social rewards, invite-a-friend, token giveaways, photo voting, polls, and more. Browse templates at /campaign-templates.",
       "When creating a campaign, choose a template to pre-fill widget layout, default copy, and reward settings. You can customize every element before publishing.",
-      "Templates marked Premium require Growth (included in your 14-day trial, or $9/mo after). Free templates include social reward and basic invite flows suitable for most small businesses.",
+      "Templates marked Premium require a paid brand ($9/mo to publish). Other templates include social reward and basic invite flows suitable for most small businesses.",
     ],
   },
   {
@@ -259,8 +259,8 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
     category: "Billing & Plans",
     description: "Overview of Referrals.com pricing plans.",
     paragraphs: [
-      "Referrals.com uses a reverse trial: 14 days of full Growth features, then $9/month per brand for external brands. See /pricing and /billing.",
-      "After trial, unpaid external brands keep the widget live for visitors with Referrals.com branding on — that is not a free-forever plan. Pay Growth to remove branding and unlock multi-domain and advanced analytics.",
+      "Set up a brand for free, then pay $9/month per brand to publish it and accept signups. That includes network domains. See /pricing and /billing.",
+      "An unpaid brand stays private. Pay $9/mo to publish it, remove branding, and unlock analytics.",
       "Growth ($9/mo per brand) removes branding, unlocks multi-domain, advanced analytics, and higher limits. Subscribe from /billing/plan/2 via PayPal. Cancel anytime.",
     ],
   },
@@ -283,7 +283,7 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
     paragraphs: [
       "Go to /billing and choose Growth ($9/mo per brand), or open /billing/plan/2. You'll approve a PayPal billing agreement to subscribe.",
       "Upgrades take effect immediately — branding removal, multi-domain, and advanced analytics unlock right away.",
-      "If you hit the free domain or participant cap (or want to remove Powered-by), the dashboard prompts you to upgrade. You can also upgrade during your trial to keep Growth without interruption.",
+      "If you want to publish another brand or remove Powered-by, the dashboard prompts you to pay $9/mo for that brand.",
     ],
   },
   {

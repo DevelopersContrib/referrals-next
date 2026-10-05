@@ -58,7 +58,7 @@ function buildSegmentWhere(
   const clauses: string[] = ["m.email IS NOT NULL", "TRIM(m.email) <> ''"];
 
   if (rules.plan === "trial") {
-    // Growth trial: free/trial plan id with future expiry
+    // Unpaid plan id with a future expiry (legacy access window)
     clauses.push(
       "(m.plan_id IS NOT NULL AND m.plan_id <= 1 AND m.plan_expiry IS NOT NULL AND m.plan_expiry > NOW())",
     );
@@ -219,19 +219,19 @@ const FALLBACK_SEGMENTS: {
   rules: SegmentRules;
 }[] = [
   {
-    name: "In Growth trial",
+    name: "Access ending",
     description:
-      "Members in the 14-day Growth trial — loss-aversion upgrade window.",
+      "Unpaid accounts with a future expiry — prompt them to pay $9/mo to publish.",
     rules: { plan: "trial" },
   },
   {
-    name: "Free capped (post-trial)",
-    description: "Trial ended — widget live with caps; warm upgrade leads.",
+    name: "Unpaid at cap",
+    description: "Unpaid accounts at the participant cap — prompt them to publish.",
     rules: { plan: "free_capped", hasQuotes: true },
   },
   {
     name: "Free capped · no campaigns",
-    description: "Post-trial / free with no campaign — activation + upgrade.",
+    description: "Unpaid accounts with no campaign — activation, then pay to publish.",
     rules: { plan: "free_capped", hasQuotes: false },
   },
   {
@@ -246,13 +246,13 @@ const FALLBACK_SEGMENTS: {
   },
   {
     name: "New members (14 days)",
-    description: "First two weeks — product tour / trial window.",
+    description: "First two weeks — product tour and setup.",
     rules: { registeredWithinDays: 14, notInWelcomeSequence: true },
   },
   {
-    name: "Trial · has campaigns",
+    name: "Unpaid · has campaigns",
     description:
-      "Trial members already running campaigns — strongest upgrade cohort.",
+      "Unpaid accounts already running campaigns — strongest upgrade cohort.",
     rules: { plan: "trial", hasQuotes: true },
   },
   {
@@ -313,12 +313,12 @@ export async function aiCreateSegments(): Promise<{
   if (aiEnabled()) {
     const prompt = `You create audience SEGMENTS for Referrals.com (referral marketing SaaS). Personal 1:1 engagement — not blasts.
 
-Pricing model: 14-day Growth reverse trial → unpaid external ($9/mo per brand) or VNOC free → $9/mo Growth paid.
-- trial = in Growth trial (full features, future plan_expiry)
-- unpaid = post-trial external without payment (widget live for visitors, branding on — not a free-forever plan)
-- free_capped = VNOC / network only (or legacy capped free)
-- paid = active paid Growth
-- free = legacy alias for anyone not paid (prefer trial, unpaid, or free_capped instead)
+Pricing model: set up a brand, then pay $9/mo per brand to publish it and accept signups. There is no free publishing period. Network domains follow the same rule.
+- trial = legacy unpaid plan id with a future expiry (not a free publishing period)
+- unpaid = no active payment (brand stays private)
+- free_capped = legacy capped unpaid accounts
+- paid = active paid subscription
+- free = legacy alias for anyone not paid (prefer unpaid or free_capped)
 
 Live stats:
 ${JSON.stringify(stats, null, 2)}
@@ -340,7 +340,7 @@ Return ONLY a JSON array of 4-6 segments. Each must use this exact shape:
 
 Note: hasQuotes means "has created at least one referral campaign" on this platform.
 nearParticipantCap means total participants across campaigns ≥ ~80% of the free cap.
-Prioritize trial ending / free_capped with campaigns (upgrade), near cap, then trial activation, then paid nurture.`;
+Prioritize unpaid accounts with campaigns (upgrade), near cap, then new-account setup, then paid nurture. Publishing is $9/mo per brand.`;
 
     const text = await completeText(prompt, {
       maxTokens: 900,

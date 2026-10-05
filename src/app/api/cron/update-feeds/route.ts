@@ -2,38 +2,44 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticateCron } from "@/lib/api/helpers";
 
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
+const BATCH = 8;
+const BUDGET_MS = 40_000;
+
 export async function GET(req: NextRequest) {
   if (!authenticateCron(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    // Get all brands with URLs to fetch RSS feeds from
+    // A slice of brands per run. Checking every brand, at five URLs each,
+    // ran until the 300s function limit.
+    const slot = Math.floor(Date.now() / (4 * 60 * 60 * 1000));
     const brands = await prisma.member_urls.findMany({
       where: { url: { not: "" } },
       select: { id: true, url: true, domain: true },
+      orderBy: { id: "asc" },
+      take: BATCH,
+      skip: (slot % 48) * BATCH,
     });
+    const deadline = Date.now() + BUDGET_MS;
 
     let feedsUpdated = 0;
     let feedsFailed = 0;
 
     for (const brand of brands) {
+      if (Date.now() > deadline) break;
       try {
-        // Try common RSS feed URLs
-        const feedUrls = [
-          `${brand.url}/feed`,
-          `${brand.url}/rss`,
-          `${brand.url}/feed.xml`,
-          `${brand.url}/rss.xml`,
-          `${brand.url}/blog/feed`,
-        ];
+        const feedUrls = [`${brand.url.replace(/\/+$/, "")}/feed`];
 
         let feedXml: string | null = null;
 
         for (const feedUrl of feedUrls) {
           try {
             const resp = await fetch(feedUrl, {
-              signal: AbortSignal.timeout(5000),
+              signal: AbortSignal.timeout(3000),
               headers: { "User-Agent": "Referrals.com Feed Bot/1.0" },
             });
             if (resp.ok) {

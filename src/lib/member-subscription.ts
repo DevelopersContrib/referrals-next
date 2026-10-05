@@ -31,7 +31,7 @@ export type MemberEntitlement = {
   planId: number | null;
   planExpiry: Date | null;
   daysLeft: number | null;
-  /** Full Growth features (trial or paid). */
+  /** Full Growth features (paid). */
   isGrowth: boolean;
   /** Paying customer (price > 0). */
   isPaid: boolean;
@@ -42,7 +42,7 @@ export type MemberEntitlement = {
 export type BrandEntitlement = MemberEntitlement & {
   brandId: number;
   memberId: number;
-  /** VNOC network brands are always free — never inherit another brand's pay. */
+  /** Network brand flag. Go-live still requires a paid stamp. */
   isVnoc: boolean;
 };
 
@@ -51,7 +51,7 @@ export function subscriptionRequiredResponse(message?: string) {
     {
       error:
         message ||
-        "Your Growth trial has ended or this feature needs a paid plan. Open Billing to continue — $9/mo per brand.",
+        "Pay $9/mo for this brand to go live.",
       code: "REQUIRES_SUBSCRIPTION",
       upgradePlanId: DEFAULT_PAID_PLAN_ID,
     },
@@ -63,7 +63,21 @@ export function participantCapMessage() {
   return `This program has reached ${FREE_PARTICIPANT_CAP} participants. The brand owner can upgrade to grow further.`;
 }
 
-/** VNOC network brands — always free, never enter the $9/mo funnel. */
+export function programNotLiveMessage() {
+  return "This program isn't live yet. The brand owner can publish it after paying $9/mo for this brand.";
+}
+
+export function programNotLiveResponse(extraHeaders?: HeadersInit) {
+  return NextResponse.json(
+    {
+      error: programNotLiveMessage(),
+      code: "NOT_LIVE",
+    },
+    { status: 403, headers: extraHeaders },
+  );
+}
+
+/** VNOC network brand. It does not go live until that brand is paid. */
 export function isVnocBrand(brand: {
   in_vnoc?: boolean | null;
   vnoc_id?: number | null;
@@ -113,10 +127,9 @@ export function daysLeftUntil(
 }
 
 /**
- * Reverse-trial entitlement:
- * - trial: plan_id trial/free + future plan_expiry → full Growth
+ * Entitlement:
  * - paid: price > 0 + future plan_expiry → full Growth + hide branding
- * - unpaid: post-trial external — must buy per brand (not a free SKU)
+ * - unpaid: must pay $9/mo per brand to publish (not a free SKU)
  * - free_capped: legacy alias kept for engagement segments; maps to unpaid at gates
  */
 export async function getMemberEntitlement(
@@ -182,18 +195,6 @@ export async function getMemberEntitlement(
     };
   }
 
-  if (activeExpiry && price <= 0) {
-    return {
-      status: "trial",
-      planId: planId ?? TRIAL_PLAN_ID,
-      planExpiry: expiry,
-      daysLeft,
-      isGrowth: true,
-      isPaid: false,
-      hideBranding: false,
-    };
-  }
-
   return {
     status: "unpaid",
     planId,
@@ -206,8 +207,8 @@ export async function getMemberEntitlement(
 }
 
 /**
- * Per-brand entitlement. Account trial applies to all brands; paid Growth is
- * stamped per brand (url_plan + member_urls.plan_expiry). VNOC brands stay free.
+ * Per-brand entitlement. Paid Growth is stamped per brand
+ * (url_plan + member_urls.plan_expiry). Publishing requires that stamp.
  */
 export async function getBrandEntitlement(
   brandId: number,
@@ -267,39 +268,6 @@ export async function getBrandEntitlement(
     };
   }
 
-  const accountTrial = await getMemberEntitlement(memberId, {
-    applyAdminBypass: false,
-  });
-  if (accountTrial.status === "trial") {
-    return {
-      brandId,
-      memberId,
-      isVnoc,
-      status: "trial",
-      planId: accountTrial.planId,
-      planExpiry: accountTrial.planExpiry,
-      daysLeft: accountTrial.daysLeft,
-      isGrowth: true,
-      isPaid: false,
-      hideBranding: false,
-    };
-  }
-
-  if (isVnoc) {
-    return {
-      brandId,
-      memberId,
-      isVnoc,
-      status: "free_capped",
-      planId: null,
-      planExpiry: null,
-      daysLeft: 0,
-      isGrowth: false,
-      isPaid: false,
-      hideBranding: false,
-    };
-  }
-
   const brandExpiry = brand.plan_expiry ? new Date(brand.plan_expiry) : null;
   const brandPaidActive =
     brandExpiry != null && brandExpiry.getTime() > Date.now();
@@ -351,7 +319,7 @@ export async function getBrandEntitlement(
 }
 
 /**
- * First non-VNOC brand for checkout CTAs (trial end, unpaid nags).
+ * First brand for checkout CTAs.
  */
 export async function getPrimaryCheckoutBrand(memberId: number) {
   const brands = await prisma.member_urls.findMany({
@@ -359,39 +327,39 @@ export async function getPrimaryCheckoutBrand(memberId: number) {
     orderBy: { date_added: "asc" },
     select: { id: true, domain: true, in_vnoc: true, vnoc_id: true },
   });
-  return brands.find((b) => !isVnocBrand(b)) ?? null;
+  return brands[0] ?? null;
 }
 
 /**
  * REF-J5: show a brand Upgrade CTA only for unpaid, non-VNOC brands that are
- * not already on Growth (trial or paid). Never for VNOC or paid stamps.
+ * that are not already paid.
  */
 export function brandShouldShowUpgradeCta(
   e:
     Pick<BrandEntitlement, "isVnoc" | "isPaid" | "isGrowth"> | null | undefined,
 ): boolean {
   if (!e) return false;
-  return !e.isVnoc && !e.isPaid && !e.isGrowth;
+  return !e.isPaid;
 }
 
-/** Full Growth for a brand (account trial or that brand paid). */
+/** A brand is live only when it has an active paid stamp. */
 export async function isBrandGrowthEntitled(brandId: number): Promise<boolean> {
   const e = await getBrandEntitlement(brandId);
-  return e?.isGrowth ?? false;
+  return e?.isPaid ?? false;
 }
 
-/** Paid Growth for a single brand (not account trial). */
+/** Paid Growth for a single brand. */
 export async function isBrandOnPaidPlan(brandId: number): Promise<boolean> {
   const e = await getBrandEntitlement(brandId);
   return e?.isPaid ?? false;
 }
 
-/** Full Growth (trial or paid). Prefer this for feature gates. */
+/** Account is paid only when the member plan price is greater than zero. */
 export async function isMemberGrowthEntitled(
   memberId: number,
 ): Promise<boolean> {
   const e = await getMemberEntitlement(memberId);
-  return e.isGrowth;
+  return e.isPaid;
 }
 
 /**
@@ -424,8 +392,6 @@ export async function countMemberParticipants(memberId: number) {
 
 export async function canMemberAddBrand(memberId: number) {
   const e = await getMemberEntitlement(memberId);
-  // Account trial unlocks multi-brand; per-brand pay does not bypass the free cap.
-  if (e.status === "trial") return { ok: true as const, entitlement: e };
   const n = await countMemberBrands(memberId);
   if (n >= FREE_DOMAIN_CAP) {
     return {
@@ -458,13 +424,11 @@ export async function canBrandAcceptParticipant(brandId: number) {
       reason: "brand_not_found" as const,
     };
   }
-  if (e.isGrowth) return { ok: true as const, entitlement: e };
-  const n = await countBrandParticipants(brandId);
-  if (n >= FREE_PARTICIPANT_CAP) {
+  if (!e.isPaid) {
     return {
       ok: false as const,
       entitlement: e,
-      reason: "participant_cap" as const,
+      reason: "not_live" as const,
     };
   }
   return { ok: true as const, entitlement: e };
@@ -489,16 +453,12 @@ export async function assertCanAcceptParticipant(
 /** @deprecated Prefer canBrandAcceptParticipant for widget/API caps. */
 export async function canMemberAcceptParticipant(memberId: number) {
   const e = await getMemberEntitlement(memberId);
-  if (e.isGrowth) return { ok: true as const, entitlement: e };
-  const n = await countMemberParticipants(memberId);
-  if (n >= FREE_PARTICIPANT_CAP) {
-    return {
-      ok: false as const,
-      entitlement: e,
-      reason: "participant_cap" as const,
-    };
-  }
-  return { ok: true as const, entitlement: e };
+  if (e.isPaid) return { ok: true as const, entitlement: e };
+  return {
+    ok: false as const,
+    entitlement: e,
+    reason: "not_live" as const,
+  };
 }
 
 /** Visitor-facing: show Powered-by unless this brand is on paid Growth. */

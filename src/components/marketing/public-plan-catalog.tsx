@@ -3,6 +3,7 @@ import {
   formatPlanPrice,
   getPlanFeatures,
   isMostPopularIndividual,
+  paidCatalogPlans,
   PLAN_CATALOG_COPY,
   planBillingLabel,
   splitPlanAudiences,
@@ -28,9 +29,9 @@ function planCtaLabel(
   isPaid: boolean,
   isLoggedIn: boolean,
 ) {
-  if (!isPaid) return "Start free trial";
+  if (!isPaid) return "Create account";
   if (isLoggedIn) return `Get ${planName ?? "plan"}`;
-  return "Start free trial";
+  return "Create account";
 }
 
 function CheckIcon({ color }: { color: string }) {
@@ -143,12 +144,17 @@ function PublicPlanCard({
           {ctaLabel}
         </Link>
       ) : (
-        <Link
-          href="/signup"
-          className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl border border-[#FF5C62]/30 bg-[#FF5C62]/5 px-4 py-3 text-center text-sm font-semibold text-[#FF5C62] transition hover:bg-[#FF5C62]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5C62]"
-        >
-          Start free trial
-        </Link>
+        <div className="mt-6 space-y-2">
+          <Link
+            href="/signup"
+            className="flex min-h-11 w-full items-center justify-center rounded-xl border border-[#FF5C62]/30 bg-[#FF5C62]/5 px-4 py-3 text-center text-sm font-semibold text-[#FF5C62] transition hover:bg-[#FF5C62]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5C62]"
+          >
+            Create account
+          </Link>
+          <p className="text-center text-[11px] leading-snug text-gray-500">
+            {PLAN_CATALOG_COPY.vnocFootnote}
+          </p>
+        </div>
       )}
     </article>
   );
@@ -163,7 +169,7 @@ export function PublicPlanCatalog({
   isLoggedIn,
   variant = "full",
 }: PublicPlanCatalogProps) {
-  const { individuals, partners } = splitPlanAudiences(plans);
+  const { individuals, partners } = splitPlanAudiences(paidCatalogPlans(plans));
 
   return (
     <div className="w-full min-w-0 space-y-10">

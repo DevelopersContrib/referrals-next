@@ -82,7 +82,7 @@ export function SignupForm() {
           Create your account
         </h1>
         <p className="mt-2 text-sm text-gray-600">
-          Start growing with referrals — 14-day Growth trial, no card.
+          Set up your referral program. Pay $9/mo per brand when you publish.
         </p>
       </div>
 
@@ -190,7 +190,7 @@ export function SignupForm() {
         </Button>
 
         <p className="text-center text-xs text-gray-500">
-          14-day Growth trial · No credit card · Then $9/mo per brand
+          Set up free · $9/mo per brand to go live
         </p>
       </form>
 

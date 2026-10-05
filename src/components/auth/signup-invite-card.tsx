@@ -11,7 +11,7 @@ type Props = {
 };
 
 const SHARE_TEXT =
-  "I just started a 14-day Growth trial on Referrals.com — launch a referral program with no credit card:";
+  "I just set up a referral program on Referrals.com — create your account and publish a brand for $9/mo:";
 
 export function SignupInviteCard({
   shareUrl,
@@ -57,11 +57,11 @@ export function SignupInviteCard({
       }
     >
       <p className="text-sm font-semibold text-gray-900">
-        Invite a business — they get a 14-day Growth trial
+        Invite a business — they can set up a program too
       </p>
       <p className="mt-1 text-xs text-gray-600">
-        Share your link so they can launch a referral program with no credit
-        card. You don&apos;t have to wait.
+        Share your link so they can create an account. Publishing a brand is
+        $9/mo. You don&apos;t have to wait.
       </p>
       <div className="mt-3 flex min-h-11 items-stretch gap-2">
         <input

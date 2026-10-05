@@ -532,7 +532,7 @@ export function ReferralWidget({
           </div>
         )}
 
-        {/* Powered by — required on trial/free; hidden for paid */}
+        {/* Powered by — shown until the brand is paid */}
         {config.showBranding !== false && (
         <div
           style={{

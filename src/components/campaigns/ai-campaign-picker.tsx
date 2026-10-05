@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { AnalysisStatus, CampaignView } from "@/components/onboarding/analysis-types";
+import { JOB_TIMEOUT_MS } from "@/lib/analysis/types";
 import { AiCampaignBrief, type CampaignBriefChoice } from "@/components/campaigns/ai-campaign-brief";
 import { DESIGN_META, isCampaignDesign } from "@/lib/analysis/campaign-design";
 
@@ -54,9 +55,23 @@ export function AiCampaignPicker({
   const [generating, setGenerating] = useState(false);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stoppedRef = useRef(false);
+  const pollAttemptRef = useRef(0);
+  const pollStartedRef = useRef<number | null>(null);
+  const [forceBrief, setForceBrief] = useState(false);
 
   const poll = useCallback(async (id: number) => {
     if (stoppedRef.current) return;
+    if (typeof document !== "undefined" && document.hidden) {
+      const onVisible = () => {
+        if (document.hidden) return;
+        document.removeEventListener("visibilitychange", onVisible);
+        void poll(id);
+      };
+      document.addEventListener("visibilitychange", onVisible);
+      return;
+    }
+    const elapsed =
+      pollStartedRef.current != null ? Date.now() - pollStartedRef.current : 0;
     try {
       const res = await fetch(`/api/brands/analyze/${id}`, { cache: "no-store" });
       if (res.ok) {
@@ -68,7 +83,14 @@ export function AiCampaignPicker({
     } catch {
       /* keep polling */
     }
-    pollRef.current = setTimeout(() => poll(id), 1600);
+    if (elapsed >= JOB_TIMEOUT_MS) {
+      setLoading(false);
+      setForceBrief(true);
+      return;
+    }
+    const wait = pollAttemptRef.current <= 0 ? 3000 : pollAttemptRef.current === 1 ? 5000 : 8000;
+    pollAttemptRef.current += 1;
+    pollRef.current = setTimeout(() => poll(id), wait);
   }, []);
 
   useEffect(() => {
@@ -91,6 +113,8 @@ export function AiCampaignPicker({
       if (initialJobId) {
         setJobId(initialJobId);
         setLoading(true);
+        pollStartedRef.current = Date.now();
+        pollAttemptRef.current = 0;
         void poll(initialJobId);
         return;
       }
@@ -113,6 +137,8 @@ export function AiCampaignPicker({
           return;
         }
         setJobId(data.jobId);
+        pollStartedRef.current = Date.now();
+        pollAttemptRef.current = 0;
         void poll(data.jobId);
       } catch {
         setError("Could not start AI campaign design.");
@@ -123,7 +149,16 @@ export function AiCampaignPicker({
     void start();
   }, [statusProp, initialJobId, brandId, brandUrl, poll]);
 
-  const analysisSettled = status?.status === "done" || status?.status === "failed";
+  const analysisSettled =
+    forceBrief || status?.status === "done" || status?.status === "failed";
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setForceBrief(true);
+      setLoading(false);
+    }, 20_000);
+    return () => window.clearTimeout(timer);
+  }, []);
   const showBrief =
     askBrief && !briefDone && !generating && Boolean(status) && analysisSettled;
 
@@ -140,7 +175,7 @@ export function AiCampaignPicker({
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Could not generate campaigns. Please try again.");
+        setError(data.error || "This step couldn't finish");
         setGenerating(false);
         return;
       }

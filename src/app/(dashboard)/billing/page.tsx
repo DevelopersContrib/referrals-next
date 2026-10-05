@@ -11,6 +11,7 @@ import { getMemberEntitlement } from "@/lib/member-subscription";
 import {
   getPlanFeatures,
   isMostPopularIndividual,
+  paidCatalogPlans,
   PLAN_CATALOG_COPY,
   planBillingLabel,
   splitPlanAudiences,
@@ -50,7 +51,7 @@ function statusBadgeVariant(
 function statusLabel(status: HumanBillingStatus): string {
   switch (status) {
     case "trial":
-      return "Trial";
+      return "Unpaid";
     case "paid":
       return "Paid";
     case "cancelled":
@@ -58,7 +59,7 @@ function statusLabel(status: HumanBillingStatus): string {
     case "unpaid":
       return "Unpaid";
     default:
-      return "Free";
+      return "Unpaid";
   }
 }
 
@@ -68,7 +69,7 @@ function statusDetail(
   daysLeft: number | null,
 ): string | null {
   if (status === "unpaid") {
-    return "Trial ended — pay $9/mo per brand to keep Growth";
+    return "Pay $9/mo per brand to publish it and accept signups.";
   }
 
   if (status === "free") {
@@ -80,10 +81,7 @@ function statusDetail(
   const dateLabel = planExpiry.toLocaleDateString();
 
   if (status === "trial") {
-    if (daysLeft != null && daysLeft > 0) {
-      return `Trial ends ${dateLabel} · ${daysLeft} day${daysLeft === 1 ? "" : "s"} left`;
-    }
-    return `Trial ends ${dateLabel}`;
+    return "Pay $9/mo per brand to publish it and accept signups.";
   }
 
   if (status === "cancelled") {
@@ -328,7 +326,7 @@ export default async function BillingPage({
         {/* Stack through 768 (lg starts at 1024); desktop keeps 2–3 cols */}
         <div className="w-full min-w-0 max-w-5xl space-y-10">
           {(() => {
-            const catalogPlans = plans as CatalogPlan[];
+            const catalogPlans = paidCatalogPlans(plans as CatalogPlan[]);
             const { individuals, partners } = splitPlanAudiences(catalogPlans);
 
             return (

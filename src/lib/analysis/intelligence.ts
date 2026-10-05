@@ -80,6 +80,7 @@ Be specific and realistic. Do not invent facts not implied by the data; infer se
     prompt,
     temperature: 0.6,
     maxTokens: 1200,
+    timeoutMs: 15_000,
   });
 
   const arr = (v: unknown): string[] =>
@@ -200,6 +201,7 @@ Match the brand voice. Be concrete and realistic with predictions.`;
     prompt,
     temperature: 0.7,
     maxTokens: 3500,
+    timeoutMs: 25_000,
   });
 
   const kinds: CampaignKind[] = brief
@@ -228,6 +230,94 @@ Match the brand voice. Be concrete and realistic with predictions.`;
       predictedConversion: String(c.predictedConversion || "").slice(0, 30),
       predictedReferrals: String(c.predictedReferrals || "").slice(0, 30),
       estimatedRoi: String(c.estimatedRoi || "").slice(0, 60),
+    };
+  });
+}
+
+export function profileFromContext(ctx: BrandContext): BrandProfile {
+  const name = ctx.name || ctx.domain;
+  const services = [...ctx.services, ...ctx.products].filter(Boolean);
+  return {
+    summary:
+      ctx.description ||
+      ctx.metaDescription ||
+      ctx.tagline ||
+      `${name} can grow through customer referrals.`,
+    industry: "General",
+    icp: services[0] ? `People who need ${services[0]}` : "Existing customers",
+    targetAudience: services.length
+      ? services.slice(0, 3).join(", ")
+      : "Customers who already know the brand",
+    products: services.join(", ") || name,
+    usp: ctx.tagline || ctx.primaryCta || `${name} worth sharing`,
+    brandVoice: "clear, friendly, specific",
+    advantages: services.slice(0, 3),
+    weaknesses: [],
+    opportunities: ["Turn happy customers into a referral channel"],
+    readinessScore: 55,
+  };
+}
+
+const FALLBACK_COPY: Record<
+  CampaignKind,
+  { name: string; headline: string; rewardType: string }
+> = {
+  fast_growth: {
+    name: "Invite friends",
+    headline: "Share it with a friend",
+    rewardType: "coupon",
+  },
+  revenue: {
+    name: "Referral rewards",
+    headline: "Earn when a friend gets started",
+    rewardType: "cash",
+  },
+  loyalty: {
+    name: "Thank your customers",
+    headline: "A thank-you for spreading the word",
+    rewardType: "coupon",
+  },
+};
+
+/** Usable campaigns when OpenAI is down or the brand profile never finished. */
+export function fallbackCampaigns(
+  ctx: BrandContext,
+  brief?: CampaignBrief,
+): CampaignSuggestion[] {
+  const name = ctx.name || ctx.domain;
+  const tone = brief?.copyTone || "friendly and clear";
+  const kinds: CampaignKind[] = brief
+    ? [
+        brief.goalKind,
+        ...(["fast_growth", "revenue", "loyalty"] as CampaignKind[]).filter(
+          (k) => k !== brief.goalKind,
+        ),
+      ]
+    : ["fast_growth", "revenue", "loyalty"];
+
+  return kinds.map((kind) => {
+    const meta = FALLBACK_COPY[kind];
+    const headline = `${meta.headline} — ${name}`;
+    return {
+      kind,
+      name: `${name} ${meta.name}`,
+      rewardType: meta.rewardType,
+      headline,
+      description: `A ${tone} referral program for ${name}. Friends join, and you reward the person who sent them.`,
+      landingCopy: `${name} grows when customers tell people they trust. Share your link and earn a reward when a friend takes the next step.`,
+      emailSequence: [
+        `Know someone who would like ${name}? Send them your link.`,
+        `Your referral link is ready. One share is enough to get started.`,
+      ],
+      socialPosts: [`I use ${name}. Here's my link if you want to try it.`],
+      sms: `Try ${name} with my link.`,
+      widgetCopy: headline,
+      successPage: `You're in. We'll let the person who invited you know.`,
+      fraudTips: ["One reward per new customer", "Ignore duplicate emails"],
+      launchChannels: ["Website widget", "Email", "Social"],
+      predictedConversion: "5-10%",
+      predictedReferrals: "Varies",
+      estimatedRoi: "—",
     };
   });
 }

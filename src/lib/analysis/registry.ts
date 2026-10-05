@@ -7,12 +7,16 @@ import { lookupVnocDomain } from "./vnoc";
 import { crawlSite } from "./crawler";
 import { discoverSocialsFromHtml, mergeSocials } from "./social";
 import {
+  fallbackCampaigns,
   generateBrandProfile,
   generateCampaigns,
+  profileFromContext,
   type BrandContext,
+  type BrandProfile,
   type CampaignBrief,
   type CampaignSuggestion,
 } from "./intelligence";
+import { JOB_TIMEOUT_MS } from "./types";
 import { generateCampaignHeroImage } from "./campaign-hero-image";
 
 // ── vnoc ──────────────────────────────────────────────────────────────────
@@ -202,22 +206,25 @@ const campaignsRunner: ModuleRunner = async (analysis) => {
   await replaceCampaignSuggestions(analysis.id, campaigns);
 };
 
-export async function regenerateCampaignsForJob(
-  analysisId: number,
-  brief: CampaignBrief
-) {
-  if (!hasOpenAI()) throw new Error("OPENAI_API_KEY not configured");
-  const analysis = await prisma.brand_analysis.findUnique({ where: { id: analysisId } });
-  if (!analysis) throw new Error("Analysis not found");
+export class AnalysisNotReadyError extends Error {
+  code = "STILL_RUNNING" as const;
+}
 
-  const ctx = await buildContext(analysis);
-  const intel = await prisma.brand_intelligence.findFirst({
-    where: { analysis_id: analysis.id },
-    orderBy: { id: "desc" },
-  });
-  if (!intel) throw new Error("Brand analysis is still running. Try again in a moment.");
-
-  const profile = {
+function profileFromIntel(intel: {
+  summary: string | null;
+  industry: string | null;
+  icp: string | null;
+  target_audience: string | null;
+  products: string | null;
+  usp: string | null;
+  brand_voice: string | null;
+  advantages: unknown;
+  weaknesses: unknown;
+  opportunities: unknown;
+  readiness_score: number | null;
+}): BrandProfile {
+  const asArr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
+  return {
     summary: intel.summary || "",
     industry: intel.industry || "",
     icp: intel.icp || "",
@@ -225,31 +232,109 @@ export async function regenerateCampaignsForJob(
     products: intel.products || "",
     usp: intel.usp || "",
     brandVoice: intel.brand_voice || "",
-    advantages: (intel.advantages as unknown as string[]) || [],
-    weaknesses: (intel.weaknesses as unknown as string[]) || [],
-    opportunities: (intel.opportunities as unknown as string[]) || [],
+    advantages: asArr(intel.advantages),
+    weaknesses: asArr(intel.weaknesses),
+    opportunities: asArr(intel.opportunities),
     readinessScore: intel.readiness_score || 60,
   };
+}
 
-  const imagePromise =
-    brief.wantImage === false
-      ? Promise.resolve(null)
-      : generateCampaignHeroImage({
-          memberId: analysis.member_id,
-          domain: analysis.domain,
-          industry: intel.industry,
-          brandVoice: intel.brand_voice,
-          summary: intel.summary,
-          color: brief.color,
-          copyTone: brief.copyTone,
-          goalKind: brief.goalKind,
-          designStyle: brief.designStyle,
-        });
+function contextHasSignals(ctx: BrandContext): boolean {
+  return Boolean(
+    ctx.name ||
+      ctx.description ||
+      ctx.metaDescription ||
+      ctx.services.length ||
+      ctx.products.length ||
+      ctx.socials.length,
+  );
+}
 
-  const [campaigns, bannerImageUrl] = await Promise.all([
-    generateCampaigns(ctx, profile, brief),
-    imagePromise,
-  ]);
+export async function regenerateCampaignsForJob(
+  analysisId: number,
+  brief: CampaignBrief
+) {
+  const analysis = await prisma.brand_analysis.findUnique({ where: { id: analysisId } });
+  if (!analysis) throw new Error("Analysis not found");
+
+  const ctx = await buildContext(analysis);
+  const running =
+    analysis.status === "pending" || analysis.status === "running";
+  const started = analysis.started_at?.getTime() ?? 0;
+  const expired = Boolean(started) && Date.now() - started >= JOB_TIMEOUT_MS;
+  if (running && !expired && !contextHasSignals(ctx)) {
+    throw new AnalysisNotReadyError(
+      "Brand analysis is still running. Try again in a moment.",
+    );
+  }
+
+  const intel = await prisma.brand_intelligence.findFirst({
+    where: { analysis_id: analysis.id },
+    orderBy: { id: "desc" },
+  });
+
+  let profile: BrandProfile | null = intel ? profileFromIntel(intel) : null;
+  if (!profile && hasOpenAI()) {
+    try {
+      profile = await Promise.race([
+        generateBrandProfile(ctx),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("intelligence timeout")), 15_000),
+        ),
+      ]);
+      await prisma.brand_intelligence.deleteMany({ where: { analysis_id: analysis.id } });
+      await prisma.brand_intelligence.create({
+        data: {
+          analysis_id: analysis.id,
+          summary: profile.summary,
+          industry: profile.industry,
+          icp: profile.icp,
+          target_audience: profile.targetAudience,
+          products: profile.products,
+          usp: profile.usp,
+          brand_voice: profile.brandVoice,
+          advantages: profile.advantages as unknown as object,
+          weaknesses: profile.weaknesses as unknown as object,
+          opportunities: profile.opportunities as unknown as object,
+          readiness_score: profile.readinessScore,
+        },
+      });
+    } catch (err) {
+      console.error("[analysis] intelligence fallback", err instanceof Error ? err.message : err);
+      profile = null;
+    }
+  }
+  if (!profile) profile = profileFromContext(ctx);
+
+  let campaigns: CampaignSuggestion[];
+  let bannerImageUrl: string | null = null;
+  try {
+    if (!hasOpenAI()) throw new Error("OPENAI_API_KEY not configured");
+    const imagePromise =
+      brief.wantImage === false
+        ? Promise.resolve(null)
+        : generateCampaignHeroImage({
+            memberId: analysis.member_id,
+            domain: analysis.domain,
+            industry: profile.industry,
+            brandVoice: profile.brandVoice,
+            summary: profile.summary,
+            color: brief.color,
+            copyTone: brief.copyTone,
+            goalKind: brief.goalKind,
+            designStyle: brief.designStyle,
+          });
+    const generated = await Promise.all([
+      generateCampaigns(ctx, profile, brief),
+      imagePromise,
+    ]);
+    campaigns = generated[0];
+    bannerImageUrl = generated[1];
+  } catch (err) {
+    console.error("[analysis] campaign fallback", err instanceof Error ? err.message : err);
+    campaigns = fallbackCampaigns(ctx, brief);
+    bannerImageUrl = null;
+  }
   await replaceCampaignSuggestions(analysis.id, campaigns, brief, bannerImageUrl);
 }
 

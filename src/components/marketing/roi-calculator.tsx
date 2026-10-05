@@ -15,7 +15,7 @@ export function RoiCalculator() {
   const newCustomers = Math.round(invited * (convRate / 100));
   const newRevenue = newCustomers * aov;
   const domainsNeeded = 1;
-  const cost = domainsNeeded * 9; // $9/mo per brand after trial
+  const cost = domainsNeeded * 9; // $9/mo per brand
   const roi = cost > 0 ? Math.round((newRevenue / cost) * 100) : null;
 
   const inputs: {
@@ -121,13 +121,13 @@ export function RoiCalculator() {
           </div>
           <div className="flex justify-between">
             <span>Your cost</span>
-            <span className="font-semibold">${cost}/mo after trial</span>
+            <span className="font-semibold">${cost}/mo</span>
           </div>
         </div>
         <p className="mt-6 text-xs text-white/75">
           {roi !== null
-            ? `That's roughly ${roi.toLocaleString("en-US")}% ROI at $9/mo per brand. 14-day Growth trial is free first.`
-            : "14-day Growth trial is free — then $9/mo per brand."}
+            ? `That's roughly ${roi.toLocaleString("en-US")}% ROI at $9/mo per brand. Every brand stays private until you pay to publish it.`
+            : "Pay $9/mo per brand to publish it. A brand stays private until then."}
         </p>
       </div>
     </div>

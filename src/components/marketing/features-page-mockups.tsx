@@ -154,12 +154,12 @@ export function FeaturesDashboardShowcase() {
               </h3>
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {[
-                  { name: "PayNow", plan: "Free Plan", date: "Mar 25" },
-                  { name: "DNtrademark", plan: "Free Plan", date: "Mar 25" },
-                  { name: "AgentDAO", plan: "Free Plan", date: "Mar 25" },
-                  { name: "Zipsite", plan: "Free Plan", date: "Mar 25" },
-                  { name: "ProfileSuite", plan: "Free Plan", date: "Mar 25" },
-                  { name: "SlimSnacks", plan: "Free Plan", date: "Mar 25" },
+                  { name: "PayNow", plan: "Unpaid", date: "Mar 25" },
+                  { name: "DNtrademark", plan: "Unpaid", date: "Mar 25" },
+                  { name: "AgentDAO", plan: "Unpaid", date: "Mar 25" },
+                  { name: "Zipsite", plan: "Unpaid", date: "Mar 25" },
+                  { name: "ProfileSuite", plan: "Unpaid", date: "Mar 25" },
+                  { name: "SlimSnacks", plan: "Unpaid", date: "Mar 25" },
                 ].map((b) => (
                   <div
                     key={b.name}

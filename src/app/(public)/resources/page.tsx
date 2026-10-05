@@ -34,7 +34,7 @@ const chapters = [
   },
   {
     title: "Launching and scaling",
-    body: "Use your 14-day Growth trial to prove the channel, then keep Growth at $9/mo per brand to scale domains. Embed widgets where intent is highest — post-purchase, onboarding, and account pages.",
+    body: "Set up a brand and pay $9/mo to publish it, then scale additional brands at the same price. Embed widgets where intent is highest — post-purchase, onboarding, and account pages.",
   },
 ];
 
@@ -149,13 +149,13 @@ export default function ResourcesPage() {
             Put it into practice
           </h2>
           <p className="mt-3 text-white/90">
-            Start a 14-day Growth trial — then $9/mo per brand.
+            Set up a brand, then pay $9/mo to publish it and accept signups.
           </p>
           <Link
             href="/signup"
             className="mt-6 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#ff646c] shadow-lg transition hover:bg-gray-50"
           >
-            Start free trial
+            Create account
           </Link>
         </div>
       </section>

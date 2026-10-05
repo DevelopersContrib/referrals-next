@@ -149,11 +149,20 @@ export async function generateImage(opts: ImageOptions): Promise<string> {
     body.quality = opts.quality ?? "medium";
   }
 
-  const res = await fetch(OPENAI_IMAGE_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetch(OPENAI_IMAGE_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(20_000),
+    });
+  } catch (e) {
+    if (e instanceof Error && (e.name === "AbortError" || e.name === "TimeoutError")) {
+      throw new OpenAIError("AI request timed out", 504);
+    }
+    throw new OpenAIError("Image generation failed", 502);
+  }
   if (!res.ok) {
     console.error("OpenAI image error", await res.text().catch(() => ""));
     throw new OpenAIError("Image generation failed", 502);

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { decryptShareCode, parseShareCode } from "@/lib/encryption";
+import { decodeShareCode, parseShareCode } from "@/lib/encryption";
 import { recordShareClick, resolveSocialTypeId, appOrigin } from "@/lib/widget-share-tracking";
 import { referralsSignupCampaignId } from "@/lib/signup-referral";
 import { redirectWithReferralCookie } from "@/lib/referral-attribution-cookie";
@@ -19,7 +19,7 @@ export async function GET(
   const appUrl = appOrigin();
 
   try {
-    const decrypted = decryptShareCode(code);
+    const decrypted = decodeShareCode(code);
     const { campaignId, socialType, participantId } = parseShareCode(decrypted);
 
     const socialTypeId = await resolveSocialTypeId(socialType);

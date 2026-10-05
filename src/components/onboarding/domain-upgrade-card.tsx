@@ -81,7 +81,7 @@ export function DomainUpgradeCard({ href }: DomainUpgradeCardProps) {
   return (
     <div className="mt-6 w-full max-w-md animate-in fade-in">
       <p className="mb-3 text-sm font-medium text-gray-600">
-        Free accounts include 1 domain. Upgrade to Growth to analyze another.
+        You can set up 1 brand before paying. Pay $9/mo per brand to analyze another.
       </p>
       <div className="relative flex w-full min-w-0 flex-col rounded-2xl border border-violet-200/80 bg-white p-5 shadow-xl shadow-violet-200/40 ring-2 ring-[#926efb]/25 sm:p-6">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-[#926efb] via-[#b794f9] to-[#FF5C62]" />
@@ -100,9 +100,8 @@ export function DomainUpgradeCard({ href }: DomainUpgradeCardProps) {
             <span className="text-sm text-gray-500">/{unit} · per brand</span>
           </div>
           <p className="mt-2 text-sm text-gray-600">
-            {days}-day billing cycle. Cancel anytime — the widget stays live for
-            visitors with branding on. After trial, external brands need Growth
-            ($9/mo per brand).
+            {days}-day billing cycle. Cancel anytime. Publishing a brand and
+            accepting signups is $9/mo per brand.
           </p>
         </div>
 

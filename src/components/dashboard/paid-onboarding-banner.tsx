@@ -18,7 +18,7 @@ const DOSIS: React.CSSProperties = {
 
 type Props = {
   isVerified: boolean;
-  /** Growth entitled (trial or paid) */
+  /** Growth entitled (paid). */
   isGrowth: boolean;
   status?: "trial" | "free_capped" | "unpaid" | "paid" | "unverified";
   daysLeft?: number | null;
@@ -80,7 +80,6 @@ function PaidOnboardingBannerInner(props: Props) {
     <SetupProgressCard
       isVerified={isVerified}
       status={status}
-      daysLeft={daysLeft}
       upgradeHref={upgradeHref}
       checkoutBrandDomain={checkoutBrandDomain}
     />
@@ -110,11 +109,11 @@ function UnpaidBrandCard({
             className="mt-1 text-balance text-lg font-bold tracking-tight text-foreground sm:text-xl"
             style={DOSIS}
           >
-            Keep Growth on {domain}
+            Publish {domain}
           </h2>
           <p className="mt-1 text-pretty text-sm leading-relaxed text-sidebar-foreground">
-            Your trial ended. Pay $9/mo for this brand to remove branding and
-            unlock full analytics. Your widget stays live for visitors.
+            This brand is set up and private. Pay $9/mo to publish it and
+            accept signups.
           </p>
         </div>
         <UpgradeCta href={upgradeHref} className="sm:w-auto">
@@ -149,7 +148,7 @@ function TrialKeepGrowthCard({
       <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-5 sm:ps-6">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wider text-brand-violet">
-            Growth trial
+            Go live
           </p>
           <h2
             id={headingId}
@@ -161,9 +160,7 @@ function TrialKeepGrowthCard({
             Keep {brandLabel}
           </h2>
           <p className="mt-1 text-pretty text-sm leading-relaxed text-sidebar-foreground">
-            {isEndingSoon
-              ? `Trial ends soon — pay $9/mo for ${brandLabel} to keep Growth.`
-              : `Full features are unlocked during trial. After that, pay $9/mo for ${brandLabel}.`}
+            {`Pay $9/mo for ${brandLabel} to publish this program.`}
           </p>
         </div>
         <UpgradeCta href={upgradeHref} className="sm:w-auto">
@@ -177,13 +174,11 @@ function TrialKeepGrowthCard({
 function SetupProgressCard({
   isVerified,
   status,
-  daysLeft,
   upgradeHref,
   checkoutBrandDomain,
 }: {
   isVerified: boolean;
   status?: Props["status"];
-  daysLeft?: number | null;
   upgradeHref: string;
   checkoutBrandDomain?: string | null;
 }) {
@@ -195,21 +190,17 @@ function SetupProgressCard({
       done: isVerified,
       href: null as string | null,
       cta: null as string | null,
-      hint: "Use the link we sent so your Growth trial unlocks.",
+      hint: "Use the link we sent so you can finish setup.",
     },
     {
       id: "billing",
       label:
-        status === "trial" && daysLeft != null && daysLeft <= 3
-          ? `Keep ${brandLabel}`
-          : "Explore Growth",
+        "Pay to go live",
       done: status === "paid",
       href: upgradeHref,
       cta: "Growth — $9/mo for this brand",
       hint:
-        status === "trial"
-          ? `Trial ends in ${daysLeft ?? "?"} day(s) — then $9/mo for ${brandLabel}.`
-          : "Subscribe per brand to remove branding and unlock full Growth.",
+        `Pay $9/mo for ${brandLabel} before the program can go public.`,
     },
   ];
 
@@ -227,11 +218,11 @@ function SetupProgressCard({
             </div>
             <div>
               <p className="flex items-center gap-1.5 text-sm font-bold text-amber-950">
-                {status === "trial" ? "Growth trial" : "Finish setup"}
+                Finish setup
                 <SparklesIcon className="size-3.5 text-amber-500" />
               </p>
               <p className="text-xs text-amber-900/70">
-                14-day full product — then $9/mo per external brand.
+                Set up the brand, then pay $9/mo to publish it.
               </p>
             </div>
           </div>

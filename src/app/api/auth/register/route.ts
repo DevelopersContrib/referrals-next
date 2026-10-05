@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         date_signedup: new Date(),
         num_of_logins: 0,
         plan_id: 1,
-        // Trial clock starts on email verify — not at register — so days aren't burned waiting
+        // plan_id 1 is an internal placeholder. Publishing requires payment.
         plan_expiry: null,
       },
     });

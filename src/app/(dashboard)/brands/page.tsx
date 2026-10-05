@@ -132,13 +132,9 @@ export default async function BrandsPage() {
                 );
                 const planLabel = brandEntitlement?.isVnoc
                   ? "Network"
-                  : brandEntitlement?.status === "trial"
-                    ? "Trial"
-                    : planActive
-                      ? "Active"
-                      : brandEntitlement?.status === "unpaid"
-                        ? "Unpaid"
-                        : "Free";
+                  : planActive
+                    ? "Active"
+                    : "Unpaid";
                 return (
                   <li
                     key={brand.id}
@@ -345,13 +341,9 @@ export default async function BrandsPage() {
                           >
                             {brandEntitlement?.isVnoc
                               ? "Network"
-                              : brandEntitlement?.status === "trial"
-                                ? "Trial"
-                                : planActive
-                                  ? "Active"
-                                  : brandEntitlement?.status === "unpaid"
-                                    ? "Unpaid"
-                                    : "Free"}
+                              : planActive
+                                ? "Active"
+                                : "Unpaid"}
                           </Badge>
                         </TableCell>
                         <TableCell className="relative z-[2] text-right">

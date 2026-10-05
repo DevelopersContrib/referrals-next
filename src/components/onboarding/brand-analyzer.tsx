@@ -12,6 +12,7 @@ import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
 import { AnalysisPipeline } from "./analysis-pipeline";
 import { BrandResults } from "./brand-results";
 import { DomainUpgradeCard } from "./domain-upgrade-card";
+import { JOB_TIMEOUT_MS } from "@/lib/analysis/types";
 import type { AnalysisStatus } from "./analysis-types";
 
 const LOGO_URL =
@@ -20,8 +21,13 @@ const LOGO_URL =
 type Phase = "input" | "analyzing" | "results";
 
 const EXAMPLES = ["stripe.com", "notion.so", "glossier.com"];
-const MAX_ANALYSIS_WAIT_MS = 30_000;
 const DEFAULT_UPGRADE_HREF = `/billing/plan/${DEFAULT_PAID_PLAN_ID}`;
+
+function pollDelayMs(attempt: number) {
+  if (attempt <= 0) return 3_000;
+  if (attempt === 1) return 5_000;
+  return 8_000;
+}
 
 function upgradeCheckoutHref(data: {
   upgradePlanId?: unknown;
@@ -73,6 +79,7 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stoppedRef = useRef(false);
   const analyzeStartedRef = useRef<number | null>(null);
+  const pollAttemptRef = useRef(0);
 
   const valid = looksLikeUrl(url);
   const slug = customSlug ?? slugFromWebsite(url);
@@ -90,6 +97,19 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
   const poll = useCallback(
     async (id: number) => {
       if (stoppedRef.current) return;
+      if (typeof document !== "undefined" && document.hidden) {
+        const onVisible = () => {
+          if (document.hidden) return;
+          document.removeEventListener("visibilitychange", onVisible);
+          void poll(id);
+        };
+        document.addEventListener("visibilitychange", onVisible);
+        return;
+      }
+      const elapsed =
+        analyzeStartedRef.current != null
+          ? Date.now() - analyzeStartedRef.current
+          : 0;
       try {
         const res = await fetch(`/api/brands/analyze/${id}`, {
           cache: "no-store",
@@ -97,24 +117,7 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
         if (res.ok) {
           const data = (await res.json()) as AnalysisStatus;
           setStatus(data);
-          const intel = data.modules?.find((m) => m.module === "intelligence");
-          const intelTerminal =
-            intel?.status === "done" || intel?.status === "failed";
-          const hasPartial =
-            Boolean(data.intelligence) ||
-            Boolean(data.crawl) ||
-            Boolean(data.vnoc?.name || data.vnoc?.logoUrl);
-          const elapsed =
-            analyzeStartedRef.current != null
-              ? Date.now() - analyzeStartedRef.current
-              : 0;
-
-          if (
-            intelTerminal ||
-            data.status === "done" ||
-            data.status === "failed" ||
-            (elapsed >= MAX_ANALYSIS_WAIT_MS && hasPartial)
-          ) {
+          if (data.status === "done" || data.status === "failed") {
             showResults();
             return;
           }
@@ -122,7 +125,13 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
       } catch {
         /* transient — keep polling */
       }
-      pollRef.current = setTimeout(() => poll(id), 1600);
+      if (elapsed >= JOB_TIMEOUT_MS) {
+        showResults();
+        return;
+      }
+      const wait = pollDelayMs(pollAttemptRef.current);
+      pollAttemptRef.current += 1;
+      pollRef.current = setTimeout(() => poll(id), wait);
     },
     [showResults],
   );
@@ -170,6 +179,7 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
 
       stoppedRef.current = false;
       analyzeStartedRef.current = Date.now();
+      pollAttemptRef.current = 0;
       setJobId(data.jobId);
       setPhase("analyzing");
       poll(data.jobId);
@@ -184,7 +194,21 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
   }
 
   if (phase === "results" && status) {
-    return <BrandResults status={status} />;
+    return (
+      <BrandResults
+        status={status}
+        onRetry={() => {
+          if (!jobId) return;
+          stoppedRef.current = false;
+          analyzeStartedRef.current = Date.now();
+          pollAttemptRef.current = 0;
+          setPhase("analyzing");
+          void fetch(`/api/brands/analyze/${jobId}/retry`, { method: "POST" }).then(
+            () => poll(jobId),
+          );
+        }}
+      />
+    );
   }
 
   // ── Input phase ──
@@ -236,7 +260,6 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
               autoFocus
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              onBlur={() => setTouched(true)}
               placeholder="yourbrand.com"
               aria-label="Website URL"
               className="min-w-0 flex-1 bg-transparent py-3 text-base text-gray-900 outline-none placeholder:text-gray-400"
@@ -305,7 +328,7 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
         {needsUpgrade && <DomainUpgradeCard href={upgradeHref} />}
 
         <p className="mt-8 text-xs text-gray-400">
-          No credit card. No forms. Just your website — we do the rest.
+          Set up your brand here. Publishing the program is $9/month for this brand.
         </p>
       </div>
     </div>

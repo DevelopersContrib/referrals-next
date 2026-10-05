@@ -4,6 +4,7 @@ import { authenticateApiKey } from "@/lib/api/helpers";
 import {
   assertCanAcceptParticipant,
   participantCapApiError,
+  programNotLiveMessage,
 } from "@/lib/member-subscription";
 
 /**
@@ -110,6 +111,12 @@ export async function POST(req: NextRequest) {
           email: normalizedEmail,
         });
         if (!cap.ok) {
+          if (cap.reason === "not_live") {
+            return NextResponse.json(
+              { success: false, error: programNotLiveMessage(), code: "NOT_LIVE" },
+              { status: 403 },
+            );
+          }
           return participantCapApiError();
         }
 

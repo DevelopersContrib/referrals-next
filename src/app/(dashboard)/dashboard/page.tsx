@@ -141,7 +141,7 @@ export default async function DashboardPage() {
     }),
     getPrimaryCheckoutBrand(memberId),
   ]);
-  // REF-J3: hide always-on upgrade nag for Growth (trial or paid).
+  // REF-J3: hide always-on upgrade nag for paid Growth.
   const showUpgradeNag = !entitlement.isGrowth;
 
   let data;
@@ -345,13 +345,9 @@ export default async function DashboardPage() {
               );
               const planLabel = brandEntitlement?.isVnoc
                 ? "Network"
-                : brandEntitlement?.status === "trial"
-                  ? "Trial"
-                  : planActive
-                    ? "Active"
-                    : brandEntitlement?.status === "unpaid"
-                      ? "Unpaid"
-                      : "Free";
+                : planActive
+                  ? "Active"
+                  : "Unpaid";
               return (
                 <article
                   key={brand.id}

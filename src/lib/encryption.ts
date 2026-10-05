@@ -38,14 +38,29 @@ export function encryptShareCode(data: string): string {
   return combined.toString("base64url");
 }
 
+const LEGACY_COLON = /^\d+:\d*:\d+(:\d+)?$/;
+
 /**
- * Decrypt a share code back to its components.
- *
- * Tries the active key first, then the legacy key, so links created before a
- * key rotation continue to work. Throws only if no configured key can decode.
+ * Share codes are either legacy base64("campaign:social:participant") or AES.
+ * Legacy links are only a few bytes, so treating them as AES throws
+ * ERR_CRYPTO_INVALID_IV.
  */
+export function decodeShareCode(encoded: string): string {
+  try {
+    const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = Buffer.from(normalized, "base64").toString("utf8");
+    if (LEGACY_COLON.test(decoded)) return decoded;
+  } catch {
+    /* try AES */
+  }
+  return decryptShareCode(encoded);
+}
+
 export function decryptShareCode(encoded: string): string {
   const combined = Buffer.from(encoded, "base64url");
+  if (combined.length < 17) {
+    throw new Error("Invalid share code");
+  }
   const iv = combined.subarray(0, 16);
   const encrypted = combined.subarray(16);
 

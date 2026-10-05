@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { regenerateCampaignsForJob } from "@/lib/analysis/registry";
+import { AnalysisNotReadyError, regenerateCampaignsForJob } from "@/lib/analysis/registry";
+import { logServerError } from "@/lib/api/public-error";
 import type { CampaignBrief, CampaignKind } from "@/lib/analysis/intelligence";
 import { isCampaignDesign } from "@/lib/analysis/campaign-design";
 
@@ -81,8 +82,17 @@ export async function POST(
   try {
     await regenerateCampaignsForJob(id, brief);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Could not generate campaigns.";
-    return NextResponse.json({ error: message }, { status: 400 });
+    if (err instanceof AnalysisNotReadyError) {
+      return NextResponse.json(
+        { error: err.message, code: err.code },
+        { status: 409 },
+      );
+    }
+    logServerError("analyze campaigns", err);
+    return NextResponse.json(
+      { error: "This step couldn't finish" },
+      { status: 400 },
+    );
   }
 
   const campaigns = await prisma.brand_campaign_suggestion.findMany({

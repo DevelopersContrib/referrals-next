@@ -83,7 +83,13 @@ const KIND_META: Record<
   loyalty: { title: "Customer Loyalty", icon: Heart, from: "#926efb", to: "#7c3aed", accent: "text-violet-600" },
 };
 
-export function BrandResults({ status }: { status: AnalysisStatus }) {
+export function BrandResults({
+  status,
+  onRetry,
+}: {
+  status: AnalysisStatus;
+  onRetry?: () => void;
+}) {
   const router = useRouter();
   const [launchingId, setLaunchingId] = useState<number | null>(null);
   const [launchedId, setLaunchedId] = useState<number | null>(null);
@@ -95,13 +101,15 @@ export function BrandResults({ status }: { status: AnalysisStatus }) {
   const intel = status.intelligence;
   const scores = status.scores;
 
-  const overall = scores.overall ?? 0;
+  const failed = status.modules.some((m) => m.status === "failed");
+  const complete = status.status === "done" && !failed;
+  const overall = scores.overall;
 
   const subScores = useMemo(
     () => [
-      { label: "Website", value: scores.website ?? 0, color: "#FF5C62" },
-      { label: "Social", value: scores.social ?? 0, color: "#926efb" },
-      { label: "Referral", value: scores.referral ?? 0, color: "#10b981" },
+      { label: "Website", value: scores.website, color: "#FF5C62" },
+      { label: "Social", value: scores.social, color: "#926efb" },
+      { label: "Referral", value: scores.referral, color: "#10b981" },
     ],
     [scores]
   );
@@ -141,9 +149,25 @@ export function BrandResults({ status }: { status: AnalysisStatus }) {
 
       {/* Header + health */}
       <div className="animate-in fade-in slide-in-from-bottom-3 duration-500">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-          <Check className="h-3.5 w-3.5" /> Analysis complete
-        </div>
+        {complete ? (
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            <Check className="h-3.5 w-3.5" /> Analysis complete
+          </div>
+        ) : (
+          <div className="mb-3 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <span>Some checks didn&apos;t finish.</span>
+            {onRetry ? (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="font-semibold underline"
+              >
+                Retry
+              </button>
+            ) : null}
+            <span className="text-amber-800">Continue anyway with what we found.</span>
+          </div>
+        )}
         <div className="flex flex-col gap-6 rounded-3xl border border-gray-100 bg-white p-6 shadow-lg shadow-gray-100/60 sm:flex-row sm:items-center sm:justify-between sm:p-8">
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-gray-100 bg-white p-2">
@@ -174,19 +198,27 @@ export function BrandResults({ status }: { status: AnalysisStatus }) {
           </div>
 
           <div className="flex items-center gap-6">
-            <ScoreGauge value={overall} label="Brand Health" color="#FF5C62" size={84} />
+            {overall == null ? (
+              <span className="text-sm text-gray-400">Score pending</span>
+            ) : (
+              <ScoreGauge value={overall} label="Brand Health" color="#FF5C62" size={84} />
+            )}
             <div className="hidden gap-5 sm:flex">
-              {subScores.map((s) => (
-                <ScoreGauge key={s.label} value={s.value} label={s.label} color={s.color} />
-              ))}
+              {subScores.map((s) =>
+                s.value == null ? null : (
+                  <ScoreGauge key={s.label} value={s.value} label={s.label} color={s.color} />
+                ),
+              )}
             </div>
           </div>
         </div>
         {/* sub scores on mobile */}
         <div className="mt-4 flex justify-around sm:hidden">
-          {subScores.map((s) => (
-            <ScoreGauge key={s.label} value={s.value} label={s.label} color={s.color} />
-          ))}
+          {subScores.map((s) =>
+            s.value == null ? null : (
+              <ScoreGauge key={s.label} value={s.value} label={s.label} color={s.color} />
+            ),
+          )}
         </div>
       </div>
 

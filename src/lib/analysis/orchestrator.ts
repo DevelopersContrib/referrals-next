@@ -7,11 +7,15 @@
  * cron sweeper retries anything stuck/failed.
  */
 import type { brand_analysis } from "@prisma/client";
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { claimBrandSlug, extractDomainFromUrl } from "@/lib/brand-access";
 import { RUNNERS } from "./registry";
+import { clientSafeMessage } from "@/lib/api/public-error";
 import {
+  JOB_TIMEOUT_MS,
   MODULE_DEPS,
+  MODULE_TIMEOUT_MS,
   ONBOARDING_MODULES,
   isModuleName,
   type ModuleName,
@@ -20,11 +24,20 @@ import {
 const MAX_ATTEMPTS = 3;
 const TERMINAL = ["done", "failed"];
 
-function appBaseUrl(): string {
-  const explicit = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "");
-  if (explicit) return explicit;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return "http://localhost:3000";
+function withTimeout<T>(work: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("This step couldn't finish")), ms);
+    work.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
 }
 
 function normalizeInputUrl(raw: string): string {
@@ -251,35 +264,17 @@ export async function createAnalysisJobForBrand(
   return { analysis, brandId: brand.id, reused: Boolean(prior) };
 }
 
-/** Fire a fire-and-forget request to the per-module runner endpoint. */
-async function triggerModule(jobId: number, module: ModuleName) {
-  // No secret configured — skip the HTTP hop and run inline (local dev).
-  if (!process.env.ANALYSIS_INTERNAL_SECRET) {
-    void runModuleAndAdvance(jobId, module);
-    return;
-  }
-
-  const url = `${appBaseUrl()}/api/brands/analyze/${jobId}/run/${module}`;
+/**
+ * Run the module after the response, on this same invocation.
+ * An HTTP call to www.referrals.com comes back 403 (Cloudflare), and the
+ * sweeper was then running the AI step for minutes on a shared DB connection.
+ */
+function triggerModule(jobId: number, module: ModuleName) {
+  const run = () => runModuleAndAdvance(jobId, module);
   try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "x-internal-secret": process.env.ANALYSIS_INTERNAL_SECRET || "",
-      },
-      cache: "no-store",
-    });
-    if (!res.ok) {
-      console.error(
-        `triggerModule ${module} for job ${jobId} returned ${res.status}`,
-      );
-      void runModuleAndAdvance(jobId, module);
-    }
-  } catch (e) {
-    console.error(
-      `triggerModule ${module} for job ${jobId} failed`,
-      (e as Error).message,
-    );
-    void runModuleAndAdvance(jobId, module);
+    after(run);
+  } catch {
+    void run();
   }
 }
 
@@ -325,7 +320,50 @@ export async function kickoffJob(jobId: number) {
  * Execute one module and advance the graph. Safe to call from after() or the
  * cron sweeper. Idempotent-ish via the queued->running claim.
  */
+/** Fail anything still open once the job is older than JOB_TIMEOUT_MS. */
+export async function expireJobIfNeeded(jobId: number): Promise<boolean> {
+  const job = await prisma.brand_analysis.findUnique({
+    where: { id: jobId },
+    select: { status: true, started_at: true },
+  });
+  if (!job || (job.status !== "pending" && job.status !== "running")) return false;
+  const started = job.started_at?.getTime() ?? 0;
+  if (!started || Date.now() - started < JOB_TIMEOUT_MS) return false;
+
+  await prisma.brand_analysis_module.updateMany({
+    where: {
+      analysis_id: jobId,
+      status: { notIn: [...TERMINAL] },
+    },
+    data: {
+      status: "failed",
+      completed_at: new Date(),
+      error: "This step couldn't finish",
+    },
+  });
+  await finalizeIfDone(jobId);
+  return true;
+}
+
+/** Re-run only modules that failed. Leaves successful modules alone. */
+export async function retryFailedModules(jobId: number) {
+  const failed = await prisma.brand_analysis_module.updateMany({
+    where: { analysis_id: jobId, status: "failed" },
+    data: { status: "pending", error: null, completed_at: null },
+  });
+  if (failed.count === 0) return { retried: 0 };
+
+  await prisma.brand_analysis.update({
+    where: { id: jobId },
+    data: { status: "running", completed_at: null, started_at: new Date(), error: null },
+  });
+  await scheduleReady(jobId);
+  return { retried: failed.count };
+}
+
 export async function runModuleAndAdvance(jobId: number, module: ModuleName) {
+  if (await expireJobIfNeeded(jobId)) return;
+
   const analysis = await prisma.brand_analysis.findUnique({
     where: { id: jobId },
   });
@@ -350,7 +388,7 @@ export async function runModuleAndAdvance(jobId: number, module: ModuleName) {
 
   const startedAt = Date.now();
   try {
-    await RUNNERS[module](analysis as brand_analysis);
+    await withTimeout(RUNNERS[module](analysis as brand_analysis), MODULE_TIMEOUT_MS);
     const durationMs = Date.now() - startedAt;
     await prisma.brand_analysis_module.update({
       where: { id: row.id },
@@ -361,20 +399,27 @@ export async function runModuleAndAdvance(jobId: number, module: ModuleName) {
     );
   } catch (e) {
     const durationMs = Date.now() - startedAt;
-    const msg = (e as Error).message?.slice(0, 500) || "unknown error";
     console.error(
-      `[analysis] job ${jobId} module ${module} failed after ${durationMs}ms:`,
-      msg,
+      `[analysis] job ${jobId} module ${module} failed after ${durationMs}ms`,
     );
     await prisma.brand_analysis_module.update({
       where: { id: row.id },
-      data: { status: "failed", completed_at: new Date(), error: msg },
+      data: {
+        status: "failed",
+        completed_at: new Date(),
+        error: clientSafeMessage(e),
+      },
     });
   }
 
-  await scheduleReady(jobId);
-  await finalizePartialScores(jobId);
-  await finalizeIfDone(jobId);
+  try {
+    await scheduleReady(jobId);
+    await finalizePartialScores(jobId);
+    await finalizeIfDone(jobId);
+  } catch (e) {
+    console.error(`[analysis] job ${jobId} could not advance after ${module}`);
+    console.error(e);
+  }
 }
 
 /** Write health scores once intelligence is ready (UI can show results before job completes). */
@@ -443,17 +488,19 @@ async function finalizeIfDone(jobId: number) {
 }
 
 async function computeScores(jobId: number) {
-  const [crawl, socials, intel] = await Promise.all([
-    prisma.brand_crawl.findFirst({
-      where: { analysis_id: jobId },
-      orderBy: { id: "desc" },
-    }),
-    prisma.brand_social.findMany({ where: { analysis_id: jobId } }),
-    prisma.brand_intelligence.findFirst({
-      where: { analysis_id: jobId },
-      orderBy: { id: "desc" },
-    }),
-  ]);
+  // One connection per isolate. Parallel reads queue on that connection and
+  // the sweeper was dying with a pool timeout on brand_social.
+  const crawl = await prisma.brand_crawl.findFirst({
+    where: { analysis_id: jobId },
+    orderBy: { id: "desc" },
+  });
+  const socials = await prisma.brand_social.findMany({
+    where: { analysis_id: jobId },
+  });
+  const intel = await prisma.brand_intelligence.findFirst({
+    where: { analysis_id: jobId },
+    orderBy: { id: "desc" },
+  });
 
   // Website score: completeness of extracted signals.
   let website = 0;
@@ -501,7 +548,7 @@ export async function sweepStuckModules() {
         { status: "failed" },
       ],
     },
-    take: 50,
+    take: 4,
   });
 
   let retried = 0;
@@ -518,6 +565,7 @@ export async function sweepStuckModules() {
   }
 
   for (const jobId of touchedJobs) {
+    await expireJobIfNeeded(jobId);
     await scheduleReady(jobId);
     await finalizeIfDone(jobId);
   }
@@ -526,9 +574,12 @@ export async function sweepStuckModules() {
   const runningJobs = await prisma.brand_analysis.findMany({
     where: { status: { in: ["pending", "running"] } },
     select: { id: true },
-    take: 100,
+    take: 20,
   });
-  for (const j of runningJobs) await finalizeIfDone(j.id);
+  for (const j of runningJobs) {
+    const expired = await expireJobIfNeeded(j.id);
+    if (!expired) await finalizeIfDone(j.id);
+  }
 
   return { retried, jobsTouched: touchedJobs.size };
 }

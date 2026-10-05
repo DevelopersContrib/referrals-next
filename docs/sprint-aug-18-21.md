@@ -151,7 +151,7 @@ Do **not** change checkout. Only `src/app/(dashboard)/billing/page.tsx` (and sma
 ### Suggested copy (use this)
 
 **Page title:** Plans  
-**Subtitle:** 14 days of Growth, then free forever — or keep Growth for $9/month per brand.
+**Subtitle:** Set up a brand, then pay $9/month per brand to publish it.
 
 **Current plan** — human status, not DB:
 
@@ -165,11 +165,11 @@ Do **not** change checkout. Only `src/app/(dashboard)/billing/page.tsx` (and sma
 
 |          | Free forever                                                                             | Growth (featured)                                                                                           |
 | -------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Eyebrow  | After your 14-day trial                                                                  | Most popular                                                                                                |
+| Eyebrow  | Pay to publish                                                                           | Most popular                                                                                                |
 | Price    | **$0** / forever                                                                         | **$9** / month per brand                                                                                    |
 | Blurb    | Widget stays live. Caps apply. Branding on.                                              | Remove branding. Unlock domains & analytics.                                                                |
 | Features | Widget keeps working · 1 brand · 500 participants · Basic stats · Referrals.com branding | Everything in Free, plus: remove branding · more brands · higher limits · public pages · advanced analytics |
-| CTA      | “Included after trial” (no button) or “You’re on Free”                                   | Trial/free → **Continue with Growth** → `/billing/plan/2`. Paid on 2 → **Current plan**                     |
+| CTA      | Not offered                                                                              | Unpaid → **Continue with Growth** → `/billing/plan/2`. Paid on 2 → **Current plan**                         |
 
 Do not say “Pay with card or PayPal” on this page. Do not show “30 days” as a feature. Do not print `0` participants as “unlimited” unless you mean it — free is **500**, Growth is uncapped for product copy.
 

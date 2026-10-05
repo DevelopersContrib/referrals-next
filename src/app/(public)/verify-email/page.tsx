@@ -2,7 +2,6 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
-import { TRIAL_PLAN_ID, trialExpiryFrom } from "@/lib/member-subscription";
 import { SignupInviteCard } from "@/components/auth/signup-invite-card";
 import { enrollMemberInSignupReferral } from "@/lib/signup-referral";
 
@@ -63,32 +62,9 @@ export default async function VerifyEmailPage({
         errorMessage =
           "Invalid or expired verification link. Please request a new one.";
       } else {
-        // Start 14-day Growth trial on first verify (don't burn days before verify).
-        // Skip if they already have an active paid plan.
-        let paidActive = false;
-        if (
-          member.plan_id &&
-          member.plan_id > TRIAL_PLAN_ID &&
-          member.plan_expiry &&
-          new Date(member.plan_expiry) > new Date()
-        ) {
-          const plan = await prisma.plans.findUnique({
-            where: { id: member.plan_id },
-            select: { price: true },
-          });
-          paidActive = (plan?.price ?? 0) > 0;
-        }
-
         await prisma.members.update({
           where: { id: member.id },
-          data: paidActive
-            ? { is_verified: true, verification_code: null }
-            : {
-                is_verified: true,
-                verification_code: null,
-                plan_id: TRIAL_PLAN_ID,
-                plan_expiry: trialExpiryFrom(),
-              },
+          data: { is_verified: true, verification_code: null },
         });
         success = true;
         invite = await enrollMemberInSignupReferral({

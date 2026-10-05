@@ -129,7 +129,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               num_of_logins: 1,
               date_signedup: new Date(),
               plan_id: 1,
-              plan_expiry: new Date(Date.now() + 14 * 86400000),
+              plan_expiry: null,
             },
           });
           user.id = String(newMember.id);

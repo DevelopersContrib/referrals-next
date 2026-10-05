@@ -11,11 +11,20 @@ export type CatalogPlan = {
 };
 
 export const PLAN_CATALOG_COPY = {
-  trialFootnote:
-    "14-day Growth trial for external brands — then $9/mo per brand.",
+  freeIsVnocOnly: true,
+  vnocFootnote: "Every brand goes live at $9/mo, including network domains.",
+  trialFootnote: "Set up a brand for free. Pay $9/mo per brand to publish it.",
   unpaidFootnote:
-    "After trial, external brands need Growth ($9/mo per brand). Widget stays live for visitors with branding on.",
+    "A brand stays private until you pay $9/mo for it. Then the widget can accept signups.",
 } as const;
+
+export function isPaidCatalogPlan(plan: CatalogPlan): boolean {
+  return (plan.price ?? 0) > 0;
+}
+
+export function paidCatalogPlans<T extends CatalogPlan>(plans: T[]): T[] {
+  return plans.filter(isPaidCatalogPlan);
+}
 
 export function isPartnerPlan(name: string | null | undefined): boolean {
   return /partner/i.test(name ?? "");

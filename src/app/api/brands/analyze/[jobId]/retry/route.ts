@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { loadAnalysisStatus } from "@/lib/analysis/load-status";
-import { expireJobIfNeeded } from "@/lib/analysis/orchestrator";
+import { prisma } from "@/lib/prisma";
+import { retryFailedModules } from "@/lib/analysis/orchestrator";
 import { logServerError } from "@/lib/api/public-error";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/brands/analyze/[jobId] — status + partial results for polling.
-export async function GET(
+// POST /api/brands/analyze/[jobId]/retry — re-run only failed modules.
+export async function POST(
   _req: NextRequest,
-  { params }: { params: Promise<{ jobId: string }> }
+  { params }: { params: Promise<{ jobId: string }> },
 ) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -25,26 +25,17 @@ export async function GET(
   }
 
   try {
-    let status = await loadAnalysisStatus(id);
-    if (!status || (status.memberId !== memberId && !isAdmin)) {
+    const job = await prisma.brand_analysis.findUnique({
+      where: { id },
+      select: { member_id: true },
+    });
+    if (!job || (job.member_id !== memberId && !isAdmin)) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-
-    if (
-      (status.status === "pending" || status.status === "running") &&
-      status.startedAt &&
-      (await expireJobIfNeeded(id))
-    ) {
-      status = await loadAnalysisStatus(id);
-      if (!status) {
-        return NextResponse.json({ error: "Not found" }, { status: 404 });
-      }
-    }
-
-    const { memberId: _memberId, startedAt: _startedAt, ...body } = status;
-    return NextResponse.json(body);
+    const result = await retryFailedModules(id);
+    return NextResponse.json(result);
   } catch (err) {
-    logServerError("analyze status", err);
+    logServerError("analyze retry", err);
     return NextResponse.json(
       { error: "This step couldn't finish" },
       { status: 500 },

@@ -14,6 +14,7 @@ import {
   CrownIcon,
   ArrowRightIcon,
 } from "lucide-react";
+import { getMemberEntitlement } from "@/lib/member-subscription";
 
 export default async function AccountPage() {
   const session = await auth();
@@ -26,6 +27,17 @@ export default async function AccountPage() {
   });
 
   if (!member) redirect("/signin");
+
+  const entitlement = await getMemberEntitlement(memberId);
+  const planName =
+    entitlement.isPaid && entitlement.planId
+      ? (
+          await prisma.plans.findUnique({
+            where: { id: entitlement.planId },
+            select: { name: true },
+          })
+        )?.name
+      : null;
 
   const initials = member.name
     ? member.name
@@ -81,7 +93,7 @@ export default async function AccountPage() {
 
             <div className="mt-4">
               <Badge className="border-0 bg-[#f2f3f8] px-3 py-1 text-[#a7abc3] font-medium">
-                Free Plan
+                {planName || "Unpaid"}
               </Badge>
             </div>
 

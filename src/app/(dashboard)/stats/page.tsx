@@ -141,8 +141,7 @@ export default async function StatsPage() {
       ) : (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Performance charts unlock on Growth (included in your 14-day trial,
-            or $9/mo after).
+            Performance charts unlock after you pay $9/mo for this brand.
           </CardContent>
         </Card>
       )}

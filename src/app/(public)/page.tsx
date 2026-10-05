@@ -492,7 +492,7 @@ export default async function HomePage() {
           "Referral marketing platform to create campaigns, embed widgets, reward participants, and grow through word of mouth.",
         offers: {
           "@type": "Offer",
-          price: "0",
+          price: "9",
           priceCurrency: "USD",
           description: PLAN_CATALOG_COPY.trialFootnote,
         },
@@ -542,7 +542,7 @@ export default async function HomePage() {
                 href="/signup"
                 className="rounded-xl bg-[#FF5C62] px-7 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-[#FF5C62]/25 transition-all hover:bg-[#ff4f58] hover:shadow-xl hover:shadow-[#FF5C62]/35"
               >
-                Start Free Trial
+                Create account
               </Link>
               <Link
                 href="/how-it-works"
@@ -554,7 +554,7 @@ export default async function HomePage() {
 
             <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] text-gray-600 sm:mt-5 sm:gap-3 sm:text-xs">
               <span className="rounded-full border border-rose-200 bg-white px-3 py-1.5">
-                No credit card required
+                $9/mo per brand to publish
               </span>
               <span className="rounded-full border border-rose-200 bg-white px-3 py-1.5">
                 Setup in under 10 minutes
@@ -832,7 +832,7 @@ export default async function HomePage() {
             href={isLoggedIn ? "/billing" : "/signup"}
             className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#FF5C62] shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
           >
-            {isLoggedIn ? "Choose a plan" : "Start free trial"}
+            {isLoggedIn ? "Choose a plan" : "Create account"}
           </Link>
         </div>
       </section>

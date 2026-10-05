@@ -67,8 +67,8 @@ export default function ReferralProgramPage() {
               </div>
               <h3 className="mt-4 font-semibold text-gray-900">Earn Rewards</h3>
               <p className="mt-2 text-sm text-gray-600">
-                When someone signs up using your referral link, they start with
-                the standard 14-day Growth trial — no credit card required.
+                When someone signs up using your referral link, they can set up
+                a brand. Publishing it is $9/mo.
               </p>
             </div>
           </div>
@@ -83,8 +83,8 @@ export default function ReferralProgramPage() {
               <li className="flex gap-3">
                 <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-600" />
                 <span>
-                  <strong>Your referrals get 14 days of Growth</strong> when
-                  they join through your link — full features, no credit card.
+                  <strong>Your referrals can set up a brand</strong> when they
+                  join through your link. Publishing it is $9/mo.
                 </span>
               </li>
               <li className="flex gap-3">
@@ -97,8 +97,8 @@ export default function ReferralProgramPage() {
               <li className="flex gap-3">
                 <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-600" />
                 <span>
-                  <strong>After the trial</strong> they continue on Growth for
-                  $9/mo per brand.
+                  <strong>Publishing</strong> is $9/mo per brand, including
+                  network domains. A brand stays private until then.
                 </span>
               </li>
             </ul>

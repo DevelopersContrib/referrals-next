@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Free / $0 plans cannot restart infinite Growth trials via Billing
+    // $0 plans are not offered. Publishing requires a paid plan.
     if (!plan.price || plan.price <= 0) {
       await logCheckoutEvent({
         attemptId,
@@ -71,12 +71,12 @@ export async function POST(req: NextRequest) {
         eventName: "server_error",
         checkoutMode: "redirect",
         errorCode: "TRIAL_NOT_VIA_SUBSCRIBE",
-        errorMessage: "A free plan cannot create a PayPal subscription",
+        errorMessage: "A $0 plan cannot create a PayPal subscription",
       });
       return NextResponse.json(
         {
           error:
-            "Free trial starts automatically at signup. Choose Growth ($9/mo per brand) to upgrade.",
+            "That plan is not available. Choose a paid plan to publish a brand.",
           code: "TRIAL_NOT_VIA_SUBSCRIBE",
         },
         { status: 400 }

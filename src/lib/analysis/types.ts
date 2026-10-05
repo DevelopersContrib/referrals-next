@@ -5,6 +5,9 @@
  */
 import type { brand_analysis } from "@prisma/client";
 
+export const MODULE_TIMEOUT_MS = 20_000;
+export const JOB_TIMEOUT_MS = 60_000;
+
 export const MODULES = ["vnoc", "crawl", "social", "intelligence", "campaigns"] as const;
 export type ModuleName = (typeof MODULES)[number];
 

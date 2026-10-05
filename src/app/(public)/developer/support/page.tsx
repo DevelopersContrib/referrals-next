@@ -35,7 +35,7 @@ const FAQS = [
   },
   {
     q: "Do I need a paid plan to use the API?",
-    a: 'Most API endpoints work during your Growth trial and on paid Growth. Publishing campaigns as "public", multi-domain brands, and other Growth features require an active Growth trial or paid Growth subscription ($9/mo per brand).',
+    a: 'Most API endpoints work on any account. Publishing a campaign as "public" and accepting signups require an active paid brand ($9/mo per brand).',
   },
   {
     q: "How do webhooks work?",

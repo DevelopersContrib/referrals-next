@@ -120,7 +120,7 @@ function SignInFormInner() {
       <p className="mt-6 text-center text-sm text-gray-600">
         Don&apos;t have an account?{" "}
         <Link href="/signup" className="font-medium text-[#FF5C62] hover:underline">
-          Sign up free
+          Create account
         </Link>
       </p>
     </div>

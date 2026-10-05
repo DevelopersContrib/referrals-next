@@ -5,6 +5,7 @@ import { syncParticipantToMailchimp } from "@/lib/integrations/mailchimp-sync";
 import { ZapierIntegration } from "@/lib/integrations/zapier";
 import {
   assertCanAcceptParticipant,
+  programNotLiveResponse,
   participantCapResponse,
 } from "@/lib/member-subscription";
 import {
@@ -70,6 +71,7 @@ export async function POST(request: NextRequest) {
         email: email.toLowerCase().trim(),
       });
       if (!cap.ok) {
+        if (cap.reason === "not_live") return programNotLiveResponse(corsHeaders);
         return participantCapResponse(corsHeaders);
       }
 

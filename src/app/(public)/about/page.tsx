@@ -217,7 +217,7 @@ export default function AboutPage() {
             href="/signup"
             className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#ff646c] shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
           >
-            Get Started Free
+            Create account
           </Link>
         </div>
       </section>

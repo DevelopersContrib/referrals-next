@@ -57,24 +57,23 @@ export async function GET(req: NextRequest) {
       const brandLabel = checkoutBrand?.domain ?? "your brand";
 
       const subject = isTrial
-        ? `Your Growth trial ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`
+        ? `Publish ${brandLabel} — access ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`
         : `Your Referrals.com plan expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`;
 
       const html = isTrial
         ? `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2>Growth trial ending soon</h2>
+              <h2>Publish ${brandLabel}</h2>
               <p>Hi ${member.name},</p>
-              <p>Your <strong>14-day Growth trial</strong> ends in <strong>${daysLeft} day${daysLeft !== 1 ? "s" : ""}</strong> (${member.plan_expiry!.toLocaleDateString()}).</p>
-              <p>Pay <strong>$9/mo for ${brandLabel}</strong> to keep Growth on that brand — remove branding, unlock analytics, and add more domains.</p>
-              <p>Your live widget keeps working for visitors with Referrals.com branding on. Without payment, that brand moves to unpaid (not a free plan).</p>
+              <p>Your current access ends in <strong>${daysLeft} day${daysLeft !== 1 ? "s" : ""}</strong> (${member.plan_expiry!.toLocaleDateString()}).</p>
+              <p>Pay <strong>$9/mo for ${brandLabel}</strong> to publish that brand and accept signups.</p>
+              <p>Until then the brand stays private.</p>
               <p>
                 <a href="${upgradeUrl}"
                    style="display: inline-block; padding: 12px 24px; background-color: #FF5C62; color: white; text-decoration: none; border-radius: 6px;">
-                  Keep ${brandLabel} — $9/mo
+                  Publish ${brandLabel} — $9/mo
                 </a>
               </p>
-              <p style="color:#666;font-size:13px;">No credit card was required for the trial.</p>
             </div>
           `
         : `

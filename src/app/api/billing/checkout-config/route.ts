@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "Free trial starts automatically at signup. Choose Growth ($9/mo per brand) to upgrade.",
+          "That plan is not available. Choose a paid plan to publish a brand.",
         code: "TRIAL_NOT_VIA_SUBSCRIBE",
       },
       { status: 400 }

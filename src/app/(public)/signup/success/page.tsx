@@ -79,7 +79,7 @@ export default async function SignupSuccessPage({
             <ol className="mt-2 space-y-1.5 text-gray-600">
               <li>1. Verify your email</li>
               <li>2. Sign in and add your website</li>
-              <li>3. Launch your first campaign (14-day Growth trial starts on verify)</li>
+              <li>3. Set up your first campaign, then pay $9/mo for the brand to publish it</li>
             </ol>
           </div>
           <div className="mt-6 flex flex-col gap-2">

@@ -6,6 +6,7 @@ import { ZapierIntegration } from "@/lib/integrations/zapier";
 import {
   assertCanAcceptParticipant,
   participantCapApiError,
+  programNotLiveMessage,
 } from "@/lib/member-subscription";
 
 export async function OPTIONS() {
@@ -51,6 +52,9 @@ export async function POST(req: NextRequest) {
       email: normalizedEmail,
     });
     if (!cap.ok) {
+      if (cap.reason === "not_live") {
+        return apiError(programNotLiveMessage(), 403);
+      }
       return participantCapApiError();
     }
 

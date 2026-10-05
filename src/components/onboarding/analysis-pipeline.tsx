@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   Building2,
@@ -30,14 +29,6 @@ const ICONS: Record<ModuleName, LucideIcon> = {
 
 const ORDER: ModuleName[] = [...ONBOARDING_MODULES];
 
-const ROTATING = [
-  "Reading your homepage…",
-  "Understanding your products…",
-  "Finding your audience…",
-  "Discovering social profiles…",
-  "Building your brand profile…",
-];
-
 function progressOf(modules: ModuleView[]): number {
   if (!modules.length) return 6;
   const done = modules.filter((m) => m.status === "done" || m.status === "failed").length;
@@ -52,15 +43,15 @@ export function AnalysisPipeline({
   status: AnalysisStatus | null;
   url: string;
 }) {
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setTick((n) => n + 1), 2200);
-    return () => clearInterval(t);
-  }, []);
-
   const modules = status?.modules ?? [];
   const byName = new Map(modules.map((m) => [m.module, m]));
   const pct = progressOf(modules);
+  const activeModule = ORDER.map((name) => byName.get(name)).find(
+    (row) => row?.status === "running" || row?.status === "queued",
+  );
+  const headline =
+    activeModule?.labels.active ||
+    (pct > 6 ? "Still working through your site…" : "Starting the brand check…");
   const domain = status?.domain || url.replace(/^https?:\/\//, "");
 
   const name = status?.vnoc?.name || status?.crawl?.name || null;
@@ -92,7 +83,7 @@ export function AnalysisPipeline({
             className="mt-3 bg-gradient-to-r from-[#FF5C62] via-[#ff7a54] to-[#926efb] bg-clip-text text-2xl font-bold text-transparent sm:text-3xl"
             style={{ fontFamily: "var(--font-dosis), sans-serif" }}
           >
-            {ROTATING[tick % ROTATING.length]}
+            {headline}
           </h2>
 
           {/* Progress bar */}

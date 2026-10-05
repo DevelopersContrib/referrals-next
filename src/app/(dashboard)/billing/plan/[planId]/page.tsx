@@ -4,7 +4,6 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeftIcon } from "lucide-react";
 import { PayPalCheckout } from "@/components/billing/paypal-checkout";
-import { FREE_PARTICIPANT_CAP } from "@/lib/billing-constants";
 import { cn } from "@/lib/utils";
 
 export default async function PlanCheckoutPage({
@@ -27,8 +26,9 @@ export default async function PlanCheckoutPage({
   if (!plan) notFound();
 
   const price = Number(plan.price ?? 0);
+  if (price <= 0) redirect("/billing");
   const unit = plan.unit || "month";
-  const isPaid = price > 0;
+  const isPaid = true;
   const priceLabel = `$${price.toFixed(2)}/${unit}`;
   const parsedBrandId = brandId ? parseInt(brandId, 10) : null;
   const brand =
@@ -50,7 +50,7 @@ export default async function PlanCheckoutPage({
       : "Add more brands as you grow",
     plan.campaigns_participants && plan.campaigns_participants > 0
       ? `${plan.campaigns_participants.toLocaleString()} participants per campaign`
-      : `Grow past the free ${FREE_PARTICIPANT_CAP}-participant cap`,
+      : "Unlimited participants once this brand is published",
     "Public campaign pages and leaderboards",
     "Advanced analytics and performance charts",
   ];
@@ -114,9 +114,8 @@ export default async function PlanCheckoutPage({
               </span>
             </div>
             <p className="mt-2 text-sm text-gray-600">
-              {plan.days || 30}-day billing cycle. Cancel anytime — the widget
-              stays live for visitors with branding on. After trial, external
-              brands need Growth ($9/mo per brand).
+              {plan.days || 30}-day billing cycle. Cancel anytime. This brand
+              stays private until payment, then the widget can accept signups.
             </p>
           </div>
 
@@ -170,14 +169,15 @@ export default async function PlanCheckoutPage({
             <div className="flex flex-1 flex-col justify-center space-y-4">
               <div className="rounded-xl bg-gradient-to-br from-rose-500/10 to-orange-50/30 p-4">
                 <p className="text-xs font-semibold uppercase tracking-wider text-[#FF5C62]">
-                  Trial
+                  Not a publish plan
                 </p>
                 <p className="mt-2 text-sm font-semibold text-gray-900">
-                  Not a paid checkout for external brands.
+                  This plan does not publish a brand.
                 </p>
                 <p className="mt-1 text-sm text-gray-600">
-                  Your 14-day Growth trial starts automatically at signup. After
-                  that, external brands need Growth ($9/mo per brand).
+                  Choose Growth at $9/mo per brand to publish and accept
+                  signups. Every brand, including network domains, uses the
+                  same rule.
                 </p>
               </div>
               <Link

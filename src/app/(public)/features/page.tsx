@@ -25,7 +25,7 @@ const featureSections = [
     items: [
       {
         title: "Multi-Campaign Support",
-        desc: "Run referral campaigns across multiple brands and domains on Growth (included in your 14-day trial).",
+        desc: "Run referral campaigns across multiple brands and domains. Pay $9/mo per brand to publish.",
         icon: (
           <svg
             className="h-6 w-6"
@@ -541,7 +541,7 @@ export default function FeaturesPage() {
                   href="/signup"
                   className="rounded-xl bg-[#FF5C62] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:bg-[#ff4f58]"
                 >
-                  Start free trial
+                  Create account
                 </Link>
                 <Link
                   href="/pricing"
@@ -612,15 +612,14 @@ export default function FeaturesPage() {
             Ready to get started?
           </h2>
           <p className="mt-4 text-lg text-white/80">
-            Get 14 days of full Growth features — no credit card. Then $9/mo per
-            brand.
+            Set up a brand, then pay $9/mo to publish it and accept signups.
           </p>
           <div className="mt-8 flex items-center justify-center gap-4">
             <Link
               href="/signup"
               className="rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#ff646c] shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
             >
-              Start free trial
+              Create account
             </Link>
             <Link
               href="/pricing"

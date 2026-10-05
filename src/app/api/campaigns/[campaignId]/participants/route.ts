@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import {
   assertCanAcceptParticipant,
   participantCapResponse,
+  programNotLiveResponse,
 } from "@/lib/member-subscription";
 export async function GET(
   request: NextRequest,
@@ -152,6 +153,7 @@ export async function POST(
       email: normalizedEmail,
     });
     if (!cap.ok) {
+      if (cap.reason === "not_live") return programNotLiveResponse();
       return participantCapResponse();
     }
 

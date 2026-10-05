@@ -10,15 +10,15 @@ import { prisma } from "@/lib/prisma";
 import { faqPageJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
-  title: "Pricing — 14-day Growth trial, then $9/mo per brand | Referrals.com",
+  title: "Pricing — $9/mo per brand to publish | Referrals.com",
   description:
-    "Start with 14 days of full Growth features — no credit card. Then keep Growth for $9/month per brand.",
+    "Set up a brand for free. Pay $9/month per brand to publish it and accept signups. Every brand, including network domains, follows the same rule.",
   alternates: { canonical: "https://referrals.com/pricing" },
   openGraph: {
     title:
-      "Pricing — 14-day Growth trial, then $9/mo per brand | Referrals.com",
+      "Pricing — $9/mo per brand to publish | Referrals.com",
     description:
-      "Same plans as in-app billing: Individuals, Partners, annual ~$/mo. 14-day Growth trial, then pay per brand.",
+      "Same plans as in-app billing: Individuals, Partners, annual ~$/mo. Pay $9/mo per brand to publish.",
     url: "https://referrals.com/pricing",
     siteName: "Referrals.com",
     images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
@@ -27,19 +27,19 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title:
-      "Pricing — 14-day Growth trial, then $9/mo per brand | Referrals.com",
+      "Pricing — $9/mo per brand to publish | Referrals.com",
     description:
-      "14-day Growth trial, then $9/month per brand. No credit card required.",
+      "Set up free. Pay $9/month per brand to publish and accept signups.",
   },
 };
 
 const faqs = [
   {
     q: "How much does Referrals.com cost?",
-    a: "You get 14 days of full Growth with no credit card. After that, external brands need a paid plan (from $9/mo per brand).",
+    a: "You can create an account and set up a brand without paying. Publishing that brand and accepting signups is $9/mo.",
   },
   {
-    q: "What happens after the 14-day trial?",
+    q: "When do I have to pay?",
     a: PLAN_CATALOG_COPY.unpaidFootnote,
   },
   {
@@ -48,7 +48,7 @@ const faqs = [
   },
   {
     q: "Do I need a credit card to start?",
-    a: "No. Sign up, run the full Growth trial for 14 days, then choose a plan when you're ready.",
+    a: "No card is required to create an account or set up a brand. A card is required when you publish a brand.",
   },
   {
     q: "Is there an annual plan?",
@@ -85,8 +85,8 @@ const pricingTestimonials = [
 ];
 
 const trustPills = [
-  "14-day Growth trial",
-  "No credit card",
+  "Set up free",
+  "Pay to publish",
   "Same plans as billing",
 ];
 
@@ -99,7 +99,7 @@ export default async function PricingPage() {
   })) as CatalogPlan[];
 
   const primaryCtaHref = isLoggedIn ? "/billing" : "/signup";
-  const primaryCtaLabel = isLoggedIn ? "Choose a plan" : "Start free trial";
+  const primaryCtaLabel = isLoggedIn ? "Choose a plan" : "Create account";
 
   return (
     <div className="bg-gradient-to-b from-white via-rose-50/50 to-orange-50/40">
@@ -112,7 +112,7 @@ export default async function PricingPage() {
           <div className="grid min-w-0 items-center gap-6 sm:gap-8 lg:grid-cols-[1fr_minmax(0,400px)] lg:gap-12">
             <div className="min-w-0 text-center lg:text-left">
               <span className="inline-flex rounded-full border border-rose-200/80 bg-white/80 px-3 py-1 text-xs font-semibold text-[#FF5C62] shadow-sm backdrop-blur">
-                14-day Growth trial · then $9/mo per brand
+                Set up free · $9/mo per brand to publish
               </span>
               <h1 className="mt-3 text-[1.65rem] font-bold leading-tight tracking-tight text-gray-900 min-[380px]:text-[1.85rem] sm:mt-4 sm:text-4xl md:text-5xl lg:text-[3.25rem] lg:leading-[1.08]">
                 Plans that match{" "}
@@ -122,8 +122,8 @@ export default async function PricingPage() {
               </h1>
               <p className="mx-auto mt-3 max-w-xl text-sm text-gray-600 sm:mt-4 sm:text-base md:text-lg lg:mx-0">
                 Individuals and Partners — the same catalog you see after
-                signup. Start with a Growth trial (no card), then pay per brand
-                for the brands you keep running.
+                signup. Set up a brand for free, then pay $9/mo to publish it.{" "}
+                {PLAN_CATALOG_COPY.vnocFootnote}
               </p>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-2 sm:mt-5 lg:justify-start">
                 {trustPills.map((label) => (
@@ -183,8 +183,8 @@ export default async function PricingPage() {
               See your referral upside
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-gray-600">
-              Estimate the new revenue a referral program could drive — start
-              with a free Growth trial.
+              Estimate the new revenue a referral program could drive at $9/mo
+              per brand.
             </p>
           </div>
           <div className="mt-12">
@@ -260,11 +260,10 @@ export default async function PricingPage() {
       <section className="relative overflow-hidden bg-gradient-to-r from-[#ff646c] via-[#ff5c62] to-[#926efb] py-16 sm:py-20">
         <div className="relative mx-auto max-w-4xl px-4 text-center">
           <h2 className="text-3xl font-bold text-white sm:text-4xl">
-            Start your 14-day Growth trial
+            Create your account
           </h2>
           <p className="mt-4 text-lg text-white/90">
-            No credit card. Full product for 14 days — then pick a plan from the
-            catalog above.
+            Set up a brand for free. Pay $9/mo per brand when you publish it.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
             <Link

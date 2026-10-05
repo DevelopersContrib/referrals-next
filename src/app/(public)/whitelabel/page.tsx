@@ -103,7 +103,7 @@ export default function WhitelabelPage() {
                   href="/signup"
                   className="rounded-xl bg-[#FF5C62] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:bg-[#ff4f58]"
                 >
-                  Start whitelabel trial
+                  Create account
                 </Link>
                 <Link
                   href="/pricing"
@@ -224,7 +224,7 @@ export default function WhitelabelPage() {
               href="/signup"
               className="inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#ff646c] shadow-lg transition hover:bg-gray-50"
             >
-              Start free trial
+              Create account
             </Link>
             <Link
               href="/contact"

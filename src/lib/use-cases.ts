@@ -156,7 +156,7 @@ export const useCases: UseCase[] = [
     faqs: [
       {
         q: "Do I need a website?",
-        a: "You can use a landing page — connect any domain you control to start your 14-day Growth trial.",
+        a: "You can use a landing page — connect any domain you control, then pay $9/mo to publish it.",
       },
       {
         q: "Can fans compete on a leaderboard?",
@@ -170,11 +170,11 @@ export const useCases: UseCase[] = [
     headline: "Referral programs for startups",
     subhead: "Launch a word-of-mouth engine before you spend a dollar on ads.",
     intro:
-      "Early traction comes from people telling people. Start a 14-day Growth trial, prove the channel, then keep Growth at $9/mo per brand as you scale products and domains.",
+      "Early traction comes from people telling people. Set up a brand, pay $9/mo to publish it, then add brands at the same price as you scale.",
     benefits: [
       {
-        title: "Free to launch",
-        body: "14-day Growth trial with full features — then $9/mo per brand.",
+        title: "Pay to publish",
+        body: "Set up a brand, then pay $9/mo to publish it and accept signups.",
       },
       {
         title: "Fast setup",
@@ -194,7 +194,7 @@ export const useCases: UseCase[] = [
     faqs: [
       {
         q: "Is it really free to start?",
-        a: "Yes — you get 14 days of full Growth features with no credit card. After that, external brands are $9/mo per brand.",
+        a: "You can create an account and set up a brand before you pay. Publishing it and accepting signups is $9/mo per brand.",
       },
       {
         q: "What happens when we grow?",

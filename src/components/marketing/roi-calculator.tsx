@@ -126,8 +126,8 @@ export function RoiCalculator() {
         </div>
         <p className="mt-6 text-xs text-white/75">
           {roi !== null
-            ? `That's roughly ${roi.toLocaleString("en-US")}% ROI at $9/mo per brand. 14-day Growth trial is free first. VNOC / network domains stay free.`
-            : "14-day Growth trial is free — then $9/mo per brand. VNOC / network domains stay free."}
+            ? `That's roughly ${roi.toLocaleString("en-US")}% ROI at $9/mo per brand. 14-day Growth trial is free first.`
+            : "14-day Growth trial is free — then $9/mo per brand."}
         </p>
       </div>
     </div>

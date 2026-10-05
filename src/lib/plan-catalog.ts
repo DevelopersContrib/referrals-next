@@ -11,8 +11,6 @@ export type CatalogPlan = {
 };
 
 export const PLAN_CATALOG_COPY = {
-  freeIsVnocOnly: true,
-  vnocFootnote: "VNOC / network domains stay free.",
   trialFootnote:
     "14-day Growth trial for external brands — then $9/mo per brand.",
   unpaidFootnote:
@@ -59,14 +57,20 @@ export function isMostPopularIndividual(
   return plan.id === cheapest.id;
 }
 
-export function getPlanFeatures(plan: CatalogPlan): string[] {
-  const features: string[] = [];
+/** "Unlimited brands" / "Up to 3 brands" — how many brands a plan covers. */
+export function planBrandScope(plan: CatalogPlan): string {
   const domains = plan.no_of_domains;
-  if (domains == null || domains <= 0) {
-    features.push("Unlimited brands");
-  } else {
-    features.push(`Up to ${domains} brand${domains === 1 ? "" : "s"}`);
-  }
+  if (domains == null || domains <= 0) return "Unlimited brands";
+  return `Up to ${domains} brand${domains === 1 ? "" : "s"}`;
+}
+
+/**
+ * What the plan includes. Billing cadence is deliberately absent — it is a
+ * payment option, not a feature, and `planBillingLabel` already renders it
+ * next to the price on every card.
+ */
+export function getPlanFeatures(plan: CatalogPlan): string[] {
+  const features: string[] = [planBrandScope(plan)];
 
   const participants = plan.campaigns_participants;
   if (participants == null || participants <= 0) {
@@ -77,19 +81,8 @@ export function getPlanFeatures(plan: CatalogPlan): string[] {
 
   const price = plan.price ?? 0;
   if (price <= 0) {
-    features.push(PLAN_CATALOG_COPY.vnocFootnote);
+    features.push("Referral widget with Referrals.com branding");
     return features;
-  }
-
-  if (isAnnual(plan)) {
-    const monthly = monthlyEquivalent(plan);
-    features.push(
-      monthly
-        ? `Billed annually (~$${monthly.toFixed(0)}/mo)`
-        : "Billed annually",
-    );
-  } else {
-    features.push("Billed monthly");
   }
 
   features.push("Gamification & leaderboards");
@@ -105,6 +98,12 @@ export function getPlanFeatures(plan: CatalogPlan): string[] {
 
 export function formatPlanPrice(plan: CatalogPlan): string {
   return `$${(plan.price ?? 0).toFixed(2)}`;
+}
+
+/** Price without trailing ".00", for space-constrained UI like the hero mockup. */
+export function formatPlanPriceShort(plan: CatalogPlan): string {
+  const price = plan.price ?? 0;
+  return Number.isInteger(price) ? `$${price}` : `$${price.toFixed(2)}`;
 }
 
 export function planBillingLabel(plan: CatalogPlan): string {

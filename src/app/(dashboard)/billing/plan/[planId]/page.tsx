@@ -170,15 +170,14 @@ export default async function PlanCheckoutPage({
             <div className="flex flex-1 flex-col justify-center space-y-4">
               <div className="rounded-xl bg-gradient-to-br from-rose-500/10 to-orange-50/30 p-4">
                 <p className="text-xs font-semibold uppercase tracking-wider text-[#FF5C62]">
-                  Trial / network
+                  Trial
                 </p>
                 <p className="mt-2 text-sm font-semibold text-gray-900">
                   Not a paid checkout for external brands.
                 </p>
                 <p className="mt-1 text-sm text-gray-600">
                   Your 14-day Growth trial starts automatically at signup. After
-                  that, external brands need Growth ($9/mo per brand). VNOC /
-                  network domains stay free.
+                  that, external brands need Growth ($9/mo per brand).
                 </p>
               </div>
               <Link

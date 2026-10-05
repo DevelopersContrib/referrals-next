@@ -169,7 +169,7 @@ export default async function UseCasePage({ params }: Props) {
           </h2>
           <p className="mt-3 text-white/90">
             Every Growth feature for 14 days. No credit card. Then $9/mo per
-            brand. VNOC / network domains stay free.
+            brand.
           </p>
           <Link
             href="/signup"

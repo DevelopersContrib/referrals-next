@@ -613,7 +613,7 @@ export default function FeaturesPage() {
           </h2>
           <p className="mt-4 text-lg text-white/80">
             Get 14 days of full Growth features — no credit card. Then $9/mo per
-            brand. VNOC / network domains stay free.
+            brand.
           </p>
           <div className="mt-8 flex items-center justify-center gap-4">
             <Link

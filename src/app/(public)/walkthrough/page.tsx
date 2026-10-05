@@ -35,7 +35,7 @@ const walkthroughSteps = [
     step: 2,
     title: "Add Your Brand",
     description:
-      "After signing up, add your brand by entering your website URL. We will automatically fetch your site details and logo. Multi-domain is included in your Growth trial and paid Growth ($9/mo per brand). VNOC / network domains stay free.",
+      "After signing up, add your brand by entering your website URL. We will automatically fetch your site details and logo. Multi-domain is included in your Growth trial and paid Growth ($9/mo per brand).",
     image: "/images/walkthrough/step-02-brand.png",
   },
   {

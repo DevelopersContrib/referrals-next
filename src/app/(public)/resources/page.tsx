@@ -34,7 +34,7 @@ const chapters = [
   },
   {
     title: "Launching and scaling",
-    body: "Use your 14-day Growth trial to prove the channel, then keep Growth at $9/mo per brand to scale domains. VNOC / network domains stay free. Embed widgets where intent is highest — post-purchase, onboarding, and account pages.",
+    body: "Use your 14-day Growth trial to prove the channel, then keep Growth at $9/mo per brand to scale domains. Embed widgets where intent is highest — post-purchase, onboarding, and account pages.",
   },
 ];
 
@@ -149,8 +149,7 @@ export default function ResourcesPage() {
             Put it into practice
           </h2>
           <p className="mt-3 text-white/90">
-            Start a 14-day Growth trial — then $9/mo per brand. VNOC / network
-            domains stay free.
+            Start a 14-day Growth trial — then $9/mo per brand.
           </p>
           <Link
             href="/signup"

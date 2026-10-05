@@ -85,7 +85,7 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
     paragraphs: [
       "Visit referrals.com/signup to start your 14-day Growth trial. You'll need your name, email address, and a password. During signup you can also enter your first brand's website URL — Referrals.com will fetch your logo and site details automatically. No credit card is required.",
       "After confirming your email, your Growth trial begins and you can sign in at /signin. From there add your brand, create campaigns, and embed your referral widget.",
-      "During the trial you get full Growth features (multi-domain, public campaigns, advanced analytics). After 14 days, external brands need Growth at $9/mo per brand. VNOC / network domains stay free.",
+      "During the trial you get full Growth features (multi-domain, public campaigns, advanced analytics). After 14 days, external brands need Growth at $9/mo per brand.",
     ],
   },
   {
@@ -95,7 +95,7 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
     description: "Add a brand by entering your website URL.",
     paragraphs: [
       "From your dashboard, click Create Brand or go to /brands/new. Enter your website URL (e.g. https://yoursite.com). Referrals.com validates the domain and pulls in your site title and logo.",
-      "Each brand represents one website or business. During your Growth trial (or on paid Growth) you can manage multiple brands from one account. After trial, each external brand is $9/mo. VNOC / network domains stay free.",
+      "Each brand represents one website or business. During your Growth trial (or on paid Growth) you can manage multiple brands from one account. After trial, each external brand is $9/mo.",
       "Once your brand is created, open its dashboard at /brands/[id] to view stats, manage campaigns, and access the widget editor.",
     ],
   },
@@ -259,7 +259,7 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
     category: "Billing & Plans",
     description: "Overview of Referrals.com pricing plans.",
     paragraphs: [
-      "Referrals.com uses a reverse trial: 14 days of full Growth features, then $9/month per brand for external brands. VNOC / network domains stay free. See /pricing and /billing.",
+      "Referrals.com uses a reverse trial: 14 days of full Growth features, then $9/month per brand for external brands. See /pricing and /billing.",
       "After trial, unpaid external brands keep the widget live for visitors with Referrals.com branding on — that is not a free-forever plan. Pay Growth to remove branding and unlock multi-domain and advanced analytics.",
       "Growth ($9/mo per brand) removes branding, unlocks multi-domain, advanced analytics, and higher limits. Subscribe from /billing/plan/2 via PayPal. Cancel anytime.",
     ],

@@ -98,7 +98,7 @@ export default function ReferralProgramPage() {
                 <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-600" />
                 <span>
                   <strong>After the trial</strong> they continue on Growth for
-                  $9/mo per brand. VNOC / network domains stay free.
+                  $9/mo per brand.
                 </span>
               </li>
             </ul>

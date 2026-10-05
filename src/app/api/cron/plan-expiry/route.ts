@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
                   Keep ${brandLabel} — $9/mo
                 </a>
               </p>
-              <p style="color:#666;font-size:13px;">VNOC / network domains stay free. No credit card was required for the trial.</p>
+              <p style="color:#666;font-size:13px;">No credit card was required for the trial.</p>
             </div>
           `
         : `

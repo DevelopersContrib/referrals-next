@@ -12,7 +12,7 @@ import { faqPageJsonLd } from "@/lib/structured-data";
 export const metadata: Metadata = {
   title: "Pricing — 14-day Growth trial, then $9/mo per brand | Referrals.com",
   description:
-    "Start with 14 days of full Growth features — no credit card. Then keep Growth for $9/month per brand. VNOC / network domains stay free.",
+    "Start with 14 days of full Growth features — no credit card. Then keep Growth for $9/month per brand.",
   alternates: { canonical: "https://referrals.com/pricing" },
   openGraph: {
     title:
@@ -29,14 +29,14 @@ export const metadata: Metadata = {
     title:
       "Pricing — 14-day Growth trial, then $9/mo per brand | Referrals.com",
     description:
-      "14-day Growth trial, then $9/month per brand. VNOC / network domains stay free.",
+      "14-day Growth trial, then $9/month per brand. No credit card required.",
   },
 };
 
 const faqs = [
   {
     q: "How much does Referrals.com cost?",
-    a: "You get 14 days of full Growth with no credit card. After that, external brands need a paid plan (from $9/mo per brand). VNOC / network domains stay free.",
+    a: "You get 14 days of full Growth with no credit card. After that, external brands need a paid plan (from $9/mo per brand).",
   },
   {
     q: "What happens after the 14-day trial?",
@@ -122,8 +122,8 @@ export default async function PricingPage() {
               </h1>
               <p className="mx-auto mt-3 max-w-xl text-sm text-gray-600 sm:mt-4 sm:text-base md:text-lg lg:mx-0">
                 Individuals and Partners — the same catalog you see after
-                signup. Start with a Growth trial (no card). External brands
-                then pay per brand; {PLAN_CATALOG_COPY.vnocFootnote}
+                signup. Start with a Growth trial (no card), then pay per brand
+                for the brands you keep running.
               </p>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-2 sm:mt-5 lg:justify-start">
                 {trustPills.map((label) => (
@@ -151,7 +151,7 @@ export default async function PricingPage() {
               </div>
             </div>
             <div className="mx-auto w-full max-w-md lg:mx-0 lg:max-w-none">
-              <PricingHeroMockup />
+              <PricingHeroMockup plans={plans} />
             </div>
           </div>
         </div>

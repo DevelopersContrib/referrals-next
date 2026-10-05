@@ -72,7 +72,7 @@ function statusDetail(
   }
 
   if (status === "free") {
-    return PLAN_CATALOG_COPY.vnocFootnote;
+    return "No payment required for this brand.";
   }
 
   if (!planExpiry) return null;
@@ -374,7 +374,7 @@ export default async function BillingPage({
                 )}
 
                 <p className="text-xs text-muted-foreground">
-                  {PLAN_CATALOG_COPY.vnocFootnote}
+                  {PLAN_CATALOG_COPY.unpaidFootnote}
                 </p>
               </>
             );

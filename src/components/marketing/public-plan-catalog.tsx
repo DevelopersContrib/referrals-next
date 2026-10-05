@@ -143,17 +143,12 @@ function PublicPlanCard({
           {ctaLabel}
         </Link>
       ) : (
-        <div className="mt-6 space-y-2">
-          <Link
-            href="/signup"
-            className="flex min-h-11 w-full items-center justify-center rounded-xl border border-[#FF5C62]/30 bg-[#FF5C62]/5 px-4 py-3 text-center text-sm font-semibold text-[#FF5C62] transition hover:bg-[#FF5C62]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5C62]"
-          >
-            Start free trial
-          </Link>
-          <p className="text-center text-[11px] leading-snug text-gray-500">
-            {PLAN_CATALOG_COPY.vnocFootnote}
-          </p>
-        </div>
+        <Link
+          href="/signup"
+          className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl border border-[#FF5C62]/30 bg-[#FF5C62]/5 px-4 py-3 text-center text-sm font-semibold text-[#FF5C62] transition hover:bg-[#FF5C62]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5C62]"
+        >
+          Start free trial
+        </Link>
       )}
     </article>
   );
@@ -239,7 +234,7 @@ export function PublicPlanCatalog({
       )}
 
       <p className="text-center text-xs text-gray-500 sm:text-left">
-        {PLAN_CATALOG_COPY.vnocFootnote} {PLAN_CATALOG_COPY.unpaidFootnote}
+        {PLAN_CATALOG_COPY.unpaidFootnote}
       </p>
     </div>
   );

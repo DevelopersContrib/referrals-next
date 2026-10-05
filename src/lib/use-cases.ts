@@ -174,7 +174,7 @@ export const useCases: UseCase[] = [
     benefits: [
       {
         title: "Free to launch",
-        body: "14-day Growth trial with full features — then $9/mo per brand. VNOC / network domains stay free.",
+        body: "14-day Growth trial with full features — then $9/mo per brand.",
       },
       {
         title: "Fast setup",
@@ -194,7 +194,7 @@ export const useCases: UseCase[] = [
     faqs: [
       {
         q: "Is it really free to start?",
-        a: "Yes — you get 14 days of full Growth features with no credit card. After that, external brands are $9/mo per brand. VNOC / network domains stay free.",
+        a: "Yes — you get 14 days of full Growth features with no credit card. After that, external brands are $9/mo per brand.",
       },
       {
         q: "What happens when we grow?",

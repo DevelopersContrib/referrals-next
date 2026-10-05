@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllPosts, getPostBySlug, getRelatedPosts } from "@/lib/blog";
+import { absoluteBlogImageUrl } from "@/lib/blog-image";
+import { BlogImage } from "@/components/blog/blog-image";
 import { JsonLd } from "@/components/seo/json-ld";
 import type { Metadata } from "next";
 
@@ -18,6 +20,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = getPostBySlug(slug);
   if (!post) return { title: "Post Not Found" };
 
+  const image = absoluteBlogImageUrl(post.featuredImage);
+
   return {
     title: `${post.title} | Referrals.com Blog`,
     description: post.excerpt,
@@ -27,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: post.excerpt,
       url: `https://referrals.com/blog/${slug}`,
       siteName: "Referrals.com",
-      images: [{ url: post.featuredImage }],
+      images: [{ url: image }],
       type: "article",
       publishedTime: post.date,
       authors: [post.author],
@@ -36,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: "summary_large_image",
       title: post.title,
       description: post.excerpt,
-      images: [post.featuredImage],
+      images: [image],
     },
   };
 }
@@ -127,7 +131,7 @@ export default async function BlogPostPage({ params }: Props) {
     "@type": "Article",
     headline: post.title,
     description: post.excerpt,
-    image: post.featuredImage ? [post.featuredImage] : undefined,
+    image: [absoluteBlogImageUrl(post.featuredImage)],
     datePublished: post.date,
     dateModified: post.date,
     author: { "@type": "Person", name: post.author },
@@ -193,12 +197,12 @@ export default async function BlogPostPage({ params }: Props) {
           </div>
         </header>
 
-        <div className="mb-12 overflow-hidden rounded-sm sm:rounded-md">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+        <div className="mb-12 aspect-[2/1] overflow-hidden rounded-sm bg-gray-100 sm:rounded-md">
+          <BlogImage
             src={post.featuredImage}
             alt={post.title}
-            className="aspect-[2/1] w-full object-cover"
+            className="h-full w-full object-cover"
+            loading="eager"
           />
         </div>
 
@@ -269,12 +273,10 @@ export default async function BlogPostPage({ params }: Props) {
                   className="group flex gap-5 border-b border-gray-100 pb-10 last:border-0 last:pb-0"
                 >
                   <div className="relative hidden h-24 w-36 shrink-0 overflow-hidden rounded-sm bg-gray-100 sm:block">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <BlogImage
                       src={rp.featuredImage}
                       alt={rp.title}
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
                     />
                   </div>
                   <div className="min-w-0 flex-1">

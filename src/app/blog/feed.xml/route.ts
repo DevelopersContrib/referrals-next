@@ -1,4 +1,5 @@
 import { getAllPosts } from "@/lib/blog";
+import { absoluteBlogImageUrl, blogImageMimeType } from "@/lib/blog-image";
 
 function escapeXml(str: string): string {
   return str
@@ -14,8 +15,9 @@ export async function GET() {
   const siteUrl = "https://referrals.com";
 
   const items = posts
-    .map(
-      (post) => `    <item>
+    .map((post) => {
+      const image = absoluteBlogImageUrl(post.featuredImage);
+      return `    <item>
       <title>${escapeXml(post.title)}</title>
       <link>${siteUrl}/blog/${post.slug}</link>
       <guid isPermaLink="true">${siteUrl}/blog/${post.slug}</guid>
@@ -23,9 +25,9 @@ export async function GET() {
       <pubDate>${new Date(post.date).toUTCString()}</pubDate>
       <author>${escapeXml(post.author)}</author>
       ${post.tags.map((t) => `<category>${escapeXml(t)}</category>`).join("\n      ")}
-      <enclosure url="${escapeXml(post.featuredImage)}" type="image/jpeg" />
-    </item>`
-    )
+      <enclosure url="${escapeXml(image)}" type="${blogImageMimeType(image)}" />
+    </item>`;
+    })
     .join("\n");
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

@@ -2,7 +2,8 @@
  * Blog Post Auto-Generation Script
  *
  * Generates a blog post using OpenAI for content and Pexels for featured images.
- * Saves the result as a JSON file in content/blog/.
+ * Saves the result as a JSON file in content/blog/ and the cover image in
+ * public/images/blog/ — covers are self-hosted, never hotlinked.
  *
  * Environment variables required:
  *   OPENAI_API_KEY  - OpenAI API key
@@ -14,6 +15,8 @@
 
 import fs from "fs";
 import path from "path";
+import { downloadBlogCover } from "../src/lib/blog";
+import { BLOG_IMAGE_FALLBACK } from "../src/lib/blog-image";
 
 // ---------------------------------------------------------------------------
 // Topic pool (50+)
@@ -180,7 +183,8 @@ interface PexelsResponse {
   photos: PexelsPhoto[];
 }
 
-async function fetchFeaturedImage(query: string): Promise<string> {
+/** A Pexels cover URL for the query, or null when Pexels returns nothing usable. */
+async function fetchFeaturedImage(query: string): Promise<string | null> {
   const apiKey = process.env.PEXELS_API_KEY;
   if (!apiKey) throw new Error("PEXELS_API_KEY environment variable is not set");
 
@@ -196,8 +200,8 @@ async function fetchFeaturedImage(query: string): Promise<string> {
   );
 
   if (!res.ok) {
-    console.warn(`Pexels API error (${res.status}), using fallback image`);
-    return "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750";
+    console.warn(`Pexels API error (${res.status}), falling back to placeholder`);
+    return null;
   }
 
   const data = (await res.json()) as PexelsResponse;
@@ -208,7 +212,7 @@ async function fetchFeaturedImage(query: string): Promise<string> {
     return photo.src.large2x;
   }
 
-  return "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750";
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -227,14 +231,19 @@ async function main(): Promise<void> {
   const { title, excerpt, content, tags } = await generateContent(topic);
   console.log(`Generated: "${title}"`);
 
-  // Fetch featured image from Pexels
+  const slug = slugify(title);
+
+  // Source the cover from Pexels, then store it under public/ so the published
+  // post never depends on a third-party host being reachable from the browser.
   console.log("Fetching featured image from Pexels...");
   const imageQuery = tags.slice(0, 2).join(" ") + " business";
-  const featuredImage = await fetchFeaturedImage(imageQuery);
-  console.log(`Image: ${featuredImage.slice(0, 80)}...`);
+  const remoteImage = await fetchFeaturedImage(imageQuery);
+  const featuredImage =
+    (remoteImage && (await downloadBlogCover(remoteImage, slug))) ??
+    BLOG_IMAGE_FALLBACK;
+  console.log(`Image: ${featuredImage}`);
 
   // Build the post object
-  const slug = slugify(title);
   const date = new Date().toISOString().split("T")[0];
 
   const post = {

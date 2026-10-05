@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { BlogImage } from "@/components/blog/blog-image";
 
 interface BlogPost {
   slug: string;
@@ -133,8 +134,7 @@ export default function AdminBlogPage() {
                 <tr key={post.slug} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <BlogImage
                         src={post.featuredImage}
                         alt=""
                         className="h-10 w-16 shrink-0 rounded object-cover"

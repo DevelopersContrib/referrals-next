@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { adminApiGuard } from "@/lib/require-platform-admin";
 import { auth } from "@/lib/auth";
-import { savePost } from "@/lib/blog";
+import { downloadBlogCover, savePost } from "@/lib/blog";
+import { BLOG_IMAGE_FALLBACK } from "@/lib/blog-image";
 import { chatJSON, hasOpenAI, OpenAIError } from "@/lib/openai";
 
 // POST /api/admin/blog/generate — trigger on-demand blog post generation
@@ -72,9 +73,13 @@ Return ONLY the JSON object.`,
       maxTokens: 3000,
     });
 
-    // --- Fetch Pexels image ---
-    let featuredImage =
-      "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750";
+    const slug = generated.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    // --- Cover image: source from Pexels, then store it locally ---
+    let featuredImage = BLOG_IMAGE_FALLBACK;
 
     if (pexelsKey) {
       try {
@@ -88,23 +93,19 @@ Return ONLY the JSON object.`,
         if (pxRes.ok) {
           const pxData = await pxRes.json();
           if (pxData.photos?.length) {
+            const remote =
+              pxData.photos[Math.floor(Math.random() * pxData.photos.length)]
+                .src.large2x;
             featuredImage =
-              pxData.photos[
-                Math.floor(Math.random() * pxData.photos.length)
-              ].src.large2x;
+              (await downloadBlogCover(remote, slug)) ?? BLOG_IMAGE_FALLBACK;
           }
         }
       } catch {
-        // Use fallback image
+        // Keep the placeholder — a post without a cover still publishes fine.
       }
     }
 
     // --- Build and save ---
-    const slug = generated.title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-
     const words = (generated.content || "").split(/\s+/).length;
     const readingTime = `${Math.max(1, Math.ceil(words / 200))} min read`;
 

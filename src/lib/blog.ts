@@ -14,6 +14,44 @@ export interface BlogPost {
 }
 
 const BLOG_DIR = path.join(process.cwd(), "content", "blog");
+const COVER_DIR = path.join(process.cwd(), "public", "images", "blog");
+
+/**
+ * Download a cover image into `public/images/blog` and return its site-relative
+ * path. Returns null if the download fails or the response is not an image.
+ *
+ * Covers are stored locally rather than hotlinked so a post never renders an
+ * empty box because a third-party image host is unreachable from the visitor's
+ * browser — ad blockers and corporate filters routinely block stock photo CDNs.
+ */
+export async function downloadBlogCover(
+  imageUrl: string,
+  slug: string,
+): Promise<string | null> {
+  try {
+    const res = await fetch(imageUrl);
+    if (!res.ok) return null;
+
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!contentType.startsWith("image/")) return null;
+
+    const ext = contentType.includes("png")
+      ? "png"
+      : contentType.includes("webp")
+        ? "webp"
+        : "jpg";
+
+    fs.mkdirSync(COVER_DIR, { recursive: true });
+    fs.writeFileSync(
+      path.join(COVER_DIR, `${slug}.${ext}`),
+      Buffer.from(await res.arrayBuffer()),
+    );
+
+    return `/images/blog/${slug}.${ext}`;
+  } catch {
+    return null;
+  }
+}
 
 function ensureBlogDir(): void {
   if (!fs.existsSync(BLOG_DIR)) {

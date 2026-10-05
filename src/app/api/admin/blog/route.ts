@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminApiGuard } from "@/lib/require-platform-admin";
 import { auth } from "@/lib/auth";
-import { getAllPosts, savePost, deletePost, type BlogPost } from "@/lib/blog";
+import {
+  getAllPosts,
+  savePost,
+  deletePost,
+  downloadBlogCover,
+  type BlogPost,
+} from "@/lib/blog";
+import { BLOG_IMAGE_FALLBACK } from "@/lib/blog-image";
 
 // GET /api/admin/blog — list all posts
 export async function GET() {
@@ -43,14 +50,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // A pasted external URL is stored locally so the cover does not depend on
+    // someone else's host staying up.
+    const supplied = body.featuredImage?.trim();
+    let featuredImage = supplied || BLOG_IMAGE_FALLBACK;
+    if (supplied && /^https?:\/\//i.test(supplied)) {
+      featuredImage =
+        (await downloadBlogCover(supplied, body.slug)) ?? BLOG_IMAGE_FALLBACK;
+    }
+
     const post: BlogPost = {
       title: body.title,
       slug: body.slug,
       excerpt: body.excerpt || "",
       content: body.content,
-      featuredImage:
-        body.featuredImage ||
-        "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750",
+      featuredImage,
       author: body.author || "Referrals.com Team",
       date: body.date || new Date().toISOString().split("T")[0],
       tags: body.tags || [],

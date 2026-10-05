@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BlogImage } from "@/components/blog/blog-image";
 import { getRecentPosts } from "@/lib/blog";
 
 export function RecentBlogPosts() {
@@ -31,8 +32,7 @@ export function RecentBlogPosts() {
             href={`/blog/${post.slug}`}
             className="group flex gap-3"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <BlogImage
               src={post.featuredImage}
               alt=""
               className="h-12 w-18 shrink-0 rounded object-cover"

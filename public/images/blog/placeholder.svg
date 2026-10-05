@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="Referrals.com article">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff5f5"/>
+      <stop offset="55%" stop-color="#ffe9ea"/>
+      <stop offset="100%" stop-color="#efe7fe"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FF5C62"/>
+      <stop offset="100%" stop-color="#926efb"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+
+  <circle cx="200" cy="170" r="150" fill="#FF5C62" opacity="0.07"/>
+  <circle cx="1420" cy="760" r="190" fill="#926efb" opacity="0.08"/>
+
+  <g transform="translate(800 400)">
+    <circle r="112" fill="none" stroke="url(#accent)" stroke-width="7" opacity="0.65"/>
+    <circle cx="0" cy="-74" r="30" fill="url(#accent)"/>
+    <circle cx="-64" cy="38" r="30" fill="url(#accent)"/>
+    <circle cx="64" cy="38" r="30" fill="url(#accent)"/>
+  </g>
+
+  <text x="800" y="628" text-anchor="middle"
+        font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"
+        font-size="54" font-weight="700" fill="#1f2430">Referrals.com</text>
+  <text x="800" y="688" text-anchor="middle"
+        font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"
+        font-size="32" font-weight="500" fill="#6b7280">Referral marketing insights</text>
+</svg>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BlogImage } from "@/components/blog/blog-image";
 import { BlogSidebar } from "@/components/blog/blog-sidebar";
 import { getPaginatedPosts } from "@/lib/blog";
 
@@ -64,12 +65,10 @@ export default async function BlogIndexPage({
                   >
                     <Link href={`/blog/${post.slug}`} className="block">
                       <div className="aspect-[16/9] overflow-hidden bg-gray-100">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <BlogImage
                           src={post.featuredImage}
                           alt={post.title}
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          loading="lazy"
                         />
                       </div>
                     </Link>

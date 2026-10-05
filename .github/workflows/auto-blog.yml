@@ -32,8 +32,8 @@ jobs:
       - name: Install tsx (script runner)
         run: pnpm add -D tsx
 
-      - name: Ensure content directory exists
-        run: mkdir -p content/blog
+      - name: Ensure content directories exist
+        run: mkdir -p content/blog public/images/blog
 
       - name: Generate blog post
         id: generate
@@ -46,7 +46,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add content/blog/
+          git add content/blog/ public/images/blog/
           # Check if there are changes to commit
           if git diff --staged --quiet; then
             echo "No new blog post to commit"

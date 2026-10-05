@@ -1,14 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { ExternalLinkIcon } from "lucide-react";
 import { BrandLogo } from "@/components/brands/brand-logo";
 import { brandMustShowBranding } from "@/lib/member-subscription";
 import { findPublicBrandBySlug } from "@/lib/public-campaign-server";
-
-const LOGO_URL =
-  "https://d1p6j71028fbjm.cloudfront.net/logos/logo-new-referral-1.png";
+import { ReferralsSiteHeader } from "@/components/public/referrals-site-header";
+import { formatBrandName, formatCount } from "@/lib/format-brand";
 
 export default async function PublicBrandPage({
   params,
@@ -37,34 +35,7 @@ export default async function PublicBrandPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Minimal referral header */}
-      <div className="border-b border-rose-100 bg-white/90 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
-          <a
-            href="https://referrals.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex h-8 items-center"
-            aria-label="Referrals.com"
-          >
-            <Image
-              src={LOGO_URL}
-              alt="Referrals.com"
-              width={126}
-              height={40}
-              priority
-              unoptimized
-              className="h-full w-auto object-contain object-left"
-            />
-          </a>
-          <Link
-            href="/signup"
-            className="rounded-lg bg-[#FF5C62] px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#ff4f58]"
-          >
-            Start your program
-          </Link>
-        </div>
-      </div>
+      {showBranding && <ReferralsSiteHeader />}
 
       <header className="bg-white border-b">
         <div className="max-w-4xl mx-auto px-4 py-6 flex items-center gap-4">
@@ -83,13 +54,15 @@ export default async function PublicBrandPage({
                 rel="noopener noreferrer"
                 className="group inline-flex items-center gap-1.5"
               >
-                <h1 className="text-2xl font-bold capitalize group-hover:text-brand">
-                  {brand.domain}
+                <h1 className="text-2xl font-bold group-hover:text-brand">
+                  {formatBrandName(brand.domain)}
                 </h1>
                 <ExternalLinkIcon className="size-4 text-gray-400 transition-colors group-hover:text-brand" />
               </a>
             ) : (
-              <h1 className="text-2xl font-bold capitalize">{brand.domain}</h1>
+              <h1 className="text-2xl font-bold">
+                {formatBrandName(brand.domain)}
+              </h1>
             )}
             {brand.description && (
               <p className="mt-1 text-gray-600">{brand.description}</p>
@@ -112,8 +85,8 @@ export default async function PublicBrandPage({
                 <h3 className="font-semibold">{campaign.name}</h3>
                 <p className="mt-1 text-sm text-gray-500">
                   {campaign.goal_type === "visit"
-                    ? `Goal: ${campaign.num_visits} visits`
-                    : `Goal: ${campaign.num_signups} signups`}
+                    ? `Goal: ${formatCount(campaign.num_visits ?? 0, "visit")}`
+                    : `Goal: ${formatCount(campaign.num_signups ?? 0, "signup")}`}
                 </p>
               </Link>
             ))}

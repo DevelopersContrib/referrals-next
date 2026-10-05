@@ -25,6 +25,7 @@ import {
   previewFromRecords,
 } from "@/components/campaigns/campaign-dashboard-preview";
 import { getRewardKind } from "@/lib/reward-types";
+import { formatCount } from "@/lib/format-brand";
 import {
   HomeIcon,
   ChevronRightIcon,
@@ -296,8 +297,8 @@ export default async function CampaignDashboardPage({
                     <TargetIcon className="size-3.5" />
                     Goal:{" "}
                     {campaign.goal_type === "visit"
-                      ? `${campaign.num_visits} visits`
-                      : `${campaign.num_signups} signups`}
+                      ? formatCount(campaign.num_visits ?? 0, "visit")
+                      : formatCount(campaign.num_signups ?? 0, "signup")}
                   </span>
                   {campaignType?.name && (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 font-medium">

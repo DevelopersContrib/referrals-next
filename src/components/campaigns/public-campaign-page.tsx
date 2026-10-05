@@ -4,6 +4,8 @@ import {
   CampaignJoinCard,
   CampaignLanding,
 } from "@/components/campaigns/campaign-landing";
+import { ReferralsSiteHeader } from "@/components/public/referrals-site-header";
+import { formatBrandName } from "@/lib/format-brand";
 
 export function buildPublicCampaignMetadata(
   data: PublicCampaignViewPayload
@@ -13,7 +15,7 @@ export function buildPublicCampaignMetadata(
   const description =
     campaign.pitch ||
     (brand.domain
-      ? `Join the referral program on ${brand.domain}.`
+      ? `Join the referral program on ${formatBrandName(brand.domain)}.`
       : "Join this referral campaign on Referrals.com.");
   return {
     title,
@@ -63,6 +65,7 @@ export function PublicCampaignPageView({
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      {showBranding !== false && <ReferralsSiteHeader />}
       <CampaignLanding
         brandDomain={brand.domain}
         brandLogoUrl={brand.logo_url}
@@ -164,7 +167,9 @@ export function PublicCampaignPageView({
 
       <footer className="mt-auto border-t border-slate-200/80 bg-white py-6 text-center text-sm text-slate-500">
         <p>
-          <span className="font-medium text-slate-700">{brand.domain}</span>
+          <span className="font-medium text-slate-700">
+            {formatBrandName(brand.domain)}
+          </span>
           {showBranding !== false && (
             <>
               <span className="mx-2 text-slate-300" aria-hidden>

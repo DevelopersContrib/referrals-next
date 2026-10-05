@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ShareButtons } from "./share-buttons";
 import { RewardDisplay } from "./reward-display";
+import { formatBrandName } from "@/lib/format-brand";
 
 interface WidgetConfig {
   campaignId: number;
@@ -62,17 +63,6 @@ interface ReferralWidgetProps {
   leaderboard?: LeaderboardEntry[];
   isEmbed?: boolean;
   skipImpression?: boolean;
-}
-
-/**
- * Auto-provisioned network campaigns use the bare domain as the widget title
- * (e.g. "englishstream.com"). Capitalize it for display — "Englishstream.com".
- * Anything that isn't a bare domain is returned untouched.
- */
-function displayTitle(title: string): string {
-  const t = title.trim();
-  if (!/^[a-z0-9][a-z0-9-]*(\.[a-z0-9-]+)+$/.test(t)) return title;
-  return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
 export function ReferralWidget({
@@ -269,7 +259,7 @@ export function ReferralWidget({
               lineHeight: 1.3,
             }}
           >
-            {displayTitle(config.headerTitle)}
+            {formatBrandName(config.headerTitle)}
           </h2>
         )}
         {config.description && (

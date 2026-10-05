@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { findPublicBrandBySlug } from "@/lib/public-campaign-server";
+import { formatBrandName } from "@/lib/format-brand";
 
 export async function generateMetadata({
   params,
@@ -16,8 +17,8 @@ export async function generateMetadata({
   }
 
   return {
-    title: `Top Referrers - ${brand.domain} | Referrals.com`,
-    description: `View the top referrers and leaderboard for ${brand.domain} campaigns on Referrals.com.`,
+    title: `Top Referrers - ${formatBrandName(brand.domain)} | Referrals.com`,
+    description: `View the top referrers and leaderboard for ${formatBrandName(brand.domain)} campaigns on Referrals.com.`,
   };
 }
 
@@ -113,7 +114,9 @@ export default async function PublicParticipantsPage({
         </h1>
         <p className="mt-2 text-gray-400">
           Leaderboard for{" "}
-          <span className="font-medium text-white">{brand.domain}</span>
+          <span className="font-medium text-white">
+            {formatBrandName(brand.domain)}
+          </span>
         </p>
       </div>
 

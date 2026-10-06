@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowRightIcon, RocketIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 type Props = {
   brandId: number;
@@ -68,16 +69,18 @@ export function CampaignGoLiveButton({
 
   if (!entitled) {
     return (
-      <Button
-        asChild
-        className={`h-10 gap-2 bg-brand font-semibold text-white hover:bg-brand-hover ${className ?? ""}`}
+      <Link
+        href={checkoutHref}
+        className={cn(
+          buttonVariants({ variant: "default", size: "default" }),
+          "h-10 gap-2 bg-brand font-semibold text-white hover:bg-brand-hover",
+          className,
+        )}
       >
-        <Link href={checkoutHref}>
-          <RocketIcon className="size-4" aria-hidden />
-          Go Live
-          <ArrowRightIcon className="size-4" aria-hidden />
-        </Link>
-      </Button>
+        <RocketIcon className="size-4" aria-hidden />
+        Go Live
+        <ArrowRightIcon className="size-4" aria-hidden />
+      </Link>
     );
   }
 

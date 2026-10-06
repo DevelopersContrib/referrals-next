@@ -82,3 +82,26 @@ Manual:
 | Crawler: multi-page fetch, colors, contact-only phones | ✅ `crawler.ts` |
 
 **Verify:** Start onboarding analyze on a slow site; confirm job reaches `done` or `failed` within ~60s and polling stops. Set `DATABASE_URL_POOLED` to your Vercel/RDS pooler in production.
+
+---
+
+## Return 404 instead of sign-in for unknown pages (Oct 5, 2026)
+
+**Priority:** High · **Status:** ✅ **DONE**
+
+**Problem:** `src/proxy.ts` redirected every unauthenticated non-public URL to `/signin`, including paths that do not exist — so bogus URLs looked like a login wall instead of HTTP 404.
+
+| Item | Status |
+| ---- | ------ |
+| Proxy: sign-in redirect only for known auth-required app prefixes | ✅ `src/proxy.ts` |
+| Branded App Router 404 page | ✅ `src/app/not-found.tsx` |
+| Unauthenticated `/api/*` still returns JSON 401 (unchanged) | ✅ |
+
+**Auth-required page prefixes** (anonymous → `/signin`): `/admin`, `/account`, `/api-keys`, `/billing`, `/brands`, `/contacts`, `/dashboard`, `/editor`, `/forum`, `/integrations`, `/notifications`, `/onboarding`, `/promotions`, `/stats`, `/tools`. Any other page path without a session reaches the App Router (real 404 or public page).
+
+**Verify:**
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/this-page-does-not-exist   # expect 404
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/brands                        # expect 307 → /signin
+```

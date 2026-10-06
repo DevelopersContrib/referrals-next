@@ -64,7 +64,7 @@ Return valid JSON:
 {
   "title": "SEO-friendly title",
   "excerpt": "1-2 sentence summary under 160 chars",
-  "content": "Full article in Markdown, 800+ words, with ## headings",
+  "content": "Full article in Markdown, 800+ words, with ## headings. Do not include the title as an H1 — start with the first section.",
   "tags": ["3-5","relevant","tags"]
 }
 

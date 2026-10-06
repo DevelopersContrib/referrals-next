@@ -45,9 +45,39 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+function normalizeHeading(value: string): string {
+  return value
+    .replace(/[*_`]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+/**
+ * Drop a leading markdown H1 that just repeats the post title.
+ *
+ * Generated posts open with the title as an H1, but the page template already
+ * renders the title in its own <h1>. Left in place it prints the title twice
+ * and gives the page a second top-level heading.
+ */
+function stripLeadingTitleHeading(md: string, title: string): string {
+  const lines = md.split("\n");
+  const first = lines.findIndex((line) => line.trim());
+  if (first === -1) return md;
+
+  const heading = lines[first].trim();
+  if (!heading.startsWith("# ")) return md;
+  if (normalizeHeading(heading.slice(2)) !== normalizeHeading(title)) return md;
+
+  return lines.slice(first + 1).join("\n");
+}
+
 /**
  * Very simple markdown-to-HTML renderer for blog content.
  * Handles: headings, paragraphs, bold, italic, links, lists.
+ *
+ * Body headings start at <h2>: the page supplies the only <h1>, so a "#" in
+ * post content is a section heading rather than the document title.
  */
 function renderMarkdown(md: string): string {
   const lines = md.split("\n");
@@ -86,7 +116,7 @@ function renderMarkdown(md: string): string {
         html.push("</ul>");
         inList = false;
       }
-      html.push(`<h1>${inline(trimmed.slice(2))}</h1>`);
+      html.push(`<h2>${inline(trimmed.slice(2))}</h2>`);
       continue;
     }
 
@@ -208,7 +238,6 @@ export default async function BlogPostPage({ params }: Props) {
 
         <div
           className="blog-article-body font-serif text-[#292929]
-            [&_h1]:mt-12 [&_h1]:mb-6 [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:leading-tight [&_h1]:tracking-tight [&_h1]:text-[#242424]
             [&_h2]:mt-14 [&_h2]:mb-5 [&_h2]:text-[1.65rem] [&_h2]:font-bold [&_h2]:leading-snug [&_h2]:tracking-tight [&_h2]:text-[#242424]
             [&_h3]:mt-12 [&_h3]:mb-4 [&_h3]:text-[1.35rem] [&_h3]:font-bold [&_h3]:leading-snug [&_h3]:text-[#242424]
             [&_p]:mb-8 [&_p]:mt-0 [&_p]:text-[1.3125rem] [&_p]:leading-[1.75] [&_p]:text-[#292929]
@@ -216,7 +245,11 @@ export default async function BlogPostPage({ params }: Props) {
             [&_li]:text-[1.3125rem] [&_li]:leading-[1.75]
             [&_strong]:font-semibold [&_strong]:text-[#242424]
             [&_a]:text-[#1a8917] [&_a]:underline [&_a]:decoration-[#1a8917]/40 [&_a]:underline-offset-[3px] hover:[&_a]:decoration-[#1a8917]"
-          dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }}
+          dangerouslySetInnerHTML={{
+            __html: renderMarkdown(
+              stripLeadingTitleHeading(post.content, post.title),
+            ),
+          }}
         />
 
         <footer className="mt-16 border-t border-gray-200 pt-12 font-sans">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Globe, Sparkles, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -76,6 +76,8 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
   /** Set once the member edits the address; until then it tracks the website. */
   const [customSlug, setCustomSlug] = useState<string | null>(null);
 
+  const errorId = `${useId()}-website-error`;
+
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stoppedRef = useRef(false);
   const analyzeStartedRef = useRef<number | null>(null);
@@ -86,6 +88,13 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
   const availability = useSlugAvailability(slug, { enabled: valid });
   const slugBlocked =
     availability.status === "taken" || availability.status === "invalid";
+
+  /**
+   * Validation stays hidden until the member has actually engaged with the
+   * field — typed then left it, or pressed Analyze. The input autofocuses, so
+   * flagging on a bare blur would scold someone who merely clicked away.
+   */
+  const showValidation = touched && !valid;
 
   const showResults = useCallback(() => {
     if (stoppedRef.current) return;
@@ -248,7 +257,7 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
         <form onSubmit={handleAnalyze} className="mt-8">
           <div
             className={`group flex items-center gap-2 rounded-2xl border-2 bg-white p-2 pl-4 shadow-sm transition-all focus-within:shadow-lg ${
-              touched && !valid
+              showValidation
                 ? "border-red-300"
                 : "border-gray-200 focus-within:border-[#FF5C62]"
             }`}
@@ -259,9 +268,19 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
               inputMode="url"
               autoFocus
               value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              onChange={(e) => {
+                setUrl(e.target.value);
+                // Editing is a correction in progress — stop flagging until the
+                // member finishes and leaves the field or submits again.
+                setTouched(false);
+              }}
+              onBlur={() => {
+                if (url.trim()) setTouched(true);
+              }}
               placeholder="yourbrand.com"
               aria-label="Website URL"
+              aria-invalid={showValidation}
+              aria-describedby={showValidation ? errorId : undefined}
               className="min-w-0 flex-1 bg-transparent py-3 text-base text-gray-900 outline-none placeholder:text-gray-400"
             />
             <Button
@@ -287,10 +306,16 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
             </Button>
           </div>
 
-          {touched && !valid && (
-            <p className="mt-2 pl-1 text-sm text-red-500">
-              Enter a valid website, like{" "}
-              <span className="font-medium">yourbrand.com</span>.
+          {showValidation && (
+            <p id={errorId} className="mt-2 pl-1 text-sm text-red-500">
+              {url.trim() ? (
+                <>
+                  Enter a valid website, like{" "}
+                  <span className="font-medium">yourbrand.com</span>.
+                </>
+              ) : (
+                "Enter your website to get started."
+              )}
             </p>
           )}
           {error && <p className="mt-2 pl-1 text-sm text-red-500">{error}</p>}

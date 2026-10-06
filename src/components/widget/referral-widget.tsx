@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ShareButtons } from "./share-buttons";
 import { RewardDisplay } from "./reward-display";
 import { formatBrandName } from "@/lib/format-brand";
+import { copyText } from "@/lib/clipboard";
 
 interface WidgetConfig {
   campaignId: number;
@@ -202,10 +203,10 @@ export function ReferralWidget({
     } catch {
       /* tracking fail-open */
     }
-    navigator.clipboard.writeText(participant.shareUrl).then(() => {
+    if (await copyText(participant.shareUrl)) {
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
-    });
+    }
   }
 
   // Background style

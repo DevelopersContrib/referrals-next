@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { copyText } from "@/lib/clipboard";
 
 function CouponContent() {
   const searchParams = useSearchParams();
@@ -10,6 +11,7 @@ function CouponContent() {
   const campaignId = searchParams.get("campaign");
   const [coupon, setCoupon] = useState<{ code: string; description?: string } | null>(null);
   const [status, setStatus] = useState<"loading" | "found" | "error">("loading");
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
 
   useEffect(() => {
     if (!code) {
@@ -77,12 +79,18 @@ function CouponContent() {
       </div>
 
       <button
-        onClick={() => {
-          navigator.clipboard.writeText(coupon?.code || "");
+        onClick={async () => {
+          const ok = await copyText(coupon?.code || "");
+          setCopyState(ok ? "copied" : "failed");
+          setTimeout(() => setCopyState("idle"), 2000);
         }}
         className="bg-[#926efb] hover:bg-[#7c5be8] text-white font-semibold px-8 py-3 rounded-lg transition-colors mb-4 w-full"
       >
-        Copy Code
+        {copyState === "copied"
+          ? "Copied!"
+          : copyState === "failed"
+            ? "Copy it manually"
+            : "Copy Code"}
       </button>
 
       <p className="text-gray-500 text-sm">

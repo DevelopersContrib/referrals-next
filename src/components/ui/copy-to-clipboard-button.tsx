@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CopyIcon, CheckIcon } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { copyText } from "@/lib/clipboard";
 
 export function CopyToClipboardButton({
   text,
@@ -20,13 +21,12 @@ export function CopyToClipboardButton({
   const [done, setDone] = useState(false);
 
   async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(text);
+    if (await copyText(text)) {
       setDone(true);
       toast.success("Copied");
       setTimeout(() => setDone(false), 2000);
-    } catch {
-      toast.error("Could not copy");
+    } else {
+      toast.error("Could not copy — select the text and press Ctrl+C");
     }
   }
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { LinkIcon, CopyIcon, CheckIcon } from "lucide-react";
+import { copyText } from "@/lib/clipboard";
 
 type Campaign = { id: number; name: string };
 
@@ -65,12 +66,9 @@ export function BrandReferralLink({ brandId }: { brandId: string }) {
   }, [brandId, selected]);
 
   const copy = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(link);
+    if (await copyText(link)) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* clipboard blocked — select manually */
     }
   }, [link]);
 

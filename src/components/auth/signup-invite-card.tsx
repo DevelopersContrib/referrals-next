@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { CheckIcon, CopyIcon } from "lucide-react";
+import { copyText } from "@/lib/clipboard";
 
 type Props = {
   shareUrl: string;
@@ -19,16 +20,15 @@ export function SignupInviteCard({
   participantId,
   compact = false,
 }: Props) {
-  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   async function copyLink() {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* ignore */
-    }
+    const ok = await copyText(shareUrl);
+    setStatus(ok ? "copied" : "failed");
+    // Leave the link selected so the Ctrl+C the message asks for actually works.
+    if (!ok) inputRef.current?.select();
+    setTimeout(() => setStatus("idle"), 2000);
 
     if (campaignId && participantId) {
       void fetch("/api/widget/share", {
@@ -65,6 +65,7 @@ export function SignupInviteCard({
       </p>
       <div className="mt-3 flex min-h-11 items-stretch gap-2">
         <input
+          ref={inputRef}
           readOnly
           value={shareUrl}
           className="min-w-0 flex-1 rounded-lg border border-rose-200 bg-white px-3 text-xs text-gray-800"
@@ -75,10 +76,24 @@ export function SignupInviteCard({
           onClick={copyLink}
           className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg bg-[#FF5C62] px-3 text-xs font-semibold text-white hover:bg-[#ff4f58]"
         >
-          {copied ? <CheckIcon className="size-3.5" /> : <CopyIcon className="size-3.5" />}
-          {copied ? "Copied" : "Copy"}
+          {status === "copied" ? (
+            <CheckIcon className="size-3.5" />
+          ) : (
+            <CopyIcon className="size-3.5" />
+          )}
+          {status === "copied"
+            ? "Copied"
+            : status === "failed"
+              ? "Ctrl+C"
+              : "Copy"}
         </button>
       </div>
+      {status === "failed" && (
+        <p className="mt-2 text-xs text-gray-600">
+          Your browser blocked the clipboard — the link is selected, press
+          Ctrl+C to copy it.
+        </p>
+      )}
       <div className="mt-3 flex flex-wrap gap-2">
         <a
           href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(SHARE_TEXT)}`}

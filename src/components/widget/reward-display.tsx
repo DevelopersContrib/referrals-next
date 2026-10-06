@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { copyText } from "@/lib/clipboard";
 
 interface RewardInfo {
   rewardType: number;
@@ -53,11 +54,11 @@ export function RewardDisplay({
     }
   }
 
-  function copyCoupon(code: string) {
-    navigator.clipboard.writeText(code).then(() => {
+  async function copyCoupon(code: string) {
+    if (await copyText(code)) {
       setCopiedCoupon(true);
       setTimeout(() => setCopiedCoupon(false), 2000);
-    });
+    }
   }
 
   if (!goalMet) return null;

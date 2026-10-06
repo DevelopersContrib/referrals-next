@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 import Link from "next/link";
 import { buildCampaignEmbedSnippets } from "@/lib/campaign-embed-snippets";
 import { cn } from "@/lib/utils";
@@ -1083,9 +1084,12 @@ export default function EditCampaignPage() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  navigator.clipboard.writeText(embedSnippet);
-                  toast.success("Embed code copied");
+                onClick={async () => {
+                  if (await copyText(embedSnippet)) {
+                    toast.success("Embed code copied");
+                  } else {
+                    toast.error("Could not copy — select the code and press Ctrl+C");
+                  }
                 }}
                 className="w-full shrink-0 sm:w-auto"
               >

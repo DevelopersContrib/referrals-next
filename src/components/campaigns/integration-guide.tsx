@@ -10,6 +10,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -328,12 +329,11 @@ export function IntegrationGuide({
   }, [activeId]);
 
   const copy = useCallback(async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
+    if (await copyText(text)) {
       setCopied(true);
       toast.success("Copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
-    } catch {
+    } else {
       toast.error("Could not copy — select the text manually");
     }
   }, []);

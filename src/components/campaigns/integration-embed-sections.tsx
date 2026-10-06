@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CopyIcon } from "lucide-react";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 
 type SectionDef = {
   id: string;
@@ -61,13 +62,12 @@ export function IntegrationEmbedSections({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const copy = useCallback(async (text: string, key: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
+    if (await copyText(text)) {
       setCopiedKey(key);
       toast.success("Copied to clipboard");
       setTimeout(() => setCopiedKey((k) => (k === key ? null : k)), 2000);
-    } catch {
-      toast.error("Could not copy");
+    } else {
+      toast.error("Could not copy — select the text and press Ctrl+C");
     }
   }, []);
 

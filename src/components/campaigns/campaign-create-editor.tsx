@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -856,9 +857,12 @@ export function CampaignCreateEditor({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(embedSnippet);
-                    toast.success("Embed code copied");
+                  onClick={async () => {
+                    if (await copyText(embedSnippet)) {
+                      toast.success("Embed code copied");
+                    } else {
+                      toast.error("Could not copy — select the code and press Ctrl+C");
+                    }
                   }}
                   className="w-full shrink-0 sm:w-auto"
                 >

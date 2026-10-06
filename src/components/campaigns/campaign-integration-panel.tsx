@@ -6,6 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { copyText } from "@/lib/clipboard";
 import {
   CheckCircle2Icon,
   CopyIcon,
@@ -56,12 +57,11 @@ export function CampaignIntegrationPanel({
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const copy = useCallback(async (text: string, key: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
+    if (await copyText(text)) {
       setCopiedKey(key);
       toast.success("Copied to clipboard");
       setTimeout(() => setCopiedKey((k) => (k === key ? null : k)), 2000);
-    } catch {
+    } else {
       toast.error("Could not copy — select the code manually");
     }
   }, []);

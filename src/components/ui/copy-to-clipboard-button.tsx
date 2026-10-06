@@ -9,10 +9,12 @@ import { cn } from "@/lib/utils";
 export function CopyToClipboardButton({
   text,
   className,
+  disabled,
   "aria-label": ariaLabel = "Copy to clipboard",
 }: {
   text: string;
   className?: string;
+  disabled?: boolean;
   "aria-label"?: string;
 }) {
   const [done, setDone] = useState(false);
@@ -35,6 +37,7 @@ export function CopyToClipboardButton({
       size="icon"
       className={cn("shrink-0 border-[#ebeef0] hover:border-brand hover:text-brand", className)}
       aria-label={ariaLabel}
+      disabled={disabled}
       onClick={() => void handleCopy()}
     >
       {done ? <CheckIcon className="size-4 text-emerald-600" /> : <CopyIcon className="size-4" />}

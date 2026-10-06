@@ -15,9 +15,11 @@ function pathnameFromAbsolute(url: string) {
 export function CampaignShareLinks({
   referralUrl,
   publicPageUrl,
+  disabled = false,
 }: {
   referralUrl: string;
   publicPageUrl: string;
+  disabled?: boolean;
 }) {
   const publicPath = pathnameFromAbsolute(publicPageUrl);
   return (
@@ -34,6 +36,7 @@ export function CampaignShareLinks({
           <CopyToClipboardButton
             text={referralUrl}
             aria-label="Copy referral link"
+            disabled={disabled}
           />
         </div>
       </div>
@@ -44,9 +47,15 @@ export function CampaignShareLinks({
         <div className="flex min-w-0 items-center gap-2">
           <Link
             href={publicPath}
-            className="flex h-9 min-w-0 flex-1 items-center rounded-md border border-[#ebeef0] bg-[#f7f8fa] px-3 text-sm text-[#575962] hover:border-brand/40"
+            className={`flex h-9 min-w-0 flex-1 items-center rounded-md border border-[#ebeef0] bg-[#f7f8fa] px-3 text-sm text-[#575962] ${
+              disabled
+                ? "pointer-events-none opacity-50"
+                : "hover:border-brand/40"
+            }`}
             target="_blank"
             rel="noreferrer"
+            aria-disabled={disabled}
+            tabIndex={disabled ? -1 : undefined}
           >
             <ExternalLinkIcon className="mr-2 size-3.5 shrink-0 text-[#a7abc3]" />
             <span className="truncate">{publicPageUrl}</span>
@@ -54,6 +63,7 @@ export function CampaignShareLinks({
           <CopyToClipboardButton
             text={publicPageUrl}
             aria-label="Copy public page URL"
+            disabled={disabled}
           />
         </div>
       </div>

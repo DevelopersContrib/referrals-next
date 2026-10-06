@@ -46,8 +46,8 @@ function main() {
   ) {
     fail("canBrandAcceptParticipant must exist");
   }
-  if (!subscription.includes('e.status === "trial"')) {
-    fail("canMemberAddBrand must only bypass domain cap for account trial");
+  if (!subscription.includes('status: "paid"') || !subscription.includes("if (isVnoc)")) {
+    fail("VNOC brands must bypass payment in getBrandEntitlement");
   }
   if (!subscription.includes("export async function getPrimaryCheckoutBrand")) {
     fail("getPrimaryCheckoutBrand must exist for trial/unpaid CTAs");

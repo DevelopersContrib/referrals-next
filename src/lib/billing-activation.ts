@@ -4,6 +4,7 @@ import { getSubscription } from "@/lib/paypal";
 import { postVnocAttribution, resolveVnocPlan } from "@/lib/vnoc-attribution";
 import { handlePaidEngagementTransition } from "@/lib/engagement";
 import { isVnocBrand } from "@/lib/member-subscription";
+import { publishCampaignGoLive } from "@/lib/campaign-live";
 import {
   logCheckoutEvent,
   newCheckoutAttemptId,
@@ -35,6 +36,7 @@ export async function activatePaidSubscription(opts: {
   memberId: number;
   planId: number;
   brandId?: number | null;
+  goLiveCampaignId?: number | null;
   subscriptionId: string;
   attemptId?: string | null;
   checkoutMode?: "in_page" | "redirect" | "webhook";
@@ -239,6 +241,22 @@ export async function activatePaidSubscription(opts: {
           "Checkout completed without brandId — account activated only",
       });
     }
+
+    if (opts.goLiveCampaignId) {
+      const goLiveBrandId = stampBrandId ?? brandId;
+      if (goLiveBrandId) {
+        try {
+          await publishCampaignGoLive({
+            memberId,
+            campaignId: opts.goLiveCampaignId,
+            brandId: goLiveBrandId,
+          });
+        } catch (goLiveErr) {
+          console.error("[billing] go-live after payment failed:", goLiveErr);
+        }
+      }
+    }
+
     if (!alreadyProcessed) {
       try {
         await handlePaidEngagementTransition(memberId);
@@ -290,10 +308,29 @@ export async function activatePaidSubscriptionFromWebhook(
     memberId: attempt.member_id,
     planId: attempt.plan_id,
     brandId: attempt.brand_id,
+    goLiveCampaignId: await readGoLiveCampaignFromAttempt(attempt.attempt_id),
     subscriptionId,
     attemptId: attempt.attempt_id,
     checkoutMode: "webhook",
   });
+}
+
+async function readGoLiveCampaignFromAttempt(
+  attemptId: string,
+): Promise<number | null> {
+  const row = await prisma.billing_checkout_events.findFirst({
+    where: { attempt_id: attemptId, event_name: "checkout_created" },
+    orderBy: { id: "desc" },
+    select: { metadata_json: true },
+  });
+  if (!row?.metadata_json) return null;
+  try {
+    const meta = JSON.parse(row.metadata_json) as { goLiveCampaign?: number };
+    const id = Number(meta.goLiveCampaign);
+    return Number.isFinite(id) && id > 0 ? id : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Extend paid period on renewal — per-brand when url_plan exists, else member-level. */

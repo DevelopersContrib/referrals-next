@@ -1,6 +1,7 @@
 # Week Sep 15 Tasks — Ronan
 
 **Status:** **CLOSED** (Sept 14, 2026 · R1/R2 re-verified Sept 28, 2026)  
+**Follow-up:** Campaign draft → **Go Live** funnel (Oct 5, 2026) → [`Week Oct 5 Tasks — Ronan.md`](Week%20Oct%205%20Tasks%20%E2%80%94%20Ronan.md)  
 **Sprint:** Sept 14–18, 2026 · **Owner:** Ronan  
 **Source:** [`docs/sprint-sept-14-18.md`](../sprint-sept-14-18.md)
 

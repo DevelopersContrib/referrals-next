@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { brandMustShowBranding } from "@/lib/member-subscription";
+import { isCampaignPubliclyLive } from "@/lib/campaign-live";
 import {
   kindLook,
   readSuggestionPayload,
@@ -49,6 +50,7 @@ export type PublicCampaignViewPayload = {
   snippets: { title: string; text: string }[];
   heroImageUrl: string | null;
   designStyle: CampaignDesignStyle | null;
+  isLive: boolean;
 };
 
 /** Newest brand wins when slugs collide (same domain, multiple member_urls). */
@@ -86,7 +88,13 @@ export async function fetchPublicCampaignViewData(
   // a live campaign that belongs to the newer brand.
   const campaign = await prisma.member_campaigns.findUnique({
     where: { id: campaignId },
-    select: { id: true, name: true, url_id: true, member_id: true },
+    select: {
+      id: true,
+      name: true,
+      url_id: true,
+      member_id: true,
+      publish: true,
+    },
   });
   if (!campaign) return null;
 
@@ -136,6 +144,7 @@ export async function fetchPublicCampaignViewData(
     : null;
 
   const showBranding = await brandMustShowBranding(campaign.url_id);
+  const isLive = await isCampaignPubliclyLive(campaign);
 
   const participantCount = await prisma.campaign_participants.count({
     where: { campaign_id: campaign.id },
@@ -205,6 +214,7 @@ export async function fetchPublicCampaignViewData(
     snippets,
     heroImageUrl: widget?.banner_image_url || payload.bannerImageUrl || null,
     designStyle: isCampaignDesign(payload.designStyle) ? payload.designStyle : null,
+    isLive,
   };
 }
 

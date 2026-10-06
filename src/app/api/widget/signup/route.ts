@@ -8,6 +8,7 @@ import {
   programNotLiveResponse,
   participantCapResponse,
 } from "@/lib/member-subscription";
+import { isCampaignPubliclyLive } from "@/lib/campaign-live";
 import {
   SHARE_SOCIAL_DIRECT,
   buildTrackedShareUrl,
@@ -54,6 +55,10 @@ export async function POST(request: NextRequest) {
         { error: "Campaign not found" },
         { status: 404, headers: corsHeaders }
       );
+    }
+
+    if (!(await isCampaignPubliclyLive(campaign))) {
+      return programNotLiveResponse(corsHeaders);
     }
 
     // Check if participant already exists for this campaign

@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
 
   const planIdParam = req.nextUrl.searchParams.get("planId");
   const brandIdParam = req.nextUrl.searchParams.get("brandId");
+  const goLiveParam = req.nextUrl.searchParams.get("goLiveCampaign");
   const planId = Number(planIdParam);
   if (!planIdParam || !Number.isFinite(planId)) {
     return NextResponse.json({ error: "planId is required" }, { status: 400 });
@@ -58,6 +59,10 @@ export async function GET(req: NextRequest) {
   }
 
   const attemptId = newCheckoutAttemptId();
+  const goLiveCampaign =
+    goLiveParam != null && Number.isFinite(Number(goLiveParam))
+      ? Number(goLiveParam)
+      : null;
   await logCheckoutEvent({
     attemptId,
     memberId,
@@ -69,6 +74,7 @@ export async function GET(req: NextRequest) {
       currency: "USD",
       price: plan.price,
       source: "billing_plan_page",
+      ...(goLiveCampaign ? { goLiveCampaign } : {}),
     },
   });
 

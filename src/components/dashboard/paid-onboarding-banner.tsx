@@ -102,22 +102,22 @@ function UnpaidBrandCard({
       <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-5 sm:ps-6">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">
-            Unpaid brand
+            Go live
           </p>
           <h2
             id="unpaid-brand-heading"
             className="mt-1 text-balance text-lg font-bold tracking-tight text-foreground sm:text-xl"
             style={DOSIS}
           >
-            Publish {domain}
+            Your campaign is ready, go live for $9/mo
           </h2>
           <p className="mt-1 text-pretty text-sm leading-relaxed text-sidebar-foreground">
-            This brand is set up and private. Pay $9/mo to publish it and
-            accept signups.
+            {domain} stays in draft until you pay. Preview in the dashboard;
+            the public page and widget turn on after checkout.
           </p>
         </div>
         <UpgradeCta href={upgradeHref} className="sm:w-auto">
-          Growth — $9/mo for this brand
+          Go Live — $9/mo
         </UpgradeCta>
       </div>
     </section>
@@ -125,9 +125,9 @@ function UnpaidBrandCard({
 }
 
 function TrialKeepGrowthCard({
-  daysLeft,
-  isEndingSoon,
-  domain,
+  daysLeft: _daysLeft,
+  isEndingSoon: _isEndingSoon,
+  domain: _domain,
   upgradeHref,
 }: {
   daysLeft: number | null | undefined;
@@ -136,8 +136,6 @@ function TrialKeepGrowthCard({
   upgradeHref: string;
 }) {
   const headingId = "trial-keep-growth-heading";
-  const timeLabel = formatTrialTimeLeft(daysLeft);
-  const brandLabel = domain ?? "this brand";
 
   return (
     <section
@@ -155,16 +153,15 @@ function TrialKeepGrowthCard({
             className="mt-1 text-balance text-lg font-bold tracking-tight text-foreground sm:text-xl"
             style={DOSIS}
           >
-            {timeLabel}
-            {" · "}
-            Keep {brandLabel}
+            Your campaign is ready, go live for $9/mo
           </h2>
           <p className="mt-1 text-pretty text-sm leading-relaxed text-sidebar-foreground">
-            {`Pay $9/mo for ${brandLabel} to publish this program.`}
+            Pay $9/mo to publish your program, share your link, and accept
+            signups.
           </p>
         </div>
         <UpgradeCta href={upgradeHref} className="sm:w-auto">
-          Keep {brandLabel} — $9/mo
+          Go Live — $9/mo
         </UpgradeCta>
       </div>
     </section>
@@ -321,13 +318,6 @@ function UpgradeCta({
       <ArrowRightIcon className="size-4" aria-hidden />
     </Link>
   );
-}
-
-function formatTrialTimeLeft(daysLeft: number | null | undefined) {
-  if (daysLeft == null) return "Active";
-  if (daysLeft <= 0) return "Last day";
-  if (daysLeft === 1) return "1 day left";
-  return `${daysLeft} days left`;
 }
 
 type BannerPreview = "trial";

@@ -31,6 +31,7 @@ type CheckoutConfig = {
 type Props = {
   planId: number;
   brandId?: number | null;
+  goLiveCampaignId?: number | null;
   priceLabel: string;
 };
 
@@ -80,7 +81,12 @@ function loadPayPalSdk(config: CheckoutConfig): Promise<PayPalNamespace> {
   });
 }
 
-export function PayPalCheckout({ planId, brandId, priceLabel }: Props) {
+export function PayPalCheckout({
+  planId,
+  brandId,
+  goLiveCampaignId,
+  priceLabel,
+}: Props) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonsRef = useRef<PayPalButtonsInstance | null>(null);
@@ -150,6 +156,7 @@ export function PayPalCheckout({ planId, brandId, priceLabel }: Props) {
             planId,
             attemptId: attemptIdRef.current,
             ...(brandId ? { brandId } : {}),
+            ...(goLiveCampaignId ? { goLiveCampaignId } : {}),
           }),
         });
         const data = (await res.json().catch(() => ({}))) as {
@@ -178,7 +185,7 @@ export function PayPalCheckout({ planId, brandId, priceLabel }: Props) {
         setActivating(false);
       }
     },
-    [brandId, logClientEvent, planId, router]
+    [brandId, goLiveCampaignId, logClientEvent, planId, router]
   );
 
   useEffect(() => {
@@ -188,6 +195,9 @@ export function PayPalCheckout({ planId, brandId, priceLabel }: Props) {
       try {
         const query = new URLSearchParams({ planId: String(planId) });
         if (brandId) query.set("brandId", String(brandId));
+        if (goLiveCampaignId) {
+          query.set("goLiveCampaign", String(goLiveCampaignId));
+        }
         const res = await fetch(`/api/billing/checkout-config?${query.toString()}`);
         const data = (await res.json().catch(() => ({}))) as CheckoutConfig & {
           error?: string;

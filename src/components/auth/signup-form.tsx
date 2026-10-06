@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GoogleButton } from "@/components/auth/google-button";
+import { PasswordField } from "@/components/auth/password-field";
 
 const passwordRules = [
   { label: "At least 8 characters", test: (v: string) => v.length >= 8 },
@@ -27,7 +28,6 @@ function readRref() {
 export function SignupForm() {
   const router = useRouter();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [showPassword, setShowPassword] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -128,27 +128,15 @@ export function SignupForm() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <div className="relative">
-            <Input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Create a password"
-              value={form.password}
-              onChange={(e) => updateForm("password", e.target.value)}
-              onFocus={() => setPasswordFocused(true)}
-              minLength={8}
-              required
-              className="pr-12"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((s) => !s)}
-              className="absolute inset-y-0 right-0 flex items-center px-3 text-xs font-medium text-gray-500 hover:text-gray-700"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? "Hide" : "Show"}
-            </button>
-          </div>
+          <PasswordField
+            id="password"
+            placeholder="Create a password"
+            value={form.password}
+            onValueChange={(v) => updateForm("password", v)}
+            onFocus={() => setPasswordFocused(true)}
+            minLength={8}
+            required
+          />
           {(passwordFocused || form.password.length > 0) && (
             <ul className="mt-2 space-y-1">
               {passwordRules.map((rule) => {

@@ -146,6 +146,26 @@
   }
 }
 
+/*
+ * Chrome fills saved credentials without firing an input event, so a React
+ * controlled field can sit on an empty value while the DOM holds a real one.
+ * This visually inert animation is the only reliable notification the browser
+ * gives us; components listen for it via onAnimationStart. See PasswordField.
+ */
+@keyframes autofill-start {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+input:-webkit-autofill {
+  animation-name: autofill-start;
+  animation-duration: 1ms;
+}
+
 /* Metronic-inspired dashboard utility classes */
 @layer utilities {
   .bg-brand {

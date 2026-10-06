@@ -11,13 +11,13 @@ export default async function PlanCheckoutPage({
   searchParams,
 }: {
   params: Promise<{ planId: string }>;
-  searchParams: Promise<{ brandId?: string }>;
+  searchParams: Promise<{ brandId?: string; goLiveCampaign?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin");
 
   const { planId } = await params;
-  const { brandId } = await searchParams;
+  const { brandId, goLiveCampaign } = await searchParams;
 
   const id = parseInt(planId, 10);
   if (Number.isNaN(id)) notFound();
@@ -31,6 +31,9 @@ export default async function PlanCheckoutPage({
   const isPaid = true;
   const priceLabel = `$${price.toFixed(2)}/${unit}`;
   const parsedBrandId = brandId ? parseInt(brandId, 10) : null;
+  const parsedGoLive = goLiveCampaign ? parseInt(goLiveCampaign, 10) : null;
+  const goLiveCampaignId =
+    parsedGoLive != null && Number.isFinite(parsedGoLive) ? parsedGoLive : null;
   const brand =
     parsedBrandId && Number.isFinite(parsedBrandId)
       ? await prisma.member_urls.findFirst({
@@ -162,6 +165,7 @@ export default async function PlanCheckoutPage({
               <PayPalCheckout
                 planId={plan.id}
                 brandId={brand?.id ?? null}
+                goLiveCampaignId={goLiveCampaignId}
                 priceLabel={priceLabel}
               />
             </>

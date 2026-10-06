@@ -64,7 +64,7 @@ export function participantCapMessage() {
 }
 
 export function programNotLiveMessage() {
-  return "This program isn't live yet. The brand owner can publish it after paying $9/mo for this brand.";
+  return "This campaign isn't live yet.";
 }
 
 export function programNotLiveResponse(extraHeaders?: HeadersInit) {
@@ -77,7 +77,7 @@ export function programNotLiveResponse(extraHeaders?: HeadersInit) {
   );
 }
 
-/** VNOC network brand. It does not go live until that brand is paid. */
+/** VNOC network brand — free to publish (no $9/mo stamp). */
 export function isVnocBrand(brand: {
   in_vnoc?: boolean | null;
   vnoc_id?: number | null;
@@ -265,6 +265,21 @@ export async function getBrandEntitlement(
       isGrowth: false,
       isPaid: false,
       hideBranding: false,
+    };
+  }
+
+  if (isVnoc) {
+    return {
+      brandId,
+      memberId,
+      isVnoc: true,
+      status: "paid",
+      planId: null,
+      planExpiry: null,
+      daysLeft: null,
+      isGrowth: true,
+      isPaid: true,
+      hideBranding: true,
     };
   }
 

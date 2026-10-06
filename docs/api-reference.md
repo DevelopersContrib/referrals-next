@@ -373,13 +373,24 @@ These are the public URLs for embedding referral widgets. No API key needed.
 | `GET /widget/{id}/embed` | iframe-ready widget page |
 | `GET /widget/{id}` | Standalone widget preview |
 
+### Dashboard: go live (session auth)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `POST` | `/api/campaigns/{campaignId}/go-live` | Publish campaign when brand is entitled; `402` + `checkoutUrl` if payment required |
+| `POST` | `/api/campaigns/{campaignId}/publish` | Toggle `publish` public/private (public requires entitled brand) |
+
+Public campaign pages (`/p/{slug}/campaign/{id}`) show **“This campaign isn't live yet.”** when `publish` is not public or the brand has no active paid stamp (VNOC and platform admins bypass at entitlement gates).
+
+Checkout from **Go Live**: `/billing/plan/2?brandId={urlId}&goLiveCampaign={campaignId}` — successful activation auto-sets `publish: public` for that campaign.
+
 ### PHP-compatible widget endpoints (no `/api` prefix)
 
 These paths are rewritten to `/api/widget/*` for backward compatibility with existing embed installations:
 
 | URL | Purpose |
 |-----|---------|
-| `POST /widget/signup` | Participant signup |
+| `POST /widget/signup` | Participant signup (403 `NOT_LIVE` if campaign is draft or brand unpaid) |
 | `POST /widget/share` | Record social share |
 | `POST /widget/click` | Track referral click |
 | `POST /widget/impression` | Record widget page view |

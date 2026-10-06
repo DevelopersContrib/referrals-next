@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
     subscriptionId?: string;
     planId?: number;
     brandId?: number;
+    goLiveCampaignId?: number;
     attemptId?: string;
   };
   try {
@@ -48,10 +49,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const brandId = Number.isFinite(Number(body.brandId))
+    ? Number(body.brandId)
+    : null;
+  const goLiveCampaignId = Number.isFinite(Number(body.goLiveCampaignId))
+    ? Number(body.goLiveCampaignId)
+    : null;
+
   const result = await activatePaidSubscription({
     memberId: parseInt(session.user.id, 10),
     planId,
-    brandId: Number.isFinite(Number(body.brandId)) ? Number(body.brandId) : null,
+    brandId,
+    goLiveCampaignId,
     subscriptionId,
     attemptId: body.attemptId,
   });
@@ -67,5 +76,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return NextResponse.json({ success: true, redirectUrl: "/billing/success" });
+  const redirectUrl =
+    brandId && goLiveCampaignId
+      ? `/brands/${brandId}/campaigns/${goLiveCampaignId}?live=1`
+      : "/billing/success";
+
+  return NextResponse.json({ success: true, redirectUrl });
 }

@@ -10,6 +10,7 @@ import {
   getPrimaryCheckoutBrand,
   isVnocBrand,
 } from "@/lib/member-subscription";
+import { pauseBrandCampaignsWhenUnpaid } from "@/lib/campaign-live";
 
 export async function GET(req: NextRequest) {
   if (!authenticateCron(req)) {
@@ -161,11 +162,25 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const expiredBrands = await prisma.member_urls.findMany({
+      where: { plan_expiry: { lt: now } },
+      select: { id: true, in_vnoc: true, vnoc_id: true },
+    });
+
+    let campaignsPaused = 0;
+    for (const url of expiredBrands) {
+      if (isVnocBrand(url)) continue;
+      await pauseBrandCampaignsWhenUnpaid(url.id);
+      campaignsPaused++;
+    }
+
     return NextResponse.json({
       success: true,
       expiring_members: expiringMembers.length,
       expiring_urls: expiringUrls.length,
       emails_sent: emailsSent,
+      expired_brands_checked: expiredBrands.length,
+      campaigns_paused_brands: campaignsPaused,
     });
   } catch (error) {
     console.error("Plan expiry cron error:", error);

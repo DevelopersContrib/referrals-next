@@ -6,6 +6,7 @@ import {
 } from "@/components/campaigns/campaign-landing";
 import { ReferralsSiteHeader } from "@/components/public/referrals-site-header";
 import { formatBrandName } from "@/lib/format-brand";
+import { CAMPAIGN_NOT_LIVE_PUBLIC_MESSAGE } from "@/lib/campaign-live";
 
 export function buildPublicCampaignMetadata(
   data: PublicCampaignViewPayload
@@ -60,12 +61,21 @@ export function PublicCampaignPageView({
     snippets,
     heroImageUrl,
     designStyle,
+    isLive,
   } = data;
   const headline = campaign.headline || campaign.name;
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
       {showBranding !== false && <ReferralsSiteHeader />}
+      {!isLive && (
+        <div
+          role="status"
+          className="border-b border-amber-200 bg-amber-50 px-5 py-3 text-center text-sm font-medium text-amber-950"
+        >
+          {CAMPAIGN_NOT_LIVE_PUBLIC_MESSAGE}
+        </div>
+      )}
       <CampaignLanding
         brandDomain={brand.domain}
         brandLogoUrl={brand.logo_url}
@@ -87,7 +97,7 @@ export function PublicCampaignPageView({
             buttonText={buttonText}
             accentFrom={accentFrom}
             accentTo={accentTo}
-            mode="live"
+            mode={isLive ? "live" : "preview"}
           />
         }
       />

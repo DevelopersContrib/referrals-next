@@ -67,6 +67,7 @@ function mockPayload(heroImageUrl: string | null): PublicCampaignViewPayload {
     snippets: [],
     heroImageUrl,
     designStyle: "hero",
+    isLive: true,
   };
 }
 

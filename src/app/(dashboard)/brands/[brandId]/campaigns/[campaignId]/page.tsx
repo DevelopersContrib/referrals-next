@@ -26,6 +26,12 @@ import {
 } from "@/components/campaigns/campaign-dashboard-preview";
 import { getRewardKind } from "@/lib/reward-types";
 import { formatCount } from "@/lib/format-brand";
+import { isBrandGrowthEntitled } from "@/lib/member-subscription";
+import {
+  campaignSurfaceLabel,
+  getCampaignSurfaceState,
+} from "@/lib/campaign-live";
+import { CampaignGoLiveButton } from "@/components/campaigns/campaign-go-live-button";
 import {
   HomeIcon,
   ChevronRightIcon,
@@ -64,6 +70,21 @@ export default async function CampaignDashboardPage({
     getBrandIfAccessible(urlId, memberId, isAdmin),
   ]);
   if (!campaign || !brand) notFound();
+
+  const [surfaceState, brandEntitled] = await Promise.all([
+    getCampaignSurfaceState({
+      publish: campaign.publish,
+      url_id: campaign.url_id,
+    }),
+    isBrandGrowthEntitled(urlId),
+  ]);
+  const statusLabel = campaignSurfaceLabel(surfaceState);
+  const statusBadgeClass =
+    surfaceState === "live"
+      ? "border-0 bg-emerald-100 text-emerald-800 font-semibold uppercase tracking-wide"
+      : surfaceState === "paused"
+        ? "border-0 bg-amber-100 text-amber-900 font-semibold uppercase tracking-wide"
+        : "border-0 bg-gray-100 text-gray-600 font-semibold uppercase tracking-wide";
 
   // Fetch stats
   const [participantCount, sharesData, impressionsData] = await Promise.all([
@@ -270,15 +291,7 @@ export default async function CampaignDashboardPage({
                   >
                     {look.label}
                   </span>
-                  <Badge
-                    className={
-                      campaign.publish === "public"
-                        ? "border-0 bg-emerald-100 text-emerald-800 font-semibold uppercase tracking-wide"
-                        : "border-0 bg-gray-100 text-gray-600 font-semibold uppercase tracking-wide"
-                    }
-                  >
-                    {campaign.publish || "public"}
-                  </Badge>
+                  <Badge className={statusBadgeClass}>{statusLabel}</Badge>
                 </div>
                 <h1 className="mt-2 text-2xl font-bold leading-tight tracking-tight text-gray-900 sm:text-3xl">
                   {headline}
@@ -309,6 +322,13 @@ export default async function CampaignDashboardPage({
               </div>
             </div>
             <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:shrink-0 lg:justify-end">
+              <CampaignGoLiveButton
+                brandId={urlId}
+                campaignId={id}
+                entitled={brandEntitled}
+                surfaceState={surfaceState}
+                className="w-full sm:w-auto"
+              />
               <IntegrationsEmbedLink className="inline-flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:border-brand/40 hover:text-brand sm:w-auto">
                 <PuzzleIcon className="size-4" />
                 Install / embed
@@ -363,9 +383,16 @@ export default async function CampaignDashboardPage({
 
       {/* Referral + public page URLs */}
       <div className="portlet min-w-0">
+        {surfaceState !== "live" && (
+          <p className="mb-3 text-sm text-amber-900/90">
+            Public page and widget links work after you go live. Preview the
+            campaign layout below.
+          </p>
+        )}
         <CampaignShareLinks
           referralUrl={referralLink}
           publicPageUrl={publicPageLink}
+          disabled={surfaceState !== "live"}
         />
       </div>
 

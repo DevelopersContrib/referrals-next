@@ -52,7 +52,7 @@ export default function PartnersPage() {
       <div className="mt-16 rounded-xl bg-blue-50 p-8 text-center">
         <h2 className="text-2xl font-bold">Ready to Partner?</h2>
         <p className="mt-2 text-gray-600">Get in touch and let&apos;s explore how we can grow together.</p>
-        <Link href="/contact" className="mt-4 inline-block rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700">
+        <Link href="/contact" className="mt-4 inline-block rounded-lg bg-brand px-6 py-3 text-sm font-medium text-white hover:bg-brand-hover">
           Contact Us
         </Link>
       </div>

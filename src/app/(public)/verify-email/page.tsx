@@ -115,7 +115,7 @@ export default async function VerifyEmailPage({
               )}
               <Link
                 href="/signin"
-                className="mt-6 inline-block rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+                className="mt-6 inline-block rounded-lg bg-brand px-6 py-2.5 text-sm font-medium text-white hover:bg-brand-hover"
               >
                 Sign In
               </Link>

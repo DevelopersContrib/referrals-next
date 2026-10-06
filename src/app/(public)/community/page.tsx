@@ -23,7 +23,7 @@ export default function CommunityPage() {
           <p className="mt-2 text-gray-600">
             Ask questions, share tips, and discuss referral marketing strategies with the community.
           </p>
-          <Link href="/forum" className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+          <Link href="/forum" className="mt-4 inline-block rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover">
             Visit Forum
           </Link>
         </div>
@@ -33,7 +33,7 @@ export default function CommunityPage() {
           <p className="mt-2 text-gray-600">
             Find integration partners, agencies, and fellow businesses to collaborate with on referral campaigns.
           </p>
-          <Link href="/partners" className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+          <Link href="/partners" className="mt-4 inline-block rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover">
             Browse Partners
           </Link>
         </div>
@@ -43,7 +43,7 @@ export default function CommunityPage() {
           <p className="mt-2 text-gray-600">
             Read expert articles on referral marketing, growth hacking, and customer advocacy. New posts every week.
           </p>
-          <Link href="/blog" className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+          <Link href="/blog" className="mt-4 inline-block rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover">
             Read Blog
           </Link>
         </div>
@@ -53,7 +53,7 @@ export default function CommunityPage() {
           <p className="mt-2 text-gray-600">
             Become a contributor — write guest posts, build integrations, or become an affiliate partner.
           </p>
-          <Link href="/contribute" className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+          <Link href="/contribute" className="mt-4 inline-block rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover">
             Get Involved
           </Link>
         </div>

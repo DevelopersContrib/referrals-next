@@ -91,6 +91,30 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // App routes that require a session (see src/app/(dashboard) and src/app/(admin)).
+  // Unknown paths must reach the App Router so Next can return a real 404 — not /signin.
+  const authRequiredPagePrefixes = [
+    "/admin",
+    "/account",
+    "/api-keys",
+    "/billing",
+    "/brands",
+    "/contacts",
+    "/dashboard",
+    "/editor",
+    "/forum",
+    "/integrations",
+    "/notifications",
+    "/onboarding",
+    "/promotions",
+    "/stats",
+    "/tools",
+  ];
+
+  const isAuthRequiredPage = authRequiredPagePrefixes.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+
   // Check for auth session token cookie (next-auth sets this)
   const sessionToken =
     request.cookies.get("authjs.session-token")?.value ||
@@ -100,6 +124,9 @@ export function proxy(request: NextRequest) {
     // API clients expect JSON — never return the HTML /signin page (breaks Auth.js / fetch().json())
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!isAuthRequiredPage) {
+      return NextResponse.next();
     }
     const signInUrl = new URL("/signin", request.url);
     signInUrl.searchParams.set("callbackUrl", pathname);

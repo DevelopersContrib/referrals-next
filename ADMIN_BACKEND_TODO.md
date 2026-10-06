@@ -14,7 +14,8 @@ _Last updated: 2026-06-23_
   (`src/lib/platform-admin.ts`); VNOC `is_admin` lookup removed.
   - Current admins: `maidabarrientos@gmail.com, chad@ecorp.com, ecorpcom@gmail.com, admin@domaindirectory.com`
 - [x] **Page gate** — `src/app/(admin)/layout.tsx` redirects non-admins to `/dashboard`
-  (anonymous already bounced to `/signin` by `src/proxy.ts`).
+  (anonymous hits on `/admin*` are bounced to `/signin` by `src/proxy.ts`; unknown non-public
+  paths get a real 404 via `src/app/not-found.tsx`, not sign-in).
 - [x] **API gate** — all 27 `src/app/api/admin/**` route files (48 handlers) call
   `requirePlatformAdminApi()` (applied via `scripts/gate-admin-routes.mjs`).
 - [x] Verified: anonymous hits to `/admin*` and `/api/admin/*` → **307 → /signin**.

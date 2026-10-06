@@ -7,9 +7,14 @@
  * cron sweeper retries anything stuck/failed.
  */
 import type { brand_analysis } from "@prisma/client";
-import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { after } from "next/server";
 import { claimBrandSlug, extractDomainFromUrl } from "@/lib/brand-access";
+import { cleanupOrphanDraftFromFailedJob } from "./cleanup";
+import {
+  fanOutAnalysisModule,
+  shouldFanOutAnalysisModules,
+} from "./fanout";
 import { RUNNERS } from "./registry";
 import { clientSafeMessage } from "@/lib/api/public-error";
 import {
@@ -270,6 +275,10 @@ export async function createAnalysisJobForBrand(
  * sweeper was then running the AI step for minutes on a shared DB connection.
  */
 function triggerModule(jobId: number, module: ModuleName) {
+  if (shouldFanOutAnalysisModules()) {
+    fanOutAnalysisModule(jobId, module);
+    return;
+  }
   const run = () => runModuleAndAdvance(jobId, module);
   try {
     after(run);
@@ -324,13 +333,14 @@ export async function kickoffJob(jobId: number) {
 export async function expireJobIfNeeded(jobId: number): Promise<boolean> {
   const job = await prisma.brand_analysis.findUnique({
     where: { id: jobId },
-    select: { status: true, started_at: true },
+    select: { status: true, started_at: true, date_added: true },
   });
   if (!job || (job.status !== "pending" && job.status !== "running")) return false;
 
   const moduleStaleCutoff = new Date(
     Date.now() - MODULE_TIMEOUT_MS - 5_000,
   );
+  const queuedStaleCutoff = new Date(Date.now() - 45_000);
   await prisma.brand_analysis_module.updateMany({
     where: {
       analysis_id: jobId,
@@ -343,10 +353,21 @@ export async function expireJobIfNeeded(jobId: number): Promise<boolean> {
       error: "This step couldn't finish",
     },
   });
+  await prisma.brand_analysis_module.updateMany({
+    where: {
+      analysis_id: jobId,
+      status: "queued",
+      started_at: { lt: queuedStaleCutoff },
+    },
+    data: {
+      status: "failed",
+      completed_at: new Date(),
+      error: "This step couldn't finish",
+    },
+  });
 
-  const started = job.started_at?.getTime() ?? 0;
-  const jobExpired =
-    Boolean(started) && Date.now() - started >= JOB_TIMEOUT_MS;
+  const clockStart = job.started_at?.getTime() ?? job.date_added.getTime();
+  const jobExpired = Date.now() - clockStart >= JOB_TIMEOUT_MS;
 
   if (!jobExpired) {
     await finalizeIfDone(jobId);
@@ -495,10 +516,11 @@ async function finalizeIfDone(jobId: number) {
     ? Date.now() - job.started_at.getTime()
     : null;
 
+  const terminalStatus = anyDone ? "done" : "failed";
   await prisma.brand_analysis.update({
     where: { id: jobId },
     data: {
-      status: anyDone ? "done" : "failed",
+      status: terminalStatus,
       completed_at: new Date(),
       website_score: scores.website,
       social_score: scores.social,
@@ -506,6 +528,14 @@ async function finalizeIfDone(jobId: number) {
       overall_health: scores.overall,
     },
   });
+
+  if (terminalStatus === "failed") {
+    try {
+      await cleanupOrphanDraftFromFailedJob(jobId);
+    } catch (cleanupErr) {
+      console.error(`[analysis] job ${jobId} orphan cleanup`, cleanupErr);
+    }
+  }
 
   if (elapsedMs != null) {
     const timing = modules
@@ -566,6 +596,19 @@ function arrLen(v: unknown): number {
 export async function sweepStuckModules() {
   const runningCutoff = new Date(Date.now() - 2 * 60 * 1000);
   const queuedCutoff = new Date(Date.now() - 20 * 1000);
+  const neverStartedCutoff = new Date(Date.now() - 30 * 1000);
+
+  const neverKicked = await prisma.brand_analysis.findMany({
+    where: {
+      status: "pending",
+      date_added: { lt: neverStartedCutoff },
+    },
+    select: { id: true },
+    take: 5,
+  });
+  for (const j of neverKicked) {
+    await kickoffJob(j.id);
+  }
 
   const stuck = await prisma.brand_analysis_module.findMany({
     where: {
@@ -609,5 +652,21 @@ export async function sweepStuckModules() {
     if (!expired) await finalizeIfDone(j.id);
   }
 
-  return { retried, jobsTouched: touchedJobs.size };
+  const stalledRunning = await prisma.brand_analysis.findMany({
+    where: {
+      status: "running",
+      started_at: { lt: neverStartedCutoff },
+    },
+    select: { id: true },
+    take: 5,
+  });
+  for (const j of stalledRunning) {
+    await scheduleReady(j.id);
+  }
+
+  return {
+    retried,
+    jobsTouched: touchedJobs.size,
+    kickoff: neverKicked.length,
+  };
 }

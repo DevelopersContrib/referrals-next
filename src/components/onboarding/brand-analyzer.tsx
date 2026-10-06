@@ -129,7 +129,18 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
           : 0;
       try {
         const data = await fetchAnalysisStatus(id);
-        if (data) {
+        if (!data) {
+          if (elapsed >= JOB_TIMEOUT_MS) {
+            setError(
+              "Analysis stopped before finishing. Please try again.",
+            );
+            setPhase("input");
+            setSubmitting(false);
+            stoppedRef.current = true;
+            if (pollRef.current) clearTimeout(pollRef.current);
+            return;
+          }
+        } else {
           setStatus(data);
           if (data.status === "done" || data.status === "failed") {
             showResults();

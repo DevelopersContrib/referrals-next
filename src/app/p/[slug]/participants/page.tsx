@@ -13,11 +13,11 @@ export async function generateMetadata({
   const brand = await findPublicBrandBySlug(slug);
 
   if (!brand) {
-    return { title: "Participants | Referrals.com" };
+    return { title: "Participants" };
   }
 
   return {
-    title: `Top Referrers - ${formatBrandName(brand.domain)} | Referrals.com`,
+    title: `Top Referrers - ${formatBrandName(brand.domain)}`,
     description: `View the top referrers and leaderboard for ${formatBrandName(brand.domain)} campaigns on Referrals.com.`,
   };
 }

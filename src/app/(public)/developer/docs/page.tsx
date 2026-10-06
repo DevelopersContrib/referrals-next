@@ -5,7 +5,7 @@ import { CodeBlock } from "@/components/developer/code-block";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "API Reference | Referrals.com",
+  title: "API Reference",
   description:
     "Complete API reference for Referrals.com. Endpoints for members, brands, campaigns, participants, webhooks, and billing.",
 };

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { listMemberTickets } from "@/lib/support-tickets";
 
-export const metadata = { title: "Support | Referrals.com" };
+export const metadata = { title: "Support" };
 
 const STATUS_LABEL: Record<string, string> = {
   open: "Open",

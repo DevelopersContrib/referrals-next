@@ -4,7 +4,7 @@ import { AuthHeroPanel } from "@/components/auth/auth-hero-panel";
 import { SignInForm } from "@/components/auth/signin-form";
 
 export const metadata: Metadata = {
-  title: "Sign in — Referrals.com",
+  title: "Sign in",
   description:
     "Sign in to your Referrals.com account to manage campaigns, track referrals, and grow your business.",
   openGraph: {

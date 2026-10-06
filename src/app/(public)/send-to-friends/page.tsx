@@ -1,13 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import type { Metadata } from "next";
-
-const meta = {
-  title: "Send to Friends | Referrals.com",
-  description:
-    "Share Referrals.com with your friends. Send them an invitation to join our referral marketing platform.",
-};
 
 export default function SendToFriendsPage() {
   const [name, setName] = useState("");
@@ -61,10 +54,6 @@ export default function SendToFriendsPage() {
 
   return (
     <>
-      <head>
-        <title>{meta.title}</title>
-        <meta name="description" content={meta.description} />
-      </head>
       <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">

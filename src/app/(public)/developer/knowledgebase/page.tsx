@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Developer Knowledgebase | Referrals.com",
+  title: "Developer Knowledgebase",
   description:
     "Guides, tutorials, and best practices for integrating the Referrals.com API into your product.",
 };

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import NewSupportTicketForm from "@/components/support/NewSupportTicketForm";
 
-export const metadata = { title: "New support ticket | Referrals.com" };
+export const metadata = { title: "New support ticket" };
 
 export default async function NewMemberSupportTicketPage() {
   const session = await auth();

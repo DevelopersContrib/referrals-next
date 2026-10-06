@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { faqPageJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
-  title: "Pricing — $9/mo per brand to publish | Referrals.com",
+  title: "Pricing — $9/mo per brand to publish",
   description:
     "Set up a brand for free. Pay $9/month per brand to publish it and accept signups. Every brand, including network domains, follows the same rule.",
   alternates: { canonical: "https://referrals.com/pricing" },

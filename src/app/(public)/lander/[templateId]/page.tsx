@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Landing Page | Referrals.com",
   description:
     "Join our referral program and earn rewards for every friend you bring on board.",
 };

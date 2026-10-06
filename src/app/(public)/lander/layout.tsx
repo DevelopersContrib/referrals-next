@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Landing Page | Referrals.com",
+  title: "Landing Page",
   description: "Start your referral marketing journey. Sign up and create your first campaign.",
   openGraph: { title: "Get Started | Referrals.com", url: "https://referrals.com/lander" },
 };

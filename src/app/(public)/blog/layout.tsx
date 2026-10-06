@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Blog - Referrals.com",
+  title: "Blog",
   description:
     "Expert insights on referral marketing, growth hacking, and word-of-mouth strategies to help you grow your business.",
 };

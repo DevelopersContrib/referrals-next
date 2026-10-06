@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Create your account",
+  // No `title`: a plain title string in a layout stops the root
+  // "%s | Referrals.com" template from reaching nested routes. Pages set theirs.
   description:
     "Create your Referrals.com account. Set up a brand for free, then pay $9/mo per brand to publish it.",
   openGraph: {

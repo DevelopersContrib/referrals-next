@@ -5,7 +5,7 @@ import { countMemberBrands } from "@/lib/member-subscription";
 import { BrandAnalyzer } from "@/components/onboarding/brand-analyzer";
 
 export const metadata: Metadata = {
-  title: "Get started — Referrals.com",
+  title: "Get started",
   robots: { index: false, follow: false },
 };
 

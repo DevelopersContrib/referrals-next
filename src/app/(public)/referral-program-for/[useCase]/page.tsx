@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const url = `https://referrals.com/referral-program-for/${data.slug}`;
   return {
-    title: `${data.headline} | Referrals.com`,
+    title: data.headline,
     description: data.subhead,
     alternates: { canonical: url },
     openGraph: {

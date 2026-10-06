@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const metadata: Metadata = {
-  title: "Ambassador Program | Referrals.com",
+  title: "Ambassador Program",
   description: "Join the Referrals.com Ambassador Program and earn by promoting the world's leading referral platform.",
 };
 

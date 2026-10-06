@@ -4,7 +4,7 @@ import { AuthHeroPanel } from "@/components/auth/auth-hero-panel";
 import { SignupForm } from "@/components/auth/signup-form";
 
 export const metadata: Metadata = {
-  title: "Create your account — Referrals.com",
+  title: "Create your account",
   description:
     "Create your Referrals.com account, set up a brand, and pay $9/mo per brand to publish.",
   openGraph: {

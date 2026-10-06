@@ -4,7 +4,7 @@ import { getAllPosts } from "@/lib/blog";
 import { useCases } from "@/lib/use-cases";
 
 export const metadata: Metadata = {
-  title: "Referral Marketing Resources & Guides | Referrals.com",
+  title: "Referral Marketing Resources & Guides",
   description:
     "The complete hub for referral marketing: how referral programs work, playbooks by industry, reward strategies, and the latest guides from Referrals.com.",
   alternates: { canonical: "https://referrals.com/resources" },

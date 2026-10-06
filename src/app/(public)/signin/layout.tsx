@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Sign In",
+  // No `title`: a plain title string in a layout stops the root
+  // "%s | Referrals.com" template from reaching nested routes. Pages set theirs.
   description:
     "Sign in to your Referrals.com account to manage your referral campaigns.",
   openGraph: {

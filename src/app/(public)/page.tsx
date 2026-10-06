@@ -8,7 +8,9 @@ import { PublicPlanCatalog } from "@/components/marketing/public-plan-catalog";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata: Metadata = {
-  title: "Referrals.com — The Best Referral Marketing Platform",
+  // Absolute: the brand already leads this title, so the "%s | Referrals.com"
+  // template from the root layout would print it twice.
+  title: { absolute: "Referrals.com — The Best Referral Marketing Platform" },
   description:
     "Create powerful referral campaigns, embed widgets, reward participants, and grow your business through word-of-mouth marketing.",
   alternates: { canonical: "https://referrals.com" },

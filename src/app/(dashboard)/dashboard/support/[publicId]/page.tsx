@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import SupportTicketThread from "@/components/support/SupportTicketThread";
 import { getMemberTicket, SupportTicketError } from "@/lib/support-tickets";
 
-export const metadata = { title: "Support ticket | Referrals.com" };
+export const metadata = { title: "Support ticket" };
 
 const STATUS_LABEL: Record<string, string> = {
   open: "Open",

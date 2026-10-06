@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Developer Portal | Referrals.com",
+  title: "Developer Portal",
   description:
     "Build powerful referral integrations with the Referrals.com REST API. Documentation, playground, knowledgebase, and support.",
 };

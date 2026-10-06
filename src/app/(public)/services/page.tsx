@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Referral Marketing Services | Referrals.com",
+  title: "Referral Marketing Services",
   description:
     "Browse our referral marketing services including reviews, social sharing, backlinks, video reviews, and more. Affordable per-action pricing.",
   alternates: { canonical: "https://referrals.com/services" },

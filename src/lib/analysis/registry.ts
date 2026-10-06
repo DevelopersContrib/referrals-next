@@ -161,9 +161,10 @@ export async function buildContext(analysis: brand_analysis): Promise<BrandConte
 
 // ── intelligence ────────────────────────────────────────────────────────────
 const intelligenceRunner: ModuleRunner = async (analysis) => {
-  if (!hasOpenAI()) throw new Error("OPENAI_API_KEY not configured");
   const ctx = await buildContext(analysis);
-  const profile = await generateBrandProfile(ctx);
+  const profile = hasOpenAI()
+    ? await generateBrandProfile(ctx)
+    : profileFromContext(ctx);
 
   await prisma.brand_intelligence.deleteMany({ where: { analysis_id: analysis.id } });
   await prisma.brand_intelligence.create({

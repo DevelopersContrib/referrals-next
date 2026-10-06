@@ -102,10 +102,8 @@ export async function POST(req: NextRequest) {
     slugGuard.slug,
   );
 
-  // Fan out the pipeline after the response is sent.
-  after(async () => {
-    await kickoffJob(analysis.id);
-  });
+  // Kick off before responding so the job cannot stay pending if after() is dropped.
+  await kickoffJob(analysis.id);
 
   return NextResponse.json(
     { jobId: analysis.id, brandId, slug },

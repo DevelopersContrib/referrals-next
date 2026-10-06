@@ -32,7 +32,6 @@ export async function GET(
 
     if (
       (status.status === "pending" || status.status === "running") &&
-      status.startedAt &&
       (await expireJobIfNeeded(id))
     ) {
       status = await loadAnalysisStatus(id);

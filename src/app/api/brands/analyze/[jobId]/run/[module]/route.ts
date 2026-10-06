@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, after } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { runModuleAndAdvance } from "@/lib/analysis/orchestrator";
 import { isModuleName } from "@/lib/analysis/types";
 
@@ -23,9 +23,7 @@ export async function POST(
     return NextResponse.json({ error: "Bad request" }, { status: 400 });
   }
 
-  after(async () => {
-    await runModuleAndAdvance(id, module);
-  });
+  await runModuleAndAdvance(id, module);
 
-  return NextResponse.json({ accepted: true }, { status: 202 });
+  return NextResponse.json({ ok: true });
 }

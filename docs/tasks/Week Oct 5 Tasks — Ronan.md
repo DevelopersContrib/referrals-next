@@ -105,3 +105,32 @@ Manual:
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/this-page-does-not-exist   # expect 404
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3000/brands                        # expect 307 → /signin
 ```
+
+---
+
+## Analyze My Brand hang (job #122 / brand #40473) — Oct 5, 2026
+
+**Priority:** Critical · **Status:** ✅ **DONE**
+
+**Problem:** Onboarding progress stuck ~13% (modules `queued` but never executed). Draft `member_urls` row created even when the pipeline never finished.
+
+| Item | Status |
+| ---- | ------ |
+| `await kickoffJob()` on POST `/api/brands/analyze` (no lost kickoff in `after()`) | ✅ |
+| Production module fan-out via `ANALYSIS_INTERNAL_SECRET` + `/run/[module]` | ✅ `src/lib/analysis/fanout.ts` |
+| Run route executes module in-request (not `after()`) | ✅ |
+| Expire stuck `queued` modules + jobs without `started_at` | ✅ `expireJobIfNeeded` |
+| Sweeper kickoff for never-started jobs | ✅ `sweepStuckModules` |
+| Remove orphan draft brands (failed, zero modules done) | ✅ `cleanup.ts` + cron path via `finalizeIfDone` |
+| Intelligence fallback when `OPENAI_API_KEY` missing | ✅ `registry.ts` |
+| Cleanup script for existing orphans | ✅ `scripts/cleanup-orphan-analysis-brands.ts` |
+
+**Production:** Set `ANALYSIS_INTERNAL_SECRET` on Vercel. Ensure `NEXT_PUBLIC_APP_URL` (or `ANALYSIS_FANOUT_URL` / `VERCEL_URL`) points at the deployment that can receive internal POSTs.
+
+**Clean up a known orphan:**
+
+```bash
+npx tsx scripts/cleanup-orphan-analysis-brands.ts --job-id 122
+# or
+npx tsx scripts/cleanup-orphan-analysis-brands.ts --brand-id 40473
+```

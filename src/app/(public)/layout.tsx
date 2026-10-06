@@ -90,6 +90,10 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
   const [mobileAboutOpen, setMobileAboutOpen] = useState(false);
   const [mobilePartnerOpen, setMobilePartnerOpen] = useState(false);
 
+  // "loading" counts as signed out so the header renders Login/Sign Up on the
+  // server and on first paint. These pages are statically rendered, so the
+  // session is only known after an /api/auth/session round-trip — showing a
+  // placeholder until then left visitors staring at an empty box.
   const isLoggedIn = status === "authenticated" && !!session?.user;
   const displayName = session?.user?.name?.trim() || session?.user?.email || "";
   const initials = userInitials(session?.user?.name, session?.user?.email);
@@ -160,9 +164,7 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
 
           {/* Desktop Auth */}
           <div className="hidden items-center gap-3 lg:flex">
-            {status === "loading" ? (
-              <div className="h-9 w-40 animate-pulse rounded-lg bg-gray-100" aria-hidden />
-            ) : isLoggedIn ? (
+            {isLoggedIn ? (
               <>
                 <div
                   className="flex max-w-[220px] items-center gap-2 rounded-full border border-emerald-200/70 bg-emerald-50/60 py-1 pl-1 pr-3"
@@ -372,9 +374,7 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
               </div>
 
               <div className="mt-4 flex flex-col gap-2 border-t border-rose-100 pt-4">
-                {status === "loading" ? (
-                  <div className="h-10 w-full animate-pulse rounded-lg bg-gray-100" aria-hidden />
-                ) : isLoggedIn ? (
+                {isLoggedIn ? (
                   <>
                     <div className="flex items-center gap-3 rounded-lg border border-emerald-200/70 bg-emerald-50/60 px-3 py-2">
                       <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FF5C62] to-[#926efb] text-sm font-bold text-white">

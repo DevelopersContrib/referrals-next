@@ -327,8 +327,31 @@ export async function expireJobIfNeeded(jobId: number): Promise<boolean> {
     select: { status: true, started_at: true },
   });
   if (!job || (job.status !== "pending" && job.status !== "running")) return false;
+
+  const moduleStaleCutoff = new Date(
+    Date.now() - MODULE_TIMEOUT_MS - 5_000,
+  );
+  await prisma.brand_analysis_module.updateMany({
+    where: {
+      analysis_id: jobId,
+      status: "running",
+      started_at: { lt: moduleStaleCutoff },
+    },
+    data: {
+      status: "failed",
+      completed_at: new Date(),
+      error: "This step couldn't finish",
+    },
+  });
+
   const started = job.started_at?.getTime() ?? 0;
-  if (!started || Date.now() - started < JOB_TIMEOUT_MS) return false;
+  const jobExpired =
+    Boolean(started) && Date.now() - started >= JOB_TIMEOUT_MS;
+
+  if (!jobExpired) {
+    await finalizeIfDone(jobId);
+    return false;
+  }
 
   await prisma.brand_analysis_module.updateMany({
     where: {
@@ -410,6 +433,12 @@ export async function runModuleAndAdvance(jobId: number, module: ModuleName) {
         error: clientSafeMessage(e),
       },
     });
+    // Unblock dependents that treat failed deps as terminal (soft deps).
+    try {
+      await scheduleReady(jobId);
+    } catch (scheduleErr) {
+      console.error(`[analysis] job ${jobId} schedule after ${module} fail`, scheduleErr);
+    }
   }
 
   try {
@@ -545,7 +574,6 @@ export async function sweepStuckModules() {
         { status: "queued", started_at: { lt: queuedCutoff } },
         { status: "queued", started_at: null },
         { status: "running", started_at: { lt: runningCutoff } },
-        { status: "failed" },
       ],
     },
     take: 4,

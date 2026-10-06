@@ -125,11 +125,17 @@ const socialRunner: ModuleRunner = async (analysis) => {
 
 // ── shared context builder for the AI modules ──────────────────────────────
 export async function buildContext(analysis: brand_analysis): Promise<BrandContext> {
-  const [crawl, vnoc, socials] = await Promise.all([
-    prisma.brand_crawl.findFirst({ where: { analysis_id: analysis.id }, orderBy: { id: "desc" } }),
-    prisma.brand_vnoc.findFirst({ where: { analysis_id: analysis.id }, orderBy: { id: "desc" } }),
-    prisma.brand_social.findMany({ where: { analysis_id: analysis.id } }),
-  ]);
+  const crawl = await prisma.brand_crawl.findFirst({
+    where: { analysis_id: analysis.id },
+    orderBy: { id: "desc" },
+  });
+  const vnoc = await prisma.brand_vnoc.findFirst({
+    where: { analysis_id: analysis.id },
+    orderBy: { id: "desc" },
+  });
+  const socials = await prisma.brand_social.findMany({
+    where: { analysis_id: analysis.id },
+  });
 
   const asArr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
 

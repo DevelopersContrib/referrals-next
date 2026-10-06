@@ -64,3 +64,21 @@ Manual:
 3. `/p/{slug}/campaign/{id}` while draft/unpaid → amber **This campaign isn't live yet.**
 4. VNOC brand → **Go Live** without checkout (admin bypass same at API gates)
 5. Dashboard top banner (unpaid) → **Your campaign is ready, go live for $9/mo**
+
+---
+
+## Onboarding pipeline — DB pool + job completion (same week)
+
+**Problem:** Analyze My Brand hung when MySQL `max_connections` (e.g. 5) was exhausted by status polling + parallel module work. Failed steps (e.g. Social profiles) could leave the job header `running`; UI could leave polling until timeout without a terminal job.
+
+| Item | Status |
+| ---- | ------ |
+| `DATABASE_URL_POOLED` + `connection_limit=1` per isolate | ✅ `src/lib/prisma.ts` |
+| Fail stale `running` modules; finalize job on timeout | ✅ `expireJobIfNeeded` |
+| Cron sweeper no longer re-queues every `failed` module | ✅ `sweepStuckModules` |
+| Schedule dependents after a module fails | ✅ `runModuleAndAdvance` |
+| Poll stops only on `done`/`failed` or after timeout + final status fetch | ✅ `brand-analyzer.tsx` |
+| **Analysis complete** badge only when `status === done` and no failed steps | ✅ `brand-results.tsx` (unchanged) |
+| Crawler: multi-page fetch, colors, contact-only phones | ✅ `crawler.ts` |
+
+**Verify:** Start onboarding analyze on a slow site; confirm job reaches `done` or `failed` within ~60s and polling stops. Set `DATABASE_URL_POOLED` to your Vercel/RDS pooler in production.

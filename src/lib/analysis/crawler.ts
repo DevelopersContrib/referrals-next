@@ -49,13 +49,19 @@ function isSocialLabel(text: string): boolean {
 }
 
 function validPhone(raw: string): string | null {
-  if (/[a-z.]/i.test(raw)) return null;
+  if (/[a-z]/i.test(raw)) return null;
   const trimmed = raw.replace(/\s+/g, " ").trim();
   const digits = trimmed.replace(/\D/g, "");
   if (digits.length < 10 || digits.length > 15) return null;
   if (/^0+$/.test(digits)) return null;
+  if (/^(\d)\1+$/.test(digits)) return null;
+  if (/^(24|32|48|64|96|128|256|512){2,}$/.test(digits)) return null;
   const shortTokens = trimmed.split(/[\s()-]+/).filter((token) => /^\d{1,2}$/.test(token));
   if (shortTokens.length >= 3) return null;
+  if (!trimmed.startsWith("+") && digits.length === 10) {
+    const area = digits.slice(0, 3);
+    if (area.startsWith("0") || area.startsWith("1")) return null;
+  }
   const prefix = trimmed.trim().startsWith("+") ? "+" : "";
   return `${prefix}${digits}`.slice(0, 16);
 }
@@ -208,15 +214,11 @@ export async function crawlSite(inputUrl: string): Promise<CrawlResult> {
   const pageBodies: string[] = home.ok ? [home.html] : [];
 
   const extraPaths = ["/about", "/about-us", "/pricing", "/services", "/contact", "/contact-us"];
-  let cursor = 0;
-  async function nextExtra() {
-    while (pageBodies.length < 5 && cursor < extraPaths.length) {
-      const path = extraPaths[cursor++];
-      const page = await fetchPage(`${origin}${path}`);
-      if (page.ok && page.html) pageBodies.push(page.html);
-    }
+  for (const path of extraPaths) {
+    if (pageBodies.length >= 5) break;
+    const page = await fetchPage(`${origin}${path}`);
+    if (page.ok && page.html) pageBodies.push(page.html);
   }
-  await Promise.all([nextExtra(), nextExtra()]);
 
   const pages = pageBodies.length;
   const contactHtml = pageBodies.find((body) => /contact/i.test(body.slice(0, 500))) || pageBodies[1] || "";
@@ -271,6 +273,12 @@ export async function crawlSite(inputUrl: string): Promise<CrawlResult> {
     if (hex) colorBag.push(hex);
   };
   pushColor(metaContent(html, "theme-color"));
+  pushColor(metaContent(html, "msapplication-TileColor"));
+  for (const match of combined.matchAll(
+    /style=["'][^"']*?(#[0-9a-fA-F]{6})/gi,
+  )) {
+    pushColor(match[1]);
+  }
   for (const match of combined.matchAll(
     /--(?:color-)?(?:primary|brand|accent|secondary)[^:]*:\s*([^;}{]+)/gi,
   )) {
@@ -279,22 +287,27 @@ export async function crawlSite(inputUrl: string): Promise<CrawlResult> {
   for (const match of combined.matchAll(/#([0-9a-fA-F]{6})\b/g)) {
     pushColor(`#${match[1]}`);
   }
-  if (colorBag.length === 0) {
-    const sheetHref = /<link[^>]+rel=["']stylesheet["'][^>]*href=["']([^"']+)["']/i.exec(html)?.[1];
-    const sheetUrl = sheetHref ? abs(finalBase, sheetHref) : null;
-    if (sheetUrl && sheetUrl.startsWith(origin)) {
+  if (colorBag.length < 3) {
+    const sheetHrefs = [
+      ...html.matchAll(/<link[^>]+rel=["']stylesheet["'][^>]*href=["']([^"']+)["']/gi),
+    ]
+      .map((m) => m[1])
+      .slice(0, 3);
+    for (const href of sheetHrefs) {
+      const sheetUrl = abs(finalBase, href);
+      if (!sheetUrl || !sheetUrl.startsWith(origin)) continue;
       const sheet = await fetchPage(sheetUrl, 3_000);
-      if (sheet.ok) {
-        extraCss = sheet.html;
-        for (const match of sheet.html.matchAll(
-          /--(?:color-)?(?:primary|brand|accent)[^:]*:\s*([^;}{]+)/gi,
-        )) {
-          pushColor(match[1]);
-        }
-        for (const match of sheet.html.matchAll(/#([0-9a-fA-F]{6})\b/g)) {
-          pushColor(`#${match[1]}`);
-        }
+      if (!sheet.ok) continue;
+      extraCss += sheet.html;
+      for (const match of sheet.html.matchAll(
+        /--(?:color-)?(?:primary|brand|accent|secondary)[^:]*:\s*([^;}{]+)/gi,
+      )) {
+        pushColor(match[1]);
       }
+      for (const match of sheet.html.matchAll(/#([0-9a-fA-F]{6})\b/g)) {
+        pushColor(`#${match[1]}`);
+      }
+      if (colorBag.length >= 4) break;
     }
   }
   if (colorBag.length === 0 && logoUrl && /\.svg($|\?)/i.test(logoUrl)) {
@@ -330,17 +343,17 @@ export async function crawlSite(inputUrl: string): Promise<CrawlResult> {
     ].filter((e) => !/\.(png|jpg|jpeg|gif|webp|svg)$/i.test(e)),
     5
   );
-  const visibleText = combined
+  const contactText = contactHtml
     .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ");
   const phones = uniq(
     [
-      ...[...combined.matchAll(/tel:([^"'?\s]+)/gi)].map((x) =>
+      ...[...contactHtml.matchAll(/tel:([^"'?\s]+)/gi)].map((x) =>
         validPhone(decodeURIComponent(x[1])),
       ),
-      ...[...visibleText.matchAll(/(?:\+|00)?\d[\d\s().-]{8,}\d/g)].map((x) =>
+      ...[...contactText.matchAll(/(?:\+|00)?\d[\d\s().-]{8,}\d/g)].map((x) =>
         validPhone(x[0]),
       ),
     ].filter((p): p is string => Boolean(p)),

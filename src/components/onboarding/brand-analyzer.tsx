@@ -24,9 +24,17 @@ const EXAMPLES = ["stripe.com", "notion.so", "glossier.com"];
 const DEFAULT_UPGRADE_HREF = `/billing/plan/${DEFAULT_PAID_PLAN_ID}`;
 
 function pollDelayMs(attempt: number) {
-  if (attempt <= 0) return 3_000;
-  if (attempt === 1) return 5_000;
-  return 8_000;
+  if (attempt <= 0) return 4_000;
+  if (attempt === 1) return 6_000;
+  return 10_000;
+}
+
+async function fetchAnalysisStatus(
+  id: number,
+): Promise<AnalysisStatus | null> {
+  const res = await fetch(`/api/brands/analyze/${id}`, { cache: "no-store" });
+  if (!res.ok) return null;
+  return (await res.json()) as AnalysisStatus;
 }
 
 function upgradeCheckoutHref(data: {
@@ -120,11 +128,8 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
           ? Date.now() - analyzeStartedRef.current
           : 0;
       try {
-        const res = await fetch(`/api/brands/analyze/${id}`, {
-          cache: "no-store",
-        });
-        if (res.ok) {
-          const data = (await res.json()) as AnalysisStatus;
+        const data = await fetchAnalysisStatus(id);
+        if (data) {
           setStatus(data);
           if (data.status === "done" || data.status === "failed") {
             showResults();
@@ -132,9 +137,15 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
           }
         }
       } catch {
-        /* transient — keep polling */
+        /* transient — keep polling until timeout or terminal */
       }
       if (elapsed >= JOB_TIMEOUT_MS) {
+        try {
+          const finalData = await fetchAnalysisStatus(id);
+          if (finalData) setStatus(finalData);
+        } catch {
+          /* show results with last known status */
+        }
         showResults();
         return;
       }

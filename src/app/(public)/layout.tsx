@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Script from "next/script";
 import { SessionProvider, useSession, signOut } from "next-auth/react";
+import { cn } from "@/lib/utils";
 
 const LOGO_URL =
   "https://d1p6j71028fbjm.cloudfront.net/logos/logo-new-referral-1.png";
@@ -12,16 +13,45 @@ const LOGO_URL =
 function DropdownMenu({
   label,
   items,
+  open,
+  onOpen,
+  onClose,
 }: {
   label: string;
   items: { href: string; label: string }[];
+  open: boolean;
+  onOpen: () => void;
+  onClose: () => void;
 }) {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
   return (
-    <div className="group relative">
-      <button className="flex items-center gap-1 text-sm text-gray-600 transition-colors hover:text-brand">
+    <div
+      className="relative"
+      onMouseEnter={onOpen}
+      onMouseLeave={onClose}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) onClose();
+      }}
+      onKeyDown={(event) => {
+        // Escape pressed while focus is inside the menu also hands focus back
+        // to the trigger. The layout catches Escape for hover-opened menus.
+        if (event.key === "Escape" && open) {
+          onClose();
+          buttonRef.current?.focus();
+        }
+      }}
+    >
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-expanded={open}
+        onClick={() => (open ? onClose() : onOpen())}
+        className="flex items-center gap-1 text-sm text-gray-600 transition-colors hover:text-brand"
+      >
         {label}
         <svg
-          className="h-4 w-4 transition-transform group-hover:rotate-180"
+          className={cn("h-4 w-4 transition-transform", open && "rotate-180")}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -34,12 +64,20 @@ function DropdownMenu({
           />
         </svg>
       </button>
-      <div className="invisible absolute left-0 top-full z-50 min-w-[200px] pt-2 opacity-0 transition-all group-hover:visible group-hover:opacity-100">
+      {/* Only opacity transitions, so a closing panel stops painting at once
+          instead of lingering under the neighbouring menu. */}
+      <div
+        className={cn(
+          "absolute left-0 top-full z-50 min-w-[200px] pt-2 transition-opacity",
+          open ? "visible opacity-100" : "invisible opacity-0"
+        )}
+      >
         <div className="rounded-xl border border-rose-100 bg-white py-2 shadow-xl">
           {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className="block px-4 py-2 text-sm text-gray-600 transition-colors hover:bg-rose-50 hover:text-brand"
             >
               {item.label}
@@ -89,6 +127,26 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileAboutOpen, setMobileAboutOpen] = useState(false);
   const [mobilePartnerOpen, setMobilePartnerOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState<"about" | "partner" | null>(null);
+
+  function closeMenu(name: "about" | "partner") {
+    // A fast pointer move can fire the old menu's mouseleave after the new
+    // menu's mouseenter, so only clear the menu that asked to close.
+    setOpenMenu((current) => (current === name ? null : current));
+  }
+
+  // These menus open on hover, so focus is usually still on the body when the
+  // user presses Escape — a handler on the menu itself would never see it.
+  useEffect(() => {
+    if (!openMenu && !mobileOpen) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setOpenMenu(null);
+      setMobileOpen(false);
+    }
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [openMenu, mobileOpen]);
 
   // "loading" counts as signed out so the header renders Login/Sign Up on the
   // server and on first paint. These pages are statically rendered, so the
@@ -144,6 +202,9 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
             </Link>
             <DropdownMenu
               label="About"
+              open={openMenu === "about"}
+              onOpen={() => setOpenMenu("about")}
+              onClose={() => closeMenu("about")}
               items={[
                 { href: "/blog", label: "Blog" },
                 { href: "/support", label: "Support" },
@@ -155,6 +216,9 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
             />
             <DropdownMenu
               label="Partner"
+              open={openMenu === "partner"}
+              onOpen={() => setOpenMenu("partner")}
+              onClose={() => closeMenu("partner")}
               items={[
                 { href: "/partners", label: "Partner With Us" },
                 { href: "/affiliate", label: "Become An Affiliate" },

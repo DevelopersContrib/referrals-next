@@ -66,7 +66,10 @@ function ResetPasswordForm() {
   if (!code || !email) {
     return (
       <Card className="w-full max-w-md">
-        <CardContent className="p-6 text-center">
+        <CardHeader className="text-center">
+          <CardTitle as="h1" className="text-2xl">Reset Password</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 pt-0 text-center">
           <p className="text-sm text-red-600">
             Invalid reset link. Please request a new password reset.
           </p>
@@ -84,7 +87,7 @@ function ResetPasswordForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Reset Password</CardTitle>
+        <CardTitle as="h1" className="text-2xl">Reset Password</CardTitle>
         <CardDescription>Enter your new password below.</CardDescription>
       </CardHeader>
       <CardContent>

@@ -34,7 +34,7 @@ export default function FeedbackPage() {
     <div className="mx-auto max-w-lg px-4 py-16">
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Share Your Feedback</CardTitle>
+          <CardTitle as="h1" className="text-2xl">Share Your Feedback</CardTitle>
           <CardDescription>Help us improve Referrals.com. Feature requests, bug reports, and suggestions are all welcome.</CardDescription>
         </CardHeader>
         <CardContent>

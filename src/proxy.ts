@@ -42,6 +42,8 @@ export function proxy(request: NextRequest) {
     "/campaign/",
     "/plans",
     "/_next",
+    "/referral-program-for",
+    "/campaign-templates",
   ];
 
   const publicExact = new Set([
@@ -78,6 +80,7 @@ export function proxy(request: NextRequest) {
     "/feedback",
     "/campaign-templates",
     "/send-to-friends",
+    "/resources",
   ]);
 
   // Allow static files
@@ -85,6 +88,19 @@ export function proxy(request: NextRequest) {
 
   // Allow public exact routes
   if (publicExact.has(pathname)) return NextResponse.next();
+
+  // Forum reads are public. Composing and editing stay behind sign-in.
+  const isForumWrite =
+    pathname === "/forum/new" ||
+    pathname.startsWith("/forum/new/") ||
+    /^\/forum\/post\/[^/]+\/edit\/?$/.test(pathname);
+
+  if (
+    !isForumWrite &&
+    (pathname === "/forum" || pathname.startsWith("/forum/"))
+  ) {
+    return NextResponse.next();
+  }
 
   // Allow public prefix routes
   if (publicPrefixes.some((prefix) => pathname.startsWith(prefix))) {
@@ -102,7 +118,7 @@ export function proxy(request: NextRequest) {
     "/contacts",
     "/dashboard",
     "/editor",
-    "/forum",
+    "/forum/new",
     "/integrations",
     "/notifications",
     "/onboarding",
@@ -111,9 +127,11 @@ export function proxy(request: NextRequest) {
     "/tools",
   ];
 
-  const isAuthRequiredPage = authRequiredPagePrefixes.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
-  );
+  const isAuthRequiredPage =
+    isForumWrite ||
+    authRequiredPagePrefixes.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    );
 
   // Check for auth session token cookie (next-auth sets this)
   const sessionToken =

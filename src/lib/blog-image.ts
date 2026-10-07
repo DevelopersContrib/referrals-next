@@ -8,7 +8,7 @@ export const BLOG_IMAGE_FALLBACK = "/images/blog/placeholder.svg";
  * Hardcoded rather than read from the environment so social crawlers always
  * resolve a production URL, matching the canonical links the blog pages emit.
  */
-const SITE_URL = "https://referrals.com";
+const SITE_URL = "https://www.referrals.com";
 
 /**
  * Absolute form of a cover image path.

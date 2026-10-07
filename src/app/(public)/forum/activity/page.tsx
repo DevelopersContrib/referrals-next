@@ -1,13 +1,16 @@
-import { auth } from "@/lib/auth";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { siteUrl } from "@/lib/site-url";
+
+export const metadata: Metadata = {
+  title: "Forum Activity",
+  description: "Latest topics and replies on the Referrals.com forum.",
+  alternates: { canonical: siteUrl("/forum/activity") },
+};
 
 export default async function ForumActivityPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/signin");
-
   // Get recent comments
   const recentComments = await prisma.topic_comments.findMany({
     orderBy: { date_posted: "desc" },

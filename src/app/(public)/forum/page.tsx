@@ -1,15 +1,19 @@
-import { auth } from "@/lib/auth";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { siteUrl } from "@/lib/site-url";
+
+export const metadata: Metadata = {
+  title: "Community Forum",
+  description:
+    "Discuss referral marketing, ask questions, and share what is working with other Referrals.com members.",
+  alternates: { canonical: siteUrl("/forum") },
+};
 
 export default async function ForumPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/signin");
-
   const topics = await prisma.topics.findMany({
     orderBy: { date_posted: "desc" },
     take: 30,

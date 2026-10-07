@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
+import { canonicalOrigin } from "@/lib/site-url";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl =
-    process.env.BASE_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    "https://referrals.com";
+  const baseUrl = canonicalOrigin(
+    process.env.BASE_URL || process.env.NEXT_PUBLIC_APP_URL
+  );
 
   return {
     rules: [

@@ -1,12 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export function CommentForm({ topicId }: { topicId: number }) {
+export function CommentForm({
+  topicId,
+  signedIn,
+  callbackPath,
+}: {
+  topicId: number;
+  signedIn: boolean;
+  callbackPath: string;
+}) {
   const router = useRouter();
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,12 +55,23 @@ export function CommentForm({ topicId }: { topicId: number }) {
         <CardTitle className="text-base">Leave a Reply</CardTitle>
       </CardHeader>
       <CardContent>
-        {error && (
+        {!signedIn ? (
+          <p className="text-sm text-muted-foreground">
+            <Link
+              href={`/signin?callbackUrl=${encodeURIComponent(callbackPath)}`}
+              className="font-medium text-blue-600 hover:underline"
+            >
+              Sign in
+            </Link>{" "}
+            to reply. Reading the forum does not require an account.
+          </p>
+        ) : null}
+        {signedIn && error && (
           <div className="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-600">
             {error}
           </div>
         )}
-        <form onSubmit={handleSubmit} className="space-y-3">
+        {signedIn ? <form onSubmit={handleSubmit} className="space-y-3">
           <Textarea
             placeholder="Write your reply..."
             rows={4}
@@ -62,7 +82,7 @@ export function CommentForm({ topicId }: { topicId: number }) {
           <Button type="submit" size="sm" disabled={loading}>
             {loading ? "Posting..." : "Post Reply"}
           </Button>
-        </form>
+        </form> : null}
       </CardContent>
     </Card>
   );

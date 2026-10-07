@@ -5,12 +5,12 @@ export const metadata: Metadata = {
   title: "How It Works",
   description:
     "Create a campaign, embed a widget, track referrals, and reward your participants. See how Referrals.com works in 3 simple steps.",
-  alternates: { canonical: "https://referrals.com/how-it-works" },
+  alternates: { canonical: "https://www.referrals.com/how-it-works" },
   openGraph: {
     title: "How It Works | Referrals.com",
     description:
       "Create a campaign, embed a widget, track referrals, and reward your participants. See how Referrals.com works in 3 simple steps.",
-    url: "https://referrals.com/how-it-works",
+    url: "https://www.referrals.com/how-it-works",
     siteName: "Referrals.com",
     images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
     type: "website",

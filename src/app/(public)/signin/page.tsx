@@ -3,6 +3,8 @@ import { getSocialProofStats } from "@/lib/social-proof";
 import { AuthHeroPanel } from "@/components/auth/auth-hero-panel";
 import { SignInForm } from "@/components/auth/signin-form";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Sign in",
   description:
@@ -11,7 +13,7 @@ export const metadata: Metadata = {
     title: "Sign in — Referrals.com",
     description:
       "Sign in to your Referrals.com account and keep your referral programs growing.",
-    url: "https://referrals.com/signin",
+    url: "https://www.referrals.com/signin",
     siteName: "Referrals.com",
     images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
     type: "website",

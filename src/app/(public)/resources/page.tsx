@@ -7,12 +7,12 @@ export const metadata: Metadata = {
   title: "Referral Marketing Resources & Guides",
   description:
     "The complete hub for referral marketing: how referral programs work, playbooks by industry, reward strategies, and the latest guides from Referrals.com.",
-  alternates: { canonical: "https://referrals.com/resources" },
+  alternates: { canonical: "https://www.referrals.com/resources" },
   openGraph: {
     title: "Referral Marketing Resources & Guides | Referrals.com",
     description:
       "The complete hub for referral marketing: how referral programs work, playbooks by industry, reward strategies, and the latest guides.",
-    url: "https://referrals.com/resources",
+    url: "https://www.referrals.com/resources",
     siteName: "Referrals.com",
     type: "website",
     images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],

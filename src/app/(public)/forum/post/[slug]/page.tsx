@@ -1,11 +1,33 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { siteUrl } from "@/lib/site-url";
 import { TopicVoteButton } from "./vote-button";
 import { CommentForm } from "./comment-form";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const topic = await prisma.topics.findFirst({
+    where: { slug },
+    select: { title: true, content: true },
+  });
+  const description = (topic?.content || "Referrals.com forum discussion.")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 160);
+  return {
+    title: topic?.title || "Forum Topic",
+    description,
+    alternates: { canonical: siteUrl(`/forum/post/${slug}`) },
+  };
+}
 
 export default async function TopicDetailPage({
   params,
@@ -13,10 +35,8 @@ export default async function TopicDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const session = await auth();
-  if (!session?.user?.id) redirect("/signin");
-
   const { slug } = await params;
-  const memberId = parseInt(session.user.id, 10);
+  const memberId = session?.user?.id ? parseInt(session.user.id, 10) : 0;
 
   // Find topic by slug
   const topic = await prisma.topics.findFirst({
@@ -94,7 +114,7 @@ export default async function TopicDetailPage({
     commentVoteCounts.map((v) => [v.comment_id, v._count.id]),
   );
 
-  const isAuthor = topic.member_id === memberId;
+  const isAuthor = memberId > 0 && topic.member_id === memberId;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -187,7 +207,7 @@ export default async function TopicDetailPage({
       </div>
 
       {/* Comment Form */}
-      <CommentForm topicId={topic.id} />
+      <CommentForm topicId={topic.id} signedIn={memberId > 0} callbackPath={`/forum/post/${topic.slug || topic.id}`} />
     </div>
   );
 }

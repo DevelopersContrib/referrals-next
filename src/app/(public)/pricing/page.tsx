@@ -13,13 +13,13 @@ export const metadata: Metadata = {
   title: "Pricing — $9/mo per brand to publish",
   description:
     "Set up a brand for free. Pay $9/month per brand to publish it and accept signups. Every brand, including network domains, follows the same rule.",
-  alternates: { canonical: "https://referrals.com/pricing" },
+  alternates: { canonical: "https://www.referrals.com/pricing" },
   openGraph: {
     title:
       "Pricing — $9/mo per brand to publish | Referrals.com",
     description:
       "Same plans as in-app billing: Individuals, Partners, annual ~$/mo. Pay $9/mo per brand to publish.",
-    url: "https://referrals.com/pricing",
+    url: "https://www.referrals.com/pricing",
     siteName: "Referrals.com",
     images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
     type: "website",

@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { getSocialProofStats } from "@/lib/social-proof";
 import { AuthHeroPanel } from "@/components/auth/auth-hero-panel";
 import { SignupForm } from "@/components/auth/signup-form";
+import { siteUrl } from "@/lib/site-url";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Create your account",
@@ -11,7 +14,7 @@ export const metadata: Metadata = {
     title: "Create your account — Referrals.com",
     description:
       "Set up a brand for free. Pay $9/mo per brand to publish it and accept signups.",
-    url: "https://referrals.com/signup",
+    url: siteUrl("/signup"),
     siteName: "Referrals.com",
     images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
     type: "website",

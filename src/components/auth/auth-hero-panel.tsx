@@ -79,16 +79,17 @@ export function AuthHeroPanel({
             ))}
           </div>
           <p className="mt-3 text-sm leading-relaxed text-white">
-            &ldquo;We used it for our new platform and it skyrocketed our new
-            users to 300%!&rdquo;
+            &ldquo;Photostream needed a way to increase signups. Referrals.com
+            turned out to be one of the best referral campaign builders we have
+            used.&rdquo;
           </p>
           <div className="mt-4 flex items-center gap-3">
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-[#d24a86]">
-              JP
+              CA
             </span>
             <div>
-              <p className="text-sm font-semibold text-white">Jack Paton</p>
-              <p className="text-xs text-white/70">CEO, LaunchPad</p>
+              <p className="text-sm font-semibold text-white">Charwin Arbuleche</p>
+              <p className="text-xs text-white/70">Founder, Photostream</p>
             </div>
           </div>
         </div>

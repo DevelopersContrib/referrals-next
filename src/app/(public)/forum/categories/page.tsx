@@ -1,13 +1,16 @@
-import { auth } from "@/lib/auth";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { siteUrl } from "@/lib/site-url";
+
+export const metadata: Metadata = {
+  title: "Forum Categories",
+  description: "Browse Referrals.com forum topics by category.",
+  alternates: { canonical: siteUrl("/forum/categories") },
+};
 
 export default async function ForumCategoriesPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/signin");
-
   const categories = await prisma.topic_categories.findMany({
     orderBy: { name: "asc" },
   });

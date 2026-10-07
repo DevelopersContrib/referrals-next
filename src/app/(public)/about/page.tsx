@@ -5,12 +5,12 @@ export const metadata: Metadata = {
   title: "About Us",
   description:
     "Learn about Referrals.com — the all-in-one referral marketing platform helping businesses grow through word-of-mouth.",
-  alternates: { canonical: "https://referrals.com/about" },
+  alternates: { canonical: "https://www.referrals.com/about" },
   openGraph: {
     title: "About Us | Referrals.com",
     description:
       "Learn about Referrals.com — the all-in-one referral marketing platform helping businesses grow through word-of-mouth.",
-    url: "https://referrals.com/about",
+    url: "https://www.referrals.com/about",
     siteName: "Referrals.com",
     images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
     type: "website",

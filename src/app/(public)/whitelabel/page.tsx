@@ -11,11 +11,11 @@ export const metadata: Metadata = {
   title: "Whitelabel Referral Platform",
   description:
     "Run referral programs under your own brand. Custom domains, subdomains, and full branding control with Referrals.com whitelabel solution.",
-  alternates: { canonical: "https://referrals.com/whitelabel" },
+  alternates: { canonical: "https://www.referrals.com/whitelabel" },
   openGraph: {
     title: "Whitelabel | Referrals.com",
     description: "Fully branded referral platform under your own domain.",
-    url: "https://referrals.com/whitelabel",
+    url: "https://www.referrals.com/whitelabel",
   },
 };
 

@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   },
   description:
     "The best referral marketing platform. Create referral campaigns, track shares, reward participants, and grow your business through word-of-mouth.",
-  metadataBase: new URL("https://referrals.com"),
+  metadataBase: new URL("https://www.referrals.com"),
   openGraph: {
     siteName: "Referrals.com",
     type: "website",

@@ -3,12 +3,13 @@ import { getAllArticleSlugs } from "@/lib/knowledgebase-articles";
 import { getAllPosts } from "@/lib/blog";
 import { useCases } from "@/lib/use-cases";
 import { prisma } from "@/lib/prisma";
+import { isUnownedTrademarkBrand } from "@/lib/blocked-brands";
+import { canonicalOrigin } from "@/lib/site-url";
 
 export async function GET() {
-  const baseUrl =
-    process.env.BASE_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    "https://referrals.com";
+  const baseUrl = canonicalOrigin(
+    process.env.BASE_URL || process.env.NEXT_PUBLIC_APP_URL
+  );
 
   // Static pages
   const staticPages = [
@@ -24,6 +25,7 @@ export async function GET() {
     { url: "/about", priority: "0.6", changefreq: "monthly" },
     { url: "/contact", priority: "0.6", changefreq: "monthly" },
     { url: "/resources", priority: "0.8", changefreq: "weekly" },
+    { url: "/forum", priority: "0.6", changefreq: "daily" },
     { url: "/blog", priority: "0.8", changefreq: "daily" },
     { url: "/developer", priority: "0.7", changefreq: "weekly" },
     { url: "/developer/docs", priority: "0.7", changefreq: "weekly" },
@@ -64,7 +66,7 @@ export async function GET() {
       where: { slug: { not: null } },
     });
     brandUrls = brands
-      .filter((b) => b.slug)
+      .filter((b) => b.slug && !isUnownedTrademarkBrand(b))
       .map((b) => ({
         url: `/p/${b.slug}`,
         date_added: b.date_added,
@@ -92,7 +94,7 @@ export async function GET() {
     campaignUrls = campaigns.flatMap((c) => {
       const brand = brandById.get(c.url_id);
       const slug = brand?.slug || brand?.domain;
-      if (!slug) return [];
+      if (!slug || !brand || isUnownedTrademarkBrand(brand)) return [];
       return [{ url: `/p/${slug}/campaign/${c.id}`, date_added: c.date_added }];
     });
   } catch {
@@ -109,7 +111,7 @@ export async function GET() {
     topicUrls = topics
       .filter((t) => t.slug)
       .map((t) => ({
-        url: `/forum/${t.slug}`,
+        url: `/forum/post/${t.slug}`,
         date_posted: t.date_posted,
       }));
   } catch {

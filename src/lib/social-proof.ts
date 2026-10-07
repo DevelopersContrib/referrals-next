@@ -4,33 +4,35 @@ export type SocialProofStats = {
   recentSignups: number;
   totalShares: number;
   brands: number;
+  weeklyCampaigns: number;
 };
 
 const fallback: SocialProofStats = {
-  recentSignups: 17,
-  totalShares: 21844,
-  brands: 2481,
+  recentSignups: 0,
+  totalShares: 0,
+  brands: 0,
+  weeklyCampaigns: 0,
 };
 
 /**
- * Light-weight social-proof numbers for auth / marketing pages.
- * Always resolves (falls back to sensible defaults if the DB is unavailable).
+ * Live activity numbers shared by the homepage and auth pages.
+ * A real zero stays zero — fallbacks apply only when the database is unreachable,
+ * so the homepage and signup page never disagree because one side invented a count.
  */
 export async function getSocialProofStats(): Promise<SocialProofStats> {
   try {
-    const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const now = Date.now();
+    const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+    const thirtyMinsAgo = new Date(now - 30 * 60 * 1000);
 
-    const [recentSignups, totalShares, brands] = await Promise.all([
+    const [recentSignups, totalShares, brands, weeklyCampaigns] = await Promise.all([
       prisma.members.count({ where: { date_signedup: { gte: thirtyMinsAgo } } }),
       prisma.participants_share.count(),
       prisma.member_urls.count(),
+      prisma.member_campaigns.count({ where: { date_added: { gte: weekAgo } } }),
     ]);
 
-    return {
-      recentSignups: recentSignups || fallback.recentSignups,
-      totalShares: totalShares || fallback.totalShares,
-      brands: brands || fallback.brands,
-    };
+    return { recentSignups, totalShares, brands, weeklyCampaigns };
   } catch {
     return fallback;
   }

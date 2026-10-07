@@ -6,6 +6,10 @@ import { PLAN_CATALOG_COPY, type CatalogPlan } from "@/lib/plan-catalog";
 import { HeroCampaignSlideshow } from "@/components/marketing/hero-campaign-slideshow";
 import { PublicPlanCatalog } from "@/components/marketing/public-plan-catalog";
 import { JsonLd } from "@/components/seo/json-ld";
+import { getSocialProofStats } from "@/lib/social-proof";
+import { siteUrl } from "@/lib/site-url";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   // Absolute: the brand already leads this title, so the "%s | Referrals.com"
@@ -13,12 +17,12 @@ export const metadata: Metadata = {
   title: { absolute: "Referrals.com — The Best Referral Marketing Platform" },
   description:
     "Create powerful referral campaigns, embed widgets, reward participants, and grow your business through word-of-mouth marketing.",
-  alternates: { canonical: "https://referrals.com" },
+  alternates: { canonical: siteUrl("/") },
   openGraph: {
     title: "Referrals.com — The Best Referral Marketing Platform",
     description:
       "Create powerful referral campaigns, embed widgets, reward participants, and grow your business through word-of-mouth marketing.",
-    url: "https://referrals.com",
+    url: siteUrl("/"),
     siteName: "Referrals.com",
     images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
     type: "website",
@@ -349,19 +353,6 @@ const testimonials = [
       "Photostream needed a way to increase signups. Referrals.com turned out to be one of the best referral campaign builders we have used.",
     avatar: "CA",
   },
-  {
-    name: "Jack Paton",
-    role: "CEO, LaunchPad",
-    quote:
-      "We used it for our new platform and it skyrocketted our new users to 300%!",
-    avatar: "JP",
-  },
-  {
-    name: "Maai Floirendo",
-    role: "Marketing Lead",
-    quote: "In just 3 days, our signups increased 500x!",
-    avatar: "MF",
-  },
 ];
 
 const integrations = [
@@ -384,13 +375,13 @@ type HeroStats = {
 };
 
 const fallbackHeroStats: HeroStats = {
-  weeklyCampaigns: 143,
-  brands: 2481,
-  participants: 9014,
-  shares: 21844,
-  revenue: 34200,
-  recentSignups: 18,
-  conversionRate: 14.8,
+  weeklyCampaigns: 0,
+  brands: 0,
+  participants: 0,
+  shares: 0,
+  revenue: 0,
+  recentSignups: 0,
+  conversionRate: 0,
 };
 
 function formatInt(value: number) {
@@ -410,42 +401,27 @@ function clamp(value: number, min: number, max: number) {
 
 async function getHeroStats(): Promise<HeroStats> {
   try {
-    const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const thirtyMinsAgo = new Date(now.getTime() - 30 * 60 * 1000);
-
-    const [
-      weeklyCampaigns,
-      brands,
-      participants,
-      shares,
-      recentSignups,
-      revenueAgg,
-    ] = await Promise.all([
-      prisma.member_campaigns.count({
-        where: { date_added: { gte: weekAgo } },
-      }),
-      prisma.member_urls.count(),
+    const [proof, participants, revenueAgg] = await Promise.all([
+      getSocialProofStats(),
       prisma.campaign_participants.count(),
-      prisma.participants_share.count(),
-      prisma.members.count({
-        where: { date_signedup: { gte: thirtyMinsAgo } },
-      }),
       prisma.member_payment.aggregate({
         _sum: { amount: true },
       }),
     ]);
 
     const rawConversionRate =
-      participants > 0 ? (shares / participants) * 100 : 0;
-    const conversionRate = clamp(Number(rawConversionRate.toFixed(1)), 1, 99.9);
+      participants > 0 ? (proof.totalShares / participants) * 100 : 0;
+    const conversionRate =
+      participants > 0
+        ? clamp(Number(rawConversionRate.toFixed(1)), 0, 99.9)
+        : 0;
 
     return {
-      weeklyCampaigns,
-      brands,
+      weeklyCampaigns: proof.weeklyCampaigns,
+      brands: proof.brands,
       participants,
-      shares,
-      recentSignups,
+      shares: proof.totalShares,
+      recentSignups: proof.recentSignups,
       revenue: revenueAgg._sum.amount ?? 0,
       conversionRate,
     };
@@ -468,10 +444,10 @@ export default async function HomePage() {
     "@graph": [
       {
         "@type": "Organization",
-        "@id": "https://referrals.com/#organization",
+        "@id": "https://www.referrals.com/#organization",
         name: "Referrals.com",
-        url: "https://referrals.com",
-        logo: "https://referrals.com/images/logo/logo.png",
+        url: "https://www.referrals.com",
+        logo: "https://www.referrals.com/images/logo/logo.png",
         sameAs: [
           "https://twitter.com/referralscom",
           "https://www.linkedin.com/company/referralscom",
@@ -480,10 +456,10 @@ export default async function HomePage() {
       },
       {
         "@type": "WebSite",
-        "@id": "https://referrals.com/#website",
-        url: "https://referrals.com",
+        "@id": "https://www.referrals.com/#website",
+        url: "https://www.referrals.com",
         name: "Referrals.com",
-        publisher: { "@id": "https://referrals.com/#organization" },
+        publisher: { "@id": "https://www.referrals.com/#organization" },
       },
       {
         "@type": "SoftwareApplication",

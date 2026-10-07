@@ -18,11 +18,11 @@ export const metadata: Metadata = {
   title: "Campaign Templates",
   description:
     "Explore our ready-made referral campaign templates. Social rewards, voting, gamification, and more — launch in minutes.",
-  alternates: { canonical: "https://referrals.com/campaign-templates" },
+  alternates: { canonical: "https://www.referrals.com/campaign-templates" },
   openGraph: {
     title: "Campaign Templates | Referrals.com",
     description: "Ready-made referral campaign templates.",
-    url: "https://referrals.com/campaign-templates",
+    url: "https://www.referrals.com/campaign-templates",
   },
 };
 
@@ -128,9 +128,8 @@ export default function CampaignTemplatesPage() {
             </span>
           </h1>
           <p className="mt-4 max-w-2xl text-sm text-gray-400 sm:text-base md:text-lg">
-            Each pattern is tuned for a specific growth motion — pick one, customize in the builder,
-            then drop the embed on your site, Shopify theme, WordPress page, or legacy CodeIgniter
-            app.
+            Each pattern is tuned for a specific growth motion — pick one, customize it in the
+            builder, then embed it on your site, Shopify store, or WordPress page.
           </p>
         </div>
       </section>
@@ -188,7 +187,7 @@ export default function CampaignTemplatesPage() {
                         Use template
                       </Link>
                       <Link
-                        href="/features"
+                        href={`/campaign-templates/${t.slug}`}
                         className="flex flex-1 items-center justify-center rounded-xl border border-white/10 py-2.5 text-center text-xs font-medium text-gray-300 transition hover:border-white/20 hover:text-white"
                       >
                         Details
@@ -207,8 +206,7 @@ export default function CampaignTemplatesPage() {
           <h2 className="text-2xl font-bold text-white sm:text-3xl">Need something custom?</h2>
           <p className="mt-3 text-gray-400">
             Start from a template or build from scratch in the campaign wizard — then paste the
-            JavaScript or iframe snippet into WordPress, Shopify, Wix, Next.js, or your PHP
-            CodeIgniter layout.
+            JavaScript or iframe snippet into WordPress, Shopify, Wix, or your own site.
           </p>
           <Link
             href="/signup"

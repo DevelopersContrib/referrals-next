@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -7,6 +8,37 @@ import { brandMustShowBranding } from "@/lib/member-subscription";
 import { findPublicBrandBySlug } from "@/lib/public-campaign-server";
 import { ReferralsSiteHeader } from "@/components/public/referrals-site-header";
 import { formatBrandName, formatCount } from "@/lib/format-brand";
+import { siteUrl } from "@/lib/site-url";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const brand = await findPublicBrandBySlug(slug);
+  if (!brand) return { title: "Referral Program" };
+
+  const name = formatBrandName(brand.domain) || "Brand";
+  const title = `${name} Referral Program`;
+  const description =
+    brand.description?.trim() ||
+    `Explore the ${name} referral program. Share campaigns, track invites, and earn rewards.`;
+  const url = siteUrl(`/p/${brand.slug || slug}`);
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title: `${title} | Referrals.com`,
+      description,
+      url,
+      siteName: "Referrals.com",
+      type: "website",
+    },
+  };
+}
 
 export default async function PublicBrandPage({
   params,

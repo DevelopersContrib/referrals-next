@@ -25,11 +25,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${post.title} | Referrals.com Blog`,
     description: post.excerpt,
-    alternates: { canonical: `https://referrals.com/blog/${slug}` },
+    alternates: { canonical: `https://www.referrals.com/blog/${slug}` },
     openGraph: {
       title: `${post.title} | Referrals.com Blog`,
       description: post.excerpt,
-      url: `https://referrals.com/blog/${slug}`,
+      url: `https://www.referrals.com/blog/${slug}`,
       siteName: "Referrals.com",
       images: [{ url: image }],
       type: "article",
@@ -153,7 +153,7 @@ export default async function BlogPostPage({ params }: Props) {
   if (!post) notFound();
 
   const related = getRelatedPosts(slug, 3);
-  const shareUrl = encodeURIComponent(`https://referrals.com/blog/${slug}`);
+  const shareUrl = encodeURIComponent(`https://www.referrals.com/blog/${slug}`);
   const shareTitle = encodeURIComponent(post.title);
 
   const articleJsonLd = {
@@ -170,12 +170,12 @@ export default async function BlogPostPage({ params }: Props) {
       name: "Referrals.com",
       logo: {
         "@type": "ImageObject",
-        url: "https://referrals.com/images/logo/logo.png",
+        url: "https://www.referrals.com/images/logo/logo.png",
       },
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `https://referrals.com/blog/${slug}`,
+      "@id": `https://www.referrals.com/blog/${slug}`,
     },
   };
 

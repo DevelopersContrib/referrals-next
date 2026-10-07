@@ -6,6 +6,7 @@ import {
   readSuggestionPayload,
 } from "@/lib/analysis/apply-campaign-suggestion";
 import { isCampaignDesign, type CampaignDesignStyle } from "@/lib/analysis/campaign-design";
+import { isUnownedTrademarkBrand } from "@/lib/blocked-brands";
 
 export type PublicCampaignBrand = {
   id: number;
@@ -56,14 +57,18 @@ export type PublicCampaignViewPayload = {
 /** Newest brand wins when slugs collide (same domain, multiple member_urls). */
 export async function findPublicBrandBySlug(slug: string) {
   const numericId = parseInt(slug, 10);
+  let brand = null;
   if (!Number.isNaN(numericId)) {
-    const byId = await prisma.member_urls.findUnique({ where: { id: numericId } });
-    if (byId) return byId;
+    brand = await prisma.member_urls.findUnique({ where: { id: numericId } });
   }
-  return prisma.member_urls.findFirst({
-    where: { slug },
-    orderBy: { id: "desc" },
-  });
+  if (!brand) {
+    brand = await prisma.member_urls.findFirst({
+      where: { slug },
+      orderBy: { id: "desc" },
+    });
+  }
+  if (!brand || isUnownedTrademarkBrand(brand)) return null;
+  return brand;
 }
 
 function slugMatchesBrand(
@@ -102,7 +107,9 @@ export async function fetchPublicCampaignViewData(
     where: { id: campaign.url_id },
     select: { id: true, domain: true, slug: true, logo_url: true },
   });
-  if (!brand || !slugMatchesBrand(slug, brand)) return null;
+  if (!brand || !slugMatchesBrand(slug, brand) || isUnownedTrademarkBrand(brand)) {
+    return null;
+  }
 
   const [widget, reward, analysis] = await Promise.all([
     prisma.campaign_widget.findFirst({

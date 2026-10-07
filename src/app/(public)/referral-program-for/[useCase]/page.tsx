@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = getUseCase(useCase);
   if (!data) return { title: "Referral Program" };
 
-  const url = `https://referrals.com/referral-program-for/${data.slug}`;
+  const url = `https://www.referrals.com/referral-program-for/${data.slug}`;
   return {
     title: data.headline,
     description: data.subhead,

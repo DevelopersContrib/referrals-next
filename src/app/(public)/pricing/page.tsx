@@ -12,7 +12,7 @@ import { faqPageJsonLd } from "@/lib/structured-data";
 export const metadata: Metadata = {
   title: "Pricing — $9/mo per brand to publish",
   description:
-    "Set up a brand for free. Pay $9/month per brand to publish it and accept signups. Every brand, including network domains, follows the same rule.",
+    "Set up a brand for free. Pay $9/month per brand to publish it and accept signups. Network (VNOC) domains stay free.",
   alternates: { canonical: "https://www.referrals.com/pricing" },
   openGraph: {
     title:

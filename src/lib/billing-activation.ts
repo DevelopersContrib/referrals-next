@@ -151,11 +151,19 @@ export async function activatePaidSubscription(opts: {
       return { ok: false, error: "plan_mismatch" };
     }
 
-    const brandId = opts.brandId ?? null;
-    let stampBrandId: number | null = brandId;
-    if (brandId) {
+    let resolvedBrandId = opts.brandId ?? null;
+    if (!resolvedBrandId && attemptId) {
+      const attempt = await prisma.billing_checkout_attempts.findFirst({
+        where: { attempt_id: attemptId },
+        orderBy: { id: "desc" },
+        select: { brand_id: true },
+      });
+      resolvedBrandId = attempt?.brand_id ?? null;
+    }
+    let stampBrandId: number | null = resolvedBrandId;
+    if (resolvedBrandId) {
       const brand = await prisma.member_urls.findFirst({
-        where: { id: brandId, member_id: memberId },
+        where: { id: resolvedBrandId, member_id: memberId },
         select: { id: true, in_vnoc: true, vnoc_id: true },
       });
       if (!brand) {
@@ -235,7 +243,7 @@ export async function activatePaidSubscription(opts: {
     );
 
     await log("activated");
-    if (!brandId) {
+    if (!resolvedBrandId) {
       await log("brand_missing", {
         errorMessage:
           "Checkout completed without brandId — account activated only",
@@ -243,7 +251,7 @@ export async function activatePaidSubscription(opts: {
     }
 
     if (opts.goLiveCampaignId) {
-      const goLiveBrandId = stampBrandId ?? brandId;
+      const goLiveBrandId = stampBrandId ?? resolvedBrandId;
       if (goLiveBrandId) {
         try {
           await publishCampaignGoLive({

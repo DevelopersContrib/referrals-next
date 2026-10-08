@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { BillingErrorBanner } from "@/components/billing/billing-error-banner";
 import { BillingSubscriptionActions } from "@/components/billing/billing-subscription-actions";
-import { getMemberEntitlement } from "@/lib/member-subscription";
+import { getMemberEntitlement, getPrimaryCheckoutBrand } from "@/lib/member-subscription";
 import {
   getPlanFeatures,
   isMostPopularIndividual,
@@ -100,10 +100,12 @@ function PlanCard({
   plan,
   plans,
   activePlanId,
+  checkoutBrandId,
 }: {
   plan: CatalogPlan;
   plans: CatalogPlan[];
   activePlanId: number;
+  checkoutBrandId: number | null;
 }) {
   const price = plan.price || 0;
   const isPaidPlan = price > 0;
@@ -204,7 +206,7 @@ function PlanCard({
         </span>
       ) : isPaidPlan ? (
         <Link
-          href={`/billing/plan/${plan.id}`}
+          href={`/billing/plan/${plan.id}${checkoutBrandId ? `?brandId=${checkoutBrandId}` : ""}`}
           className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-4 py-3 text-center text-sm font-semibold text-white shadow-md shadow-violet-300/40 transition-all hover:brightness-105 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#926efb]"
         >
           Get {plan.name}
@@ -221,14 +223,14 @@ function PlanCard({
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; brandId?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin");
   const memberId = parseInt(session.user.id, 10);
-  const { error } = await searchParams;
+  const { error, brandId: brandIdParam } = await searchParams;
 
-  const [member, plans, entitlement, currentSubscription, payments] =
+  const [member, plans, entitlement, currentSubscription, payments, checkoutBrand] =
     await Promise.all([
       prisma.members.findUnique({ where: { id: memberId } }),
       prisma.plans.findMany({ orderBy: { id: "asc" } }),
@@ -242,9 +244,15 @@ export default async function BillingPage({
         orderBy: { id: "desc" },
         take: 10,
       }),
+      getPrimaryCheckoutBrand(memberId),
     ]);
 
   const activePlanId = member?.plan_id || 0;
+  const parsedBrandIdParam = brandIdParam ? parseInt(brandIdParam, 10) : null;
+  const effectiveBrandId =
+    (parsedBrandIdParam && Number.isFinite(parsedBrandIdParam) ? parsedBrandIdParam : null) ??
+    checkoutBrand?.id ??
+    null;
   const isCancelled = Boolean(currentSubscription?.agreement_cancel);
   const humanStatus = resolveHumanStatus(entitlement.status, isCancelled);
   const detail = statusDetail(
@@ -345,6 +353,7 @@ export default async function BillingPage({
                         plan={plan}
                         plans={catalogPlans}
                         activePlanId={activePlanId}
+                        checkoutBrandId={effectiveBrandId}
                       />
                     ))}
                   </div>
@@ -365,6 +374,7 @@ export default async function BillingPage({
                           plan={plan}
                           plans={catalogPlans}
                           activePlanId={activePlanId}
+                          checkoutBrandId={effectiveBrandId}
                         />
                       ))}
                     </div>

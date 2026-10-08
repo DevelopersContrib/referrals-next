@@ -97,8 +97,8 @@ export default function ReferralProgramPage() {
               <li className="flex gap-3">
                 <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-600" />
                 <span>
-                  <strong>Publishing</strong> is $9/mo per brand, including
-                  network domains. A brand stays private until then.
+                  <strong>Publishing</strong> is $9/mo per brand (network/VNOC
+                  domains stay free). A brand stays private until then.
                 </span>
               </li>
             </ul>

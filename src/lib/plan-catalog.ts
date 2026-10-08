@@ -12,7 +12,7 @@ export type CatalogPlan = {
 
 export const PLAN_CATALOG_COPY = {
   freeIsVnocOnly: true,
-  vnocFootnote: "Every brand goes live at $9/mo, including network domains.",
+  vnocFootnote: "Network (VNOC) domains stay free — no $9/mo charge for those brands.",
   trialFootnote: "Set up a brand for free. Pay $9/mo per brand to publish it.",
   unpaidFootnote:
     "A brand stays private until you pay $9/mo for it. Then the widget can accept signups.",

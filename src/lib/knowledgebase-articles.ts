@@ -85,7 +85,7 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
     paragraphs: [
       "Visit referrals.com/signup. You'll need your name, email address, and a password. During signup you can also enter your first brand's website URL — Referrals.com will fetch your logo and site details automatically.",
       "After confirming your email, sign in at /signin. From there add your brand, create a private campaign, and embed your referral widget.",
-      "A brand stays private until you pay $9/mo to publish it and accept signups. That price applies to every brand, including network domains.",
+      "A brand stays private until you pay $9/mo to publish it and accept signups. Network (VNOC) domains stay free.",
     ],
   },
   {
@@ -95,7 +95,7 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
     description: "Add a brand by entering your website URL.",
     paragraphs: [
       "From your dashboard, click Create Brand or go to /brands/new. Enter your website URL (e.g. https://yoursite.com). Referrals.com validates the domain and pulls in your site title and logo.",
-      "Each brand represents one website or business. You can manage multiple brands from one account. Publishing a brand is $9/mo, including network domains.",
+      "Each brand represents one website or business. You can manage multiple brands from one account. Publishing a brand is $9/mo; network (VNOC) domains stay free.",
       "Once your brand is created, open its dashboard at /brands/[id] to view stats, manage campaigns, and access the widget editor.",
     ],
   },
@@ -259,7 +259,7 @@ export const knowledgebaseArticles: KnowledgebaseArticle[] = [
     category: "Billing & Plans",
     description: "Overview of Referrals.com pricing plans.",
     paragraphs: [
-      "Set up a brand for free, then pay $9/month per brand to publish it and accept signups. That includes network domains. See /pricing and /billing.",
+      "Set up a brand for free, then pay $9/month per brand to publish it and accept signups. Network (VNOC) domains stay free. See /pricing and /billing.",
       "An unpaid brand stays private. Pay $9/mo to publish it, remove branding, and unlock analytics.",
       "Growth ($9/mo per brand) removes branding, unlocks multi-domain, advanced analytics, and higher limits. Subscribe from /billing/plan/2 via PayPal. Cancel anytime.",
     ],

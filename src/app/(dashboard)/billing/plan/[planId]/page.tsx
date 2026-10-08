@@ -180,8 +180,7 @@ export default async function PlanCheckoutPage({
                 </p>
                 <p className="mt-1 text-sm text-gray-600">
                   Choose Growth at $9/mo per brand to publish and accept
-                  signups. Every brand, including network domains, uses the
-                  same rule.
+                  signups. Network (VNOC) domains stay free.
                 </p>
               </div>
               <Link

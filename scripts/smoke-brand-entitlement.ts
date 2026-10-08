@@ -52,6 +52,9 @@ function main() {
   if (!subscription.includes("export async function getPrimaryCheckoutBrand")) {
     fail("getPrimaryCheckoutBrand must exist for trial/unpaid CTAs");
   }
+  if (!subscription.includes("!isVnocBrand(b)")) {
+    fail("getPrimaryCheckoutBrand must skip VNOC brands");
+  }
   pass("member-subscription exports per-brand entitlement helpers");
 
   const activation = readRepoFile("src/lib/billing-activation.ts");
@@ -68,6 +71,9 @@ function main() {
   }
   if (!activation.includes('"brand_missing"')) {
     fail("activatePaidSubscription must log brand_missing when brandId absent");
+  }
+  if (!activation.includes("resolvedBrandId")) {
+    fail("activatePaidSubscription must fall back to checkout attempt brand_id");
   }
   if (!activation.includes("activatePaidSubscriptionFromWebhook")) {
     fail("activatePaidSubscriptionFromWebhook must exist");
@@ -86,11 +92,26 @@ function main() {
   }
   pass("plan-catalog helper exists");
 
+  const catalog_vnoc = catalog.includes("including network domains");
+  if (catalog_vnoc) {
+    fail("plan-catalog vnocFootnote must not claim network domains pay $9/mo");
+  }
+  if (!catalog.includes("stay free")) {
+    fail("plan-catalog vnocFootnote must say network (VNOC) domains stay free");
+  }
+  pass("plan-catalog VNOC footnote is accurate");
+
   const billingPage = readRepoFile("src/app/(dashboard)/billing/page.tsx");
   if (!billingPage.includes('from "@/lib/plan-catalog"')) {
     fail("billing page must import plan-catalog");
   }
-  pass("billing page imports plan-catalog");
+  if (!billingPage.includes("getPrimaryCheckoutBrand")) {
+    fail("billing page must fetch checkout brand for plan button links");
+  }
+  if (!billingPage.includes("checkoutBrandId")) {
+    fail("billing plan cards must pass brandId to checkout links");
+  }
+  pass("billing page imports plan-catalog and passes brandId");
 
   const cron = readRepoFile("src/app/api/cron/plan-expiry/route.ts");
   if (cron.includes("free forever")) {

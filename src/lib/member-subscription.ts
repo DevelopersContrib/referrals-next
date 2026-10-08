@@ -42,7 +42,7 @@ export type MemberEntitlement = {
 export type BrandEntitlement = MemberEntitlement & {
   brandId: number;
   memberId: number;
-  /** Network brand flag. Go-live still requires a paid stamp. */
+  /** Network (VNOC) brand — treated as paid/live without a $9/mo stamp. */
   isVnoc: boolean;
 };
 
@@ -334,7 +334,8 @@ export async function getBrandEntitlement(
 }
 
 /**
- * First brand for checkout CTAs.
+ * First non-VNOC brand for checkout CTAs.
+ * VNOC/network brands are free and must never appear in Go Live / pay prompts.
  */
 export async function getPrimaryCheckoutBrand(memberId: number) {
   const brands = await prisma.member_urls.findMany({
@@ -342,7 +343,7 @@ export async function getPrimaryCheckoutBrand(memberId: number) {
     orderBy: { date_added: "asc" },
     select: { id: true, domain: true, in_vnoc: true, vnoc_id: true },
   });
-  return brands[0] ?? null;
+  return brands.find((b) => !isVnocBrand(b)) ?? null;
 }
 
 /**

@@ -129,24 +129,14 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
           : 0;
       try {
         const data = await fetchAnalysisStatus(id);
-        if (!data) {
-          if (elapsed >= JOB_TIMEOUT_MS) {
-            setError(
-              "Analysis stopped before finishing. Please try again.",
-            );
-            setPhase("input");
-            setSubmitting(false);
-            stoppedRef.current = true;
-            if (pollRef.current) clearTimeout(pollRef.current);
-            return;
-          }
-        } else {
+        if (data) {
           setStatus(data);
           if (data.status === "done" || data.status === "failed") {
             showResults();
             return;
           }
         }
+        // data is null (404 / server error) — keep polling until timeout
       } catch {
         /* transient — keep polling until timeout or terminal */
       }
@@ -239,6 +229,36 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
           );
         }}
       />
+    );
+  }
+
+  if (phase === "results" && !status) {
+    return (
+      <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl flex-col items-center justify-center px-4 py-12 text-center">
+        <Link href="/" className="mb-6 flex w-fit items-center">
+          <Image src={LOGO_URL} alt="Referrals.com" width={104} height={33} priority unoptimized />
+        </Link>
+        <h1 className="text-2xl font-bold text-gray-900" style={{ fontFamily: "var(--font-dosis), sans-serif" }}>
+          We couldn&apos;t finish the analysis
+        </h1>
+        <p className="mt-3 max-w-md text-gray-600">
+          Something went wrong on our end. You can try again with the same
+          website or a different one.
+        </p>
+        <Button
+          className="mt-6 gap-1.5 bg-[#FF5C62] px-6 font-semibold hover:bg-[#ff4f58]"
+          onClick={() => {
+            stoppedRef.current = false;
+            setJobId(null);
+            setStatus(null);
+            setError(null);
+            setSubmitting(false);
+            setPhase("input");
+          }}
+        >
+          Try again <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
     );
   }
 

@@ -86,7 +86,27 @@ async function offline(urlArg: string) {
   }
   pass("finalizeIfDone defers orphan cleanup (no inline delete)");
 
-  console.log("\n3. Crawl budget");
+  console.log("\n3. triggerModule prefers after() over fan-out");
+  const triggerMatch = orchestratorSrc.match(
+    /function triggerModule[\s\S]*?^}/m,
+  );
+  if (!triggerMatch) {
+    fail("could not locate triggerModule in orchestrator.ts");
+  }
+  const afterIdx = triggerMatch[0].indexOf("after(");
+  const fanOutIdx = triggerMatch[0].indexOf("fanOutAnalysisModule(");
+  if (afterIdx < 0) {
+    fail("triggerModule must call after()");
+  }
+  if (fanOutIdx >= 0 && fanOutIdx < afterIdx) {
+    fail(
+      "triggerModule must try after() BEFORE fan-out — HTTP fan-out to self " +
+        "is blocked by Cloudflare/Deployment Protection in production (VNOC-66095)",
+    );
+  }
+  pass("triggerModule tries after() before fan-out");
+
+  console.log("\n4. Crawl budget");
   const url = normalizeUrl(urlArg);
   const t0 = Date.now();
   const crawl = await crawlSite(url);

@@ -270,21 +270,30 @@ export async function createAnalysisJobForBrand(
 }
 
 /**
- * Run the module after the response, on this same invocation.
- * An HTTP call to www.referrals.com comes back 403 (Cloudflare), and the
- * sweeper was then running the AI step for minutes on a shared DB connection.
+ * Trigger a module to run. Prefer after() (runs on this invocation without a
+ * network roundtrip) over HTTP fan-out (self-referential requests are often
+ * blocked by Cloudflare / Vercel Deployment Protection — the root cause of
+ * VNOC-66095 modules never starting in production).
  */
 function triggerModule(jobId: number, module: ModuleName) {
-  if (shouldFanOutAnalysisModules()) {
-    fanOutAnalysisModule(jobId, module);
-    return;
-  }
   const run = () => runModuleAndAdvance(jobId, module);
   try {
     after(run);
+    return;
   } catch {
-    void run();
+    // after() unavailable (e.g. non-request context) — fall through
   }
+  if (shouldFanOutAnalysisModules()) {
+    console.info(
+      `[analysis] job ${jobId} module ${module}: after() unavailable, using fan-out`,
+    );
+    fanOutAnalysisModule(jobId, module);
+    return;
+  }
+  console.warn(
+    `[analysis] job ${jobId} module ${module}: after() unavailable and no fan-out, running inline`,
+  );
+  void run();
 }
 
 /** Claim a pending module (pending -> queued) atomically, then trigger it. */
@@ -318,6 +327,7 @@ export async function scheduleReady(jobId: number) {
 
 /** Kick off a freshly-created job (triggers modules with no deps). */
 export async function kickoffJob(jobId: number) {
+  console.info(`[analysis] job ${jobId} kickoff`);
   await prisma.brand_analysis.update({
     where: { id: jobId },
     data: { status: "running", started_at: new Date() },
@@ -341,7 +351,7 @@ export async function expireJobIfNeeded(jobId: number): Promise<boolean> {
     Date.now() - MODULE_TIMEOUT_MS - 5_000,
   );
   const queuedStaleCutoff = new Date(Date.now() - 45_000);
-  await prisma.brand_analysis_module.updateMany({
+  const expiredRunning = await prisma.brand_analysis_module.updateMany({
     where: {
       analysis_id: jobId,
       status: "running",
@@ -353,7 +363,7 @@ export async function expireJobIfNeeded(jobId: number): Promise<boolean> {
       error: "This step couldn't finish",
     },
   });
-  await prisma.brand_analysis_module.updateMany({
+  const expiredQueued = await prisma.brand_analysis_module.updateMany({
     where: {
       analysis_id: jobId,
       status: "queued",
@@ -365,6 +375,17 @@ export async function expireJobIfNeeded(jobId: number): Promise<boolean> {
       error: "This step couldn't finish",
     },
   });
+
+  // When stale modules were marked failed, their dependents (e.g. social,
+  // intelligence) may now be unblocked. Schedule them so partial results are
+  // still produced instead of all modules timing out.
+  if (expiredRunning.count > 0 || expiredQueued.count > 0) {
+    try {
+      await scheduleReady(jobId);
+    } catch (e) {
+      console.error(`[analysis] job ${jobId} scheduleReady after expiry`, e);
+    }
+  }
 
   const clockStart = job.started_at?.getTime() ?? job.date_added.getTime();
   const jobExpired = Date.now() - clockStart >= JOB_TIMEOUT_MS;
@@ -406,6 +427,7 @@ export async function retryFailedModules(jobId: number) {
 }
 
 export async function runModuleAndAdvance(jobId: number, module: ModuleName) {
+  console.info(`[analysis] job ${jobId} module ${module} starting`);
   if (await expireJobIfNeeded(jobId)) return;
 
   const analysis = await prisma.brand_analysis.findUnique({
@@ -444,7 +466,8 @@ export async function runModuleAndAdvance(jobId: number, module: ModuleName) {
   } catch (e) {
     const durationMs = Date.now() - startedAt;
     console.error(
-      `[analysis] job ${jobId} module ${module} failed after ${durationMs}ms`,
+      `[analysis] job ${jobId} module ${module} failed after ${durationMs}ms:`,
+      e instanceof Error ? e.message : e,
     );
     await prisma.brand_analysis_module.update({
       where: { id: row.id },

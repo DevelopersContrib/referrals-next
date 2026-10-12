@@ -80,7 +80,7 @@ function firstCrawlHex(colors: unknown): string | undefined {
 }
 
 /** Shared MySQL columns are often latin1 — drop emoji so inserts don't fail. */
-function stripFancy(text: string): string {
+export function stripFancy(text: string): string {
   return text.replace(/[^\x09\x0A\x0D\x20-\x7E]/g, "").replace(/\s+/g, " ").trim();
 }
 

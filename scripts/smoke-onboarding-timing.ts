@@ -65,7 +65,28 @@ async function offline(urlArg: string) {
   }
   pass("all onboarding modules registered in MODULES");
 
-  console.log("\n2. Crawl budget");
+  console.log("\n2. No inline orphan cleanup in finalizeIfDone");
+  const fs = await import("fs");
+  const orchestratorSrc = fs.readFileSync(
+    require.resolve("../src/lib/analysis/orchestrator"),
+    "utf8",
+  );
+  const finalizeMatch = orchestratorSrc.match(
+    /async function finalizeIfDone[\s\S]*?^}/m,
+  );
+  if (!finalizeMatch) {
+    fail("could not locate finalizeIfDone in orchestrator.ts");
+  }
+  if (finalizeMatch[0].includes("cleanupOrphanDraftFromFailedJob")) {
+    fail(
+      "finalizeIfDone must NOT call cleanupOrphanDraftFromFailedJob inline — " +
+        "it deletes analysis records while the client is still polling, " +
+        "causing a 404 that resets the UI to step 1 (VNOC-66095)",
+    );
+  }
+  pass("finalizeIfDone defers orphan cleanup (no inline delete)");
+
+  console.log("\n3. Crawl budget");
   const url = normalizeUrl(urlArg);
   const t0 = Date.now();
   const crawl = await crawlSite(url);

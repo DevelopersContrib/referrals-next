@@ -529,13 +529,9 @@ async function finalizeIfDone(jobId: number) {
     },
   });
 
-  if (terminalStatus === "failed") {
-    try {
-      await cleanupOrphanDraftFromFailedJob(jobId);
-    } catch (cleanupErr) {
-      console.error(`[analysis] job ${jobId} orphan cleanup`, cleanupErr);
-    }
-  }
+  // Orphan draft cleanup is deferred to sweepStuckModules (cron) so the
+  // client poll loop can still read the "failed" status and show results
+  // instead of getting a 404 and resetting to the input step.
 
   if (elapsedMs != null) {
     const timing = modules
@@ -664,9 +660,34 @@ export async function sweepStuckModules() {
     await scheduleReady(j.id);
   }
 
+  // Deferred orphan cleanup: remove draft brands from failed jobs whose
+  // analysis completed > 5 min ago, so the client poll loop has time to read
+  // the "failed" status before the records disappear.
+  const ORPHAN_GRACE_MS = 5 * 60 * 1000;
+  const orphanCutoff = new Date(Date.now() - ORPHAN_GRACE_MS);
+  let orphansCleaned = 0;
+  const orphanCandidates = await prisma.brand_analysis.findMany({
+    where: {
+      status: "failed",
+      completed_at: { lt: orphanCutoff },
+    },
+    select: { id: true },
+    orderBy: { id: "desc" },
+    take: 20,
+  });
+  for (const j of orphanCandidates) {
+    try {
+      const result = await cleanupOrphanDraftFromFailedJob(j.id);
+      if (result.removed) orphansCleaned++;
+    } catch (err) {
+      console.error(`[analysis] orphan cleanup job ${j.id}`, err);
+    }
+  }
+
   return {
     retried,
     jobsTouched: touchedJobs.size,
     kickoff: neverKicked.length,
+    orphansCleaned,
   };
 }

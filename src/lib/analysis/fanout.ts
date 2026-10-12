@@ -13,7 +13,13 @@ export function analysisFanoutOrigin(): string | null {
   return null;
 }
 
+/**
+ * Fan-out is opt-in only: set ANALYSIS_FORCE_FANOUT=true to use HTTP fan-out.
+ * By default modules run in-process via after() / direct call, which avoids
+ * self-referential HTTP that Cloudflare and Vercel Deployment Protection block.
+ */
 export function shouldFanOutAnalysisModules(): boolean {
+  if (process.env.ANALYSIS_FORCE_FANOUT !== "true") return false;
   const secret = process.env.ANALYSIS_INTERNAL_SECRET?.trim();
   const origin = analysisFanoutOrigin();
   return Boolean(secret && origin);
@@ -26,6 +32,7 @@ export function fanOutAnalysisModule(jobId: number, module: ModuleName): void {
   if (!secret || !origin) return;
 
   const url = `${origin}/api/brands/analyze/${jobId}/run/${module}`;
+  console.info(`[analysis] fan-out ${module} job ${jobId} -> ${url}`);
   void fetch(url, {
     method: "POST",
     headers: {

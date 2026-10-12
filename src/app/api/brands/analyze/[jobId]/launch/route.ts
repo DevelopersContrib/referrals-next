@@ -5,10 +5,12 @@ import { uniqueBrandSlug } from "@/lib/brand-access";
 import { getRewardKind } from "@/lib/reward-types";
 import {
   isBrandGrowthEntitled,
-  subscriptionRequiredResponse,
+  isVnocBrand,
 } from "@/lib/member-subscription";
+import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
 import {
   readSuggestionPayload,
+  stripFancy,
   widgetSeedFromSuggestion,
 } from "@/lib/analysis/apply-campaign-suggestion";
 
@@ -44,6 +46,29 @@ export async function POST(
     body = {};
   }
 
+  try {
+    return await launchCampaign(id, memberId, body);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(
+      `[campaign-launch] brandAnalysis=${id} member=${memberId} suggestion=${body.suggestionId ?? "auto"}`,
+      msg,
+      err instanceof Error ? err.stack : "",
+    );
+    return NextResponse.json(
+      { error: "Could not save this campaign. Please try again." },
+      { status: 500 },
+    );
+  }
+}
+
+/** Sanitize AI-generated text for MySQL latin1 columns. */
+function safe(text: string | null | undefined, maxLen: number): string {
+  if (!text) return "";
+  return stripFancy(text).slice(0, maxLen);
+}
+
+async function launchCampaign(id: number, memberId: number, body: LaunchBody) {
   const job = await prisma.brand_analysis.findUnique({ where: { id } });
   if (!job || job.member_id !== memberId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -71,19 +96,29 @@ export async function POST(
     return NextResponse.json({ error: "No campaign suggestion found" }, { status: 404 });
   }
 
-  const paid = await isBrandGrowthEntitled(brand.id);
-  const resolvedPublish =
+  const vnoc = isVnocBrand(brand);
+  const paid = vnoc || (await isBrandGrowthEntitled(brand.id));
+  const resolvedPublish: "public" | "private" =
     body.publish === "public" || body.publish === "private"
       ? body.publish
       : paid
         ? "public"
         : "private";
+
   if (resolvedPublish === "public" && !paid) {
-    return subscriptionRequiredResponse();
+    const checkoutUrl = `/billing/plan/${DEFAULT_PAID_PLAN_ID}?brandId=${brand.id}`;
+    return NextResponse.json(
+      {
+        error: "Pay $9/mo for this brand to go live.",
+        code: "REQUIRES_SUBSCRIPTION",
+        checkoutUrl,
+      },
+      { status: 402 },
+    );
   }
 
   // Resolve campaign type + reward type from reference tables.
-  const [types, rewardTypes, crawl, intel, vnoc] = await Promise.all([
+  const [types, rewardTypes, crawl, intel, vnocRow] = await Promise.all([
     prisma.campaign_types.findMany({ orderBy: { id: "asc" } }),
     prisma.reward_types.findMany({ orderBy: { id: "asc" } }),
     prisma.brand_crawl.findFirst({ where: { analysis_id: id }, orderBy: { id: "desc" } }),
@@ -92,6 +127,7 @@ export async function POST(
   ]);
 
   if (types.length === 0 || rewardTypes.length === 0) {
+    console.error("[campaign-launch] reference data missing: campaign_types or reward_types empty");
     return NextResponse.json(
       { error: "Campaign or reward types are not configured." },
       { status: 500 }
@@ -108,7 +144,7 @@ export async function POST(
     rewardTypes[0];
 
   const payload = readSuggestionPayload(suggestion.payload);
-  const name = (suggestion.name || `${brand.domain} referral program`).slice(0, 200);
+  const name = safe(suggestion.name, 200) || `${brand.domain} referral program`.slice(0, 200);
   const emailBody = Array.isArray(payload.emailSequence) ? payload.emailSequence[0] : undefined;
   const seed = widgetSeedFromSuggestion({
     kind: suggestion.kind,
@@ -119,6 +155,10 @@ export async function POST(
     crawlColors: crawl?.colors,
     brandColors: brand.brand_colors,
   });
+
+  console.log(
+    `[campaign-launch] creating campaign: brand=${brand.id} analysis=${id} suggestion=${suggestion.id} publish=${resolvedPublish} paid=${paid}`,
+  );
 
   // 1. Campaign
   const campaign = await prisma.member_campaigns.create({
@@ -131,10 +171,10 @@ export async function POST(
       goal_type: payload.goalType === "visit" ? "visit" : "signup",
       num_visits: payload.goalType === "visit" ? 5 : null,
       num_signups: payload.goalType === "visit" ? null : 3,
-      reward_notify_subject: `You earned a reward from ${brand.domain}`.slice(0, 200),
-      reward_notify_message: (payload.successPage || suggestion.description || "").slice(0, 2000) || null,
-      campaign_entry_subject: (suggestion.headline || name).slice(0, 200),
-      campaign_entry_message: (emailBody || payload.landingCopy || suggestion.description || "").slice(0, 2000) || null,
+      reward_notify_subject: safe(`You earned a reward from ${brand.domain}`, 200),
+      reward_notify_message: safe(payload.successPage || suggestion.description, 2000) || null,
+      campaign_entry_subject: safe(suggestion.headline || name, 200),
+      campaign_entry_message: safe(emailBody || payload.landingCopy || suggestion.description, 2000) || null,
       publish: resolvedPublish,
       date_added: new Date(),
     },
@@ -148,12 +188,12 @@ export async function POST(
   await prisma.campaign_widget.create({
     data: {
       campaign_id: campaign.id,
-      header_title: seed.header_title,
-      description: seed.description,
-      body_text: seed.body_text,
-      success_message: seed.success_message,
-      button_text: seed.button_text,
-      join_button_text: seed.join_button_text,
+      header_title: safe(seed.header_title, 100),
+      description: safe(seed.description, 65000),
+      body_text: safe(seed.body_text, 65000) || null,
+      success_message: safe(seed.success_message, 65000) || null,
+      button_text: safe(seed.button_text, 100),
+      join_button_text: safe(seed.join_button_text, 200),
       color: seed.color,
       button_color: seed.button_color,
       text_color: seed.text_color,
@@ -172,7 +212,7 @@ export async function POST(
       data: {
         campaign_id: campaign.id,
         url: shareUrl,
-        description: seed.shareText,
+        description: safe(seed.shareText, 65000),
         ...(seed.banner_image_url && seed.banner_image_url.length <= 500
           ? { image_url: seed.banner_image_url }
           : {}),
@@ -187,15 +227,15 @@ export async function POST(
       campaign_id: campaign.id,
       custom_message:
         kind === "custom"
-          ? (suggestion.description || payload.successPage || "").slice(0, 2000) || null
+          ? safe(suggestion.description || payload.successPage, 2000) || null
           : null,
       ...(kind === "cash" && seed.cashHint ? { cash_value: seed.cashHint } : {}),
     },
   });
 
   // 4. Finalize the brand: authoritative logo, slug, description.
-  const logo = vnoc?.logo_url || crawl?.logo_url || null;
-  const description = intel?.summary || vnoc?.description || crawl?.meta_description || null;
+  const logo = vnocRow?.logo_url || crawl?.logo_url || null;
+  const description = intel?.summary || vnocRow?.description || crawl?.meta_description || null;
   let nextSlug = brand.slug?.trim() || "";
   if (nextSlug) {
     const slugTaken = await prisma.member_urls.findFirst({
@@ -211,9 +251,8 @@ export async function POST(
     where: { id: brand.id },
     data: {
       ...(logo ? { logo_url: logo.slice(0, 200) } : {}),
-      ...(description ? { description: description.slice(0, 2000) } : {}),
+      ...(description ? { description: safe(description, 2000) } : {}),
       slug: nextSlug,
-      // Persist the derived palette so the brand "owns" its colors going forward.
       ...(!hadBrandColors && Object.keys(palette).length > 0
         ? { brand_colors: { ...palette, accent: `#${seed.color}` } }
         : !hadBrandColors
@@ -222,9 +261,22 @@ export async function POST(
     },
   });
 
+  const checkoutUrl = !paid
+    ? `/billing/plan/${DEFAULT_PAID_PLAN_ID}?brandId=${brand.id}&goLiveCampaign=${campaign.id}`
+    : undefined;
+
+  console.log(
+    `[campaign-launch] success: campaign=${campaign.id} brand=${brand.id} publish=${resolvedPublish}`,
+  );
+
   return NextResponse.json(
-    { campaignId: campaign.id, brandId: brand.id, publish: resolvedPublish },
-    { status: 201 }
+    {
+      campaignId: campaign.id,
+      brandId: brand.id,
+      publish: resolvedPublish,
+      ...(checkoutUrl ? { checkoutUrl } : {}),
+    },
+    { status: 201 },
   );
 }
 
@@ -240,11 +292,6 @@ function normalizeHex(v: unknown): string | undefined {
   if (typeof v !== "string") return undefined;
   const s = v.trim().replace(/^#/, "");
   return /^[0-9a-fA-F]{6}$/.test(s) ? `#${s.toLowerCase()}` : undefined;
-}
-
-/** Strip the leading '#' for storage in the widget color columns. */
-function stripHash(hex: string | undefined, fallback = "6366f1"): string {
-  return hex ? hex.replace(/^#/, "").toLowerCase() : fallback;
 }
 
 function paletteFromBrandColors(bc: unknown): Palette {

@@ -203,16 +203,40 @@ export function AiCampaignPicker({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ suggestionId: c.id }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({} as Record<string, unknown>));
+
+      if (res.status === 402 && data.checkoutUrl) {
+        setLaunchedId(c.id);
+        router.push(data.checkoutUrl as string);
+        return;
+      }
+      if (data.code === "REQUIRES_SUBSCRIPTION" && data.checkoutUrl) {
+        setLaunchedId(c.id);
+        router.push(data.checkoutUrl as string);
+        return;
+      }
+
       if (!res.ok) {
-        setError(data.error || "Could not launch this campaign. Please try again.");
+        setError(
+          typeof data.error === "string"
+            ? data.error
+            : "Could not launch this campaign. Please try again.",
+        );
         setLaunchingId(null);
         return;
       }
+
       setLaunchedId(c.id);
-      setTimeout(() => {
-        router.push(`/brands/${data.brandId}/campaigns/${data.campaignId}`);
-      }, 600);
+
+      if (data.checkoutUrl) {
+        setTimeout(() => {
+          router.push(data.checkoutUrl as string);
+        }, 600);
+      } else {
+        setTimeout(() => {
+          router.push(`/brands/${data.brandId}/campaigns/${data.campaignId}`);
+        }, 600);
+      }
     } catch {
       setError("Something went wrong launching the campaign.");
       setLaunchingId(null);

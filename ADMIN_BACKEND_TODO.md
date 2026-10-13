@@ -1,23 +1,33 @@
 # Admin Backend — Status & TODO
 
 Tracking the work to make `/admin` a complete, secured admin backend.
-Everything below is **uncommitted** (working tree only) per the current hold.
+The hold is over — everything described below is committed and on `main`.
 
-_Last updated: 2026-06-23_
+_Last updated: 2026-10-13_
 
 ---
 
 ## ✅ Done & verified
 
 ### Security / access
-- [x] **Admin is `.env`-only** — `ADMIN_EMAILS` is the single source of truth
-  (`src/lib/platform-admin.ts`); VNOC `is_admin` lookup removed.
-  - Current admins: `maidabarrientos@gmail.com, chad@ecorp.com, ecorpcom@gmail.com, admin@domaindirectory.com`
+- [x] **Admin flag lives in the DB** — `members.is_admin` is the source of truth.
+  `sessionIsPlatformAdmin()` (`src/lib/require-platform-admin.ts`) trusts
+  `session.user.isAdmin` when present and otherwise re-reads the column via
+  `memberIdIsPlatformAdmin()`.
+  - ⚠️ An earlier revision of this doc claimed `ADMIN_EMAILS` was the single source
+    of truth. It is **not** an access-control input — `src/lib/platform-admin.ts`
+    uses it only to keep team accounts out of dashboard stats and revenue
+    (`getPlatformAdminMemberIds`, `getExcludedMemberIds`). Granting admin means
+    setting `members.is_admin = 1`, not editing `.env`.
 - [x] **Page gate** — `src/app/(admin)/layout.tsx` redirects non-admins to `/dashboard`
   (anonymous hits on `/admin*` are bounced to `/signin` by `src/proxy.ts`; unknown non-public
   paths get a real 404 via `src/app/not-found.tsx`, not sign-in).
-- [x] **API gate** — all 27 `src/app/api/admin/**` route files (48 handlers) call
-  `requirePlatformAdminApi()` (applied via `scripts/gate-admin-routes.mjs`).
+- [x] **API gate** — all 57 `src/app/api/admin/**` route files (101 handlers) are gated.
+  Three interchangeable helpers all funnel into `sessionIsPlatformAdmin()` and return
+  401/403: `adminApiGuard()` and `requirePlatformAdminApi()`
+  (`src/lib/require-platform-admin.ts`), plus `requireAdminApi()`
+  (`src/lib/panel-admin-api.ts`), the shim used by the ported engagement routes.
+  Originally applied via `scripts/gate-admin-routes.mjs`.
 - [x] Verified: anonymous hits to `/admin*` and `/api/admin/*` → **307 → /signin**.
 
 ### Dashboard (real data)
@@ -102,15 +112,21 @@ user-submitted).
 The CRUD above was generated against the real Prisma models but only partially
 verified. Before relying on it:
 
-- [ ] `npx tsc --noEmit` → 0 errors (after the subdomains fix).
-- [ ] `npx eslint` over `src/app/api/admin` + `src/app/(admin)` → clean.
-- [ ] `pnpm build` (Vercel deploys on a clean build; no `ignoreDuringBuilds`).
+- [x] `npx tsc --noEmit` → 0 errors. _(2026-10-13)_
+- [x] `npx eslint` over `src/app/api/admin` + `src/app/(admin)` → clean. _(2026-10-13,
+  after `d3a3179` cleared 8 `react-hooks/set-state-in-effect` errors in the list pages)_
+- [x] Production build compiles. _(2026-10-13)_ — use `npx next build`; `pnpm build`
+  runs `prisma generate` first, which fails with `EPERM … query_engine-windows.dll.node`
+  while a dev server is holding the DLL.
+- [x] Confirm every **new** API route includes an admin gate — re-audited per HTTP
+  method (so a guard on `GET` can't mask an unprotected `DELETE`) across all 57 route
+  files / 101 handlers: **0 ungated**. _(2026-10-13)_
 - [ ] **Logged-in smoke test as an admin** for each entity: create → list shows it →
   edit → save → delete. Confirm required-field validation and that FK columns
   (e.g. `campaign_id`, `url_id`, `member_id`) are set correctly on create.
-- [ ] Confirm every **new** API route includes the `requirePlatformAdminApi()` gate
-  (the codemod only touched pre-existing files; agent-created `[id]` routes added
-  it manually — verify).
+  - Blocked on an admin account, not on code. To unblock locally, set
+    `members.is_admin = 1` for your dev-DB account and sign in again (the flag is read
+    into the session JWT at sign-in).
 
 ---
 
@@ -133,6 +149,6 @@ full CRUD:
 ## 📌 Notes / risks
 - **Cancel subscription hits LIVE PayPal** when `PAYPAL_MODE=live` (sandbox otherwise).
   Guarded by a two-step confirm; failures return 502 and do **not** mark cancelled locally.
-- **Admins must re-login** so their session JWT reflects the new `ADMIN_EMAILS`.
-- Everything is **uncommitted** — review the diff before committing.
+- **Admins must re-login** after `members.is_admin` changes, so the session JWT picks
+  up the new flag.
 - One-off tooling left in tree: `scripts/gate-admin-routes.mjs` (idempotent; documents the API gating).

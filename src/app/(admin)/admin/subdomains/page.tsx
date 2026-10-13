@@ -30,23 +30,31 @@ export default function AdminSubdomainsPage() {
   const [subdomains, setSubdomains] = useState<Subdomain[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadSubdomains() {
-    try {
-      const res = await fetch("/api/admin/subdomains");
-      if (res.ok) {
-        const data = await res.json();
-        setSubdomains(data);
-      }
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
-    }
+  // Returns rows rather than setting state, so the mount effect can apply them
+  // from a promise callback (react-hooks/set-state-in-effect).
+  async function fetchSubdomains(): Promise<Subdomain[]> {
+    const res = await fetch("/api/admin/subdomains");
+    if (!res.ok) return [];
+    return res.json();
   }
 
   useEffect(() => {
-    loadSubdomains();
+    let cancelled = false;
+    fetchSubdomains()
+      .catch(() => [] as Subdomain[])
+      .then((rows) => {
+        if (cancelled) return;
+        setSubdomains(rows);
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  async function reloadSubdomains() {
+    setSubdomains(await fetchSubdomains().catch(() => []));
+  }
 
   async function handleDelete(id: number) {
     if (!confirm("Delete this subdomain?")) return;
@@ -56,7 +64,7 @@ export default function AdminSubdomainsPage() {
       });
       if (!res.ok) throw new Error("Failed to delete");
       toast.success("Subdomain deleted");
-      loadSubdomains();
+      await reloadSubdomains();
     } catch {
       toast.error("Failed to delete subdomain");
     }

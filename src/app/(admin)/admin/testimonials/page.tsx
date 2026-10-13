@@ -28,23 +28,31 @@ export default function AdminTestimonialsPage() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadTestimonials() {
-    try {
-      const res = await fetch("/api/admin/testimonials");
-      if (res.ok) {
-        const data = await res.json();
-        setTestimonials(data);
-      }
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
-    }
+  // Returns rows rather than setting state, so the mount effect can apply them
+  // from a promise callback (react-hooks/set-state-in-effect).
+  async function fetchTestimonials(): Promise<Testimonial[]> {
+    const res = await fetch("/api/admin/testimonials");
+    if (!res.ok) return [];
+    return res.json();
   }
 
   useEffect(() => {
-    loadTestimonials();
+    let cancelled = false;
+    fetchTestimonials()
+      .catch(() => [] as Testimonial[])
+      .then((rows) => {
+        if (cancelled) return;
+        setTestimonials(rows);
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  async function reloadTestimonials() {
+    setTestimonials(await fetchTestimonials().catch(() => []));
+  }
 
   async function handleAction(
     id: number,
@@ -61,7 +69,7 @@ export default function AdminTestimonialsPage() {
           body: JSON.stringify({ id, approved: action === "approve" }),
         });
       }
-      loadTestimonials();
+      await reloadTestimonials();
     } catch {
       // ignore
     }

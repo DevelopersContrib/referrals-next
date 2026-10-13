@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LifeBuoy, Mail, Clock, User, Search } from "lucide-react";
 
 type Ticket = {
@@ -26,46 +26,78 @@ const STATUS_FILTERS = new Set([
 ]);
 
 export default function AdminSupportPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [status, setStatus] = useState(() => {
-    const fromUrl = searchParams.get("status") || "";
-    return STATUS_FILTERS.has(fromUrl) ? fromUrl : "";
-  });
   const [source, setSource] = useState("");
   const [q, setQ] = useState("");
 
-  async function load() {
-    setLoading(true);
-    setError("");
+  // The URL owns the status filter, so dashboard deep-links (?status=…) and the
+  // dropdown stay in sync without mirroring the value into state.
+  const urlStatus = searchParams.get("status") || "";
+  const status = STATUS_FILTERS.has(urlStatus) ? urlStatus : "";
+
+  async function fetchTickets(): Promise<{ tickets?: Ticket[]; error?: string }> {
     const params = new URLSearchParams();
     if (status) params.set("status", status);
     if (source) params.set("source", source);
     if (q.trim()) params.set("q", q.trim());
+    const r = await fetch(`/api/admin/support/tickets?${params}`);
+    return r.json();
+  }
+
+  function applyTickets(data: { tickets?: Ticket[]; error?: string }) {
+    if (data.error) {
+      setError(data.error);
+    } else {
+      setError("");
+      setTickets(data.tickets || []);
+    }
+    setLoading(false);
+  }
+
+  // State is set only from promise callbacks here; the spinner is turned on by
+  // the handlers below (react-hooks/set-state-in-effect).
+  useEffect(() => {
+    let cancelled = false;
+    fetchTickets()
+      .then((data) => {
+        if (!cancelled) applyTickets(data);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setError("Failed to load tickets");
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload when filters change
+  }, [status, source]);
+
+  async function search() {
+    setLoading(true);
+    setError("");
     try {
-      const r = await fetch(`/api/admin/support/tickets?${params}`);
-      const data = await r.json();
-      if (data.error) setError(data.error);
-      else setTickets(data.tickets || []);
+      applyTickets(await fetchTickets());
     } catch {
       setError("Failed to load tickets");
-    } finally {
       setLoading(false);
     }
   }
 
-  // Dashboard deep-links (?status=…) — only react when the URL changes
-  useEffect(() => {
-    const fromUrl = searchParams.get("status") || "";
-    setStatus(STATUS_FILTERS.has(fromUrl) ? fromUrl : "");
-  }, [searchParams]);
-
-  useEffect(() => {
-    void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload when filters change
-  }, [status, source]);
+  function changeStatus(next: string) {
+    setLoading(true);
+    const params = new URLSearchParams(searchParams.toString());
+    if (next) params.set("status", next);
+    else params.delete("status");
+    const qs = params.toString();
+    router.replace(qs ? `/admin/support?${qs}` : "/admin/support", {
+      scroll: false,
+    });
+  }
 
   return (
     <div className="space-y-6 p-6">
@@ -84,7 +116,7 @@ export default function AdminSupportPage() {
           <label className="text-xs text-gray-500 block mb-1">Status</label>
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            onChange={(e) => changeStatus(e.target.value)}
             className="w-full rounded-lg border border-white/10 bg-[#292A2D] text-gray-200 px-3 py-2 text-sm"
           >
             <option value="">All</option>
@@ -99,7 +131,10 @@ export default function AdminSupportPage() {
           <label className="text-xs text-gray-500 block mb-1">Source</label>
           <select
             value={source}
-            onChange={(e) => setSource(e.target.value)}
+            onChange={(e) => {
+              setLoading(true);
+              setSource(e.target.value);
+            }}
             className="w-full rounded-lg border border-white/10 bg-[#292A2D] text-gray-200 px-3 py-2 text-sm"
           >
             <option value="">All</option>
@@ -112,12 +147,12 @@ export default function AdminSupportPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="RF-1234, email, subject…"
-            onKeyDown={(e) => e.key === "Enter" && load()}
+            onKeyDown={(e) => e.key === "Enter" && search()}
             className="flex-1 rounded-lg border border-white/10 bg-[#292A2D] px-3 py-2 text-sm text-white"
           />
           <button
             type="button"
-            onClick={load}
+            onClick={search}
             className="px-3 py-2 rounded-lg bg-[#ff646c] text-white hover:bg-[#ff4f58]"
           >
             <Search className="h-4 w-4" />

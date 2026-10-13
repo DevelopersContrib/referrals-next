@@ -30,23 +30,31 @@ export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadReviews() {
-    try {
-      const res = await fetch("/api/admin/reviews");
-      if (res.ok) {
-        const data = await res.json();
-        setReviews(data);
-      }
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
-    }
+  // Returns rows rather than setting state, so the mount effect can apply them
+  // from a promise callback (react-hooks/set-state-in-effect).
+  async function fetchReviews(): Promise<Review[]> {
+    const res = await fetch("/api/admin/reviews");
+    if (!res.ok) return [];
+    return res.json();
   }
 
   useEffect(() => {
-    loadReviews();
+    let cancelled = false;
+    fetchReviews()
+      .catch(() => [] as Review[])
+      .then((rows) => {
+        if (cancelled) return;
+        setReviews(rows);
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  async function reloadReviews() {
+    setReviews(await fetchReviews().catch(() => []));
+  }
 
   async function handleAction(id: number, action: "approve" | "reject" | "delete") {
     try {
@@ -60,7 +68,7 @@ export default function AdminReviewsPage() {
           body: JSON.stringify({ id, approved: action === "approve" }),
         });
       }
-      loadReviews();
+      await reloadReviews();
     } catch {
       // ignore
     }

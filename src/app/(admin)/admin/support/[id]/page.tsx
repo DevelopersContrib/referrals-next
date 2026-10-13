@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Send, CheckCircle, Sparkles } from "lucide-react";
@@ -37,23 +37,27 @@ export default function AdminSupportTicketPage() {
   const [tips, setTips] = useState<string[]>([]);
   const [internalNote, setInternalNote] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const r = await fetch(`/api/admin/support/tickets/${id}`);
-      const data = await r.json();
-      if (data.error) setError(data.error);
-      else setTicket(data.ticket);
-    } catch {
-      setError("Failed to load ticket");
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
+  // Fetched inline so state is only set from promise callbacks, never
+  // synchronously in the effect body (react-hooks/set-state-in-effect).
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+    fetch(`/api/admin/support/tickets/${id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data.error) setError(data.error);
+        else setTicket(data.ticket);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Failed to load ticket");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   async function sendReply() {
     if (!reply.trim()) return;

@@ -28,29 +28,37 @@ export default function AdminApiKeysPage() {
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadKeys() {
-    try {
-      const res = await fetch("/api/admin/api-keys");
-      if (res.ok) {
-        const data = await res.json();
-        setKeys(data);
-      }
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
-    }
+  // Returns rows rather than setting state, so the mount effect can apply them
+  // from a promise callback (react-hooks/set-state-in-effect).
+  async function fetchKeys(): Promise<ApiKey[]> {
+    const res = await fetch("/api/admin/api-keys");
+    if (!res.ok) return [];
+    return res.json();
   }
 
   useEffect(() => {
-    loadKeys();
+    let cancelled = false;
+    fetchKeys()
+      .catch(() => [] as ApiKey[])
+      .then((rows) => {
+        if (cancelled) return;
+        setKeys(rows);
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  async function reloadKeys() {
+    setKeys(await fetchKeys().catch(() => []));
+  }
 
   async function handleRevoke(id: number) {
     if (!confirm("Revoke this API key? This cannot be undone.")) return;
     try {
       await fetch(`/api/admin/api-keys?id=${id}`, { method: "DELETE" });
-      loadKeys();
+      await reloadKeys();
     } catch {
       // ignore
     }

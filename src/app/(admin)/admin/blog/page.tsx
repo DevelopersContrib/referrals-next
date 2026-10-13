@@ -19,23 +19,46 @@ export default function AdminBlogPage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPosts = useCallback(async () => {
+  // Returns posts rather than setting state, so the mount effect can apply them
+  // from a promise callback (react-hooks/set-state-in-effect).
+  const fetchPosts = useCallback(async (): Promise<BlogPost[]> => {
+    const res = await fetch("/api/admin/blog");
+    if (!res.ok) throw new Error("Failed to fetch posts");
+    const data = await res.json();
+    return data.posts || [];
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchPosts()
+      .then((rows) => {
+        if (cancelled) return;
+        setPosts(rows);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "Unknown error");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchPosts]);
+
+  async function reloadPosts() {
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await fetch("/api/admin/blog");
-      if (!res.ok) throw new Error("Failed to fetch posts");
-      const data = await res.json();
-      setPosts(data.posts || []);
+      setPosts(await fetchPosts());
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
+  }
 
   const handleDelete = async (slug: string) => {
     if (!confirm(`Delete "${slug}"? This cannot be undone.`)) return;
@@ -60,7 +83,7 @@ export default function AdminBlogPage() {
         const data = await res.json();
         throw new Error(data.error || "Generation failed");
       }
-      await fetchPosts();
+      await reloadPosts();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Generation failed");
     } finally {

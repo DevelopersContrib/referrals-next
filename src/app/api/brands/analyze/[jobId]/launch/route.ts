@@ -261,21 +261,12 @@ async function launchCampaign(id: number, memberId: number, body: LaunchBody) {
     },
   });
 
-  const checkoutUrl = !paid
-    ? `/billing/plan/${DEFAULT_PAID_PLAN_ID}?brandId=${brand.id}&goLiveCampaign=${campaign.id}`
-    : undefined;
-
   console.log(
-    `[campaign-launch] success: campaign=${campaign.id} brand=${brand.id} publish=${resolvedPublish}`,
+    `[campaign-launch] success: campaign=${campaign.id} brand=${brand.id} publish=${resolvedPublish} paid=${paid}`,
   );
 
   return NextResponse.json(
-    {
-      campaignId: campaign.id,
-      brandId: brand.id,
-      publish: resolvedPublish,
-      ...(checkoutUrl ? { checkoutUrl } : {}),
-    },
+    { campaignId: campaign.id, brandId: brand.id, publish: resolvedPublish },
     { status: 201 },
   );
 }

@@ -205,17 +205,6 @@ export function AiCampaignPicker({
       });
       const data = await res.json().catch(() => ({} as Record<string, unknown>));
 
-      if (res.status === 402 && data.checkoutUrl) {
-        setLaunchedId(c.id);
-        router.push(data.checkoutUrl as string);
-        return;
-      }
-      if (data.code === "REQUIRES_SUBSCRIPTION" && data.checkoutUrl) {
-        setLaunchedId(c.id);
-        router.push(data.checkoutUrl as string);
-        return;
-      }
-
       if (!res.ok) {
         setError(
           typeof data.error === "string"
@@ -227,16 +216,9 @@ export function AiCampaignPicker({
       }
 
       setLaunchedId(c.id);
-
-      if (data.checkoutUrl) {
-        setTimeout(() => {
-          router.push(data.checkoutUrl as string);
-        }, 600);
-      } else {
-        setTimeout(() => {
-          router.push(`/brands/${data.brandId}/campaigns/${data.campaignId}`);
-        }, 600);
-      }
+      setTimeout(() => {
+        router.push(`/brands/${data.brandId}/campaigns/${data.campaignId}`);
+      }, 600);
     } catch {
       setError("Something went wrong launching the campaign.");
       setLaunchingId(null);

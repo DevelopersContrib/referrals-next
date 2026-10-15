@@ -6,6 +6,9 @@ import {
   apiError,
   handleCors,
   getPagination,
+  parseId,
+  readJsonBody,
+  invalidJsonError,
 } from "@/lib/api/helpers";
 import { isBrandGrowthEntitled } from "@/lib/member-subscription";
 
@@ -26,7 +29,11 @@ export async function GET(req: NextRequest) {
 
     const where: Record<string, unknown> = { member_id: memberId };
     if (brandId) {
-      where.url_id = parseInt(brandId, 10);
+      const id = parseId(brandId);
+      if (id === null) {
+        return apiError("Brand not found", 404);
+      }
+      where.url_id = id;
     }
 
     const [campaigns, total] = await Promise.all([
@@ -61,7 +68,9 @@ export async function POST(req: NextRequest) {
       return apiError("Invalid or missing API key", 401);
     }
 
-    const body = await req.json();
+    const parsed = await readJsonBody(req);
+    if (!parsed.ok) return invalidJsonError();
+    const body = parsed.body;
     const { name, url_id, type_id, reward_type, goal_type, num_signups, publish } = body;
 
     if (!name || !url_id) {

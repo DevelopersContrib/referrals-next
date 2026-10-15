@@ -56,12 +56,46 @@ export function handleCors() {
 }
 
 /**
+ * Parse a numeric route param. Returns null for anything that isn't a positive
+ * integer, so callers can answer 404 instead of handing NaN to Prisma — which
+ * throws a validation error and surfaces as a 500.
+ */
+export function parseId(value: string | undefined | null): number | null {
+  if (!value || !/^\d+$/.test(value)) return null;
+  const id = parseInt(value, 10);
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
+/**
+ * Read a JSON body without letting a malformed payload become a 500.
+ * Callers answer with invalidJsonError() when ok is false.
+ */
+export async function readJsonBody(req: NextRequest) {
+  try {
+    return { ok: true as const, body: await req.json() };
+  } catch {
+    return { ok: false as const, body: null };
+  }
+}
+
+/** Standard 400 for an unparseable JSON body. */
+export function invalidJsonError() {
+  return apiError("Invalid JSON body", 400);
+}
+
+/**
  * Parse pagination params from request
  */
 export function getPagination(req: NextRequest) {
   const url = new URL(req.url);
-  const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
-  const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get("limit") || "20", 10)));
+  // parseInt returns NaN for junk like ?limit=abc, and NaN survives Math.min /
+  // Math.max — it would reach Prisma's take/skip and throw a 500.
+  const asInt = (raw: string | null, fallback: number) => {
+    const n = parseInt(raw || "", 10);
+    return Number.isFinite(n) ? n : fallback;
+  };
+  const page = Math.max(1, asInt(url.searchParams.get("page"), 1));
+  const limit = Math.min(100, Math.max(1, asInt(url.searchParams.get("limit"), 20)));
   const skip = (page - 1) * limit;
   return { page, limit, skip };
 }

@@ -2,7 +2,13 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { compareSync } from "bcryptjs";
 import { createHmac } from "crypto";
-import { apiSuccess, apiError, handleCors } from "@/lib/api/helpers";
+import {
+  apiSuccess,
+  apiError,
+  handleCors,
+  readJsonBody,
+  invalidJsonError,
+} from "@/lib/api/helpers";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 function base64url(input: string | Buffer): string {
@@ -46,7 +52,9 @@ export async function POST(req: NextRequest) {
       return apiError("Too many attempts. Please try again shortly.", 429);
     }
 
-    const body = await req.json();
+    const parsed = await readJsonBody(req);
+    if (!parsed.ok) return invalidJsonError();
+    const body = parsed.body;
     const { email, password } = body;
 
     if (!email || !password) {

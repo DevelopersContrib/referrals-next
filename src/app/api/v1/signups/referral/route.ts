@@ -5,6 +5,8 @@ import {
   apiSuccess,
   apiError,
   handleCors,
+  readJsonBody,
+  invalidJsonError,
 } from "@/lib/api/helpers";
 import { logApiCall } from "@/lib/api/log-call";
 import { tryRewardReferrerAfterSignup } from "@/lib/campaign-reward";
@@ -23,7 +25,9 @@ export async function POST(req: NextRequest) {
     const apiKey = req.headers.get("x-api-key") || "";
     logApiCall(apiKey, "v1/signups/referral", req);
 
-    const body = await req.json();
+    const parsed = await readJsonBody(req);
+    if (!parsed.ok) return invalidJsonError();
+    const body = parsed.body;
     const { code, email, name, ip } = body;
 
     if (!code) {

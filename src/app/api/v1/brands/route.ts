@@ -6,6 +6,8 @@ import {
   apiError,
   handleCors,
   getPagination,
+  readJsonBody,
+  invalidJsonError,
 } from "@/lib/api/helpers";
 import { canMemberAddBrand } from "@/lib/member-subscription";
 import { checkBrandSlug, claimBrandSlug } from "@/lib/brand-access";
@@ -55,7 +57,9 @@ export async function POST(req: NextRequest) {
       return apiError("Invalid or missing API key", 401);
     }
 
-    const body = await req.json();
+    const parsed = await readJsonBody(req);
+    if (!parsed.ok) return invalidJsonError();
+    const body = parsed.body;
     const { url, description, slug } = body;
 
     if (!url) {

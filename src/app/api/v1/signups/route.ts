@@ -1,6 +1,13 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { authenticateApiKey, apiSuccess, apiError, handleCors } from "@/lib/api/helpers";
+import {
+  authenticateApiKey,
+  apiSuccess,
+  apiError,
+  handleCors,
+  readJsonBody,
+  invalidJsonError,
+} from "@/lib/api/helpers";
 import { syncParticipantToMailchimp } from "@/lib/integrations/mailchimp-sync";
 import { ZapierIntegration } from "@/lib/integrations/zapier";
 import {
@@ -20,7 +27,9 @@ export async function POST(req: NextRequest) {
       return apiError("Invalid or missing API key", 401);
     }
 
-    const body = await req.json();
+    const parsed = await readJsonBody(req);
+    if (!parsed.ok) return invalidJsonError();
+    const body = parsed.body;
     const { campaign_id, email, name, referral_url, ip_address } = body;
 
     if (!campaign_id || !email || !name) {

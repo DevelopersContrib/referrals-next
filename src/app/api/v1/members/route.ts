@@ -1,7 +1,13 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashSync } from "bcryptjs";
-import { apiSuccess, apiError, handleCors } from "@/lib/api/helpers";
+import {
+  apiSuccess,
+  apiError,
+  handleCors,
+  readJsonBody,
+  invalidJsonError,
+} from "@/lib/api/helpers";
 
 export async function OPTIONS() {
   return handleCors();
@@ -9,7 +15,9 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const parsed = await readJsonBody(req);
+    if (!parsed.ok) return invalidJsonError();
+    const body = parsed.body;
     const { email, name, password } = body;
 
     if (!email || !name || !password) {

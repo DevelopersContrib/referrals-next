@@ -5,6 +5,9 @@ import {
   apiSuccess,
   apiError,
   handleCors,
+  parseId,
+  readJsonBody,
+  invalidJsonError,
 } from "@/lib/api/helpers";
 import { checkBrandSlug } from "@/lib/brand-access";
 
@@ -23,7 +26,10 @@ export async function GET(
     }
 
     const { brandId } = await params;
-    const id = parseInt(brandId, 10);
+    const id = parseId(brandId);
+    if (id === null) {
+      return apiError("Brand not found", 404);
+    }
 
     const brand = await prisma.member_urls.findFirst({
       where: { id, member_id: memberId },
@@ -51,7 +57,10 @@ export async function PUT(
     }
 
     const { brandId } = await params;
-    const id = parseInt(brandId, 10);
+    const id = parseId(brandId);
+    if (id === null) {
+      return apiError("Brand not found", 404);
+    }
 
     const existing = await prisma.member_urls.findFirst({
       where: { id, member_id: memberId },
@@ -61,8 +70,9 @@ export async function PUT(
       return apiError("Brand not found", 404);
     }
 
-    const body = await req.json();
-    const { url, description, logo_url, background_image, slug } = body;
+    const parsed = await readJsonBody(req);
+    if (!parsed.ok) return invalidJsonError();
+    const { url, description, logo_url, background_image, slug } = parsed.body;
 
     let nextSlug: string | undefined;
     if (slug !== undefined && slug !== existing.slug) {
@@ -114,7 +124,10 @@ export async function DELETE(
     }
 
     const { brandId } = await params;
-    const id = parseInt(brandId, 10);
+    const id = parseId(brandId);
+    if (id === null) {
+      return apiError("Brand not found", 404);
+    }
 
     const existing = await prisma.member_urls.findFirst({
       where: { id, member_id: memberId },

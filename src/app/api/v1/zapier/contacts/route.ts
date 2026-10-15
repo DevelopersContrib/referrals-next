@@ -1,6 +1,13 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { authenticateApiKey, apiSuccess, apiError, handleCors, getPagination } from "@/lib/api/helpers";
+import {
+  authenticateApiKey,
+  apiSuccess,
+  apiError,
+  handleCors,
+  getPagination,
+  parseId,
+} from "@/lib/api/helpers";
 
 export async function OPTIONS() {
   return handleCors();
@@ -32,11 +39,18 @@ export async function GET(req: NextRequest) {
       return apiSuccess([]);
     }
 
-    const where: Record<string, unknown> = {
-      campaign_id: campaignId
-        ? parseInt(campaignId, 10)
-        : { in: campaignIds },
-    };
+    // The filter must stay inside the member's own campaigns, or any API key
+    // could read another member's contacts by guessing a campaign id.
+    let campaignFilter: unknown = { in: campaignIds };
+    if (campaignId) {
+      const id = parseId(campaignId);
+      if (id === null || !campaignIds.includes(id)) {
+        return apiError("Campaign not found or access denied", 404);
+      }
+      campaignFilter = id;
+    }
+
+    const where: Record<string, unknown> = { campaign_id: campaignFilter };
 
     const participants = await prisma.campaign_participants.findMany({
       where,

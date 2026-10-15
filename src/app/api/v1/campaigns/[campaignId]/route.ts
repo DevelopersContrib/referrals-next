@@ -1,6 +1,14 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { authenticateApiKey, apiSuccess, apiError, handleCors } from "@/lib/api/helpers";
+import {
+  authenticateApiKey,
+  apiSuccess,
+  apiError,
+  handleCors,
+  parseId,
+  readJsonBody,
+  invalidJsonError,
+} from "@/lib/api/helpers";
 
 export async function OPTIONS() {
   return handleCors();
@@ -17,7 +25,10 @@ export async function GET(
     }
 
     const { campaignId } = await params;
-    const id = parseInt(campaignId, 10);
+    const id = parseId(campaignId);
+    if (id === null) {
+      return apiError("Campaign not found", 404);
+    }
 
     const campaign = await prisma.member_campaigns.findFirst({
       where: { id, member_id: memberId },
@@ -57,7 +68,10 @@ export async function PUT(
     }
 
     const { campaignId } = await params;
-    const id = parseInt(campaignId, 10);
+    const id = parseId(campaignId);
+    if (id === null) {
+      return apiError("Campaign not found", 404);
+    }
 
     const existing = await prisma.member_campaigns.findFirst({
       where: { id, member_id: memberId },
@@ -67,7 +81,9 @@ export async function PUT(
       return apiError("Campaign not found", 404);
     }
 
-    const body = await req.json();
+    const parsed = await readJsonBody(req);
+    if (!parsed.ok) return invalidJsonError();
+    const body = parsed.body;
     const {
       name,
       type_id,
@@ -111,7 +127,10 @@ export async function DELETE(
     }
 
     const { campaignId } = await params;
-    const id = parseInt(campaignId, 10);
+    const id = parseId(campaignId);
+    if (id === null) {
+      return apiError("Campaign not found", 404);
+    }
 
     const existing = await prisma.member_campaigns.findFirst({
       where: { id, member_id: memberId },

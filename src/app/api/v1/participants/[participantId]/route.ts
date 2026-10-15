@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { authenticateApiKey, apiSuccess, apiError, handleCors } from "@/lib/api/helpers";
+import { authenticateApiKey, apiSuccess, apiError, handleCors, parseId } from "@/lib/api/helpers";
 
 export async function OPTIONS() {
   return handleCors();
@@ -17,7 +17,10 @@ export async function GET(
     }
 
     const { participantId } = await params;
-    const id = parseInt(participantId, 10);
+    const id = parseId(participantId);
+    if (id === null) {
+      return apiError("Participant not found", 404);
+    }
 
     const participant = await prisma.campaign_participants.findUnique({
       where: { id },

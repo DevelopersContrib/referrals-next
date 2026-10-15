@@ -6,6 +6,8 @@ import {
   apiError,
   handleCors,
   getPagination,
+  readJsonBody,
+  invalidJsonError,
 } from "@/lib/api/helpers";
 
 export async function OPTIONS() {
@@ -52,7 +54,9 @@ export async function POST(req: NextRequest) {
       return apiError("Invalid or missing API key", 401);
     }
 
-    const body = await req.json();
+    const parsed = await readJsonBody(req);
+    if (!parsed.ok) return invalidJsonError();
+    const body = parsed.body;
     const { link, message, campaign_id } = body;
 
     if (!link) {

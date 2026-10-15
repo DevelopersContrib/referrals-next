@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { CloseButton } from "./close-button";
 
 interface TopbarPageProps {
   params: Promise<{ code: string }>;
@@ -81,9 +82,7 @@ export default async function TopbarNotificationPage({ params }: TopbarPageProps
         >
           Join Now
         </a>
-        <button className="close" onClick={() => (window as Window & typeof globalThis).parent.postMessage("close-topbar", "*")}>
-          ×
-        </button>
+        <CloseButton />
       </body>
     </html>
   );

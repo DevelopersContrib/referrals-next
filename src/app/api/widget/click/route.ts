@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { decryptShareCode, parseShareCode } from "@/lib/encryption";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { resolveSocialTypeId } from "@/lib/widget-share-tracking";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -46,9 +47,20 @@ export async function POST(request: NextRequest) {
       const socialParsed = parseInt(parsed.socialType, 10);
       socialTypeId = isNaN(socialParsed) ? 1 : socialParsed;
     } else if (body.campaignId && body.participantId) {
-      campaignId = body.campaignId;
-      participantId = body.participantId;
-      socialTypeId = body.socialType || 1;
+      campaignId = Number(body.campaignId);
+      participantId = Number(body.participantId);
+
+      // Accept a social name ("facebook") as well as an id, since that is what
+      // /api/widget/share takes for the same field.
+      const resolved =
+        body.socialType == null ? 1 : await resolveSocialTypeId(body.socialType);
+      if (resolved === null) {
+        return NextResponse.json(
+          { error: "Invalid social type" },
+          { status: 400, headers: corsHeaders }
+        );
+      }
+      socialTypeId = resolved;
     } else {
       return NextResponse.json(
         { error: "Either code or campaignId+participantId required" },

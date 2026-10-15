@@ -107,10 +107,10 @@ user-submitted).
 
 ---
 
-## 🟡 Needs verification (built, not yet smoke-tested)
+## ✅ Verification (all gates green as of 2026-10-14)
 
-The CRUD above was generated against the real Prisma models but only partially
-verified. Before relying on it:
+The CRUD above was generated against the real Prisma models. It has now been
+verified end-to-end:
 
 - [x] `npx tsc --noEmit` → 0 errors. _(2026-10-13)_
 - [x] `npx eslint` over `src/app/api/admin` + `src/app/(admin)` → clean. _(2026-10-13,
@@ -121,12 +121,24 @@ verified. Before relying on it:
 - [x] Confirm every **new** API route includes an admin gate — re-audited per HTTP
   method (so a guard on `GET` can't mask an unprotected `DELETE`) across all 57 route
   files / 101 handlers: **0 ungated**. _(2026-10-13)_
-- [ ] **Logged-in smoke test as an admin** for each entity: create → list shows it →
-  edit → save → delete. Confirm required-field validation and that FK columns
-  (e.g. `campaign_id`, `url_id`, `member_id`) are set correctly on create.
-  - Blocked on an admin account, not on code. To unblock locally, set
-    `members.is_admin = 1` for your dev-DB account and sign in again (the flag is read
-    into the session JWT at sign-in).
+- [x] **Logged-in smoke test as an admin** — run 2026-10-14 against the local dev DB,
+  signed in as a real admin session. **105/105 checks passed.**
+  - create → list → edit → verify → delete → confirm-gone for all 7 create-capable
+    entities (plans, members, brands, campaigns, coupons, contests, deals), plus
+    edit/delete for the two generated ones (participants, email-templates).
+  - Required-field validation returns 400 with a useful message on every collection
+    POST; duplicate member email returns 409; a campaign pointing at a non-existent
+    brand returns 404; deleting a plan that still has subscribers returns 409.
+  - FK columns verified on the created rows: `member_urls.member_id`,
+    `member_campaigns.url_id`, `campaign_coupons.campaign_id`,
+    `campaign_contest.campaign_id` + `member_id`, `brand_deals.url_id` + `member_id`.
+    Note `member_campaigns.member_id` is correctly derived from the brand rather than
+    taken from the request body.
+  - All 32 `/admin` pages render 200 with no runtime error.
+  - Row counts returned to baseline afterwards — the run leaves nothing behind.
+  - To re-run it yourself, grant admin with
+    `UPDATE members SET is_admin = 1 WHERE email = '<your dev account>';` and sign in
+    again (the flag is read into the session JWT at sign-in).
 
 ---
 
@@ -151,4 +163,9 @@ full CRUD:
   Guarded by a two-step confirm; failures return 502 and do **not** mark cancelled locally.
 - **Admins must re-login** after `members.is_admin` changes, so the session JWT picks
   up the new flag.
+- **Don't run `next build` and `next dev` against the same `.next/`.** After a
+  production build, the next `next dev` served an HTML 404 for *every* dynamic route
+  (`/api/admin/plans/[planId]`, `/api/brands/[id]/stats`, `/p/[slug]` …) while static
+  routes kept working — which looks exactly like the `[id]` handlers being broken.
+  `rm -rf .next` and restart dev to clear it.
 - One-off tooling left in tree: `scripts/gate-admin-routes.mjs` (idempotent; documents the API gating).

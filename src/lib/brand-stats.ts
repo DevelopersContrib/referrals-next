@@ -190,7 +190,7 @@ async function getParticipantsSeriesRaw(
         AND cp.date_signedup >= ${fromDate}
         AND cp.date_signedup <= ${toDate}
       GROUP BY YEAR(cp.date_signedup), MONTH(cp.date_signedup), DAY(cp.date_signedup)
-      ORDER BY cp.date_signedup ASC
+      ORDER BY MIN(cp.date_signedup) ASC
     `;
   } else if (groupBy === "month") {
     rows = await prisma.$queryRaw`
@@ -268,7 +268,7 @@ async function getSharesSeriesRaw(
         AND ps.date_shared >= ${fromDate}
         AND ps.date_shared <= ${toDate}
       GROUP BY YEAR(ps.date_shared), MONTH(ps.date_shared), DAY(ps.date_shared)
-      ORDER BY ps.date_shared ASC
+      ORDER BY MIN(ps.date_shared) ASC
     `;
   } else if (groupBy === "month") {
     rows = await prisma.$queryRaw`
@@ -312,10 +312,13 @@ async function getSharesSeriesRaw(
 }
 
 export async function getShareLeaders(brandId: number, limit = 10) {
+  // One row per email, since a participant can join several of the brand's
+  // campaigns. id/name must be aggregated or MySQL's ONLY_FULL_GROUP_BY
+  // (on by default since 5.7) rejects the query.
   const rows = await prisma.$queryRaw<
     Array<{ id: number; name: string; email: string; total: bigint }>
   >`
-    SELECT cp.id, cp.name, cp.email, COUNT(*) AS total
+    SELECT MIN(cp.id) AS id, MIN(cp.name) AS name, cp.email, COUNT(*) AS total
     FROM campaign_participants cp
     INNER JOIN member_campaigns mc ON mc.id = cp.campaign_id
     INNER JOIN participants_share ps ON ps.participant_id = cp.id
@@ -334,10 +337,11 @@ export async function getShareLeaders(brandId: number, limit = 10) {
 }
 
 export async function getInviteLeaders(brandId: number, limit = 10) {
+  // Same grouping rule as getShareLeaders above.
   const rows = await prisma.$queryRaw<
     Array<{ id: number; name: string; email: string; total: bigint }>
   >`
-    SELECT cp.id, cp.name, cp.email, COUNT(*) AS total
+    SELECT MIN(cp.id) AS id, MIN(cp.name) AS name, cp.email, COUNT(*) AS total
     FROM campaign_participants cp
     INNER JOIN member_campaigns mc ON mc.id = cp.campaign_id
     INNER JOIN participants_invited_emails pie ON pie.participant_id = cp.id

@@ -1,13 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashSync } from "bcryptjs";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    if (!rateLimit(`reset:${clientIp(request)}`, 10, 60_000)) {
+      return NextResponse.json(
+        { error: "Too many attempts. Please try again shortly." },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const { code, email, password } = body;
 
-    if (!code || !email || !password) {
+    // These go straight into a Prisma filter, so they must be strings. A JSON
+    // object here would be read as a query operator ({ "not": null } matches
+    // any pending code) and hand over the account without the real token.
+    if (
+      typeof code !== "string" ||
+      typeof email !== "string" ||
+      !code ||
+      !email ||
+      !password
+    ) {
       return NextResponse.json(
         { error: "Code, email, and password are required." },
         { status: 400 }

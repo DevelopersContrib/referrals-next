@@ -57,7 +57,9 @@ export async function POST(req: NextRequest) {
     const body = parsed.body;
     const { email, password } = body;
 
-    if (!email || !password) {
+    // email reaches a Prisma filter, so reject anything that isn't a string —
+    // an object would be read as a query operator rather than a value.
+    if (typeof email !== "string" || !email || !password) {
       return apiError("Email and password are required", 400);
     }
 

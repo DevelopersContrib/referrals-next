@@ -136,9 +136,10 @@ The Go Live CTA now lives on the brand homepage (and is hidden for admins / Unli
 
 **Done when:**
 
-- A scheduled job in `vercel.json` sends unpaid brand owners a series on day 0, 1, 3 and 7, plus one email after an abandoned checkout
-- Every email links to checkout for that specific brand
-- The copy matches the $9/mo pay-to-publish model (Maida approves the copy)
+- [x] A scheduled job in `vercel.json` sends unpaid brand owners a series on day 0, 1, 3 and 7, plus one email after an abandoned checkout _(code done in PR)_
+- [x] Every email links to checkout for that specific brand _(code done in PR)_
+- [ ] The copy matches the $9/mo pay-to-publish model — **Maida approves the copy**
+- [ ] `UNPAID_FOLLOWUP_EMAILS_ENABLED=true` set in Vercel env — **Lee enables after approval**
 
 ## B18 — Subscriber report + Unlimited renewals (3h) — HIGH · Ronan + Maida
 

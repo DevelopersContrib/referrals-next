@@ -82,6 +82,13 @@ $9/mo alone is slow: $1,000/mo needs about 111 paying brands. This task brings i
 
 ## B16 — Win back members who set up a brand but never paid (6h) — CRITICAL · Ronan + Maida
 
+**Code done** — see PR. Remaining for Maida/Ronan:
+- [ ] Run `prisma/sql/winback_plan_and_log.sql` on production (creates plan row + log table)
+- [ ] Create the PayPal billing plan (admin script or first checkout triggers it)
+- [ ] Run `scripts/winback-unpaid-brands.ts` on prod, send list+count to Maida
+- [ ] Maida approves copy
+- [ ] Send first batch: `WINBACK_SEND=true npx tsx scripts/winback-send-emails.ts --send`
+
 These are the warmest leads: they wanted the product and stopped at the paywall.
 
 **Ronan:**

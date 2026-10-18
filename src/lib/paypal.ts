@@ -162,7 +162,7 @@ export async function suspendSubscription(
   return postSubscriptionAction(subscriptionId, "suspend", reason);
 }
 
-function getPayPalApiBaseUrl(): string {
+export function getPayPalApiBaseUrl(): string {
   return process.env.PAYPAL_MODE === "live"
     ? "https://api-m.paypal.com"
     : "https://api-m.sandbox.paypal.com";
@@ -219,7 +219,7 @@ export async function verifyWebhookSignature(
   return data.verification_status === "SUCCESS";
 }
 
-async function getAccessToken(): Promise<string> {
+export async function getAccessToken(): Promise<string> {
   const auth = Buffer.from(
     `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
   ).toString("base64");

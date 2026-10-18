@@ -587,6 +587,7 @@ model plans {
   unit                   String? @default("month") @db.VarChar(100)
   no_unit                Int?    @default(0)
   days                   Int?    @default(0)
+  is_for_sale            Boolean @default(true)
 }
 
 model referral_coupons {
@@ -699,6 +700,20 @@ model url_plan {
   agreement_activate  String?  @db.VarChar(200)
   date_added          DateTime @default(now()) @db.Timestamp(0)
   payment_id          Int?
+}
+
+model winback_email_log {
+  id            Int      @id @default(autoincrement())
+  member_id     Int
+  brand_id      Int
+  email         String   @db.VarChar(200)
+  sent_at       DateTime @default(now()) @db.DateTime(0)
+  batch_number  Int      @default(0)
+  status        String   @default("sent") @db.VarChar(50)
+  error_message String?  @db.Text
+
+  @@index([member_id], map: "idx_winback_member")
+  @@index([brand_id], map: "idx_winback_brand")
 }
 
 model url_socials {

@@ -39,10 +39,11 @@ const sections: { title: string; endpoints: Endpoint[] }[] = [
       {
         method: "POST",
         path: "/api/v1/members",
-        description: "Register a new member (public).",
-        auth: false,
+        description:
+          "Create a member account (requires your API key). Returns the same response whether or not the email is already registered.",
+        auth: true,
         body: `{ "email": "new@example.com", "name": "Jane Doe", "password": "securepass" }`,
-        response: `{ "success": true, "data": { "id": 42, "email": "...", "name": "...", "date_signedup": "..." } }`,
+        response: `{ "success": true, "data": { "email": "...", "message": "Request received. ..." } }`,
       },
       {
         method: "GET",

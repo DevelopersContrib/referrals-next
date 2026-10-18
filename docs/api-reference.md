@@ -46,16 +46,16 @@ Exchange email + password for a 30-day JWT.
 
 ### `POST /v1/members`
 
-Register a new member (public).
+Create a member account. The response is the same whether or not the email is already registered. Rate limited to 20 requests an hour per key and per IP.
 
-**Auth:** None
+**Auth:** `X-API-Key`
 
 ```json
 // Request
 { "email": "new@example.com", "name": "Jane Doe", "password": "securepass" }
 
-// Response 201
-{ "success": true, "data": { "id": 42, "email": "new@example.com", "name": "Jane Doe", "date_signedup": "2026-06-20T..." } }
+// Response 202
+{ "success": true, "data": { "email": "new@example.com", "message": "Request received. If this email is new, the account has been created." } }
 ```
 
 ### `GET /v1/members/profile`

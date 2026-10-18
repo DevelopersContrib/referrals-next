@@ -16,6 +16,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { BrandLogo } from "@/components/brands/brand-logo";
 import { PublishGainCalculator } from "@/components/campaigns/publish-gain-calculator";
+import { BrandCancelButton } from "@/components/billing/brand-cancel-button";
 import { isVnocBrand } from "@/lib/member-subscription";
 import {
   AGENCY_10_PLAN_ID,
@@ -34,7 +35,7 @@ type Props = { params: Promise<{ brandId: string }> };
 
 type Coverage =
   | { kind: "network" }
-  | { kind: "own"; planId: number; expiry: Date; subscriptionId: string | null }
+  | { kind: "own"; planId: number; expiry: Date; subscriptionId: string | null; cancelled: boolean }
   | { kind: "agency"; planId: number; expiry: Date; position: number; cap: number }
   | { kind: "none" };
 
@@ -169,6 +170,7 @@ export default async function BrandBillingPage({ params }: Props) {
         planId: ownPlan.id,
         expiry: ownExpiry,
         subscriptionId: urlPlan?.paypal_agreement_id ?? null,
+        cancelled: Boolean(urlPlan?.agreement_cancel),
       };
     } else if (
       accountIsAgency &&
@@ -259,7 +261,10 @@ export default async function BrandBillingPage({ params }: Props) {
 
       {coverage.kind === "own" && (
         <LivePlanCard
+          brandId={brandId}
           brandName={brand.domain}
+          hasSubscription={Boolean(coverage.subscriptionId)}
+          cancelled={coverage.cancelled}
           planId={coverage.planId}
           expiry={coverage.expiry}
           price={priceOf(coverage.planId) ?? monthly}
@@ -503,7 +508,10 @@ function PlanCard({
 }
 
 function LivePlanCard({
+  brandId,
   brandName,
+  hasSubscription,
+  cancelled,
   planId,
   expiry,
   price,
@@ -514,7 +522,10 @@ function LivePlanCard({
   doublePaying,
   now,
 }: {
+  brandId: number;
   brandName: string;
+  hasSubscription: boolean;
+  cancelled: boolean;
   planId: number;
   expiry: Date;
   price: number;
@@ -529,6 +540,7 @@ function LivePlanCard({
   const periodDays = isYearly ? 365 : 30;
   const daysLeft = Math.max(0, Math.ceil((expiry.getTime() - now) / 86_400_000));
   const pct = Math.min(100, Math.max(4, Math.round((daysLeft / periodDays) * 100)));
+  const renews = hasSubscription && !cancelled;
   return (
     <section className="overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-sm">
       <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-5">
@@ -545,7 +557,8 @@ function LivePlanCard({
         <Stat icon={<SparklesIcon className="size-4" />} label="Campaigns" value={campaigns.toLocaleString()} />
         <div className="rounded-xl bg-gray-50 p-4">
           <p className="flex items-center gap-1.5 text-xs text-gray-500">
-            <CalendarIcon className="size-4" aria-hidden="true" /> Renews {fmtDate(expiry)}
+            <CalendarIcon className="size-4" aria-hidden="true" />{" "}
+            {renews ? "Renews" : "Ends"} {fmtDate(expiry)}
           </p>
           <div className="mt-2 h-2 rounded-full bg-gray-200" aria-hidden="true">
             <div className="h-2 rounded-full bg-emerald-500" style={{ width: `${pct}%` }} />
@@ -553,26 +566,31 @@ function LivePlanCard({
           <p className="mt-1 text-xs text-gray-600">{daysLeft} days left in this period</p>
         </div>
       </div>
-      {doublePaying && (
+      {doublePaying && renews && (
         <p className="mx-5 mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
-          Your agency plan already covers this brand. Cancel this brand&apos;s own plan on the{" "}
-          <Link href="/billing" className="font-semibold underline">
-            Billing page
-          </Link>{" "}
-          to stop paying twice.
+          Your agency plan already covers this brand. Cancel this brand&apos;s own plan below to
+          stop paying twice.
         </p>
       )}
       <div className="flex flex-wrap items-center gap-3 border-t border-gray-100 px-5 py-4">
         {/* Never start a second checkout here: that would bill monthly and
             yearly at once. Switching happens on the Billing page. */}
-        {switchToYearlyHref && yearlySaving > 0 && (
+        {renews ? (
+          <>
+            {switchToYearlyHref && yearlySaving > 0 && (
+              <span className="text-sm text-gray-700">
+                Yearly saves ${yearlySaving} a year.
+              </span>
+            )}
+            <BrandCancelButton brandId={brandId} brandName={brandName} liveUntil={fmtDate(expiry)} />
+          </>
+        ) : (
           <span className="text-sm text-gray-700">
-            Yearly saves ${yearlySaving} a year.
+            {cancelled ? "Cancelled. " : "No recurring charge. "}
+            {brandName} stays live until {fmtDate(expiry)}, then goes private. You can publish it
+            again from this page after that.
           </span>
         )}
-        <Link href="/billing" className="text-sm font-medium text-gray-700 underline underline-offset-2">
-          Manage or cancel on Billing
-        </Link>
       </div>
     </section>
   );

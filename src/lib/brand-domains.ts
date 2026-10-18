@@ -202,6 +202,33 @@ export async function vercelRemoveDomain(name: string): Promise<void> {
   await vercel(`/v9/projects/{project}/domains/${encodeURIComponent(name)}`, { method: "DELETE" }).catch(() => null);
 }
 
+/** How long an address that isn't live yet stays reserved for the brand that added it. */
+export const UNVERIFIED_CLAIM_DAYS = 7;
+
+/**
+ * Whether another brand's claim on this address still blocks a new one.
+ *
+ * Vercel only gives a brand an address for good once its DNS points at us
+ * (verified and not misconfigured), which proves control of the domain. An
+ * address that never got there is held for UNVERIFIED_CLAIM_DAYS from when it
+ * was added to the project, then anyone who owns it can claim it. When Vercel
+ * can't be asked, or the row came from the legacy project, the claim is kept.
+ */
+export async function claimIsHeld(row: { domain: string; vercel_identifier: string | null }): Promise<boolean> {
+  const cfg = vercelConfig();
+  if (!cfg || row.vercel_identifier !== cfg.projectId) return true;
+  const name = encodeURIComponent(row.domain);
+  const [project, config] = await Promise.all([
+    vercel(`/v9/projects/{project}/domains/${name}`).catch(() => null),
+    vercel(`/v6/domains/${name}/config`).catch(() => null),
+  ]);
+  if (project?.status === 404) return false; // no longer on our project
+  if (!project?.ok || !config?.ok) return true;
+  if (project.body.verified !== false && !config.body.misconfigured) return true;
+  const addedAt = Number(project.body.createdAt) || 0;
+  return !addedAt || Date.now() - addedAt < UNVERIFIED_CLAIM_DAYS * 86_400_000;
+}
+
 export type DomainStatus = {
   /** Vercel has the address and it points at us with a valid setup. */
   live: boolean;

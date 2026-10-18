@@ -7,14 +7,10 @@ import {
   brandShouldShowUpgradeCta,
   countMemberBrands,
   getBrandEntitlement,
-  getMemberEntitlement,
-  listMemberBrandBilling,
 } from "@/lib/member-subscription";
 import { enrollMemberInSignupReferral } from "@/lib/signup-referral";
 import { SignupInviteCard } from "@/components/auth/signup-invite-card";
-import { DashboardUpgradeCard } from "@/components/dashboard/dashboard-upgrade-card";
 import { BrandUpgradeCta } from "@/components/brands/brand-upgrade-cta";
-import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -135,25 +131,8 @@ export default async function DashboardPage() {
   });
   const needsEmailVerify = !verifiedRow?.is_verified && Boolean(session.user.email);
 
-  const [entitlement, growthPlan, brandBilling] = await Promise.all([
-    getMemberEntitlement(memberId, { applyAdminBypass: false }),
-    prisma.plans.findUnique({
-      where: { id: DEFAULT_PAID_PLAN_ID },
-      select: {
-        name: true,
-        price: true,
-        unit: true,
-        days: true,
-        no_of_domains: true,
-        campaigns_participants: true,
-      },
-    }),
-    listMemberBrandBilling(memberId),
-  ]);
-  // Billing is per brand: only nag while a brand is still private, and point
-  // the card at that brand. A paid account plan (agency) hides it entirely.
-  const firstPrivateBrand = brandBilling.find((b) => b.status === "private") ?? null;
-  const showUpgradeNag = !entitlement.isGrowth && firstPrivateBrand !== null;
+  // Publishing is per brand, so the "Publish your brand" push lives on each
+  // brand's own page, not on the account dashboard.
 
   let data;
   try {
@@ -506,18 +485,6 @@ export default async function DashboardPage() {
 
         {/* Right Column: Quick Links + Social */}
         <div className="space-y-6 lg:col-span-5">
-          {showUpgradeNag && (
-            <DashboardUpgradeCard
-              planName={growthPlan?.name}
-              price={growthPlan?.price}
-              unit={growthPlan?.unit}
-              days={growthPlan?.days}
-              noOfDomains={growthPlan?.no_of_domains}
-              campaignsParticipants={growthPlan?.campaigns_participants}
-              brandId={firstPrivateBrand?.brandId ?? null}
-            />
-          )}
-
           <Suspense
             fallback={
               <div className="h-72 animate-pulse rounded-2xl border border-gray-100 bg-white motion-reduce:animate-none" />

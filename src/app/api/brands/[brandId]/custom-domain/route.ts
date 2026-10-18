@@ -5,6 +5,7 @@ import { getBrandEntitlement } from "@/lib/member-subscription";
 import {
   DomainError,
   ROOT_DOMAIN,
+  claimIsHeld,
   cleanDomain,
   domainVariants,
   forgetHost,
@@ -70,12 +71,25 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     );
   }
 
-  const usedElsewhere = await prisma.brand_whitelabel.findFirst({
+  // Another brand only keeps the address once it is live there (its DNS points
+  // at us), or for a few days while it's being set up. Stale claims are
+  // released so the real owner can connect it.
+  const claims = await prisma.brand_whitelabel.findMany({
     where: { domain: { in: [domain, ...domainVariants(domain)] }, url_id: { not: c.brandId } },
-    select: { id: true },
+    select: { id: true, domain: true, vercel_identifier: true },
   });
-  if (usedElsewhere) {
-    return NextResponse.json({ error: "That domain is already connected to another brand." }, { status: 409 });
+  for (const claim of claims) {
+    if (!claim.domain || (await claimIsHeld({ domain: claim.domain, vercel_identifier: claim.vercel_identifier }))) {
+      return NextResponse.json(
+        { error: "That domain is already connected to another brand. If it's yours, contact support." },
+        { status: 409 },
+      );
+    }
+  }
+  for (const claim of claims) {
+    if (claim.domain) await vercelRemoveDomain(claim.domain);
+    await prisma.brand_whitelabel.update({ where: { id: claim.id }, data: { domain: null } });
+    forgetHost(claim.domain);
   }
 
   const existing = await currentRow(c.brandId);

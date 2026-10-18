@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { computeActiveMrr } from "@/lib/mrr";
 
 /**
  * Admin view over PayPal recurring subscriptions (`member_plan`). A row's
@@ -76,7 +77,7 @@ export async function getSubscriptionStats(): Promise<AdminSubscriptionStats> {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const [active, cancelled, pending, total, newThisMonth, mrrRows] =
+  const [active, cancelled, pending, total, newThisMonth, mrr] =
     await Promise.all([
       prisma.member_plan.count({
         where: { agreement_activate: { not: null }, agreement_cancel: null },
@@ -87,14 +88,7 @@ export async function getSubscriptionStats(): Promise<AdminSubscriptionStats> {
       }),
       prisma.member_plan.count(),
       prisma.member_plan.count({ where: { date_added: { gte: monthStart } } }),
-      // MRR = monthly-normalized price across members with a live paid plan.
-      prisma.$queryRaw<{ mrr: number | null }[]>`
-        SELECT COALESCE(
-          SUM(CASE WHEN pl.unit = 'year' THEN pl.price / 12 ELSE pl.price END),
-        0) AS mrr
-        FROM members m
-        JOIN plans pl ON pl.id = m.plan_id
-        WHERE m.plan_id > 0 AND m.plan_expiry > ${now} AND pl.price > 0`,
+      computeActiveMrr(),
     ]);
 
   return {
@@ -103,7 +97,7 @@ export async function getSubscriptionStats(): Promise<AdminSubscriptionStats> {
     pending,
     total,
     newThisMonth,
-    mrr: Number(mrrRows[0]?.mrr ?? 0),
+    mrr,
   };
 }
 

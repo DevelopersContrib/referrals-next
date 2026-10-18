@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { computeActiveMrr } from "@/lib/mrr";
 
 /**
  * Platform revenue, computed the "correct" way for admin/reporting:
@@ -110,38 +111,15 @@ export function monthlyPrice(plan: {
 /**
  * Estimated Monthly Recurring Revenue from currently-active subscribers,
  * normalizing annual plans to a monthly figure. Admin/comped members excluded.
+ *
+ * Aggregates ACTIVE subscriptions from both `url_plan` (per-brand) and
+ * `member_plan` (account-level), excludes VNOC, de-duplicates by agreement id.
  */
 export async function getMrrEstimate(opts: {
   excludeMemberIds?: number[];
   now?: Date;
 }): Promise<number> {
-  const now = opts.now ?? new Date();
-  const excludeMemberIds = opts.excludeMemberIds ?? [];
-
-  const activeMembers = await prisma.members.findMany({
-    where: {
-      plan_id: { gt: 0 },
-      plan_expiry: { gt: now },
-      ...(excludeMemberIds.length ? { id: { notIn: excludeMemberIds } } : {}),
-    },
-    select: { plan_id: true },
-  });
-  if (activeMembers.length === 0) return 0;
-
-  const planIds = [...new Set(activeMembers.map((m) => m.plan_id).filter((v): v is number => v != null))];
-  const plans = await prisma.plans.findMany({
-    where: { id: { in: planIds } },
-    select: { id: true, price: true, unit: true, days: true },
-  });
-  const planById = new Map(plans.map((p) => [p.id, p]));
-
-  let mrr = 0;
-  for (const m of activeMembers) {
-    const plan = m.plan_id != null ? planById.get(m.plan_id) : undefined;
-    if (!plan) continue;
-    mrr += monthlyPrice(plan);
-  }
-  return round2(mrr);
+  return computeActiveMrr({ excludeMemberIds: opts.excludeMemberIds });
 }
 
 export interface PlanSubscriberStat {

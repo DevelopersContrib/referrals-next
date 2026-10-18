@@ -148,13 +148,24 @@ Same-price plans and Unlimited brand coverage are already in code. What is left 
 
 ## P2 — If time is left Friday
 
-## B10 — MRR ignores per-brand subscriptions (2h) — MEDIUM · Ronan
+## B10 — MRR ignores per-brand subscriptions (2h) — ✅ DONE · Ronan
+
+PR: `cursor/b10-mrr-fix-ed7e`
 
 **Problem:** MRR only counts `members.plan_id`, so per-brand payments are missing. It can show $0 while people are paying.
 
 **Where:** `src/lib/admin-subscriptions.ts:91`, `src/lib/revenue.ts:121`, `scripts/paid-funnel-snapshot.ts`.
 
-**Done when:** MRR is the sum of active `url_plan` and `member_plan` subscriptions, and it matches PayPal.
+**Done:**
+- MRR is now the sum of active `url_plan` and `member_plan` subscriptions
+- Yearly plans normalised to monthly (price / 12)
+- Cancelled / suspended / expired subscriptions excluded
+- Same PayPal agreement in both tables counted once
+- VNOC / network brands stay at $0
+- Shared helper: `src/lib/mrr.ts` (`computeActiveMrr` / `computeMrrFromRows`)
+- Smoke test: `scripts/smoke-mrr.ts`
+
+**Still open (needs prod access — Lee):** Verify computed MRR matches PayPal active subscriptions total. Requires PayPal API read against the live account.
 
 ---
 

@@ -86,7 +86,7 @@ export default function WhitelabelPage() {
           <div className="grid min-w-0 items-center gap-6 sm:gap-8 lg:grid-cols-[1fr_minmax(0,420px)] lg:gap-12">
             <div className="min-w-0 text-center lg:text-left">
               <span className="inline-flex rounded-full border border-violet-200/80 bg-white/80 px-3 py-1 text-xs font-semibold text-[#926efb] shadow-sm backdrop-blur">
-                Enterprise-grade branding
+                Your brand, not ours
               </span>
               <h1 className="mt-3 text-[1.65rem] font-bold leading-tight tracking-tight text-gray-900 min-[380px]:text-[1.85rem] sm:mt-4 sm:text-4xl md:text-5xl lg:text-[3.25rem] lg:leading-[1.08]">
                 Whitelabel referrals that{" "}
@@ -216,8 +216,8 @@ export default function WhitelabelPage() {
             Launch your branded referral platform
           </h2>
           <p className="mt-4 text-lg text-white/90">
-            Guided setup, priority support on Enterprise, and room to grow from first brand to
-            full portfolio.
+            Every published brand is whitelabel: $9/mo per brand, with room to grow from your
+            first brand to a full client portfolio.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
             <Link

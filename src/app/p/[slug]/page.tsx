@@ -9,6 +9,7 @@ import { findPublicBrandBySlug } from "@/lib/public-campaign-server";
 import { ReferralsSiteHeader } from "@/components/public/referrals-site-header";
 import { formatBrandName, formatCount } from "@/lib/format-brand";
 import { siteUrl } from "@/lib/site-url";
+import { shouldNoindexBrand } from "@/lib/seo-indexable-brands";
 
 export async function generateMetadata({
   params,
@@ -25,11 +26,13 @@ export async function generateMetadata({
     brand.description?.trim() ||
     `Explore the ${name} referral program. Share campaigns, track invites, and earn rewards.`;
   const url = siteUrl(`/p/${brand.slug || slug}`);
+  const noindex = await shouldNoindexBrand(brand);
 
   return {
     title,
     description,
     alternates: { canonical: url },
+    ...(noindex ? { robots: { index: false, follow: false } } : {}),
     openGraph: {
       title: `${title} | Referrals.com`,
       description,

@@ -30,7 +30,7 @@ type TemplateDef = {
   slug: string;
   title: string;
   desc: string;
-  tag: "Free" | "Premium";
+  bestFor: string;
   icon: LucideIcon;
   gradient: string;
   chipClass: string;
@@ -41,7 +41,7 @@ const templates: TemplateDef[] = [
     slug: "social-instant",
     title: "Social Instant Reward",
     desc: "Reward participants the moment they share on social. Built for fast viral loops and launch-week buzz.",
-    tag: "Free",
+    bestFor: "Ecommerce & Shopify",
     icon: Share2Icon,
     gradient: "from-[#FF5C62] via-[#ff7a6f] to-[#ff9a8b]",
     chipClass: "bg-[#FF5C62] text-white",
@@ -50,7 +50,7 @@ const templates: TemplateDef[] = [
     slug: "token-reward",
     title: "Token Reward",
     desc: "Crypto-native incentives for Web3 communities — referrals that feel on-chain without the friction.",
-    tag: "Premium",
+    bestFor: "Web3 projects",
     icon: CoinsIcon,
     gradient: "from-[#6b4bb7] via-[#926efb] to-[#b8a4fc]",
     chipClass: "bg-[#926efb] text-white",
@@ -59,7 +59,7 @@ const templates: TemplateDef[] = [
     slug: "download-giveaway",
     title: "Download Giveaway",
     desc: "Ebooks, guides, or assets in exchange for qualified referrals. Perfect for lead-gen and content marketing.",
-    tag: "Free",
+    bestFor: "Creators & newsletters",
     icon: DownloadIcon,
     gradient: "from-[#e11d48] via-[#FF5C62] to-[#fb7185]",
     chipClass: "bg-[#FF5C62] text-white",
@@ -68,7 +68,7 @@ const templates: TemplateDef[] = [
     slug: "photo-voting",
     title: "Photo Voting",
     desc: "UGC contests where friends vote. High engagement and shareable moments across Instagram and beyond.",
-    tag: "Premium",
+    bestFor: "Communities & contests",
     icon: CameraIcon,
     gradient: "from-[#5b21b6] via-[#7c3aed] to-[#a78bfa]",
     chipClass: "bg-[#926efb] text-white",
@@ -77,7 +77,7 @@ const templates: TemplateDef[] = [
     slug: "poll-campaign",
     title: "Poll Campaign",
     desc: "Collect opinions and grow your list at the same time — every vote can carry a referral ask.",
-    tag: "Free",
+    bestFor: "Local & newsletters",
     icon: BarChart3Icon,
     gradient: "from-[#be123c] via-[#FF5C62] to-[#fda4af]",
     chipClass: "bg-[#FF5C62] text-white",
@@ -86,7 +86,7 @@ const templates: TemplateDef[] = [
     slug: "closed-beta",
     title: "Closed Beta",
     desc: "Invite-only access with referral gates. Ideal for product-led growth before a public launch.",
-    tag: "Premium",
+    bestFor: "Startups & SaaS",
     icon: LockIcon,
     gradient: "from-[#4c1d95] via-[#6d28d9] to-[#8b5cf6]",
     chipClass: "bg-[#926efb] text-white",
@@ -95,7 +95,7 @@ const templates: TemplateDef[] = [
     slug: "info-bar",
     title: "Info Bar",
     desc: "A slim top bar that follows visitors site-wide — always-on promotion without blocking content.",
-    tag: "Free",
+    bestFor: "Any website",
     icon: PanelTopIcon,
     gradient: "from-[#9f1239] via-[#FF5C62] to-[#fecdd3]",
     chipClass: "bg-[#FF5C62] text-white",
@@ -104,7 +104,7 @@ const templates: TemplateDef[] = [
     slug: "full-page",
     title: "Full Page Takeover",
     desc: "Maximum-impact landing for launches. One focused story: join, refer, unlock — highest conversion potential.",
-    tag: "Premium",
+    bestFor: "Launches & agencies",
     icon: Maximize2Icon,
     gradient: "from-[#3b0764] via-[#7c3aed] to-[#c4b5fd]",
     chipClass: "bg-[#926efb] text-white",
@@ -140,8 +140,8 @@ export default function CampaignTemplatesPage() {
             <div>
               <h2 className="text-xl font-semibold text-white sm:text-2xl">Browse by use case</h2>
               <p className="mt-1 text-sm text-gray-500">
-                Free templates ship with core features; Premium unlocks gamification and advanced
-                flows.
+                Every template is included when you publish ($9/mo per brand). Pick the
+                one that fits your business.
               </p>
             </div>
             <Link
@@ -171,7 +171,7 @@ export default function CampaignTemplatesPage() {
                     <span
                       className={`absolute right-3 top-3 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${t.chipClass}`}
                     >
-                      {t.tag}
+                      Best for {t.bestFor}
                     </span>
                   </div>
                   <div className="flex flex-1 flex-col p-5">

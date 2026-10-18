@@ -4,12 +4,12 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "Create a campaign, embed a widget, track referrals, and reward your participants. See how Referrals.com works in 3 simple steps.",
+    "Create a campaign, embed a widget, track referrals, and reward your participants. Set up free, publish for $9/mo, and start rewarding referrals.",
   alternates: { canonical: "https://www.referrals.com/how-it-works" },
   openGraph: {
     title: "How It Works | Referrals.com",
     description:
-      "Create a campaign, embed a widget, track referrals, and reward your participants. See how Referrals.com works in 3 simple steps.",
+      "Create a campaign, embed a widget, track referrals, and reward your participants. Set up free, publish for $9/mo, and start rewarding referrals.",
     url: "https://www.referrals.com/how-it-works",
     siteName: "Referrals.com",
     images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     card: "summary",
     title: "How It Works | Referrals.com",
     description:
-      "Create a campaign, embed a widget, track referrals, and reward your participants. See how Referrals.com works in 3 simple steps.",
+      "Create a campaign, embed a widget, track referrals, and reward your participants. Set up free, publish for $9/mo, and start rewarding referrals.",
   },
 };
 
@@ -37,6 +37,17 @@ const steps = [
   },
   {
     number: "2",
+    title: "Publish for $9/mo",
+    description:
+      "Setting up is free and stays private while you edit. When the reward and the page look right, publish your brand for $9/mo (or $99/yr) and the campaign goes public. Cancel anytime and it goes back to private.",
+    features: [
+      "Preview everything before you pay",
+      "Every feature included, no tiers",
+      "Pay per brand, cancel anytime",
+    ],
+  },
+  {
+    number: "3",
     title: "Share Your Widget",
     description:
       "Embed the referral widget on your website with a single line of code. Your visitors can join the campaign, share your brand on social media, and invite friends via email, all from the widget.",
@@ -47,7 +58,7 @@ const steps = [
     ],
   },
   {
-    number: "3",
+    number: "4",
     title: "Track & Reward",
     description:
       "Watch referrals roll in from your dashboard. Track every share, click, and conversion in real time. Automatically reward participants when they hit your goals with coupons, cash, or custom incentives.",
@@ -67,7 +78,7 @@ export default function HowItWorksPage() {
           How It Works
         </h1>
         <p className="mt-4 text-lg text-gray-600">
-          Launch a referral program in three simple steps.
+          Launch a referral program in four simple steps.
         </p>
       </div>
 

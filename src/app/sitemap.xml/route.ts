@@ -3,7 +3,7 @@ import { getAllArticleSlugs } from "@/lib/knowledgebase-articles";
 import { getAllPosts } from "@/lib/blog";
 import { useCases } from "@/lib/use-cases";
 import { prisma } from "@/lib/prisma";
-import { isUnownedTrademarkBrand } from "@/lib/blocked-brands";
+import { getIndexableBrands } from "@/lib/seo-indexable-brands";
 import { canonicalOrigin } from "@/lib/site-url";
 
 export async function GET() {
@@ -21,7 +21,9 @@ export async function GET() {
     { url: "/how-it-works", priority: "0.8", changefreq: "monthly" },
     { url: "/campaign-templates", priority: "0.8", changefreq: "weekly" },
     { url: "/whitelabel", priority: "0.7", changefreq: "monthly" },
-    { url: "/services", priority: "0.7", changefreq: "monthly" },
+    { url: "/partners", priority: "0.6", changefreq: "monthly" },
+    { url: "/referral-program", priority: "0.5", changefreq: "monthly" },
+    { url: "/walkthrough", priority: "0.6", changefreq: "monthly" },
     { url: "/about", priority: "0.6", changefreq: "monthly" },
     { url: "/contact", priority: "0.6", changefreq: "monthly" },
     { url: "/resources", priority: "0.8", changefreq: "weekly" },
@@ -35,6 +37,22 @@ export async function GET() {
 
   const supportArticlePages = getAllArticleSlugs().map((slug) => ({
     url: `/support/${slug}`,
+    priority: "0.6",
+    changefreq: "monthly" as const,
+  }));
+
+  // Campaign template detail pages
+  const templatePages = [
+    "social-instant",
+    "token-reward",
+    "download-giveaway",
+    "photo-voting",
+    "poll-campaign",
+    "closed-beta",
+    "info-bar",
+    "full-page",
+  ].map((slug) => ({
+    url: `/campaign-templates/${slug}`,
     priority: "0.6",
     changefreq: "monthly" as const,
   }));
@@ -58,47 +76,33 @@ export async function GET() {
     // Continue without blog posts if content dir is unavailable
   }
 
-  // Dynamic pages: public brand landing pages (/p/{slug})
+  // Dynamic pages: public brand landing pages (/p/{slug}) and their public
+  // campaigns. Only live brands with a public campaign are listed; private,
+  // empty and excluded brands get noindex on the page itself.
   let brandUrls: { url: string; date_added: Date }[] = [];
-  try {
-    const brands = await prisma.member_urls.findMany({
-      select: { slug: true, domain: true, date_added: true },
-      where: { slug: { not: null } },
-    });
-    brandUrls = brands
-      .filter((b) => b.slug && !isUnownedTrademarkBrand(b))
-      .map((b) => ({
-        url: `/p/${b.slug}`,
-        date_added: b.date_added,
-      }));
-  } catch {
-    // If DB query fails, continue with static pages only
-  }
-
-  // Dynamic pages: public campaign pages (/p/{slug}/campaign/{id})
   let campaignUrls: { url: string; date_added: Date }[] = [];
   try {
-    const campaigns = await prisma.member_campaigns.findMany({
-      select: { id: true, date_added: true, url_id: true },
-      where: { publish: "public" },
-    });
-    const urlIds = [...new Set(campaigns.map((c) => c.url_id).filter(Boolean))];
-    const brands =
-      urlIds.length > 0
-        ? await prisma.member_urls.findMany({
-            where: { id: { in: urlIds } },
-            select: { id: true, slug: true, domain: true },
+    const brands = await getIndexableBrands();
+    brandUrls = brands.map((b) => ({
+      url: `/p/${b.slug}`,
+      date_added: b.date_added,
+    }));
+
+    const brandById = new Map(brands.map((b) => [b.id, b]));
+    const campaigns =
+      brands.length > 0
+        ? await prisma.member_campaigns.findMany({
+            select: { id: true, date_added: true, url_id: true },
+            where: { publish: "public", url_id: { in: [...brandById.keys()] } },
           })
         : [];
-    const brandById = new Map(brands.map((b) => [b.id, b]));
     campaignUrls = campaigns.flatMap((c) => {
       const brand = brandById.get(c.url_id);
-      const slug = brand?.slug || brand?.domain;
-      if (!slug || !brand || isUnownedTrademarkBrand(brand)) return [];
-      return [{ url: `/p/${slug}/campaign/${c.id}`, date_added: c.date_added }];
+      if (!brand) return [];
+      return [{ url: `/p/${brand.slug}/campaign/${c.id}`, date_added: c.date_added }];
     });
   } catch {
-    // Continue with what we have
+    // If DB query fails, continue with static pages only
   }
 
   // Dynamic pages: forum topics
@@ -120,7 +124,7 @@ export async function GET() {
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${[...staticPages, ...supportArticlePages, ...useCasePages, ...blogPages]
+${[...staticPages, ...supportArticlePages, ...templatePages, ...useCasePages, ...blogPages]
   .map(
     (page) => `  <url>
     <loc>${baseUrl}${page.url}</loc>

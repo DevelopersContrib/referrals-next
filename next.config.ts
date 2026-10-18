@@ -105,6 +105,18 @@ const nextConfig: NextConfig = {
         destination: "/pricing",
         permanent: true,
       },
+      // ── Retired marketing pages (Oct 2026 clean-up) ──
+      { source: "/services", destination: "/pricing", permanent: true },
+      { source: "/send-to-friends", destination: "/referral-program", permanent: true },
+      { source: "/community", destination: "/forum", permanent: true },
+      { source: "/contribute", destination: "/partners", permanent: true },
+      // A bare /coupon (no code) was an error page; real links carry ?code=
+      {
+        source: "/coupon",
+        missing: [{ type: "query", key: "code" }],
+        destination: "/pricing",
+        permanent: false,
+      },
       // ── /knowledgebase → /support ──
       {
         source: "/knowledgebase",

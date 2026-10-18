@@ -12,13 +12,13 @@ import { faqPageJsonLd } from "@/lib/structured-data";
 export const metadata: Metadata = {
   title: "Pricing — $9/mo per brand to publish",
   description:
-    "Set up a brand for free. Pay $9/month per brand to publish it and accept signups. Network (VNOC) domains stay free.",
+    "Set up your referral program free. Pay $9/month (or $99/year) per brand when you publish it and start accepting signups. Cancel anytime.",
   alternates: { canonical: "https://www.referrals.com/pricing" },
   openGraph: {
     title:
       "Pricing — $9/mo per brand to publish | Referrals.com",
     description:
-      "Same plans as in-app billing: Individuals, Partners, annual ~$/mo. Pay $9/mo per brand to publish.",
+      "Set up free. $9/mo or $99/yr per brand when your referral program goes live. No per-referral fees.",
     url: "https://www.referrals.com/pricing",
     siteName: "Referrals.com",
     images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
@@ -115,9 +115,9 @@ export default async function PricingPage() {
                 Set up free · $9/mo per brand to publish
               </span>
               <h1 className="mt-3 text-[1.65rem] font-bold leading-tight tracking-tight text-gray-900 min-[380px]:text-[1.85rem] sm:mt-4 sm:text-4xl md:text-5xl lg:text-[3.25rem] lg:leading-[1.08]">
-                Plans that match{" "}
+                Set up free.{" "}
                 <span className="bg-gradient-to-r from-[#FF5C62] via-[#ff7a6f] to-[#926efb] bg-clip-text text-transparent">
-                  your billing
+                  $9/mo when you go live.
                 </span>
               </h1>
               <p className="mx-auto mt-3 max-w-xl text-sm text-gray-600 sm:mt-4 sm:text-base md:text-lg lg:mx-0">
@@ -168,8 +168,8 @@ export default async function PricingPage() {
               Choose the plan that fits
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-gray-600">
-              Most Popular marks the best starting Growth plan. Annual cards
-              show a ~$/mo equivalent.
+              Every plan includes every feature. Annual plans show the
+              monthly equivalent.
             </p>
           </div>
           <PublicPlanCatalog plans={plans} isLoggedIn={isLoggedIn} />

@@ -6,6 +6,7 @@ import Image from "next/image";
 import Script from "next/script";
 import { SessionProvider, useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
+import { useCases } from "@/lib/use-cases";
 
 const LOGO_URL =
   "https://d1p6j71028fbjm.cloudfront.net/logos/logo-new-referral-1.png";
@@ -497,7 +498,7 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
       {/* Footer */}
       <footer className="border-t border-slate-700/80 bg-slate-800">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {/* Brand */}
             <div>
               <Link href="/" className="mb-4 inline-block">
@@ -576,6 +577,25 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
               </ul>
             </div>
 
+            {/* Solutions: audience pages (internal links for visitors and search) */}
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+                Solutions
+              </h3>
+              <ul className="mt-4 space-y-2">
+                {useCases.map((u) => (
+                  <li key={u.slug}>
+                    <Link
+                      href={`/referral-program-for/${u.slug}`}
+                      className="text-sm text-slate-300 transition-colors hover:text-white"
+                    >
+                      {u.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             {/* Company */}
             <div>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
@@ -583,7 +603,6 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
               </h3>
               <ul className="mt-4 space-y-2">
                 {[
-                  { href: "/community", label: "Community" },
                   { href: "/forum", label: "Forum" },
                   { href: "/partners", label: "Partners" },
                   { href: "/features", label: "Features" },

@@ -62,7 +62,6 @@ export function proxy(request: NextRequest) {
     "/cookie-policy",
     "/contact",
     "/referral-program",
-    "/contribute",
     "/walkthrough",
     "/signup/success",
     "/signup/share",
@@ -71,15 +70,12 @@ export function proxy(request: NextRequest) {
     "/support",
     "/knowledgebase",
     "/features",
-    "/community",
     "/partners",
     "/affiliate",
     "/ambassador",
     "/whitelabel",
-    "/services",
     "/feedback",
     "/campaign-templates",
-    "/send-to-friends",
     "/resources",
   ]);
 

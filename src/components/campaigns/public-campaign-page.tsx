@@ -7,6 +7,7 @@ import {
 import { ReferralsSiteHeader } from "@/components/public/referrals-site-header";
 import { formatBrandName } from "@/lib/format-brand";
 import { CAMPAIGN_NOT_LIVE_PUBLIC_MESSAGE } from "@/lib/campaign-live";
+import { isExcludedFromSearch } from "@/lib/seo-indexable-brands";
 
 export function buildPublicCampaignMetadata(
   data: PublicCampaignViewPayload
@@ -18,9 +19,16 @@ export function buildPublicCampaignMetadata(
     (brand.domain
       ? `Join the referral program on ${formatBrandName(brand.domain)}.`
       : "Join this referral campaign on Referrals.com.");
+  const noindex =
+    !data.isLive ||
+    isExcludedFromSearch({
+      slug: (brand as { slug?: string | null }).slug,
+      domain: brand.domain,
+    });
   return {
     title,
     description,
+    ...(noindex ? { robots: { index: false, follow: false } } : {}),
     openGraph: {
       title,
       description,

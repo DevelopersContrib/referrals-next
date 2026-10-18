@@ -6,7 +6,7 @@ import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 type TemplateDetail = {
   slug: string;
   title: string;
-  tag: "Free" | "Premium";
+  bestFor: string;
   summary: string;
   details: string;
   steps: string[];
@@ -16,7 +16,7 @@ const templates: TemplateDetail[] = [
   {
     slug: "social-instant",
     title: "Social Instant Reward",
-    tag: "Free",
+    bestFor: "Ecommerce & Shopify",
     summary:
       "Reward participants the moment they share on social. Built for fast viral loops and launch-week buzz.",
     details:
@@ -30,7 +30,7 @@ const templates: TemplateDetail[] = [
   {
     slug: "token-reward",
     title: "Token Reward",
-    tag: "Premium",
+    bestFor: "Web3 projects",
     summary:
       "Crypto-native incentives for Web3 communities — referrals that feel on-chain without the friction.",
     details:
@@ -44,7 +44,7 @@ const templates: TemplateDetail[] = [
   {
     slug: "download-giveaway",
     title: "Download Giveaway",
-    tag: "Free",
+    bestFor: "Creators & newsletters",
     summary:
       "Ebooks, guides, or assets in exchange for qualified referrals. Perfect for lead-gen and content marketing.",
     details:
@@ -58,7 +58,7 @@ const templates: TemplateDetail[] = [
   {
     slug: "photo-voting",
     title: "Photo Voting",
-    tag: "Premium",
+    bestFor: "Communities & contests",
     summary:
       "UGC contests where friends vote. High engagement and shareable moments across social.",
     details:
@@ -72,7 +72,7 @@ const templates: TemplateDetail[] = [
   {
     slug: "poll-campaign",
     title: "Poll Campaign",
-    tag: "Free",
+    bestFor: "Local & newsletters",
     summary:
       "Collect opinions and grow your list at the same time — every vote can carry a referral ask.",
     details:
@@ -86,7 +86,7 @@ const templates: TemplateDetail[] = [
   {
     slug: "closed-beta",
     title: "Closed Beta",
-    tag: "Premium",
+    bestFor: "Startups & SaaS",
     summary:
       "Invite-only access with referral gates. Ideal for product-led growth before a public launch.",
     details:
@@ -100,7 +100,7 @@ const templates: TemplateDetail[] = [
   {
     slug: "info-bar",
     title: "Info Bar",
-    tag: "Free",
+    bestFor: "Any website",
     summary:
       "A slim top bar that follows visitors site-wide — always-on promotion without blocking content.",
     details:
@@ -114,7 +114,7 @@ const templates: TemplateDetail[] = [
   {
     slug: "full-page",
     title: "Full Page Takeover",
-    tag: "Premium",
+    bestFor: "Launches & agencies",
     summary:
       "Maximum-impact landing for launches. One focused story: join, refer, unlock.",
     details:
@@ -174,7 +174,7 @@ export default async function CampaignTemplateDetailPage({
             All templates
           </Link>
           <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-[#FF5C62]">
-            {template.tag} template
+            Best for {template.bestFor}
           </p>
           <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">{template.title}</h1>
           <p className="mt-4 text-base text-gray-300">{template.summary}</p>

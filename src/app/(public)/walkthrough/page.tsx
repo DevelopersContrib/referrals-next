@@ -28,7 +28,7 @@ const walkthroughSteps = [
     step: 1,
     title: "Create Your Account",
     description:
-      "Sign up at Referrals.com with your name, email, and the website URL for your first brand. Publishing that brand is $9/mo.",
+      "Sign up at Referrals.com with your name and email, or with Google. Setting up is free; publishing a brand is $9/mo.",
     image: "/images/walkthrough/step-01-signup.png",
   },
   {

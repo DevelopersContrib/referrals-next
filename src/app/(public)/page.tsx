@@ -8,20 +8,21 @@ import { PublicPlanCatalog } from "@/components/marketing/public-plan-catalog";
 import { JsonLd } from "@/components/seo/json-ld";
 import { getSocialProofStats } from "@/lib/social-proof";
 import { siteUrl } from "@/lib/site-url";
+import { useCases } from "@/lib/use-cases";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   // Absolute: the brand already leads this title, so the "%s | Referrals.com"
   // template from the root layout would print it twice.
-  title: { absolute: "Referrals.com — The Best Referral Marketing Platform" },
+  title: { absolute: "Referrals.com — Referral Program Software for Small Businesses" },
   description:
-    "Create powerful referral campaigns, embed widgets, reward participants, and grow your business through word-of-mouth marketing.",
+    "Launch a customer referral program in minutes: share links, a widget, rewards and leaderboards. Set up free, then $9/mo per brand when you go live.",
   alternates: { canonical: siteUrl("/") },
   openGraph: {
-    title: "Referrals.com — The Best Referral Marketing Platform",
+    title: "Referrals.com — Referral Program Software for Small Businesses",
     description:
-      "Create powerful referral campaigns, embed widgets, reward participants, and grow your business through word-of-mouth marketing.",
+      "Launch a customer referral program in minutes: share links, a widget, rewards and leaderboards. Set up free, then $9/mo per brand when you go live.",
     url: siteUrl("/"),
     siteName: "Referrals.com",
     images: [{ url: "/images/logo/logo.png", width: 284, height: 90 }],
@@ -29,16 +30,15 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "Referrals.com — The Best Referral Marketing Platform",
+    title: "Referrals.com — Referral Program Software for Small Businesses",
     description:
-      "Create powerful referral campaigns, embed widgets, reward participants, and grow your business through word-of-mouth marketing.",
+      "Launch a customer referral program in minutes: share links, a widget, rewards and leaderboards. Set up free, then $9/mo per brand when you go live.",
   },
 };
 
 const campaignTemplates = [
   {
     title: "Social Rewards",
-    badge: "Free",
     description:
       "Reward users for sharing your brand on social media. Boost followers and engagement organically.",
     iconColor: "text-[#FF5C62]",
@@ -61,7 +61,6 @@ const campaignTemplates = [
   },
   {
     title: "Invite for Perks",
-    badge: "Free",
     description:
       "Let users invite friends and earn perks. Drive sign-ups with a simple invite-and-reward loop.",
     iconColor: "text-[#926efb]",
@@ -84,7 +83,6 @@ const campaignTemplates = [
   },
   {
     title: "Gamification Based",
-    badge: "Premium",
     description:
       "Create leaderboards, challenges and point systems. Turn referrals into a competitive game.",
     iconColor: "text-[#FF5C62]",
@@ -107,7 +105,6 @@ const campaignTemplates = [
   },
   {
     title: "Voting Campaign",
-    badge: "Premium",
     description:
       "Run polls and voting contests. Engage audiences and collect valuable market insights.",
     iconColor: "text-[#926efb]",
@@ -167,9 +164,9 @@ const features = [
       "Fully GDPR compliant with built-in consent management and data protection features.",
   },
   {
-    title: "Unlimited Potential",
+    title: "One Program per Brand",
     description:
-      "On Growth, launch campaigns across multiple domains with high participant limits and full referral tracking.",
+      "Run a separate program for each brand, store or client. Each one is published for $9/mo, with full referral tracking.",
   },
   {
     title: "Ready-Made Templates",
@@ -503,24 +500,24 @@ export default async function HomePage() {
               className="mt-3 text-[1.65rem] font-bold leading-tight tracking-tight text-gray-900 min-[380px]:text-[1.85rem] sm:mt-4 sm:text-4xl md:text-5xl lg:text-6xl"
               style={{ fontFamily: "var(--font-dosis), sans-serif" }}
             >
-              Make your growth feel inevitable.
+              Turn your customers into your sales team.
               <span className="mt-1 block bg-gradient-to-r from-[#FF5C62] to-[#926efb] bg-clip-text text-transparent sm:mt-2">
-                Let every customer bring the next one.
+                Launch a referral program today.
               </span>
             </h1>
 
             <p className="mt-3 max-w-2xl text-sm text-gray-700 sm:mt-4 sm:text-base md:text-lg">
-              Design a referral engine your customers want to share. Launch in
-              minutes, track every invite, and turn word of mouth into a
-              repeatable revenue channel.
+              Give every customer a link to share and a reward they actually
+              want. Track every invite and signup. Set up free, then $9/mo per
+              brand when your program goes live.
             </p>
 
             <div className="mt-5 flex flex-col gap-2 sm:mt-6 sm:flex-row sm:gap-3">
               <Link
-                href="/signup"
+                href="/signup?ref=home-hero"
                 className="rounded-xl bg-[#FF5C62] px-7 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-[#FF5C62]/25 transition-all hover:bg-[#ff4f58] hover:shadow-xl hover:shadow-[#FF5C62]/35"
               >
-                Create account
+                Set up your program free
               </Link>
               <Link
                 href="/how-it-works"
@@ -529,6 +526,27 @@ export default async function HomePage() {
                 See How It Works
               </Link>
             </div>
+
+            <nav
+              aria-label="Referral programs by business type"
+              className="mt-4 sm:mt-5"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                I run a…
+              </p>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {useCases.map((u) => (
+                  <li key={u.slug}>
+                    <Link
+                      href={`/referral-program-for/${u.slug}`}
+                      className="inline-flex min-h-9 items-center rounded-full border border-gray-200 bg-white px-3.5 text-sm font-medium text-gray-800 shadow-sm transition hover:border-[#FF5C62]/50 hover:text-[#d63a40]"
+                    >
+                      {u.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
 
             <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] text-gray-600 sm:mt-5 sm:gap-3 sm:text-xs">
               <span className="rounded-full border border-rose-200 bg-white px-3 py-1.5">
@@ -586,10 +604,15 @@ export default async function HomePage() {
               className="text-3xl font-bold text-gray-900 sm:text-4xl"
               style={{ fontFamily: "var(--font-dosis), sans-serif" }}
             >
-              Flexible Campaigns
+              Pick a campaign that fits your business
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-              Choose from multiple campaign types to match your growth strategy
+              Every campaign type is included when you publish. Start from a
+              template and{" "}
+              <Link href="/campaign-templates" className="font-semibold text-[#d63a40] underline-offset-4 hover:underline">
+                browse all templates
+              </Link>
+              .
             </p>
           </div>
 
@@ -604,20 +627,9 @@ export default async function HomePage() {
                 >
                   <span className={template.iconColor}>{template.icon}</span>
                 </div>
-                <div className="mb-2 flex items-center gap-2">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {template.title}
-                  </h3>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      template.badge === "Free"
-                        ? "bg-green-500/10 text-green-400"
-                        : "bg-[#926efb]/10 text-[#926efb]"
-                    }`}
-                  >
-                    {template.badge}
-                  </span>
-                </div>
+                <h3 className="mb-2 text-lg font-semibold text-gray-900">
+                  {template.title}
+                </h3>
                 <p className="text-sm text-gray-600">{template.description}</p>
               </div>
             ))}
@@ -633,11 +645,11 @@ export default async function HomePage() {
               className="text-3xl font-bold text-gray-900 sm:text-4xl"
               style={{ fontFamily: "var(--font-dosis), sans-serif" }}
             >
-              Powerful Features to Amplify
-              <br className="hidden sm:block" /> Your Online Presence
+              Everything you need to run
+              <br className="hidden sm:block" /> a referral program
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-              Everything you need to launch, manage, and scale referral programs
+              Share links, widgets, rewards, leaderboards and tracking. All included when you publish.
             </p>
           </div>
 
@@ -656,20 +668,6 @@ export default async function HomePage() {
                 <p className="mt-2 text-sm leading-relaxed text-gray-600">
                   {feature.description}
                 </p>
-                <div className="mt-4 rounded-lg border border-rose-100 bg-rose-50/60 p-3">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-xs font-medium text-gray-500">
-                      Feature mockup
-                    </span>
-                    <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                  </div>
-                  <div className="h-1.5 rounded-full bg-rose-100">
-                    <div
-                      className="h-1.5 rounded-full bg-gradient-to-r from-[#FF5C62] to-[#926efb] animate-pulse"
-                      style={{ width: `${55 + (idx % 4) * 10}%` }}
-                    />
-                  </div>
-                </div>
               </div>
             ))}
           </div>
@@ -743,8 +741,8 @@ export default async function HomePage() {
               Simple, transparent pricing
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-              {PLAN_CATALOG_COPY.trialFootnote} Same Individuals &amp; Partners
-              catalog as in-app billing — including annual ~$/mo.
+              Set up your brand free. Pay $9/mo per brand when you&apos;re ready
+              to go live, or $99/yr. Cancel anytime.
             </p>
           </div>
 
@@ -800,7 +798,7 @@ export default async function HomePage() {
             className="text-3xl font-bold text-white sm:text-4xl"
             style={{ fontFamily: "var(--font-dosis), sans-serif" }}
           >
-            Ready to skyrocket your growth?
+            Your next customer is one share away
           </h2>
           <p className="mt-4 text-lg text-white/80">
             Join thousands of businesses using Referrals.com to drive
@@ -810,7 +808,7 @@ export default async function HomePage() {
             href={isLoggedIn ? "/billing" : "/signup"}
             className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#FF5C62] shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
           >
-            {isLoggedIn ? "Choose a plan" : "Create account"}
+            {isLoggedIn ? "Choose a plan" : "Set up your program free"}
           </Link>
         </div>
       </section>

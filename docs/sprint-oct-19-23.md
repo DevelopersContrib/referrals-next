@@ -143,6 +143,14 @@ The Go Live CTA now lives on the brand homepage (and is hidden for admins / Unli
 
 ## B18 — Subscriber report + Unlimited renewals (3h) — HIGH · Ronan + Maida
 
+> **Code/tools done (VNOC-66167):** `scripts/subscriber-report.ts` lists active
+> subscribers per plan from `member_plan` + `url_plan` with optional `--paypal`
+> status check and `--csv` output. Premium Unlimited subscribers are highlighted.
+> Draft emails in `docs/drafts/b18-plan-rename-emails.md`.
+> **Remaining:** Ronan runs the report on prod, sends CSV to Maida. Maida
+> reviews the report, approves the email copy, and decides each Premium
+> Unlimited renewal.
+
 Same-price plans and Unlimited brand coverage are already in code. What is left is the list and the emails.
 
 **Ronan:**

@@ -7,6 +7,8 @@ import { PayPalCheckout } from "@/components/billing/paypal-checkout";
 import { cn } from "@/lib/utils";
 import { getBrandEntitlement, getPrimaryCheckoutBrand } from "@/lib/member-subscription";
 import { publicPlanName, type CatalogPlan } from "@/lib/plan-catalog";
+import { WINBACK_PLAN_ID } from "@/lib/billing-constants";
+import { memberHasUsedWinbackOffer } from "@/lib/billing-winback";
 
 export default async function PlanCheckoutPage({
   params,
@@ -57,6 +59,12 @@ export default async function PlanCheckoutPage({
       );
     }
     redirect("/brands/new");
+  }
+
+  // Win-back $1 offer: one use per member.
+  if (plan.id === WINBACK_PLAN_ID) {
+    const alreadyUsed = await memberHasUsedWinbackOffer(memberId);
+    if (alreadyUsed) redirect("/billing");
   }
 
   // A single-brand plan on a brand that's already live would charge twice.

@@ -59,6 +59,15 @@ Billing rules for this sprint:
 
 ## B4 — Confirm checkout works in production (2h) — CRITICAL · Ronan + Maida
 
+> **Code/tools done (VNOC-66165):** `scripts/billing-checkout-health.ts`
+> summarizes checkout event error counts and PayPal webhook verification
+> status over a `--since` window. Full checklist at
+> `docs/b4-prod-checkout-checklist.md`. The Oct 18 billing code (B1–B5,
+> B7, B9, B11–B15) is confirmed on main.
+> **Remaining:** Deploy main to production. Ronan runs the health script.
+> Maida makes the $9 purchase. Verify the brand went live per the
+> checklist.
+
 The reuse/fallback bugs are fixed in code. Production has not taken a known-good $9 yet, and the Oct 18 billing branch is not deployed.
 
 **Done when:**

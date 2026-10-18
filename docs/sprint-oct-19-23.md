@@ -78,6 +78,15 @@ The reuse/fallback bugs are fixed in code. Production has not taken a known-good
 
 ## B2 — Orphan payments from before the brand-id fix (1h) — CRITICAL · Ronan + Maida
 
+> **Code/tools done (VNOC-66166):** `scripts/orphan-payments.ts` lists
+> member_payment rows with no matching url_plan (member, email, amount, date,
+> PayPal ids, brands with live/private status). Supports `--csv`.
+> `scripts/attach-orphan-payment.ts` attaches a payment to a brand (dry-run
+> by default).
+> **Remaining:** Ronan runs orphan-payments on prod, sends CSV to Maida. Maida
+> decides each row (attach to brand or refund). Ronan runs attach script with
+> `--apply` only after Maida's approval.
+
 Checkout now requires a brand. People who already paid with no `url_plan` may still have a private brand.
 
 **Done when:**

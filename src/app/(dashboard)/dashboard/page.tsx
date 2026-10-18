@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { unstable_cache } from "next/cache";
 import { auth } from "@/lib/auth";
 import { VerifyEmailBanner } from "@/components/auth/verify-email-banner";
 import { WhatsNew } from "@/components/dashboard/whats-new";
@@ -32,7 +33,41 @@ import {
   LayoutGridIcon,
 } from "lucide-react";
 
-async function getDashboardData(memberId: number) {
+const BIG_ACCOUNT_CAMPAIGNS = 500;
+
+/** Participants, shares, clicks and widget views across all of a member's campaigns. */
+async function accountTotals(memberId: number) {
+  const rows = await prisma.$queryRaw<
+    { participants: bigint | null; shares: bigint | null; clicks: number | bigint | null; impressions: number | bigint | null }[]
+  >`
+    SELECT
+      (SELECT COUNT(*) FROM campaign_participants cp
+         JOIN member_campaigns mc ON mc.id = cp.campaign_id
+        WHERE mc.member_id = ${memberId}) AS participants,
+      (SELECT COUNT(*) FROM participants_share ps
+         JOIN member_campaigns mc ON mc.id = ps.campaign_id
+        WHERE mc.member_id = ${memberId}) AS shares,
+      (SELECT COALESCE(SUM(ps.clicks), 0) FROM participants_share ps
+         JOIN member_campaigns mc ON mc.id = ps.campaign_id
+        WHERE mc.member_id = ${memberId}) AS clicks,
+      (SELECT COALESCE(SUM(wi.views), 0) FROM campaign_widget_impressions_count wi
+         JOIN member_campaigns mc ON mc.id = wi.campaign_id
+        WHERE mc.member_id = ${memberId}) AS impressions`;
+  const r = rows[0];
+  // Plain numbers so the result can be cached.
+  return {
+    participants: Number(r?.participants ?? 0),
+    shares: Number(r?.shares ?? 0),
+    clicks: Number(r?.clicks ?? 0),
+    impressions: Number(r?.impressions ?? 0),
+  };
+}
+
+const cachedAccountTotals = unstable_cache(accountTotals, ["dashboard-account-totals"], {
+  revalidate: 300,
+});
+
+async function getDashboardData(memberId: number, opts: { isAdmin: boolean }) {
   const brands = await prisma.member_urls.findMany({
     where: { member_id: memberId },
     orderBy: { date_added: "desc" },
@@ -43,7 +78,7 @@ async function getDashboardData(memberId: number) {
 
   // Totals are counted in the database by account. Big accounts (network
   // owners) have 20k+ campaigns, so never load their ids into the app.
-  const [brandTotal, campaignTotal, perBrand, totals] = await Promise.all([
+  const [brandTotal, campaignTotal, perBrand] = await Promise.all([
     prisma.member_urls.count({ where: { member_id: memberId } }),
     prisma.member_campaigns.count({ where: { member_id: memberId } }),
     brandIds.length
@@ -53,28 +88,17 @@ async function getDashboardData(memberId: number) {
           _count: { _all: true },
         })
       : Promise.resolve([]),
-    prisma.$queryRaw<
-      { participants: bigint | null; shares: bigint | null; clicks: number | bigint | null; impressions: number | bigint | null }[]
-    >`
-      SELECT
-        (SELECT COUNT(*) FROM campaign_participants cp
-           JOIN member_campaigns mc ON mc.id = cp.campaign_id
-          WHERE mc.member_id = ${memberId}) AS participants,
-        (SELECT COUNT(*) FROM participants_share ps
-           JOIN member_campaigns mc ON mc.id = ps.campaign_id
-          WHERE mc.member_id = ${memberId}) AS shares,
-        (SELECT COALESCE(SUM(ps.clicks), 0) FROM participants_share ps
-           JOIN member_campaigns mc ON mc.id = ps.campaign_id
-          WHERE mc.member_id = ${memberId}) AS clicks,
-        (SELECT COALESCE(SUM(wi.views), 0) FROM campaign_widget_impressions_count wi
-           JOIN member_campaigns mc ON mc.id = wi.campaign_id
-          WHERE mc.member_id = ${memberId}) AS impressions`,
   ]);
 
   const campaignCountByBrandMap = new Map<number, number>(
     perBrand.map((r) => [r.url_id, r._count._all] as const),
   );
-  const t = totals[0];
+  // Big accounts and admins get totals cached for a few minutes; everyone
+  // else sees them live so a new signup shows up right away.
+  const t =
+    opts.isAdmin || campaignTotal > BIG_ACCOUNT_CAMPAIGNS
+      ? await cachedAccountTotals(memberId)
+      : await accountTotals(memberId);
 
   // Build a map of campaign counts by brand
   return {
@@ -83,10 +107,10 @@ async function getDashboardData(memberId: number) {
     stats: {
       brands: brandTotal,
       campaigns: campaignTotal,
-      participants: Number(t?.participants ?? 0),
-      clicks: Number(t?.clicks ?? 0),
-      shares: Number(t?.shares ?? 0),
-      impressions: Number(t?.impressions ?? 0),
+      participants: t.participants,
+      clicks: t.clicks,
+      shares: t.shares,
+      impressions: t.impressions,
     },
   };
 }
@@ -121,7 +145,9 @@ export default async function DashboardPage() {
 
   let data;
   try {
-    data = await getDashboardData(memberId);
+    data = await getDashboardData(memberId, {
+      isAdmin: Boolean((session.user as { isAdmin?: boolean }).isAdmin),
+    });
   } catch {
     data = {
       brands: [],

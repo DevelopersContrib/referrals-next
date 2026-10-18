@@ -59,6 +59,15 @@ Billing rules for this sprint:
 
 ## B4 — Confirm checkout works in production (2h) — CRITICAL · Ronan + Maida
 
+> **Code/tools done (VNOC-66165):** `scripts/billing-checkout-health.ts`
+> summarizes checkout event error counts and PayPal webhook verification
+> status over a `--since` window. Full checklist at
+> `docs/b4-prod-checkout-checklist.md`. The Oct 18 billing code (B1–B5,
+> B7, B9, B11–B15) is confirmed on main.
+> **Remaining:** Deploy main to production. Ronan runs the health script.
+> Maida makes the $9 purchase. Verify the brand went live per the
+> checklist.
+
 The reuse/fallback bugs are fixed in code. Production has not taken a known-good $9 yet, and the Oct 18 billing branch is not deployed.
 
 **Done when:**
@@ -149,13 +158,24 @@ Same-price plans and Unlimited brand coverage are already in code. What is left 
 
 ## P2 — If time is left Friday
 
-## B10 — MRR ignores per-brand subscriptions (2h) — MEDIUM · Ronan
+## B10 — MRR ignores per-brand subscriptions (2h) — ✅ DONE · Ronan
+
+PR: `cursor/b10-mrr-fix-ed7e`
 
 **Problem:** MRR only counts `members.plan_id`, so per-brand payments are missing. It can show $0 while people are paying.
 
 **Where:** `src/lib/admin-subscriptions.ts:91`, `src/lib/revenue.ts:121`, `scripts/paid-funnel-snapshot.ts`.
 
-**Done when:** MRR is the sum of active `url_plan` and `member_plan` subscriptions, and it matches PayPal.
+**Done:**
+- MRR is now the sum of active `url_plan` and `member_plan` subscriptions
+- Yearly plans normalised to monthly (price / 12)
+- Cancelled / suspended / expired subscriptions excluded
+- Same PayPal agreement in both tables counted once
+- VNOC / network brands stay at $0
+- Shared helper: `src/lib/mrr.ts` (`computeActiveMrr` / `computeMrrFromRows`)
+- Smoke test: `scripts/smoke-mrr.ts`
+
+**Still open (needs prod access — Lee):** Verify computed MRR matches PayPal active subscriptions total. Requires PayPal API read against the live account.
 
 ---
 

@@ -16,7 +16,9 @@ export default async function DashboardLayout({
     where: { member_id: memberId },
     orderBy: { date_added: "desc" },
     select: { id: true, domain: true, logo_url: true },
-    take: 500,
+    // Recent brands for the switcher. Network owners have 20k+; the sidebar
+    // fetches the brand you're in if it isn't one of these.
+    take: 50,
   });
 
   return (

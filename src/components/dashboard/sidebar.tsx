@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -97,9 +97,26 @@ export function DashboardSidebar({
   const router = useRouter();
   // Inside /brands/{id}/... show that brand's own menu.
   const brandMatch = pathname.match(/^\/brands\/(\d+)(?:\/([a-z-]+))?/);
-  const activeBrand = brandMatch
-    ? brands.find((b) => b.id === Number(brandMatch[1])) ?? null
-    : null;
+  const activeBrandId = brandMatch ? Number(brandMatch[1]) : null;
+  const listed = activeBrandId ? brands.find((b) => b.id === activeBrandId) ?? null : null;
+  // Brands outside the recent list (big accounts) are looked up on demand.
+  const [fetched, setFetched] = useState<{ id: number; domain: string; logo_url?: string | null } | null>(null);
+  useEffect(() => {
+    if (!activeBrandId || listed) return;
+    let alive = true;
+    fetch(`/api/brands/${activeBrandId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b) => {
+        if (alive && b?.id) setFetched({ id: Number(b.id), domain: b.domain || "Brand", logo_url: b.logo_url ?? null });
+      })
+      .catch(() => null);
+    return () => {
+      alive = false;
+    };
+  }, [activeBrandId, listed]);
+  const activeBrand = listed ?? (fetched && fetched.id === activeBrandId ? fetched : null);
+  const switcherBrands =
+    activeBrand && !listed ? [activeBrand, ...brands] : brands;
   const brandSection =
     brandMatch?.[2] && BRAND_SECTIONS.includes(brandMatch[2]) ? brandMatch[2] : "";
   const { data: session } = useSession();
@@ -159,7 +176,7 @@ export function DashboardSidebar({
                         }}
                         className="w-full truncate rounded-md border-0 bg-transparent py-1 pr-6 text-sm font-semibold text-[#3f4047] focus:ring-2 focus:ring-brand/30"
                       >
-                        {brands.map((b) => (
+                        {switcherBrands.map((b) => (
                           <option key={b.id} value={b.id}>
                             {b.domain}
                           </option>

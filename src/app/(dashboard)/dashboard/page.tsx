@@ -41,67 +41,52 @@ async function getDashboardData(memberId: number) {
 
   const brandIds = brands.map((b) => b.id);
 
-  let totalCampaigns = 0;
-  let totalParticipants = 0;
-  let totalClicks = 0;
-  let totalShares = 0;
-  let totalImpressions = 0;
-  const campaignCountByBrandMap = new Map<number, number>();
+  // Totals are counted in the database by account. Big accounts (network
+  // owners) have 20k+ campaigns, so never load their ids into the app.
+  const [brandTotal, campaignTotal, perBrand, totals] = await Promise.all([
+    prisma.member_urls.count({ where: { member_id: memberId } }),
+    prisma.member_campaigns.count({ where: { member_id: memberId } }),
+    brandIds.length
+      ? prisma.member_campaigns.groupBy({
+          by: ["url_id"],
+          where: { member_id: memberId, url_id: { in: brandIds } },
+          _count: { _all: true },
+        })
+      : Promise.resolve([]),
+    prisma.$queryRaw<
+      { participants: bigint | null; shares: bigint | null; clicks: number | bigint | null; impressions: number | bigint | null }[]
+    >`
+      SELECT
+        (SELECT COUNT(*) FROM campaign_participants cp
+           JOIN member_campaigns mc ON mc.id = cp.campaign_id
+          WHERE mc.member_id = ${memberId}) AS participants,
+        (SELECT COUNT(*) FROM participants_share ps
+           JOIN member_campaigns mc ON mc.id = ps.campaign_id
+          WHERE mc.member_id = ${memberId}) AS shares,
+        (SELECT COALESCE(SUM(ps.clicks), 0) FROM participants_share ps
+           JOIN member_campaigns mc ON mc.id = ps.campaign_id
+          WHERE mc.member_id = ${memberId}) AS clicks,
+        (SELECT COALESCE(SUM(wi.views), 0) FROM campaign_widget_impressions_count wi
+           JOIN member_campaigns mc ON mc.id = wi.campaign_id
+          WHERE mc.member_id = ${memberId}) AS impressions`,
+  ]);
 
-  if (brandIds.length > 0) {
-    const allCampaigns = await prisma.member_campaigns.findMany({
-      where: { member_id: memberId },
-      select: { id: true, url_id: true },
-    });
-
-    totalCampaigns = allCampaigns.length;
-    const campaignIds = allCampaigns.map((c) => c.id);
-
-    // Count campaigns per brand manually
-    for (const c of allCampaigns) {
-      campaignCountByBrandMap.set(
-        c.url_id,
-        (campaignCountByBrandMap.get(c.url_id) || 0) + 1,
-      );
-    }
-
-    if (campaignIds.length > 0) {
-      const [participantCount, clicksAgg, shareCount, impressionsAgg] =
-        await Promise.all([
-          prisma.campaign_participants.count({
-            where: { campaign_id: { in: campaignIds } },
-          }),
-          prisma.participants_share.aggregate({
-            where: { campaign_id: { in: campaignIds } },
-            _sum: { clicks: true },
-          }),
-          prisma.participants_share.count({
-            where: { campaign_id: { in: campaignIds } },
-          }),
-          prisma.campaign_widget_impressions_count.aggregate({
-            where: { campaign_id: { in: campaignIds } },
-            _sum: { views: true },
-          }),
-        ]);
-
-      totalParticipants = participantCount;
-      totalClicks = clicksAgg._sum.clicks || 0;
-      totalShares = shareCount;
-      totalImpressions = Number(impressionsAgg._sum.views || 0);
-    }
-  }
+  const campaignCountByBrandMap = new Map<number, number>(
+    perBrand.map((r) => [r.url_id, r._count._all] as const),
+  );
+  const t = totals[0];
 
   // Build a map of campaign counts by brand
   return {
     brands,
     campaignCountByBrand: campaignCountByBrandMap,
     stats: {
-      brands: brands.length,
-      campaigns: totalCampaigns,
-      participants: totalParticipants,
-      clicks: totalClicks,
-      shares: totalShares,
-      impressions: totalImpressions,
+      brands: brandTotal,
+      campaigns: campaignTotal,
+      participants: Number(t?.participants ?? 0),
+      clicks: Number(t?.clicks ?? 0),
+      shares: Number(t?.shares ?? 0),
+      impressions: Number(t?.impressions ?? 0),
     },
   };
 }

@@ -115,6 +115,53 @@ export async function getSubscription(subscriptionId: string) {
   return response.json();
 }
 
+export async function getBillingPlan(planId: string) {
+  const response = await fetch(
+    `${getPayPalApiBaseUrl()}/v1/billing/plans/${planId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${await getAccessToken()}`,
+      },
+    }
+  );
+  if (!response.ok) return null;
+  return response.json() as Promise<{ id?: string; status?: string; name?: string }>;
+}
+
+async function postSubscriptionAction(
+  subscriptionId: string,
+  action: "activate" | "suspend",
+  reason: string,
+) {
+  const response = await fetch(
+    `${getPayPalApiBaseUrl()}/v1/billing/subscriptions/${subscriptionId}/${action}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${await getAccessToken()}`,
+      },
+      body: JSON.stringify({ reason }),
+    },
+  );
+  if (response.status === 204) return { success: true };
+  return response.json();
+}
+
+export async function activateSubscription(
+  subscriptionId: string,
+  reason = "Customer requested reactivation",
+) {
+  return postSubscriptionAction(subscriptionId, "activate", reason);
+}
+
+export async function suspendSubscription(
+  subscriptionId: string,
+  reason = "Customer requested suspension",
+) {
+  return postSubscriptionAction(subscriptionId, "suspend", reason);
+}
+
 function getPayPalApiBaseUrl(): string {
   return process.env.PAYPAL_MODE === "live"
     ? "https://api-m.paypal.com"

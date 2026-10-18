@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendCampaignEntryEmail } from "@/lib/campaign-email";
 import { syncParticipantToMailchimp } from "@/lib/integrations/mailchimp-sync";
@@ -57,7 +58,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!(await isCampaignPubliclyLive(campaign))) {
+    const session = await auth();
+    const ownerId = session?.user?.id ? parseInt(session.user.id, 10) : 0;
+    const ownerPreview =
+      ownerId > 0 && campaign.member_id === ownerId;
+    if (!ownerPreview && !(await isCampaignPubliclyLive(campaign))) {
       return programNotLiveResponse(corsHeaders);
     }
 
@@ -72,12 +77,14 @@ export async function POST(request: NextRequest) {
     let isNewParticipant = false;
 
     if (!participant) {
-      const cap = await assertCanAcceptParticipant(campaign.url_id, {
-        email: email.toLowerCase().trim(),
-      });
-      if (!cap.ok) {
-        if (cap.reason === "not_live") return programNotLiveResponse(corsHeaders);
-        return participantCapResponse(corsHeaders);
+      if (!ownerPreview) {
+        const cap = await assertCanAcceptParticipant(campaign.url_id, {
+          email: email.toLowerCase().trim(),
+        });
+        if (!cap.ok) {
+          if (cap.reason === "not_live") return programNotLiveResponse(corsHeaders);
+          return participantCapResponse(corsHeaders);
+        }
       }
 
       isNewParticipant = true;
@@ -148,7 +155,7 @@ export async function POST(request: NextRequest) {
       url: shareUrl,
     });
 
-    if (isNewParticipant) {
+    if (isNewParticipant && !ownerPreview) {
       try {
         const emailContent = await prisma.campaign_email_content.findFirst({
           where: { campaign_id: campaignIdNum },

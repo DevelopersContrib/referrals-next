@@ -1,8 +1,45 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { brandForHost, isAppHost, normalizeHost, ROOT_DOMAIN } from "@/lib/brand-domains";
 
-export function proxy(request: NextRequest) {
+/** Paths a white-label host serves as-is (assets, tracking, widget, APIs). */
+const BRAND_HOST_PASSTHROUGH = ["/_next", "/api/", "/t/", "/t2/", "/go/", "/widget"];
+
+/**
+ * A brand's own address (name.referrals.com or refer.theirsite.com) shows that
+ * brand's public pages: "/" is the brand page, "/campaign/123" a campaign.
+ * Anything else (dashboard, sign-in) belongs on referrals.com.
+ */
+async function brandHostResponse(request: NextRequest, host: string) {
+  const { pathname, search } = request.nextUrl;
+  const brand = await brandForHost(host);
+  if (!brand) {
+    return NextResponse.redirect(`https://www.${ROOT_DOMAIN}/`, 307);
+  }
+  if (pathname.includes(".") || BRAND_HOST_PASSTHROUGH.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
+  // Links to this brand's own /p/ pages still work; other brands' pages don't show here.
+  const own = [`/p/${brand.slug}`, `/p/${brand.brandId}`];
+  if (own.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    return NextResponse.next();
+  }
+  if (pathname === "/" || pathname === "/participants" || /^\/campaign\/\d+\/?$/.test(pathname)) {
+    const url = request.nextUrl.clone();
+    // By id, so a slug shared with an older brand can't pick the wrong one.
+    url.pathname = `/p/${brand.brandId}${pathname === "/" ? "" : pathname.replace(/\/$/, "")}`;
+    return NextResponse.rewrite(url, { headers: { "x-brand-host": host } });
+  }
+  return NextResponse.redirect(`https://www.${ROOT_DOMAIN}${pathname}${search}`, 307);
+}
+
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  const host = normalizeHost(
+    request.headers.get("host") ?? request.headers.get("x-forwarded-host")?.split(",")[0],
+  );
+  if (!isAppHost(host)) return brandHostResponse(request, host);
 
   // Public routes — always accessible
   const publicPrefixes = [

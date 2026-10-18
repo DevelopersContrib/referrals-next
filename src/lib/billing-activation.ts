@@ -1,9 +1,10 @@
 import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSubscription } from "@/lib/paypal";
+import { getBillingPlan, getSubscription } from "@/lib/paypal";
+import { paypalPlanNameFor } from "@/lib/billing-paypal-plan";
 import { postVnocAttribution, resolveVnocPlan } from "@/lib/vnoc-attribution";
 import { handlePaidEngagementTransition } from "@/lib/engagement";
-import { isVnocBrand } from "@/lib/member-subscription";
+import { getPrimaryCheckoutBrand, isVnocBrand } from "@/lib/member-subscription";
 import { publishCampaignGoLive } from "@/lib/campaign-live";
 import {
   logCheckoutEvent,
@@ -150,6 +151,23 @@ export async function activatePaidSubscription(opts: {
       });
       return { ok: false, error: "plan_mismatch" };
     }
+    if (!knownMapping) {
+      // First sale of this PayPal plan: it must be the plan we created for
+      // this internal plan (its name carries our plan id and price).
+      const paypalPlan = (await getBillingPlan(paypalPlanId).catch(() => null)) as
+        | { name?: string }
+        | null;
+      if (paypalPlan?.name !== paypalPlanNameFor(plan)) {
+        console.error(
+          `[billing] plan mismatch: paypal plan ${paypalPlanId} is not the plan for ${plan.id}`
+        );
+        await log("server_error", {
+          errorCode: "plan_mismatch",
+          errorMessage: "PayPal plan is not the plan created for this internal plan",
+        });
+        return { ok: false, error: "plan_mismatch" };
+      }
+    }
 
     let resolvedBrandId = opts.brandId ?? null;
     if (!resolvedBrandId && attemptId) {
@@ -159,6 +177,10 @@ export async function activatePaidSubscription(opts: {
         select: { brand_id: true },
       });
       resolvedBrandId = attempt?.brand_id ?? null;
+    }
+    if (!resolvedBrandId) {
+      const primary = await getPrimaryCheckoutBrand(memberId);
+      resolvedBrandId = primary?.id ?? null;
     }
     let stampBrandId: number | null = resolvedBrandId;
     if (resolvedBrandId) {
@@ -203,12 +225,22 @@ export async function activatePaidSubscription(opts: {
           date_added: now,
         },
       });
+      // Never shorten time the brand already paid for.
+      const current = await prisma.member_urls.findUnique({
+        where: { id: stampBrandId },
+        select: { plan_expiry: true },
+      });
+      const brandExpiry =
+        current?.plan_expiry && current.plan_expiry > now
+          ? new Date(current.plan_expiry.getTime() + (plan.days || 30) * 86_400_000)
+          : expiry;
       await prisma.member_urls.update({
         where: { id: stampBrandId },
-        data: { plan_expiry: expiry },
+        data: { plan_expiry: brandExpiry },
       });
     }
 
+    const coversAccount = (plan.no_of_domains ?? 1) !== 1;
     await prisma.member_payment.create({
       data: {
         member_id: memberId,
@@ -218,15 +250,20 @@ export async function activatePaidSubscription(opts: {
         transaction_id: subscriptionId,
         currency: "USD",
         plan_expiry: expiry,
+        // Per-brand billing history; agency plans pay for the account.
+        url_id: coversAccount ? null : stampBrandId,
       },
     });
 
-    if (!stampBrandId) {
-      await prisma.members.update({
-        where: { id: memberId },
-        data: { plan_id: plan.id, plan_expiry: expiry },
-      });
-    }
+    await prisma.members.update({
+      where: { id: memberId },
+      data: {
+        is_verified: true,
+        ...(coversAccount || !stampBrandId
+          ? { plan_id: plan.id, plan_expiry: expiry }
+          : {}),
+      },
+    });
 
     const priceUsd = plan.price ?? 0;
     const billing = (plan.days || 30) >= 365 ? "year" : "month";
@@ -344,8 +381,25 @@ async function readGoLiveCampaignFromAttempt(
 /** Extend paid period on renewal — per-brand when url_plan exists, else member-level. */
 export async function extendPaidSubscriptionPeriod(
   agreementId: string,
-  days = 30,
+  days?: number,
 ) {
+  const mapped = await prisma.member_plan.findFirst({
+    where: { paypal_agreement_id: agreementId },
+    select: { payment_id: true },
+  });
+  const mappedPlan = mapped?.payment_id
+    ? await prisma.plans.findUnique({
+        where: { id: mapped.payment_id },
+        select: { days: true, no_of_domains: true },
+      })
+    : null;
+  let periodDays = days;
+  if (periodDays == null && mappedPlan) {
+    periodDays = mappedPlan.days || 30;
+  }
+  if (periodDays == null) periodDays = 30;
+  days = periodDays;
+
   const now = Date.now();
   const urlPlans = await prisma.url_plan.findMany({
     where: { paypal_agreement_id: agreementId },
@@ -368,8 +422,11 @@ export async function extendPaidSubscriptionPeriod(
         data: { plan_expiry: newExpiry },
       });
     }
-    return;
   }
+
+  // A single-brand renewal pays for that brand only. Extending the account
+  // too would revive a lapsed agency plan for free.
+  if (urlPlans.length > 0 && (mappedPlan?.no_of_domains ?? 1) === 1) return;
 
   const memberPlan = await prisma.member_plan.findFirst({
     where: { paypal_agreement_id: agreementId },

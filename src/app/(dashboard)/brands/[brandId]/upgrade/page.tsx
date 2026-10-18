@@ -1,9 +1,11 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
 
-/** REF-J3: orphan upgrade page → existing Growth checkout */
+/**
+ * One publish step for every "pay $9" button: checkout for this brand, carrying
+ * its newest campaign so paying actually makes that campaign live.
+ */
 export default async function UpgradeBrandPage({
   params,
 }: {
@@ -24,5 +26,7 @@ export default async function UpgradeBrandPage({
     redirect("/brands");
   }
 
-  redirect(`/billing/plan/${DEFAULT_PAID_PLAN_ID}?brandId=${brand.id}`);
+  // The brand's billing page shows monthly, yearly and agency, each going
+  // to checkout with this brand and its newest campaign.
+  redirect(`/brands/${brand.id}/billing`);
 }

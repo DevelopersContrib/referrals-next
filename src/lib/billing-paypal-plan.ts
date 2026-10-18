@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import {
   createSubscriptionPlan,
   findSubscriptionPlanIdByName,
+  getBillingPlan,
   getOrCreateProduct,
 } from "@/lib/paypal";
 
@@ -40,7 +41,16 @@ export async function resolvePaypalPlanId(plan: BillablePlan): Promise<string | 
     orderBy: { id: "desc" },
     select: { paypal_plan_id: true },
   });
-  if (mapped?.paypal_plan_id) return mapped.paypal_plan_id;
+  if (mapped?.paypal_plan_id) {
+    try {
+      const live = await getBillingPlan(mapped.paypal_plan_id);
+      if ((live?.status ?? "").toUpperCase() === "ACTIVE") {
+        return mapped.paypal_plan_id;
+      }
+    } catch (error) {
+      console.error("[billing] stored PayPal plan is not reusable:", error);
+    }
+  }
 
   const name = paypalPlanNameFor(plan);
 

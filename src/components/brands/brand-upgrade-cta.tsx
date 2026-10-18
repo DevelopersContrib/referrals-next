@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { SparklesIcon } from "lucide-react";
-import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
 import { cn } from "@/lib/utils";
 
 export const GROWTH_BRAND_CTA_LABEL = "Growth — $9/mo for this brand";
@@ -21,7 +20,8 @@ export function BrandUpgradeCta({
   variant = "row",
   className,
 }: BrandUpgradeCtaProps) {
-  const href = `/billing/plan/${DEFAULT_PAID_PLAN_ID}?brandId=${brandId}`;
+  // Goes through /brands/{id}/upgrade, which adds the campaign to publish.
+  const href = `/brands/${brandId}/upgrade`;
 
   if (variant === "card") {
     return (

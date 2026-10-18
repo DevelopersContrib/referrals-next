@@ -24,6 +24,8 @@ type PreviewProps = {
   publicPageUrl: string;
   widgetUrl: string;
   payload: SuggestionPayload;
+  /** Draft/private campaigns: the public page and widget refuse visitors, so hide those links. */
+  isLive?: boolean;
 };
 
 export function CampaignDashboardPreview({
@@ -39,6 +41,7 @@ export function CampaignDashboardPreview({
   publicPageUrl,
   widgetUrl,
   payload,
+  isLive = true,
 }: PreviewProps) {
   const host = publicPageUrl.replace(/^https?:\/\//, "");
   const snippets = [
@@ -56,6 +59,7 @@ export function CampaignDashboardPreview({
             What visitors see on your public page — not just the join form.
           </p>
         </div>
+        {isLive && (
         <div className="flex flex-wrap items-center gap-3">
           <IntegrationsEmbedLink className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand underline-offset-2 hover:underline">
             <PuzzleIcon className="size-3.5" />
@@ -71,6 +75,7 @@ export function CampaignDashboardPreview({
             <ExternalLinkIcon className="size-3.5" />
           </Link>
         </div>
+        )}
       </div>
 
       <div className="bg-gradient-to-b from-slate-100 to-slate-50 p-3 sm:p-5">
@@ -128,6 +133,11 @@ export function CampaignDashboardPreview({
   );
 }
 
+function widgetButtonColor(raw?: string | null): string | null {
+  const v = (raw || "").trim().replace(/^#/, "");
+  return /^[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(v) ? `#${v}` : null;
+}
+
 export function previewFromRecords(input: {
   kind?: string | null;
   headline: string;
@@ -137,6 +147,7 @@ export function previewFromRecords(input: {
     button_text?: string | null;
     join_button_text?: string | null;
     banner_image_url?: string | null;
+    button_color?: string | null;
   } | null;
   suggestionPayload?: unknown;
   rewardLabel: string | null;
@@ -157,8 +168,9 @@ export function previewFromRecords(input: {
       input.widget?.join_button_text ||
       input.widget?.button_text ||
       look.cta,
-    accentFrom: look.from,
-    accentTo: look.to,
+    // Match the real widget: it paints the button with the saved button color.
+    accentFrom: widgetButtonColor(input.widget?.button_color) ?? look.from,
+    accentTo: widgetButtonColor(input.widget?.button_color) ?? look.to,
     rewardLabel: input.rewardLabel,
     publicPageUrl: input.publicPageUrl,
     widgetUrl: input.widgetUrl,

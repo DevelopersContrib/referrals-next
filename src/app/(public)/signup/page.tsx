@@ -33,7 +33,12 @@ export default async function SignUpPage() {
   return (
     <div className="grid min-h-[calc(100vh-4rem)] lg:grid-cols-2">
       <div className="flex items-center justify-center px-4 py-12 sm:px-8">
-        <SignupForm />
+        <SignupForm
+          googleEnabled={
+            Boolean(process.env.GOOGLE_CLIENT_ID?.trim()) &&
+            Boolean(process.env.GOOGLE_CLIENT_SECRET?.trim())
+          }
+        />
       </div>
       <AuthHeroPanel stats={stats} variant="signup" />
     </div>

@@ -46,7 +46,13 @@ export async function getWidgetData(campaignId: number) {
   if (!campaign) return null;
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://referrals.com";
-  const showBranding = await brandMustShowBranding(campaign.url_id);
+  const [showBranding, brand] = await Promise.all([
+    brandMustShowBranding(campaign.url_id),
+    prisma.member_urls.findUnique({
+      where: { id: campaign.url_id },
+      select: { domain: true, logo_url: true },
+    }),
+  ]);
 
   return {
     config: {
@@ -79,6 +85,9 @@ export async function getWidgetData(campaignId: number) {
       shareText: socialContent?.description || undefined,
       shareTitle: campaign.name,
       showBranding,
+      // Same logo the dashboard and public page show for this brand.
+      brandDomain: brand?.domain || undefined,
+      brandLogoUrl: brand?.logo_url || undefined,
     },
     reward: reward
       ? {

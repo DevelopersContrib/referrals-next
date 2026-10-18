@@ -103,8 +103,8 @@ export default async function VerifyEmailPage({
                 Email Verified
               </h1>
               <p className="mt-2 text-gray-600">
-                Your email has been verified successfully. You can now sign in to
-                your account.
+                Thanks, your email is confirmed. You can publish your brand
+                whenever you&apos;re ready.
               </p>
               {invite && (
                 <SignupInviteCard
@@ -114,10 +114,10 @@ export default async function VerifyEmailPage({
                 />
               )}
               <Link
-                href="/signin"
+                href="/dashboard"
                 className="mt-6 inline-block rounded-lg bg-brand px-6 py-2.5 text-sm font-medium text-white hover:bg-brand-hover"
               >
-                Sign In
+                Continue
               </Link>
             </>
           ) : (

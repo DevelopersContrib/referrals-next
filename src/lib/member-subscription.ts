@@ -9,6 +9,7 @@ import {
   FREE_PARTICIPANT_CAP,
   TRIAL_DAYS,
   TRIAL_PLAN_ID,
+  UNLIMITED_PLAN_ID,
 } from "@/lib/billing-constants";
 
 export {
@@ -157,20 +158,8 @@ export async function getMemberEntitlement(
     select: { plan_id: true, plan_expiry: true, is_verified: true },
   });
 
-  if (!member?.is_verified) {
-    return {
-      status: "unverified",
-      planId: member?.plan_id ?? null,
-      planExpiry: member?.plan_expiry ?? null,
-      daysLeft: daysLeftUntil(member?.plan_expiry),
-      isGrowth: false,
-      isPaid: false,
-      hideBranding: false,
-    };
-  }
-
-  const planId = member.plan_id && member.plan_id > 0 ? member.plan_id : null;
-  const expiry = member.plan_expiry ? new Date(member.plan_expiry) : null;
+  const planId = member?.plan_id && member.plan_id > 0 ? member.plan_id : null;
+  const expiry = member?.plan_expiry ? new Date(member.plan_expiry) : null;
   const activeExpiry = expiry != null && expiry.getTime() > Date.now();
   const daysLeft = daysLeftUntil(expiry);
 
@@ -192,6 +181,18 @@ export async function getMemberEntitlement(
       isGrowth: true,
       isPaid: true,
       hideBranding: true,
+    };
+  }
+
+  if (!member?.is_verified) {
+    return {
+      status: "unverified",
+      planId,
+      planExpiry: expiry,
+      daysLeft,
+      isGrowth: false,
+      isPaid: false,
+      hideBranding: false,
     };
   }
 
@@ -253,21 +254,6 @@ export async function getBrandEntitlement(
     select: { plan_id: true, plan_expiry: true, is_verified: true },
   });
 
-  if (!member?.is_verified) {
-    return {
-      brandId,
-      memberId,
-      isVnoc,
-      status: "unverified",
-      planId: member?.plan_id ?? null,
-      planExpiry: member?.plan_expiry ?? null,
-      daysLeft: daysLeftUntil(member?.plan_expiry),
-      isGrowth: false,
-      isPaid: false,
-      hideBranding: false,
-    };
-  }
-
   if (isVnoc) {
     return {
       brandId,
@@ -319,6 +305,37 @@ export async function getBrandEntitlement(
     }
   }
 
+  const covered = await brandCoveredByAccountPlan(brandId, memberId, member);
+  if (covered) {
+    return {
+      brandId,
+      memberId,
+      isVnoc,
+      status: "paid",
+      planId: covered.planId,
+      planExpiry: covered.planExpiry,
+      daysLeft: daysLeftUntil(covered.planExpiry),
+      isGrowth: true,
+      isPaid: true,
+      hideBranding: true,
+    };
+  }
+
+  if (!member?.is_verified) {
+    return {
+      brandId,
+      memberId,
+      isVnoc,
+      status: "unverified",
+      planId: member?.plan_id ?? null,
+      planExpiry: member?.plan_expiry ?? null,
+      daysLeft: daysLeftUntil(member?.plan_expiry),
+      isGrowth: false,
+      isPaid: false,
+      hideBranding: false,
+    };
+  }
+
   return {
     brandId,
     memberId,
@@ -333,6 +350,48 @@ export async function getBrandEntitlement(
   };
 }
 
+function accountPlanCoversMultipleBrands(
+  planId: number | null | undefined,
+  price: number,
+  noOfDomains: number | null | undefined,
+) {
+  if (!planId || price <= 0) return false;
+  if (planId === UNLIMITED_PLAN_ID) return true;
+  const domains = noOfDomains ?? 1;
+  return domains !== 1;
+}
+
+async function brandCoveredByAccountPlan(
+  brandId: number,
+  memberId: number,
+  member: { plan_id: number | null; plan_expiry: Date | null } | null,
+): Promise<{ planId: number; planExpiry: Date } | null> {
+  const planId = member?.plan_id && member.plan_id > 0 ? member.plan_id : null;
+  const expiry = member?.plan_expiry ? new Date(member.plan_expiry) : null;
+  if (!planId || !expiry || expiry.getTime() <= Date.now()) return null;
+
+  const plan = await prisma.plans.findUnique({
+    where: { id: planId },
+    select: { price: true, no_of_domains: true },
+  });
+  if (!plan || !accountPlanCoversMultipleBrands(planId, plan.price ?? 0, plan.no_of_domains)) {
+    return null;
+  }
+
+  const brands = await prisma.member_urls.findMany({
+    where: { member_id: memberId },
+    orderBy: { date_added: "asc" },
+    select: { id: true, in_vnoc: true, vnoc_id: true },
+  });
+  const countable = brands.filter((b) => !isVnocBrand(b));
+  const cap = plan.no_of_domains != null && plan.no_of_domains > 0
+    ? plan.no_of_domains
+    : Number.POSITIVE_INFINITY;
+  const index = countable.findIndex((b) => b.id === brandId);
+  if (index < 0 || index >= cap) return null;
+  return { planId, planExpiry: expiry };
+}
+
 /**
  * First non-VNOC brand for checkout CTAs.
  * VNOC/network brands are free and must never appear in Go Live / pay prompts.
@@ -343,7 +402,13 @@ export async function getPrimaryCheckoutBrand(memberId: number) {
     orderBy: { date_added: "asc" },
     select: { id: true, domain: true, in_vnoc: true, vnoc_id: true },
   });
-  return brands.find((b) => !isVnocBrand(b)) ?? null;
+  const own = brands.filter((b) => !isVnocBrand(b));
+  // Prefer a brand that still needs paying for, so a checkout never lands on a live brand.
+  for (const b of own) {
+    const e = await getBrandEntitlement(b.id, { applyAdminBypass: false });
+    if (!e?.isPaid) return b;
+  }
+  return own[0] ?? null;
 }
 
 /**
@@ -368,6 +433,44 @@ export async function isBrandGrowthEntitled(brandId: number): Promise<boolean> {
 export async function isBrandOnPaidPlan(brandId: number): Promise<boolean> {
   const e = await getBrandEntitlement(brandId);
   return e?.isPaid ?? false;
+}
+
+/**
+ * Go Live / publish CTA for a specific brand. Hidden when the brand is
+ * already live, the viewer is a platform admin, or the owner has an
+ * active Unlimited subscription.
+ */
+export async function shouldShowBrandPublishCta(opts: {
+  brandId: number;
+  viewerMemberId: number | null;
+  isViewerAdmin?: boolean;
+}): Promise<boolean> {
+  const viewerId = opts.viewerMemberId;
+  if (!viewerId || viewerId <= 0) return false;
+
+  if (
+    opts.isViewerAdmin === true ||
+    (await memberIdIsPlatformAdmin(viewerId))
+  ) {
+    return false;
+  }
+
+  const entitlement = await getBrandEntitlement(opts.brandId, {
+    applyAdminBypass: false,
+  });
+  if (!entitlement) return false;
+  if (entitlement.isPaid || entitlement.isVnoc) return false;
+
+  const owner = await prisma.members.findUnique({
+    where: { id: entitlement.memberId },
+    select: { plan_id: true, plan_expiry: true },
+  });
+  if (owner?.plan_id === UNLIMITED_PLAN_ID) {
+    const expiry = owner.plan_expiry ? new Date(owner.plan_expiry) : null;
+    if (expiry != null && expiry.getTime() > Date.now()) return false;
+  }
+
+  return true;
 }
 
 /** Account is paid only when the member plan price is greater than zero. */
@@ -408,15 +511,99 @@ export async function countMemberParticipants(memberId: number) {
 
 export async function canMemberAddBrand(memberId: number) {
   const e = await getMemberEntitlement(memberId);
-  const n = await countMemberBrands(memberId);
-  if (n >= FREE_DOMAIN_CAP) {
-    return {
-      ok: false as const,
-      entitlement: e,
-      reason: "domain_cap" as const,
-    };
+  const unpaid = await countUnpaidSetupBrands(memberId);
+  if (unpaid < FREE_DOMAIN_CAP) {
+    return { ok: true as const, entitlement: e };
   }
-  return { ok: true as const, entitlement: e };
+  return {
+    ok: false as const,
+    entitlement: e,
+    reason: "domain_cap" as const,
+  };
+}
+
+/** Unpaid non-network brands that occupy the one free setup slot. */
+async function countUnpaidSetupBrands(memberId: number) {
+  const brands = await prisma.member_urls.findMany({
+    where: { member_id: memberId },
+    select: {
+      id: true,
+      in_vnoc: true,
+      vnoc_id: true,
+      plan_expiry: true,
+    },
+  });
+  let unpaid = 0;
+  for (const brand of brands) {
+    if (isVnocBrand(brand)) continue;
+    const entitled = await isBrandGrowthEntitled(brand.id);
+    if (entitled) continue;
+    if (await brandIsAbandonedDraft(brand.id)) continue;
+    unpaid += 1;
+  }
+  return unpaid;
+}
+
+async function brandIsAbandonedDraft(brandId: number) {
+  const [campaigns, analyses] = await Promise.all([
+    prisma.member_campaigns.count({ where: { url_id: brandId } }),
+    prisma.brand_analysis.findMany({
+      where: { url_id: brandId },
+      select: { status: true },
+    }),
+  ]);
+  if (campaigns > 0) return false;
+  if (analyses.length === 0) return false;
+  return analyses.every(
+    (row) => row.status === "failed" || row.status === "expired",
+  );
+}
+
+export type BrandBillingRow = {
+  brandId: number;
+  domain: string | null;
+  status: "live" | "private" | "network";
+  planExpiry: Date | null;
+  subscriptionId: string | null;
+  checkoutPlanId: number;
+};
+
+export async function listMemberBrandBilling(
+  memberId: number,
+): Promise<BrandBillingRow[]> {
+  const brands = await prisma.member_urls.findMany({
+    where: { member_id: memberId },
+    orderBy: { date_added: "asc" },
+    select: {
+      id: true,
+      domain: true,
+      in_vnoc: true,
+      vnoc_id: true,
+      plan_expiry: true,
+    },
+  });
+
+  const rows: BrandBillingRow[] = [];
+  for (const brand of brands) {
+    const entitlement = await getBrandEntitlement(brand.id, {
+      applyAdminBypass: false,
+    });
+    const urlPlan = await prisma.url_plan.findFirst({
+      where: { url_id: brand.id },
+      orderBy: { id: "desc" },
+      select: { paypal_agreement_id: true, payment_id: true },
+    });
+    const isNetwork = isVnocBrand(brand);
+    rows.push({
+      brandId: brand.id,
+      domain: brand.domain,
+      status: isNetwork ? "network" : entitlement?.isPaid ? "live" : "private",
+      planExpiry: entitlement?.planExpiry ?? brand.plan_expiry,
+      subscriptionId: urlPlan?.paypal_agreement_id ?? null,
+      checkoutPlanId: urlPlan?.payment_id || DEFAULT_PAID_PLAN_ID,
+    });
+  }
+  return rows;
 }
 
 export async function countBrandParticipants(brandId: number) {

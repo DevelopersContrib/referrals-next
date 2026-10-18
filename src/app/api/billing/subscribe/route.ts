@@ -7,6 +7,7 @@ import {
   logCheckoutEvent,
   newCheckoutAttemptId,
 } from "@/lib/billing-checkout-log";
+import { getPrimaryCheckoutBrand } from "@/lib/member-subscription";
 
 /**
  * Redirect checkout fallback: creates the subscription server-side and returns
@@ -18,8 +19,32 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { planId, brandId, attemptId: requestedAttemptId } = await req.json();
+  const { planId, brandId: rawBrandId, attemptId: requestedAttemptId } = await req.json();
   const memberId = parseInt(session.user.id, 10);
+  const parsedBrandId = Number(rawBrandId);
+  let brandId =
+    Number.isFinite(parsedBrandId) && parsedBrandId > 0 ? parsedBrandId : null;
+  if (brandId) {
+    const owns = await prisma.member_urls.findFirst({
+      where: { id: brandId, member_id: memberId },
+      select: { id: true },
+    });
+    if (!owns) {
+      return NextResponse.json({ error: "Brand not found" }, { status: 404 });
+    }
+  } else {
+    const primary = await getPrimaryCheckoutBrand(memberId);
+    brandId = primary?.id ?? null;
+  }
+  if (!brandId) {
+    return NextResponse.json(
+      {
+        error: "Create a brand before checkout. Payment publishes that brand.",
+        code: "BRAND_REQUIRED",
+      },
+      { status: 400 },
+    );
+  }
   const existingAttempt =
     typeof requestedAttemptId === "string"
       ? await prisma.billing_checkout_attempts.findFirst({

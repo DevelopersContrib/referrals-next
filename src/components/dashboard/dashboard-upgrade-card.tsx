@@ -1,8 +1,5 @@
 import Link from "next/link";
-import {
-  DEFAULT_PAID_PLAN_ID,
-  FREE_PARTICIPANT_CAP,
-} from "@/lib/billing-constants";
+import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
 
 type DashboardUpgradeCardProps = {
   planName?: string | null;
@@ -15,24 +12,18 @@ type DashboardUpgradeCardProps = {
   brandId?: number | null;
 };
 
-function buildIncludes(props: DashboardUpgradeCardProps): string[] {
-  const domains = props.noOfDomains;
-  const participants = props.campaignsParticipants;
+/** What publishing a brand actually does (pay-to-publish: nothing is public before). */
+function buildIncludes(_props: DashboardUpgradeCardProps): string[] {
   return [
-    "Remove Referrals.com branding from your widget",
-    domains && domains > 0
-      ? `Up to ${domains} brand${domains === 1 ? "" : "s"}`
-      : "Add more brands as you grow",
-    participants && participants > 0
-      ? `${participants.toLocaleString()} participants per campaign`
-      : `Grow past the free ${FREE_PARTICIPANT_CAP}-participant cap`,
-    "Public campaign pages and leaderboards",
-    "Advanced analytics and performance charts",
+    "Your campaign goes public and the widget starts taking signups",
+    "Every feature included: rewards, leaderboards, analytics",
+    "Your branding on the widget, not ours",
+    "Cancel anytime and the brand goes back to private",
   ];
 }
 
 export function DashboardUpgradeCard({
-  planName = "Growth",
+  planName: _planName = "Growth",
   price = 9,
   unit = "month",
   days = 30,
@@ -45,7 +36,7 @@ export function DashboardUpgradeCard({
     campaignsParticipants,
   });
   const href = brandId
-    ? `/billing/plan/${DEFAULT_PAID_PLAN_ID}?brandId=${brandId}`
+    ? `/brands/${brandId}/upgrade`
     : `/billing/plan/${DEFAULT_PAID_PLAN_ID}`;
   const displayPrice = Number(price ?? 0);
 
@@ -53,12 +44,12 @@ export function DashboardUpgradeCard({
     <div className="relative flex w-full min-w-0 flex-col rounded-2xl border border-violet-200/80 bg-white p-5 shadow-xl shadow-violet-200/40 ring-2 ring-[#926efb]/25 sm:p-6">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-[#926efb] via-[#b794f9] to-[#FF5C62]" />
       <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-4 py-1 text-xs font-bold text-white shadow-md">
-        Growth plan
+        Publish
       </span>
 
       <div className="mb-5 rounded-xl bg-gradient-to-br from-violet-500/10 to-rose-50/20 p-4">
         <h3 className="text-lg font-bold tracking-tight text-gray-900 sm:text-xl">
-          {planName || "Growth"}
+          Publish your brand
         </h3>
         <div className="mt-3 flex flex-wrap items-baseline gap-1">
           <span className="text-3xl font-bold tracking-tight text-gray-900">
@@ -69,8 +60,8 @@ export function DashboardUpgradeCard({
           </span>
         </div>
         <p className="mt-2 text-sm text-gray-600">
-          {days || 30}-day billing cycle. Cancel anytime — unlock branding
-          removal, multi-domain, and advanced analytics.
+          Billed every {days || 30} days. Your brand stays private until you
+          publish it.
         </p>
       </div>
 
@@ -90,7 +81,7 @@ export function DashboardUpgradeCard({
         href={href}
         className="mt-6 flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-4 py-3 text-center text-sm font-semibold text-white shadow-md shadow-violet-300/40 transition-all hover:brightness-105 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#926efb]"
       >
-        Growth — $9/mo for this brand
+        Publish for $9/mo
       </Link>
     </div>
   );

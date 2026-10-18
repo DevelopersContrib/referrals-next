@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { brandMustShowBranding } from "@/lib/member-subscription";
 import { encryptShareCode } from "@/lib/encryption";
 import { sendEmail } from "@/lib/ses";
 
@@ -64,6 +65,8 @@ export async function POST(request: NextRequest) {
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://referrals.com";
+    // Paid brands are white label: no Referrals.com line in their emails.
+    const showBranding = await brandMustShowBranding(campaign.url_id).catch(() => true);
     const sent: string[] = [];
     const failed: string[] = [];
 
@@ -101,7 +104,8 @@ export async function POST(request: NextRequest) {
             campaign.name,
             widget?.header_title || campaign.name,
             widget?.description || "",
-            inviteUrl
+            inviteUrl,
+            showBranding
           );
 
         await sendEmail({
@@ -142,7 +146,8 @@ function buildDefaultInviteEmail(
   campaignName: string,
   headerTitle: string,
   description: string,
-  inviteUrl: string
+  inviteUrl: string,
+  showBranding: boolean
 ): string {
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
@@ -156,9 +161,9 @@ function buildDefaultInviteEmail(
           Join Now
         </a>
       </p>
-      <p style="font-size: 12px; color: #9CA3AF;">
+      ${showBranding ? `<p style="font-size: 12px; color: #9CA3AF;">
         Powered by <a href="https://referrals.com" style="color: #9CA3AF;">Referrals.com</a>
-      </p>
+      </p>` : ""}
     </div>
   `;
 }

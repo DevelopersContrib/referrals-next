@@ -167,18 +167,47 @@ export async function POST(req: NextRequest) {
           }
 
           if (plan) {
+            const saleId = resource.id;
+            const alreadyLogged = saleId
+              ? await prisma.member_payment.findFirst({
+                  where: { transaction_id: saleId },
+                  select: { id: true },
+                })
+              : null;
+            if (alreadyLogged) break;
+
+            // The first sale arrives right after checkout, and activation already
+            // set the period for it. Every later sale is a renewal and extends it.
+            const activationRow = await prisma.member_payment.findFirst({
+              where: { transaction_id: agreementId },
+              select: { datetime_created: true },
+            });
+            const FIRST_SALE_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
+            const isFirstSale =
+              activationRow?.datetime_created != null &&
+              Date.now() - new Date(activationRow.datetime_created).getTime() < FIRST_SALE_WINDOW_MS;
+
+            // Renewals belong to the same brand as the subscription.
+            const brandPlan = await prisma.url_plan.findFirst({
+              where: { paypal_agreement_id: agreementId },
+              orderBy: { id: "desc" },
+              select: { url_id: true },
+            });
             await prisma.member_payment.create({
               data: {
                 member_id: plan.member_id,
                 amount: parseFloat(resource.amount?.total || "0"),
                 datetime_created: new Date(),
                 status: "completed",
-                transaction_id: resource.id,
+                transaction_id: saleId,
                 currency: resource.amount?.currency || "USD",
+                url_id: brandPlan?.url_id ?? null,
               },
             });
 
-            await extendPaidSubscriptionPeriod(agreementId, 30);
+            if (!isFirstSale) {
+              await extendPaidSubscriptionPeriod(agreementId);
+            }
 
             // Report the paid charge to VNOC (idempotent by transaction id).
             const amountUsd = parseFloat(resource.amount?.total || "0");

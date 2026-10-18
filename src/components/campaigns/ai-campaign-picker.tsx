@@ -285,7 +285,17 @@ export function AiCampaignPicker({
         />
       ) : campaigns.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-[#d7dce0] bg-white p-6 text-sm text-[#a7abc3]">
-          We couldn&apos;t generate campaigns automatically. Use a template below or start from scratch.
+          We couldn&apos;t generate campaigns automatically this time.{" "}
+          {brandId ? (
+            <a
+              href={`/brands/${brandId}/campaigns/new`}
+              className="font-medium text-[#d63a40] underline"
+            >
+              Start from a template instead
+            </a>
+          ) : (
+            "Try again in a moment, or start from a template."
+          )}
         </div>
       ) : (
         <div className="space-y-4">

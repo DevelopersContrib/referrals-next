@@ -13,9 +13,12 @@ export async function GET(request: NextRequest) {
     const memberId = parseInt(session.user.id, 10);
     const { searchParams } = new URL(request.url);
     const q = searchParams.get("q")?.trim() || "";
+    // Optional: only this brand's campaigns (brand menu → Contacts).
+    const brandIdRaw = parseInt(searchParams.get("brandId") || "", 10);
+    const brandId = Number.isFinite(brandIdRaw) && brandIdRaw > 0 ? brandIdRaw : null;
 
     const campaigns = await prisma.member_campaigns.findMany({
-      where: { member_id: memberId },
+      where: { member_id: memberId, ...(brandId ? { url_id: brandId } : {}) },
       select: { id: true, name: true },
     });
     const campaignIds = campaigns.map((c) => c.id);

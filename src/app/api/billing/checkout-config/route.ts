@@ -6,6 +6,7 @@ import {
   logCheckoutEvent,
   newCheckoutAttemptId,
 } from "@/lib/billing-checkout-log";
+import { getPrimaryCheckoutBrand } from "@/lib/member-subscription";
 
 /**
  * GET /api/billing/checkout-config?planId=2
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
 
   const memberId = parseInt(session.user.id, 10);
   const parsedBrandId = brandIdParam ? Number(brandIdParam) : null;
-  const brandId =
+  let brandId =
     parsedBrandId != null && Number.isFinite(parsedBrandId) ? parsedBrandId : null;
   if (brandId != null) {
     const ownsBrand = await prisma.member_urls.findFirst({
@@ -56,6 +57,18 @@ export async function GET(req: NextRequest) {
     if (!ownsBrand) {
       return NextResponse.json({ error: "Brand not found" }, { status: 404 });
     }
+  } else {
+    const primary = await getPrimaryCheckoutBrand(memberId);
+    brandId = primary?.id ?? null;
+  }
+  if (brandId == null) {
+    return NextResponse.json(
+      {
+        error: "Create a brand before checkout. Payment publishes that brand.",
+        code: "BRAND_REQUIRED",
+      },
+      { status: 400 },
+    );
   }
 
   const attemptId = newCheckoutAttemptId();

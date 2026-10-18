@@ -103,14 +103,12 @@ const SOCIAL_FIELDS: Array<{
 
 interface BrandEditPanelProps {
   brandId: string;
-  isPremium?: boolean;
   /** REF-J5: unpaid non-VNOC only — never show without brandId in the href. */
   showUpgradeCta?: boolean;
 }
 
 export function BrandEditPanel({
   brandId,
-  isPremium = false,
   showUpgradeCta = false,
 }: BrandEditPanelProps) {
   const router = useRouter();
@@ -449,15 +447,6 @@ export function BrandEditPanel({
                 >
                   Social Media Brand
                 </TabsTrigger>
-                {isPremium && (
-                  <TabsTrigger
-                    value="whitelabel"
-                    data-tab-value="whitelabel"
-                    className="h-10 flex-none gap-1.5 px-3 data-active:text-brand data-active:after:bg-brand"
-                  >
-                    Whitelabel
-                  </TabsTrigger>
-                )}
               </ScrollableTabsList>
             </div>
 
@@ -730,21 +719,6 @@ export function BrandEditPanel({
               </form>
             </TabsContent>
 
-            {isPremium && (
-              <TabsContent value="whitelabel" className="p-6">
-                <div className="mx-auto max-w-2xl space-y-4 text-sm text-[#575962]">
-                  <p>
-                    Configure a custom domain and whitelabel settings for this
-                    brand&apos;s referral campaigns.
-                  </p>
-                  <Link href={`/brands/${brandId}/subdomain`}>
-                    <Button className="gap-2 bg-brand hover:bg-brand-hover">
-                      Open Whitelabel Settings
-                    </Button>
-                  </Link>
-                </div>
-              </TabsContent>
-            )}
           </Tabs>
         </div>
 

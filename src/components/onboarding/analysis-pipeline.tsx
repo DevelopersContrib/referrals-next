@@ -244,7 +244,7 @@ export function AnalysisPipeline({
           </div>
 
           <p className="mt-4 text-center text-xs text-gray-400">
-            This usually takes about 15 seconds. Hang tight.
+            This usually takes under a minute. Hang tight.
           </p>
         </div>
       </div>

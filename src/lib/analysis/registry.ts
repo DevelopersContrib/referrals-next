@@ -61,6 +61,18 @@ const vnocRunner: ModuleRunner = async (analysis) => {
 const crawlRunner: ModuleRunner = async (analysis) => {
   const c = await crawlSite(analysis.input_url);
 
+  // Give the brand the logo we found on its site, unless the owner (or the
+  // VNOC match) already set one. Settings, the widget and public pages read it.
+  if (analysis.url_id && c.logoUrl && c.logoUrl.length <= 200) {
+    await prisma.member_urls.updateMany({
+      where: {
+        id: analysis.url_id,
+        OR: [{ logo_url: null }, { logo_url: "" }, { logo_url: "0" }],
+      },
+      data: { logo_url: c.logoUrl },
+    });
+  }
+
   await prisma.brand_crawl.deleteMany({ where: { analysis_id: analysis.id } });
   await prisma.brand_crawl.create({
     data: {

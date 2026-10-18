@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GoogleButton } from "@/components/auth/google-button";
 import { PasswordField } from "@/components/auth/password-field";
+import { TurnstileWidget, TURNSTILE_SITE_KEY } from "@/components/auth/turnstile-widget";
 
 const passwordRules = [
   { label: "At least 8 characters", test: (v: string) => v.length >= 8 },
@@ -25,12 +27,15 @@ function readRref() {
   return fromUrl || cookie || "";
 }
 
-export function SignupForm() {
+export function SignupForm({ googleEnabled = true }: { googleEnabled?: boolean }) {
   const router = useRouter();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileReset, setTurnstileReset] = useState(0);
+  const waitingForCheck = Boolean(TURNSTILE_SITE_KEY) && !turnstileToken;
 
   useEffect(() => {
     const rref = new URLSearchParams(window.location.search).get("rref");
@@ -51,6 +56,7 @@ export function SignupForm() {
         body: JSON.stringify({
           ...form,
           rref: readRref(),
+          turnstileToken,
         }),
       });
       const data = await res.json();
@@ -58,10 +64,32 @@ export function SignupForm() {
       if (!res.ok) {
         setError(data.error || "Something went wrong");
         setLoading(false);
+        // The token is single-use: get a fresh one for the next try.
+        setTurnstileReset((n) => n + 1);
         return;
       }
 
-      router.push("/signup/success?email=" + encodeURIComponent(form.email));
+      // VNOC Analytics conversion. It used to fire on /signup/success, which
+      // the new flow skips, so record it here before moving on.
+      try {
+        window.vnoc?.track?.("signup", "conversion");
+      } catch {
+        /* tracking must never block sign-up */
+      }
+
+      // Sign the new member straight in and start onboarding. Email
+      // verification happens in the background (banner + resend link).
+      const signedIn = await signIn("credentials", {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      });
+      if (signedIn?.error) {
+        router.push("/signup/success?email=" + encodeURIComponent(form.email));
+        return;
+      }
+      router.push("/onboarding");
+      router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);
@@ -86,17 +114,23 @@ export function SignupForm() {
         </p>
       </div>
 
-      <div className="mt-8">
-        <GoogleButton callbackUrl="/dashboard" label="Sign up with Google" />
-      </div>
+      {googleEnabled ? (
+        <>
+          <div className="mt-8">
+            <GoogleButton callbackUrl="/onboarding" label="Sign up with Google" />
+          </div>
 
-      <div className="my-6 flex items-center gap-3">
-        <span className="h-px flex-1 bg-gray-200" />
-        <span className="text-xs font-medium uppercase tracking-wide text-gray-400">
-          or sign up with email
-        </span>
-        <span className="h-px flex-1 bg-gray-200" />
-      </div>
+          <div className="my-6 flex items-center gap-3">
+            <span className="h-px flex-1 bg-gray-200" />
+            <span className="text-xs font-medium uppercase tracking-wide text-gray-400">
+              or sign up with email
+            </span>
+            <span className="h-px flex-1 bg-gray-200" />
+          </div>
+        </>
+      ) : (
+        <div className="mt-8" />
+      )}
 
       {error && (
         <div className="mb-4 rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-600">
@@ -169,12 +203,18 @@ export function SignupForm() {
           )}
         </div>
 
+        <TurnstileWidget action="signup" onToken={setTurnstileToken} resetKey={turnstileReset} />
+
         <Button
           type="submit"
           className="w-full bg-[#FF5C62] hover:bg-[#ff4f58]"
-          disabled={loading}
+          disabled={loading || waitingForCheck}
         >
-          {loading ? "Creating account…" : "Create account"}
+          {loading
+            ? "Creating account…"
+            : waitingForCheck
+              ? "Checking your browser…"
+              : "Create account"}
         </Button>
 
         <p className="text-center text-xs text-gray-500">

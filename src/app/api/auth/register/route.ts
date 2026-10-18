@@ -5,10 +5,18 @@ import { prisma } from "@/lib/prisma";
 import { sendVerificationEmail } from "@/lib/ses";
 import { postVnocAttribution } from "@/lib/vnoc-attribution";
 import { enrollMemberInSignupReferral } from "@/lib/signup-referral";
+import { requestIp, verifyTurnstile } from "@/lib/turnstile";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password, website, rref: rrefBody } = await req.json();
+    const { name, email, password, website, rref: rrefBody, turnstileToken } = await req.json();
+
+    if (!(await verifyTurnstile(turnstileToken, requestIp(req.headers)))) {
+      return NextResponse.json(
+        { error: "Please complete the security check and try again.", code: "TURNSTILE" },
+        { status: 400 }
+      );
+    }
 
     if (
       typeof name !== "string" ||

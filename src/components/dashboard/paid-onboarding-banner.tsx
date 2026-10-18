@@ -24,6 +24,10 @@ type Props = {
   daysLeft?: number | null;
   checkoutBrandId?: number | null;
   checkoutBrandDomain?: string | null;
+  /** Display name for this brand, e.g. "Giftcast.com". */
+  brandName?: string | null;
+  /** True when this specific brand is already live / network. */
+  brandIsLive?: boolean;
 };
 
 export function PaidOnboardingBanner(props: Props) {
@@ -44,23 +48,23 @@ function PaidOnboardingBannerInner(props: Props) {
     daysLeft,
     checkoutBrandId,
     checkoutBrandDomain,
+    brandName,
+    brandIsLive,
   } = preview ? previewOnboarding(preview) : props;
 
   const upgradeHref = checkoutBrandId
-    ? `/billing/plan/${DEFAULT_PAID_PLAN_ID}?brandId=${checkoutBrandId}`
+    ? `/brands/${checkoutBrandId}/upgrade`
     : `/billing/plan/${DEFAULT_PAID_PLAN_ID}`;
+  const name =
+    (brandName && brandName.trim()) ||
+    checkoutBrandDomain ||
+    "this brand";
+  const thisBrandIsLive =
+    brandIsLive === true ||
+    (brandIsLive !== false && status === "paid");
 
-  if (isVerified && status === "paid") return null;
-  if (isVerified && status === "free_capped") return null;
-
-  if (isVerified && status === "unpaid" && checkoutBrandId) {
-    return (
-      <UnpaidBrandCard
-        domain={checkoutBrandDomain ?? "this brand"}
-        upgradeHref={upgradeHref}
-      />
-    );
-  }
+  if (thisBrandIsLive) return null;
+  if (!checkoutBrandId) return null;
 
   if (isVerified && status === "trial") {
     const isEndingSoon = daysLeft != null && daysLeft <= 3;
@@ -68,29 +72,22 @@ function PaidOnboardingBannerInner(props: Props) {
       <TrialKeepGrowthCard
         daysLeft={daysLeft}
         isEndingSoon={isEndingSoon}
-        domain={checkoutBrandDomain}
+        domain={name}
         upgradeHref={upgradeHref}
       />
     );
   }
 
-  if (isVerified && isGrowth) return null;
-
   return (
-    <SetupProgressCard
-      isVerified={isVerified}
-      status={status}
-      upgradeHref={upgradeHref}
-      checkoutBrandDomain={checkoutBrandDomain}
-    />
+    <UnpaidBrandCard brandName={name} upgradeHref={upgradeHref} />
   );
 }
 
 function UnpaidBrandCard({
-  domain,
+  brandName,
   upgradeHref,
 }: {
-  domain: string;
+  brandName: string;
   upgradeHref: string;
 }) {
   return (
@@ -102,22 +99,22 @@ function UnpaidBrandCard({
       <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-5 sm:ps-6">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">
-            Go live
+            {brandName} is not live
           </p>
           <h2
             id="unpaid-brand-heading"
             className="mt-1 text-balance text-lg font-bold tracking-tight text-foreground sm:text-xl"
             style={DOSIS}
           >
-            Your campaign is ready, go live for $9/mo
+            Publish {brandName} for $9/mo
           </h2>
           <p className="mt-1 text-pretty text-sm leading-relaxed text-sidebar-foreground">
-            {domain} stays in draft until you pay. Preview in the dashboard;
-            the public page and widget turn on after checkout.
+            {brandName} is still private. Pay for this brand to share the
+            widget and accept signups.
           </p>
         </div>
         <UpgradeCta href={upgradeHref} className="sm:w-auto">
-          Go Live — $9/mo
+          Publish {brandName}
         </UpgradeCta>
       </div>
     </section>
@@ -153,11 +150,11 @@ function TrialKeepGrowthCard({
             className="mt-1 text-balance text-lg font-bold tracking-tight text-foreground sm:text-xl"
             style={DOSIS}
           >
-            Your campaign is ready, go live for $9/mo
+            Publish {_domain ?? "this brand"} for $9/mo
           </h2>
           <p className="mt-1 text-pretty text-sm leading-relaxed text-sidebar-foreground">
-            Pay $9/mo to publish your program, share your link, and accept
-            signups.
+            {_domain ?? "This brand"} is still private. Pay $9/mo to publish
+            it, share your link, and accept signups.
           </p>
         </div>
         <UpgradeCta href={upgradeHref} className="sm:w-auto">

@@ -32,6 +32,13 @@ import {
   getCampaignSurfaceState,
 } from "@/lib/campaign-live";
 import { CampaignGoLiveButton } from "@/components/campaigns/campaign-go-live-button";
+import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
+import { LiveCelebration } from "@/components/campaigns/live-celebration";
+import {
+  LockedUntilPublished,
+  PublishCampaignHero,
+  PublishStickyBar,
+} from "@/components/campaigns/publish-campaign-cta";
 import {
   HomeIcon,
   ChevronRightIcon,
@@ -49,11 +56,14 @@ import {
 
 interface CampaignDashboardPageProps {
   params: Promise<{ brandId: string; campaignId: string }>;
+  searchParams?: Promise<{ live?: string }>;
 }
 
 export default async function CampaignDashboardPage({
   params,
+  searchParams,
 }: CampaignDashboardPageProps) {
+  const justWentLive = (await searchParams)?.live === "1";
   const session = await auth();
   if (!session?.user?.id) redirect("/signin");
 
@@ -79,6 +89,9 @@ export default async function CampaignDashboardPage({
     isBrandGrowthEntitled(urlId),
   ]);
   const statusLabel = campaignSurfaceLabel(surfaceState);
+  // Private + unpaid: lead every part of the page with the publish step.
+  const showPublishPush = surfaceState !== "live" && !brandEntitled;
+  const publishHref = `/billing/plan/${DEFAULT_PAID_PLAN_ID}?brandId=${urlId}&goLiveCampaign=${id}`;
   const statusBadgeClass =
     surfaceState === "live"
       ? "border-0 bg-emerald-100 text-emerald-800 font-semibold uppercase tracking-wide"
@@ -263,6 +276,23 @@ export default async function CampaignDashboardPage({
         </span>
       </nav>
 
+      {justWentLive && surfaceState === "live" && (
+        <LiveCelebration
+          brandName={brand?.domain || "Your brand"}
+          referralUrl={referralLink}
+          publicPageUrl={publicPageLink}
+          widgetStudioHref={`/brands/${brandId}/campaigns/${campaignId}/widget`}
+        />
+      )}
+
+      {showPublishPush && (
+        <PublishCampaignHero
+          href={publishHref}
+          brandName={brand?.domain || "your brand"}
+          optionsHref={`/brands/${urlId}/billing`}
+        />
+      )}
+
       {/* Campaign Header — same designed card the AI showed at launch */}
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div
@@ -322,17 +352,25 @@ export default async function CampaignDashboardPage({
               </div>
             </div>
             <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:shrink-0 lg:justify-end">
-              <CampaignGoLiveButton
-                brandId={urlId}
-                campaignId={id}
-                entitled={brandEntitled}
-                surfaceState={surfaceState}
-                className="w-full sm:w-auto"
-              />
-              <IntegrationsEmbedLink className="inline-flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:border-brand/40 hover:text-brand sm:w-auto">
-                <PuzzleIcon className="size-4" />
-                Install / embed
-              </IntegrationsEmbedLink>
+              {/* Unpaid brands get the single "Publish for $9/mo" button in the
+                  private bar above; this one is for paid brands with a draft. */}
+              {brandEntitled && (
+                <CampaignGoLiveButton
+                  brandId={urlId}
+                  campaignId={id}
+                  entitled={brandEntitled}
+                  surfaceState={surfaceState}
+                  className="w-full sm:w-auto"
+                />
+              )}
+              {/* The widget refuses visitors until the campaign is live, so only
+                  offer the embed code once it is. */}
+              {surfaceState === "live" && (
+                <IntegrationsEmbedLink className="inline-flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:border-brand/40 hover:text-brand sm:w-auto">
+                  <PuzzleIcon className="size-4" />
+                  Install / embed
+                </IntegrationsEmbedLink>
+              )}
               <Link
                 href={`/brands/${brandId}/campaigns/${campaignId}/edit`}
                 className="w-full sm:w-auto"
@@ -382,19 +420,35 @@ export default async function CampaignDashboardPage({
       </div>
 
       {/* Referral + public page URLs */}
-      <div className="portlet min-w-0">
-        {surfaceState !== "live" && (
-          <p className="mb-3 text-sm text-amber-900/90">
-            Public page and widget links work after you go live. Preview the
-            campaign layout below.
-          </p>
-        )}
-        <CampaignShareLinks
-          referralUrl={referralLink}
-          publicPageUrl={publicPageLink}
-          disabled={surfaceState !== "live"}
-        />
-      </div>
+      {showPublishPush ? (
+        <LockedUntilPublished
+          href={publishHref}
+          title="Your share link and public page unlock when you publish"
+          description="Copy them, post them anywhere, and every click and signup is tracked."
+        >
+          <div className="portlet min-w-0">
+            <CampaignShareLinks
+              referralUrl={referralLink}
+              publicPageUrl={publicPageLink}
+              disabled
+            />
+          </div>
+        </LockedUntilPublished>
+      ) : (
+        <div className="portlet min-w-0">
+          {surfaceState !== "live" && (
+            <p className="mb-3 text-sm text-amber-900/90">
+              Public page and widget links work after you go live. Preview the
+              campaign layout below.
+            </p>
+          )}
+          <CampaignShareLinks
+            referralUrl={referralLink}
+            publicPageUrl={publicPageLink}
+            disabled={surfaceState !== "live"}
+          />
+        </div>
+      )}
 
       <CampaignDashboardPreview
         {...previewFromRecords({
@@ -409,16 +463,24 @@ export default async function CampaignDashboardPage({
           publicPageUrl: publicPageLink,
           widgetUrl: referralLink,
         })}
+        isLive={surfaceState === "live"}
       />
 
-      <CampaignTrackingProof
-        campaignId={campaign.id}
-        brandId={brandId}
-        initialImpressions={stats.impressions}
-        initialClicks={stats.clicks}
-      />
+      {surfaceState === "live" && (
+        <CampaignTrackingProof
+          campaignId={campaign.id}
+          brandId={brandId}
+          initialImpressions={stats.impressions}
+          initialClicks={stats.clicks}
+        />
+      )}
 
       {/* Stats Grid */}
+      {showPublishPush && (
+        <p className="-mb-2 text-sm text-gray-600">
+          These start counting the moment you publish: every signup, share, click and view.
+        </p>
+      )}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => {
           const Icon = stat.icon;
@@ -576,6 +638,10 @@ export default async function CampaignDashboardPage({
           />
         }
       />
+
+      {showPublishPush && (
+        <PublishStickyBar href={publishHref} brandName={brand?.domain || "Your brand"} />
+      )}
     </div>
   );
 }

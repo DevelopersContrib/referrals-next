@@ -4,7 +4,12 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ExternalLinkIcon } from "lucide-react";
 import { BrandLogo } from "@/components/brands/brand-logo";
-import { brandMustShowBranding } from "@/lib/member-subscription";
+import { auth } from "@/lib/auth";
+import {
+  brandMustShowBranding,
+  shouldShowBrandPublishCta,
+} from "@/lib/member-subscription";
+import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
 import { findPublicBrandBySlug } from "@/lib/public-campaign-server";
 import { ReferralsSiteHeader } from "@/components/public/referrals-site-header";
 import { formatBrandName, formatCount } from "@/lib/format-brand";
@@ -26,18 +31,22 @@ export async function generateMetadata({
     brand.description?.trim() ||
     `Explore the ${name} referral program. Share campaigns, track invites, and earn rewards.`;
   const url = siteUrl(`/p/${brand.slug || slug}`);
-  const noindex = await shouldNoindexBrand(brand);
+  const [noindex, showBranding] = await Promise.all([
+    shouldNoindexBrand(brand),
+    brandMustShowBranding(brand.id),
+  ]);
 
   return {
-    title,
+    // White-label brands: no Referrals.com in the tab or link previews.
+    title: showBranding ? title : { absolute: title },
     description,
     alternates: { canonical: url },
     ...(noindex ? { robots: { index: false, follow: false } } : {}),
     openGraph: {
-      title: `${title} | Referrals.com`,
+      title: showBranding ? `${title} | Referrals.com` : title,
       description,
       url,
-      siteName: "Referrals.com",
+      siteName: showBranding ? "Referrals.com" : name,
       type: "website",
     },
   };
@@ -55,6 +64,19 @@ export default async function PublicBrandPage({
   if (!brand) notFound();
 
   const showBranding = await brandMustShowBranding(brand.id);
+  const session = await auth();
+  const viewerId = session?.user?.id ? parseInt(session.user.id, 10) : 0;
+  const isOwner = viewerId > 0 && brand.member_id === viewerId;
+  const isViewerAdmin = Boolean(
+    (session?.user as { isAdmin?: boolean } | undefined)?.isAdmin,
+  );
+  const showPublishCta =
+    isOwner &&
+    (await shouldShowBrandPublishCta({
+      brandId: brand.id,
+      viewerMemberId: viewerId,
+      isViewerAdmin,
+    }));
 
   const campaigns = await prisma.member_campaigns.findMany({
     where: { url_id: brand.id, publish: "public" },
@@ -71,6 +93,20 @@ export default async function PublicBrandPage({
   return (
     <div className="min-h-screen bg-gray-50">
       {showBranding && <ReferralsSiteHeader />}
+      {showPublishCta && (
+        <div
+          role="status"
+          className="border-b border-amber-200 bg-amber-50 px-5 py-3 text-center text-sm font-medium text-amber-950"
+        >
+          {formatBrandName(brand.domain) || brand.domain} is not live yet.{" "}
+          <a
+            href={`/billing/plan/${DEFAULT_PAID_PLAN_ID}?brandId=${brand.id}`}
+            className="font-semibold underline"
+          >
+            Publish {formatBrandName(brand.domain) || brand.domain}
+          </a>
+        </div>
+      )}
 
       <header className="bg-white border-b">
         <div className="max-w-4xl mx-auto px-4 py-6 flex items-center gap-4">

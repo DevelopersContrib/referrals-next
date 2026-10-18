@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import {
@@ -28,6 +28,7 @@ import {
   PlusIcon,
   WrenchIcon,
   MessageSquareIcon,
+  BadgeCheckIcon,
   CreditCardIcon,
   UserIcon,
   BarChart3Icon,
@@ -36,25 +37,18 @@ import {
   UsersIcon,
   KeyIcon,
   MegaphoneIcon,
-  ImageIcon,
-  StarIcon,
-  HandshakeIcon,
-  TargetIcon,
-  MailIcon,
-  MonitorIcon,
-  ShareIcon,
-  Share2Icon,
-  PlugIcon,
   LifeBuoyIcon,
+  GiftIcon,
+  SettingsIcon,
+  ArrowLeftIcon,
 } from "lucide-react";
+import { BrandLogo } from "@/components/brands/brand-logo";
 
 const DASHBOARD_LOGO_URL =
   "https://d1p6j71028fbjm.cloudfront.net/logos/logo-new-referral-1.png";
 
 const mainNav = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboardIcon },
-  { title: "Stats", href: "/stats", icon: BarChart3Icon },
-  { title: "Contacts", href: "/contacts", icon: UsersIcon },
 ];
 
 const brandsNav = [
@@ -66,25 +60,27 @@ const brandsNav = [
   { title: "View All Brands", href: "/brands" },
 ];
 
-const toolsNav = [
-  { title: "All Tools", href: "/tools", icon: WrenchIcon },
-  { title: "Banners", href: "/tools/banners", icon: ImageIcon },
-  { title: "Reviews", href: "/tools/reviews", icon: StarIcon },
-  { title: "Testimonials", href: "/tools/testimonials", icon: MessageSquareIcon },
-  { title: "Partnerships", href: "/tools/partnerships", icon: HandshakeIcon },
-  { title: "Ads", href: "/tools/ads", icon: TargetIcon },
-  { title: "Email", href: "/tools/email", icon: MailIcon },
-  { title: "Shoutouts", href: "/tools/shoutouts", icon: MegaphoneIcon },
-  { title: "Promotions", href: "/promotions", icon: ShareIcon },
-];
 
-const integrationsNav = [
-  // Shopify hidden for now — to be replaced by a dedicated Shopify app.
-  { title: "Mailchimp", href: "/integrations/mailchimp", icon: MailIcon },
-  { title: "Facebook", href: "/tools/facebook", icon: Share2Icon },
-];
+
+/** Sections every brand has; the switcher keeps you in the same one. */
+const BRAND_SECTIONS = ["campaigns", "stats", "contacts", "tools", "white-label", "billing", "edit"];
+
+function brandMenu(brandId: number) {
+  const base = `/brands/${brandId}`;
+  return [
+    { title: "Overview", section: "", href: base, icon: LayoutDashboardIcon },
+    { title: "Campaigns", section: "campaigns", href: `${base}/campaigns`, icon: MegaphoneIcon },
+    { title: "Stats", section: "stats", href: `${base}/stats`, icon: BarChart3Icon },
+    { title: "Contacts", section: "contacts", href: `${base}/contacts`, icon: UsersIcon },
+    { title: "Tools", section: "tools", href: `${base}/tools`, icon: WrenchIcon },
+    { title: "White label", section: "white-label", href: `${base}/white-label`, icon: BadgeCheckIcon },
+    { title: "Billing", section: "billing", href: `${base}/billing`, icon: CreditCardIcon },
+    { title: "Settings", section: "edit", href: `${base}/edit`, icon: SettingsIcon },
+  ];
+}
 
 const bottomNav = [
+  { title: "Refer & Earn", href: "/refer", icon: GiftIcon },
   { title: "Forum", href: "/forum", icon: MessageSquareIcon },
   { title: "Support", href: "/dashboard/support", icon: LifeBuoyIcon },
   { title: "Billing", href: "/billing", icon: CreditCardIcon },
@@ -95,17 +91,20 @@ const bottomNav = [
 export function DashboardSidebar({
   brands = [],
 }: {
-  brands?: { id: number; domain: string }[];
+  brands?: { id: number; domain: string; logo_url?: string | null }[];
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  // Inside /brands/{id}/... show that brand's own menu.
+  const brandMatch = pathname.match(/^\/brands\/(\d+)(?:\/([a-z-]+))?/);
+  const activeBrand = brandMatch
+    ? brands.find((b) => b.id === Number(brandMatch[1])) ?? null
+    : null;
+  const brandSection =
+    brandMatch?.[2] && BRAND_SECTIONS.includes(brandMatch[2]) ? brandMatch[2] : "";
   const { data: session } = useSession();
   const isAdmin = Boolean((session?.user as { isAdmin?: boolean })?.isAdmin);
   const [brandsOpen, setBrandsOpen] = useState(pathname.startsWith("/brands"));
-  const [toolsOpen, setToolsOpen] = useState(
-    pathname.startsWith("/tools") ||
-      pathname.startsWith("/promotions") ||
-      pathname.startsWith("/integrations")
-  );
 
   return (
     <Sidebar>
@@ -123,237 +122,245 @@ export function DashboardSidebar({
       </SidebarHeader>
 
       <SidebarContent className="px-2 pt-3">
-        {/* Create Brand Button */}
-        <div className="px-2 pb-2">
-          <Link href="/brands/new" className="block">
-            <Button className="w-full gap-2 bg-brand font-medium text-white hover:bg-brand-hover">
-              <PlusIcon className="size-4" />
-              Create Brand
-            </Button>
-          </Link>
-        </div>
+        {activeBrand ? (
+          <>
+            {/* Inside a brand: only the brand menu, plus a way back out. */}
+            <div className="px-2 pb-2">
+              <Link
+                href="/dashboard"
+                className="flex min-h-9 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-[#575962] transition hover:bg-brand/5 hover:text-brand"
+              >
+                <ArrowLeftIcon className="size-4" aria-hidden="true" />
+                Dashboard
+              </Link>
+            </div>
+          {/* Brand menu: everything about the brand you're in */}
+          {activeBrand && (
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
+                Brand
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <div className="mx-2 mb-2 rounded-xl border border-[#ebeef0] bg-white p-2">
+                  <div className="flex items-center gap-2">
+                    <BrandLogo
+                      domain={activeBrand.domain}
+                      logoUrl={activeBrand.logo_url}
+                      imgClassName="size-8 shrink-0 rounded-lg border bg-white object-contain p-0.5"
+                      fallbackClassName="flex size-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-xs font-bold text-gray-500"
+                    />
+                    <label className="min-w-0 flex-1">
+                      <span className="sr-only">Switch brand</span>
+                      <select
+                        value={activeBrand.id}
+                        onChange={(e) => {
+                          const id = e.target.value;
+                          router.push(`/brands/${id}${brandSection ? `/${brandSection}` : ""}`);
+                        }}
+                        className="w-full truncate rounded-md border-0 bg-transparent py-1 pr-6 text-sm font-semibold text-[#3f4047] focus:ring-2 focus:ring-brand/30"
+                      >
+                        {brands.map((b) => (
+                          <option key={b.id} value={b.id}>
+                            {b.domain}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </div>
+                <SidebarMenu>
+                  {brandMenu(activeBrand.id).map((item) => {
+                    const Icon = item.icon;
+                    const isActive =
+                      item.section === ""
+                        ? pathname === item.href
+                        : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                    return (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          isActive={isActive}
+                          render={<Link href={item.href} />}
+                          className={isActive ? "bg-brand/5 text-brand font-medium" : "text-[#575962]"}
+                        >
+                          <Icon className="size-4" />
+                          <span>{item.title}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
 
-        {/* Main Navigation */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
-            Main
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainNav.slice(0, 1).map((item) => {
-                const Icon = item.icon;
-                // Exact /dashboard only — /dashboard/support is its own nav item
-                const isActive = pathname === item.href;
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      isActive={isActive}
-                      render={<Link href={item.href} />}
-                      className={isActive ? "bg-brand/5 text-brand font-medium" : "text-[#575962]"}
-                    >
-                      <Icon className="size-4" />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+          </>
+        ) : (
+          <>
+          {/* Create Brand Button */}
+          <div className="px-2 pb-2">
+            <Link href="/brands/new" className="block">
+              <Button className="w-full gap-2 bg-brand font-medium text-white hover:bg-brand-hover">
+                <PlusIcon className="size-4" />
+                Create Brand
+              </Button>
+            </Link>
+          </div>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => setBrandsOpen(!brandsOpen)}
-                  isActive={pathname.startsWith("/brands")}
-                  className={
-                    pathname.startsWith("/brands")
-                      ? "bg-brand/5 text-brand font-medium"
-                      : "text-[#575962]"
-                  }
-                >
-                  <GlobeIcon className="size-4" />
-                  <span>My Brands</span>
-                  {brandsOpen ? (
-                    <ChevronDownIcon className="ml-auto size-3.5 text-[#a7abc3]" />
-                  ) : (
-                    <ChevronRightIcon className="ml-auto size-3.5 text-[#a7abc3]" />
-                  )}
-                </SidebarMenuButton>
-                {brandsOpen && (
-                  <SidebarMenuSub>
-                    {brands.map((brand) => {
-                      const href = `/brands/${brand.id}`;
-                      const isActive =
-                        pathname === href || pathname.startsWith(`${href}/`);
-                      return (
-                        <SidebarMenuSubItem key={brand.id}>
-                          <SidebarMenuSubButton
-                            isActive={isActive}
-                            render={<Link href={href} />}
-                            className={isActive ? "text-brand font-medium" : ""}
-                          >
-                            <span
-                              aria-hidden
-                              className="flex size-3.5 shrink-0 items-center justify-center text-base leading-none text-[#a7abc3]"
+          {/* Main Navigation */}
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
+              Main
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {mainNav.slice(0, 1).map((item) => {
+                  const Icon = item.icon;
+                  // Exact /dashboard only — /dashboard/support is its own nav item
+                  const isActive = pathname === item.href;
+                  return (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton
+                        isActive={isActive}
+                        render={<Link href={item.href} />}
+                        className={isActive ? "bg-brand/5 text-brand font-medium" : "text-[#575962]"}
+                      >
+                        <Icon className="size-4" />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => setBrandsOpen(!brandsOpen)}
+                    isActive={pathname.startsWith("/brands")}
+                    className={
+                      pathname.startsWith("/brands")
+                        ? "bg-brand/5 text-brand font-medium"
+                        : "text-[#575962]"
+                    }
+                  >
+                    <GlobeIcon className="size-4" />
+                    <span>My Brands</span>
+                    {brandsOpen ? (
+                      <ChevronDownIcon className="ml-auto size-3.5 text-[#a7abc3]" />
+                    ) : (
+                      <ChevronRightIcon className="ml-auto size-3.5 text-[#a7abc3]" />
+                    )}
+                  </SidebarMenuButton>
+                  {brandsOpen && (
+                    <SidebarMenuSub>
+                      {brands.map((brand) => {
+                        const href = `/brands/${brand.id}`;
+                        const isActive =
+                          pathname === href || pathname.startsWith(`${href}/`);
+                        return (
+                          <SidebarMenuSubItem key={brand.id}>
+                            <SidebarMenuSubButton
+                              isActive={isActive}
+                              render={<Link href={href} />}
+                              className={isActive ? "text-brand font-medium" : ""}
                             >
-                              ·
-                            </span>
-                            <span className="truncate">{brand.domain}</span>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      );
-                    })}
-                    {brandsNav
-                      .filter((item) => !item.adminOnly || isAdmin)
-                      .map((item) => {
-                      const isActive =
-                        item.href === "/brands/allbrands"
-                          ? pathname === item.href ||
-                            pathname.startsWith(item.href + "/")
-                          : pathname === item.href;
-                      return (
-                        <SidebarMenuSubItem key={item.href}>
-                          <SidebarMenuSubButton
-                            isActive={isActive}
-                            render={<Link href={item.href} />}
-                            className={isActive ? "text-brand font-medium" : ""}
-                          >
-                            <span
-                              aria-hidden
-                              className="flex size-3.5 shrink-0 items-center justify-center text-base leading-none text-[#a7abc3]"
+                              <span
+                                aria-hidden
+                                className="flex size-3.5 shrink-0 items-center justify-center text-base leading-none text-[#a7abc3]"
+                              >
+                                ·
+                              </span>
+                              <span className="truncate">{brand.domain}</span>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        );
+                      })}
+                      {brandsNav
+                        .filter((item) => !item.adminOnly || isAdmin)
+                        .map((item) => {
+                        const isActive =
+                          item.href === "/brands/allbrands"
+                            ? pathname === item.href ||
+                              pathname.startsWith(item.href + "/")
+                            : pathname === item.href;
+                        return (
+                          <SidebarMenuSubItem key={item.href}>
+                            <SidebarMenuSubButton
+                              isActive={isActive}
+                              render={<Link href={item.href} />}
+                              className={isActive ? "text-brand font-medium" : ""}
                             >
-                              ·
-                            </span>
-                            <span className="flex min-w-0 items-center gap-1.5">
-                              <span className="truncate">{item.title}</span>
-                              {item.adminOnly && (
-                                <span className="shrink-0 rounded bg-brand px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none text-white">
-                                  Admin
-                                </span>
-                              )}
-                            </span>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      );
-                    })}
-                  </SidebarMenuSub>
-                )}
-              </SidebarMenuItem>
-
-              {mainNav.slice(1).map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      isActive={isActive}
-                      render={<Link href={item.href} />}
-                      className={isActive ? "bg-brand/5 text-brand font-medium" : "text-[#575962]"}
-                    >
-                      <Icon className="size-4" />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarSeparator />
-
-        {/* Tools Section (collapsible) */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
-            Tools & Marketing
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => setToolsOpen(!toolsOpen)}
-                  className="text-[#575962]"
-                >
-                  <WrenchIcon className="size-4" />
-                  <span>Tools</span>
-                  {toolsOpen ? (
-                    <ChevronDownIcon className="ml-auto size-3.5 text-[#a7abc3]" />
-                  ) : (
-                    <ChevronRightIcon className="ml-auto size-3.5 text-[#a7abc3]" />
+                              <span
+                                aria-hidden
+                                className="flex size-3.5 shrink-0 items-center justify-center text-base leading-none text-[#a7abc3]"
+                              >
+                                ·
+                              </span>
+                              <span className="flex min-w-0 items-center gap-1.5">
+                                <span className="truncate">{item.title}</span>
+                                {item.adminOnly && (
+                                  <span className="shrink-0 rounded bg-brand px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none text-white">
+                                    Admin
+                                  </span>
+                                )}
+                              </span>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        );
+                      })}
+                    </SidebarMenuSub>
                   )}
-                </SidebarMenuButton>
-                {toolsOpen && (
-                  <SidebarMenuSub>
-                    {toolsNav.map((tool) => {
-                      const Icon = tool.icon;
-                      const isActive = pathname === tool.href;
-                      return (
-                        <SidebarMenuSubItem key={tool.href}>
-                          <SidebarMenuSubButton
-                            isActive={isActive}
-                            render={<Link href={tool.href} />}
-                            className={isActive ? "text-brand font-medium" : ""}
-                          >
-                            <Icon className="size-3.5" />
-                            <span>{tool.title}</span>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      );
-                    })}
-                    <SidebarMenuSubItem>
-                      <div className="flex items-center gap-2 px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#a7abc3]">
-                        <PlugIcon className="size-3" />
-                        Integrations
-                      </div>
-                    </SidebarMenuSubItem>
-                    {integrationsNav.map((item) => {
-                      const Icon = item.icon;
-                      const isActive = pathname === item.href;
-                      return (
-                        <SidebarMenuSubItem key={item.href}>
-                          <SidebarMenuSubButton
-                            isActive={isActive}
-                            render={<Link href={item.href} />}
-                            className={isActive ? "text-brand font-medium" : ""}
-                          >
-                            <Icon className="size-3.5" />
-                            <span>{item.title}</span>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      );
-                    })}
-                  </SidebarMenuSub>
-                )}
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                </SidebarMenuItem>
 
-        <SidebarSeparator />
+                {mainNav.slice(1).map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                  return (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton
+                        isActive={isActive}
+                        render={<Link href={item.href} />}
+                        className={isActive ? "bg-brand/5 text-brand font-medium" : "text-[#575962]"}
+                      >
+                        <Icon className="size-4" />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
 
-        {/* Quick Links */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
-            Quick Links
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {bottomNav.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      isActive={isActive}
-                      render={<Link href={item.href} />}
-                      className={isActive ? "bg-brand/5 text-brand font-medium" : "text-[#575962]"}
-                    >
-                      <Icon className="size-4" />
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+          <SidebarSeparator />
+          <SidebarSeparator />
+
+          {/* Quick Links */}
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-wider text-[#a7abc3]">
+              Quick Links
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {bottomNav.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                  return (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton
+                        isActive={isActive}
+                        render={<Link href={item.href} />}
+                        className={isActive ? "bg-brand/5 text-brand font-medium" : "text-[#575962]"}
+                      >
+                        <Icon className="size-4" />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          </>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-[#ebeef0] px-4 py-3">

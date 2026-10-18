@@ -1,5 +1,12 @@
 /** Shared plan catalog helpers — billing + public pricing must import from here. */
 
+import {
+  AGENCY_10_PLAN_ID,
+  AGENCY_50_PLAN_ID,
+  PLAN_PUBLIC_NAME,
+  PUBLIC_SALE_PLAN_IDS,
+} from "@/lib/billing-constants";
+
 export type CatalogPlan = {
   id: number;
   name: string | null;
@@ -12,29 +19,44 @@ export type CatalogPlan = {
 
 export const PLAN_CATALOG_COPY = {
   freeIsVnocOnly: true,
-  vnocFootnote: "Network (VNOC) domains stay free — no $9/mo charge for those brands.",
-  trialFootnote: "Set up a brand for free. Pay $9/mo per brand to publish it.",
+  vnocFootnote: "Network domains stay free. Everyone else publishes a brand at $9/mo or $99/yr.",
+  trialFootnote: "Set up a brand for free. Pay $9/mo (or $99/yr) to publish it.",
   unpaidFootnote:
-    "A brand stays private until you pay $9/mo for it. Then the widget can accept signups.",
+    "A brand stays private until you pay. Agency plans cover 10 or 50 brands on one subscription.",
 } as const;
+
+export function publicPlanName(plan: CatalogPlan): string {
+  return PLAN_PUBLIC_NAME[plan.id] ?? plan.name ?? `Plan ${plan.id}`;
+}
+
+export function isPublicSalePlan(plan: CatalogPlan): boolean {
+  return (PUBLIC_SALE_PLAN_IDS as readonly number[]).includes(plan.id);
+}
+
+export function saleCatalogPlans<T extends CatalogPlan>(plans: T[]): T[] {
+  return plans.filter((plan) => isPublicSalePlan(plan) && isPaidCatalogPlan(plan));
+}
 
 export function isPaidCatalogPlan(plan: CatalogPlan): boolean {
   return (plan.price ?? 0) > 0;
 }
 
 export function paidCatalogPlans<T extends CatalogPlan>(plans: T[]): T[] {
-  return plans.filter(isPaidCatalogPlan);
+  return saleCatalogPlans(plans);
 }
 
-export function isPartnerPlan(name: string | null | undefined): boolean {
-  return /partner/i.test(name ?? "");
+export function isPartnerPlan(plan: CatalogPlan | string | null | undefined): boolean {
+  if (plan && typeof plan === "object") {
+    return plan.id === AGENCY_10_PLAN_ID || plan.id === AGENCY_50_PLAN_ID;
+  }
+  return /partner/i.test(plan ?? "");
 }
 
 export function splitPlanAudiences<T extends CatalogPlan>(plans: T[]) {
   const individuals: T[] = [];
   const partners: T[] = [];
   for (const plan of plans) {
-    if (isPartnerPlan(plan.name)) partners.push(plan);
+    if (isPartnerPlan(plan)) partners.push(plan);
     else individuals.push(plan);
   }
   return { individuals, partners };
@@ -57,7 +79,7 @@ export function isMostPopularIndividual(
   plans: CatalogPlan[],
 ): boolean {
   const paidIndividuals = plans.filter(
-    (p) => !isPartnerPlan(p.name) && (p.price ?? 0) > 0,
+    (p) => !isPartnerPlan(p) && (p.price ?? 0) > 0,
   );
   if (paidIndividuals.length === 0) return false;
   const cheapest = [...paidIndividuals].sort(
@@ -98,8 +120,8 @@ export function getPlanFeatures(plan: CatalogPlan): string[] {
   features.push("Remove Referrals.com branding");
   features.push("Advanced analytics");
   features.push("Widget templates & embeds");
-  if (isPartnerPlan(plan.name)) {
-    features.push("Multi-brand plans for agencies and resellers");
+  if (isPartnerPlan(plan)) {
+    features.push("Publish up to this many brands on one subscription");
   }
 
   return features;

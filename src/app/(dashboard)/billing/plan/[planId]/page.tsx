@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowLeftIcon } from "lucide-react";
 import { PayPalCheckout } from "@/components/billing/paypal-checkout";
 import { cn } from "@/lib/utils";
+import { getBrandEntitlement, getPrimaryCheckoutBrand } from "@/lib/member-subscription";
+import { publicPlanName, type CatalogPlan } from "@/lib/plan-catalog";
 
 export default async function PlanCheckoutPage({
   params,
@@ -30,6 +32,7 @@ export default async function PlanCheckoutPage({
   const unit = plan.unit || "month";
   const isPaid = true;
   const priceLabel = `$${price.toFixed(2)}/${unit}`;
+  const memberId = parseInt(session.user.id, 10);
   const parsedBrandId = brandId ? parseInt(brandId, 10) : null;
   const parsedGoLive = goLiveCampaign ? parseInt(goLiveCampaign, 10) : null;
   const goLiveCampaignId =
@@ -39,11 +42,28 @@ export default async function PlanCheckoutPage({
       ? await prisma.member_urls.findFirst({
           where: {
             id: parsedBrandId,
-            member_id: parseInt(session.user.id, 10),
+            member_id: memberId,
           },
           select: { id: true, domain: true },
         })
       : null;
+  if (!brand) {
+    const primary = await getPrimaryCheckoutBrand(memberId);
+    if (primary) {
+      redirect(
+        `/billing/plan/${plan.id}?brandId=${primary.id}${
+          goLiveCampaignId ? `&goLiveCampaign=${goLiveCampaignId}` : ""
+        }`,
+      );
+    }
+    redirect("/brands/new");
+  }
+
+  // A single-brand plan on a brand that's already live would charge twice.
+  if ((plan.no_of_domains ?? 1) === 1) {
+    const e = await getBrandEntitlement(brand.id, { applyAdminBypass: false });
+    if (e?.isPaid) redirect(`/brands/${brand.id}/billing`);
+  }
 
   const accent = isPaid ? "#926efb" : "#FF5C62";
   const includes = [
@@ -105,7 +125,7 @@ export default async function PlanCheckoutPage({
               {isPaid ? "Growth plan" : "Plan"}
             </p>
             <h1 className="mt-1 text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">
-              {plan.name || `Plan ${plan.id}`}
+              {publicPlanName(plan as CatalogPlan)}
             </h1>
             <div className="mt-3 flex flex-wrap items-baseline gap-1">
               <span className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
@@ -164,7 +184,8 @@ export default async function PlanCheckoutPage({
               </div>
               <PayPalCheckout
                 planId={plan.id}
-                brandId={brand?.id ?? null}
+                brandId={brand.id}
+                brandName={brand.domain}
                 goLiveCampaignId={goLiveCampaignId}
                 priceLabel={priceLabel}
               />

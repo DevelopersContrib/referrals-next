@@ -7,13 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { BillingErrorBanner } from "@/components/billing/billing-error-banner";
 import { BillingSubscriptionActions } from "@/components/billing/billing-subscription-actions";
-import { getMemberEntitlement, getPrimaryCheckoutBrand } from "@/lib/member-subscription";
+import { getMemberEntitlement, getPrimaryCheckoutBrand, listMemberBrandBilling } from "@/lib/member-subscription";
 import {
   getPlanFeatures,
   isMostPopularIndividual,
   paidCatalogPlans,
   PLAN_CATALOG_COPY,
   planBillingLabel,
+  publicPlanName,
   splitPlanAudiences,
   formatPlanPrice,
   type CatalogPlan,
@@ -21,6 +22,11 @@ import {
 import { cn } from "@/lib/utils";
 
 type HumanBillingStatus = "trial" | "free" | "unpaid" | "paid" | "cancelled";
+
+/** Request time for this server render (kept out of the component itself). */
+function requestTime(): number {
+  return Date.now();
+}
 
 function resolveHumanStatus(
   entitlementStatus: string,
@@ -157,7 +163,7 @@ function PlanCard({
       >
         <div className="flex min-w-0 items-start justify-between gap-2">
           <h3 className="min-w-0 break-words text-lg font-bold tracking-tight text-gray-900">
-            {plan.name}
+            {publicPlanName(plan)}
           </h3>
           {isCurrent && (
             <span
@@ -209,7 +215,7 @@ function PlanCard({
           href={`/billing/plan/${plan.id}${checkoutBrandId ? `?brandId=${checkoutBrandId}` : ""}`}
           className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#926efb] to-[#7c3aed] px-4 py-3 text-center text-sm font-semibold text-white shadow-md shadow-violet-300/40 transition-all hover:brightness-105 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#926efb]"
         >
-          Get {plan.name}
+          Get {publicPlanName(plan)}
         </Link>
       ) : (
         <span className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-center text-sm font-medium text-gray-500">
@@ -230,7 +236,7 @@ export default async function BillingPage({
   const memberId = parseInt(session.user.id, 10);
   const { error, brandId: brandIdParam } = await searchParams;
 
-  const [member, plans, entitlement, currentSubscription, payments, checkoutBrand] =
+  const [member, plans, entitlement, currentSubscription, payments, checkoutBrand, brandRows] =
     await Promise.all([
       prisma.members.findUnique({ where: { id: memberId } }),
       prisma.plans.findMany({ orderBy: { id: "asc" } }),
@@ -245,6 +251,7 @@ export default async function BillingPage({
         take: 10,
       }),
       getPrimaryCheckoutBrand(memberId),
+      listMemberBrandBilling(memberId),
     ]);
 
   const activePlanId = member?.plan_id || 0;
@@ -264,7 +271,7 @@ export default async function BillingPage({
   const hasActivePaidAccess =
     entitlement.isPaid &&
     entitlement.planExpiry != null &&
-    entitlement.planExpiry.getTime() > Date.now();
+    entitlement.planExpiry.getTime() > requestTime();
 
   const canCancel =
     hasActivePaidAccess &&
@@ -286,6 +293,56 @@ export default async function BillingPage({
       <Suspense fallback={null}>
         <BillingErrorBanner initialError={error} />
       </Suspense>
+
+      <Card className="min-w-0 border-rose-100/80 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold">
+            Brands
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="min-w-0 space-y-3">
+          {brandRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No brands yet. Set one up, then pay to publish it.
+            </p>
+          ) : (
+            brandRows.map((row) => (
+              <div
+                key={row.brandId}
+                className="flex min-w-0 flex-wrap items-center justify-between gap-3 border-b border-gray-100 py-2 last:border-0"
+              >
+                <div className="min-w-0">
+                  <Link
+                    href={`/brands/${row.brandId}/billing`}
+                    className="block truncate text-sm font-medium text-gray-900 hover:text-[#d63a40]"
+                  >
+                    {row.domain || `Brand ${row.brandId}`}
+                  </Link>
+                  <p className="text-xs text-muted-foreground">
+                    {row.status === "live" && row.planExpiry
+                      ? `Live · renews ${row.planExpiry.toLocaleDateString()}`
+                      : row.status === "network"
+                        ? "Network brand · no $9/mo charge"
+                        : "Private · not taking signups"}
+                  </p>
+                </div>
+                {row.status === "private" ? (
+                  <Link
+                    href={`/brands/${row.brandId}/billing`}
+                    className="inline-flex min-h-11 items-center rounded-lg bg-[#926efb] px-3 text-sm font-semibold text-white"
+                  >
+                    Publish
+                  </Link>
+                ) : (
+                  <Badge variant={row.status === "live" ? "default" : "secondary"}>
+                    {row.status === "live" ? "Live" : "Network"}
+                  </Badge>
+                )}
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="min-w-0 border-rose-100/80 shadow-sm">
         <CardHeader className="pb-3">
@@ -341,7 +398,7 @@ export default async function BillingPage({
               <>
                 <div>
                   <h3 className="mb-1 text-base font-semibold text-gray-900">
-                    For Individuals
+                    For one brand
                   </h3>
                   <p className="mb-4 text-sm text-muted-foreground">
                     {PLAN_CATALOG_COPY.trialFootnote}
@@ -362,7 +419,7 @@ export default async function BillingPage({
                 {partners.length > 0 && (
                   <div>
                     <h3 className="mb-1 text-base font-semibold text-gray-900">
-                      For Partners &amp; Agencies
+                      For agencies
                     </h3>
                     <p className="mb-4 text-sm text-muted-foreground">
                       Multi-brand plans for agencies and resellers.
@@ -399,10 +456,11 @@ export default async function BillingPage({
             <p className="text-sm text-muted-foreground">No payments yet.</p>
           ) : (
             <div className="min-w-0 max-w-full overflow-x-auto">
-              <table className="w-full min-w-[480px] text-sm">
+              <table className="w-full min-w-[560px] text-sm">
                 <thead>
                   <tr className="border-b">
                     <th className="py-2 text-left">Date</th>
+                    <th className="py-2 text-left">Brand</th>
                     <th className="py-2 text-left">Amount</th>
                     <th className="py-2 text-left">Status</th>
                     <th className="py-2 text-left">Transaction</th>
@@ -415,6 +473,19 @@ export default async function BillingPage({
                         {new Date(
                           payment.datetime_created,
                         ).toLocaleDateString()}
+                      </td>
+                      <td className="py-2">
+                        {payment.url_id ? (
+                          <Link
+                            href={`/brands/${payment.url_id}/billing`}
+                            className="text-gray-900 hover:text-[#d63a40]"
+                          >
+                            {brandRows.find((b) => b.brandId === payment.url_id)?.domain ||
+                              `Brand ${payment.url_id}`}
+                          </Link>
+                        ) : (
+                          <span className="text-muted-foreground">Account plan</span>
+                        )}
                       </td>
                       <td className="py-2">
                         ${(payment.amount || 0).toFixed(2)}{" "}

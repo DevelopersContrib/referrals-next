@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     const canAdd = await canMemberAddBrand(memberId);
     if (!canAdd.ok) {
       return apiError(
-        "You can set up 1 brand before paying. Pay $9/mo per brand to add another.",
+        "You can set up 1 unpaid brand. Publish it, or use an agency plan, to add another.",
         403,
       );
     }

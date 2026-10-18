@@ -6,6 +6,7 @@ import {
   paidCatalogPlans,
   PLAN_CATALOG_COPY,
   planBillingLabel,
+  publicPlanName,
   splitPlanAudiences,
   type CatalogPlan,
 } from "@/lib/plan-catalog";
@@ -69,7 +70,7 @@ function PublicPlanCard({
   const shownFeatures =
     variant === "compact" ? features.slice(0, isPaidPlan ? 4 : 3) : features;
   const href = planCtaHref(plan.id, isPaidPlan, isLoggedIn);
-  const ctaLabel = planCtaLabel(plan.name, isPaidPlan, isLoggedIn);
+  const ctaLabel = planCtaLabel(publicPlanName(plan), isPaidPlan, isLoggedIn);
 
   return (
     <article
@@ -102,7 +103,7 @@ function PublicPlanCard({
         )}
       >
         <h3 className="min-w-0 break-words text-lg font-bold tracking-tight text-gray-900">
-          {plan.name}
+          {publicPlanName(plan)}
         </h3>
         <div className="mt-3 flex flex-wrap items-baseline gap-1">
           <span className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
@@ -179,7 +180,7 @@ export function PublicPlanCatalog({
             id="plans-individuals"
             className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl"
           >
-            For Individuals
+            For one brand
           </h2>
           <p className="mt-1.5 max-w-2xl text-sm text-gray-600 sm:text-base">
             {PLAN_CATALOG_COPY.trialFootnote}
@@ -212,7 +213,7 @@ export function PublicPlanCatalog({
               id="plans-partners"
               className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl"
             >
-              For Partners &amp; Agencies
+              For agencies
             </h2>
             <p className="mt-1.5 max-w-2xl text-sm text-gray-600 sm:text-base">
               Multi-brand plans for agencies and resellers.

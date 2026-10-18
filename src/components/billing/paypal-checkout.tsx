@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CreditCardIcon, Loader2Icon, LockIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LaunchOverlay } from "@/components/billing/launch-overlay";
 
 type PayPalButtonsInstance = {
   render: (container: HTMLElement) => Promise<void>;
@@ -30,6 +31,8 @@ type CheckoutConfig = {
 
 type Props = {
   planId: number;
+  /** Shown on the launch screen while the brand goes live. */
+  brandName?: string | null;
   brandId?: number | null;
   goLiveCampaignId?: number | null;
   priceLabel: string;
@@ -86,6 +89,7 @@ export function PayPalCheckout({
   brandId,
   goLiveCampaignId,
   priceLabel,
+  brandName,
 }: Props) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -172,7 +176,7 @@ export function PayPalCheckout({
         }
 
         terminalRef.current = true;
-        toast.success("Subscription active — welcome to Growth.");
+        toast.success(brandName ? `${brandName} is live!` : "You're live!");
         router.push(data.redirectUrl || "/billing/success");
       } catch {
         toast.error("Network error while activating your subscription.");
@@ -185,7 +189,7 @@ export function PayPalCheckout({
         setActivating(false);
       }
     },
-    [brandId, goLiveCampaignId, logClientEvent, planId, router]
+    [brandId, brandName, goLiveCampaignId, logClientEvent, planId, router]
   );
 
   useEffect(() => {
@@ -384,12 +388,7 @@ export function PayPalCheckout({
         </div>
       )}
 
-      {activating && (
-        <p className="mt-3 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <Loader2Icon className="size-4 animate-spin" />
-          Activating your subscription…
-        </p>
-      )}
+      {activating && <LaunchOverlay brandName={brandName} />}
 
       <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
         <LockIcon className="mt-0.5 size-3.5 shrink-0" />

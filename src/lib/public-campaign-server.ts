@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { brandMustShowBranding } from "@/lib/member-subscription";
 import { isCampaignPubliclyLive } from "@/lib/campaign-live";
 import {
@@ -7,6 +8,7 @@ import {
 } from "@/lib/analysis/apply-campaign-suggestion";
 import { isCampaignDesign, type CampaignDesignStyle } from "@/lib/analysis/campaign-design";
 import { isUnownedTrademarkBrand } from "@/lib/blocked-brands";
+import { poweredByHref } from "@/lib/powered-by";
 
 export type PublicCampaignBrand = {
   id: number;
@@ -43,6 +45,8 @@ export type PublicCampaignViewPayload = {
   participantMap: Map<number, PublicCampaignParticipant>;
   totalClicks: number;
   showBranding: boolean;
+  /** "Powered by Referrals.com" link with the owner's referral code; null when hidden. */
+  poweredByHref: string | null;
   accentFrom: string;
   accentTo: string;
   rewardLabel: string | null;
@@ -52,11 +56,12 @@ export type PublicCampaignViewPayload = {
   heroImageUrl: string | null;
   designStyle: CampaignDesignStyle | null;
   isLive: boolean;
+  ownerPreview: boolean;
 };
 
 /** Newest brand wins when slugs collide (same domain, multiple member_urls). */
 export async function findPublicBrandBySlug(slug: string) {
-  const numericId = parseInt(slug, 10);
+  const numericId = /^\d+$/.test(slug) ? parseInt(slug, 10) : NaN;
   let brand = null;
   if (!Number.isNaN(numericId)) {
     brand = await prisma.member_urls.findUnique({ where: { id: numericId } });
@@ -105,7 +110,14 @@ export async function fetchPublicCampaignViewData(
 
   const brand = await prisma.member_urls.findUnique({
     where: { id: campaign.url_id },
-    select: { id: true, domain: true, slug: true, logo_url: true },
+    select: {
+      id: true,
+      domain: true,
+      slug: true,
+      logo_url: true,
+      member_id: true,
+      hide_powered_by: true,
+    },
   });
   if (!brand || !slugMatchesBrand(slug, brand) || isUnownedTrademarkBrand(brand)) {
     return null;
@@ -150,8 +162,14 @@ export async function fetchPublicCampaignViewData(
       })
     : null;
 
-  const showBranding = await brandMustShowBranding(campaign.url_id);
+  const [showBranding, poweredBy] = await Promise.all([
+    brandMustShowBranding(campaign.url_id),
+    poweredByHref(brand, "campaign_page"),
+  ]);
   const isLive = await isCampaignPubliclyLive(campaign);
+  const session = await auth();
+  const viewerId = session?.user?.id ? parseInt(session.user.id, 10) : 0;
+  const ownerPreview = !isLive && viewerId > 0 && campaign.member_id === viewerId;
 
   const participantCount = await prisma.campaign_participants.count({
     where: { campaign_id: campaign.id },
@@ -209,6 +227,7 @@ export async function fetchPublicCampaignViewData(
     participantMap,
     totalClicks,
     showBranding,
+    poweredByHref: poweredBy,
     accentFrom: accent.from,
     accentTo: accent.to,
     rewardLabel: reward?.cash_value
@@ -222,6 +241,7 @@ export async function fetchPublicCampaignViewData(
     heroImageUrl: widget?.banner_image_url || payload.bannerImageUrl || null,
     designStyle: isCampaignDesign(payload.designStyle) ? payload.designStyle : null,
     isLive,
+    ownerPreview,
   };
 }
 

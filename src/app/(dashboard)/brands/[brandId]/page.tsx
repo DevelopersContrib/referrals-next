@@ -6,6 +6,13 @@ import { getBrandIfAccessible } from "@/lib/brand-access";
 import { getShareLeaders, getInviteLeaders } from "@/lib/brand-stats";
 import { BrandDashboardPanel } from "@/components/brands/brand-dashboard-panel";
 import { BrandLogo } from "@/components/brands/brand-logo";
+import { BrandReferralLink } from "@/components/brands/brand-referral-link";
+import { PaidOnboardingBanner } from "@/components/dashboard/paid-onboarding-banner";
+import {
+  getBrandEntitlement,
+  shouldShowBrandPublishCta,
+} from "@/lib/member-subscription";
+import { formatBrandName } from "@/lib/format-brand";
 import { Button } from "@/components/ui/button";
 import {
   PlusIcon,
@@ -33,20 +40,31 @@ export default async function BrandDashboardPage({ params }: PageProps) {
   const brand = await getBrandIfAccessible(id, memberId, isAdmin);
   if (!brand) notFound();
 
-  const [campaigns, shareLeaders, inviteLeaders] = await Promise.all([
-    prisma.member_campaigns.findMany({
-      where: { url_id: id },
-      orderBy: { id: "desc" },
-      select: {
-        id: true,
-        name: true,
-        date_added: true,
-        publish: true,
-      },
-    }),
-    getShareLeaders(id),
-    getInviteLeaders(id),
-  ]);
+  const member = await prisma.members.findUnique({
+    where: { id: memberId },
+    select: { is_verified: true },
+  });
+  const [campaigns, shareLeaders, inviteLeaders, entitlement, showPublishCta] =
+    await Promise.all([
+      prisma.member_campaigns.findMany({
+        where: { url_id: id },
+        orderBy: { id: "desc" },
+        select: {
+          id: true,
+          name: true,
+          date_added: true,
+          publish: true,
+        },
+      }),
+      getShareLeaders(id),
+      getInviteLeaders(id),
+      getBrandEntitlement(id, { applyAdminBypass: false }),
+      shouldShowBrandPublishCta({
+        brandId: id,
+        viewerMemberId: memberId,
+        isViewerAdmin: isAdmin,
+      }),
+    ]);
 
   const logo = brand.logo_url && brand.logo_url !== "0" ? brand.logo_url : null;
 
@@ -111,6 +129,21 @@ export default async function BrandDashboardPage({ params }: PageProps) {
           </Link>
         </div>
       </div>
+
+      {showPublishCta && entitlement && (
+        <PaidOnboardingBanner
+          isVerified={Boolean(member?.is_verified)}
+          isGrowth={entitlement.isGrowth}
+          status={entitlement.status}
+          daysLeft={entitlement.daysLeft}
+          checkoutBrandId={id}
+          checkoutBrandDomain={brand.domain}
+          brandName={formatBrandName(brand.domain) || brand.domain}
+          brandIsLive={false}
+        />
+      )}
+
+      <BrandReferralLink brandId={String(brand.id)} />
 
       <BrandDashboardPanel
         brand={{

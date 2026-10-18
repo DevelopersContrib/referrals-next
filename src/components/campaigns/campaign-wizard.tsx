@@ -328,7 +328,7 @@ export function CampaignWizard({
         const error = await response.json().catch(() => ({}));
         const msg =
           error?.code === "REQUIRES_SUBSCRIPTION"
-            ? `${error.error || "Subscription required"} Open Billing to choose a plan.`
+            ? `${error.error || "This brand isn't published yet."} Save it as Private for now, then publish the brand for $9/mo from the campaign page.`
             : error.error || "Failed to create campaign";
         throw new Error(msg);
       }
@@ -474,10 +474,10 @@ export function CampaignWizard({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="public">
-                          Public — shareable link & widget (most common)
+                          Public — needs a published brand ($9/mo)
                         </SelectItem>
                         <SelectItem value="private">
-                          Private — invite-only / testing
+                          Private — set up and preview first
                         </SelectItem>
                       </SelectContent>
                     </Select>

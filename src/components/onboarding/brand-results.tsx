@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -93,6 +93,17 @@ export function BrandResults({
   const router = useRouter();
   const [launchingId, setLaunchingId] = useState<number | null>(null);
   const [launchedId, setLaunchedId] = useState<number | null>(null);
+  // Onboarding analysis skips campaign generation to keep the first wait short,
+  // so build the 3 suggestions here with sensible defaults instead of sending
+  // the member into a second wizard. "Customize" still opens the full brief.
+  const [campaigns, setCampaigns] = useState<CampaignView[]>(status.campaigns);
+  // BrandResults only renders once the analysis has settled, so a member with
+  // no suggestions yet starts in the "designing" state.
+  const [generating, setGenerating] = useState(
+    status.campaigns.length === 0 && Boolean(status.jobId),
+  );
+  const [genFailed, setGenFailed] = useState(false);
+  const triedGenerate = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
   const name = status.vnoc?.name || status.crawl?.name || status.domain;
@@ -114,6 +125,39 @@ export function BrandResults({
     [scores]
   );
 
+  const brandColor =
+    (status.crawl?.colors ?? []).find((c) => /^#?[0-9a-fA-F]{6}$/.test(c.trim())) ?? "#ff5c62";
+
+  useEffect(() => {
+    if (triedGenerate.current) return;
+    // Results can also show after the client timeout with modules still
+    // running; try anyway and fall back to template links if it isn't ready.
+    if (campaigns.length > 0 || !status.jobId) return;
+    triedGenerate.current = true;
+    fetch(`/api/brands/analyze/${status.jobId}/campaigns`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        goalKind: "fast_growth",
+        goalType: "signup",
+        color: brandColor.startsWith("#") ? brandColor : `#${brandColor}`,
+        copyTone: "Friendly & warm",
+        designStyle: "hero",
+        wantImage: false,
+      }),
+    })
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !Array.isArray(data.campaigns) || data.campaigns.length === 0) {
+          setGenFailed(true);
+          return;
+        }
+        setCampaigns(data.campaigns);
+      })
+      .catch(() => setGenFailed(true))
+      .finally(() => setGenerating(false));
+  }, [campaigns.length, status.jobId, brandColor]);
+
   async function launch(c: CampaignView) {
     if (launchingId) return;
     setLaunchingId(c.id);
@@ -126,7 +170,7 @@ export function BrandResults({
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Could not launch this campaign. Please try again.");
+        setError(data.error || "Could not set up this campaign. Please try again.");
         setLaunchingId(null);
         return;
       }
@@ -251,11 +295,31 @@ export function BrandResults({
           className="text-xl font-bold text-gray-900"
           style={{ fontFamily: "var(--font-dosis), sans-serif" }}
         >
-          Your AI-designed referral campaigns
+          Referral campaigns built for {name}
         </h2>
         <p className="mt-1 text-sm text-gray-500">
-          Pick one to launch instantly. You can fine-tune everything afterward.
+          Pick one to start. You can preview and edit it, and it stays private
+          until you publish your brand for $9/mo.
         </p>
+        {status.brandId && (
+          <p className="mt-2 text-sm text-gray-500">
+            Want something different?{" "}
+            <Link
+              href={`/brands/${status.brandId}/campaigns/ai`}
+              className="font-medium text-[#d63a40] underline-offset-4 hover:underline"
+            >
+              Customize with AI
+            </Link>{" "}
+            or{" "}
+            <Link
+              href={`/brands/${status.brandId}/campaigns/new`}
+              className="font-medium text-[#d63a40] underline-offset-4 hover:underline"
+            >
+              start from a template
+            </Link>
+            .
+          </p>
+        )}
 
         {error && (
           <p className="mt-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
@@ -263,29 +327,55 @@ export function BrandResults({
           </p>
         )}
 
-        {status.campaigns.length === 0 ? (
-          <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-8 text-center text-sm text-gray-500">
-            Design a referral campaign with AI when you&apos;re ready.{" "}
-            {status.brandId ? (
-              <Link
-                href={`/brands/${status.brandId}/campaigns/ai`}
-                className="font-medium text-[#FF5C62] underline"
+        {generating ? (
+          <div className="mt-5 grid gap-5 lg:grid-cols-3" aria-busy="true">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="flex h-64 flex-col justify-end rounded-2xl border border-gray-100 bg-white p-5"
               >
-                Open the AI campaign builder
-              </Link>
+                <div className="h-4 w-2/3 animate-pulse rounded bg-gray-100 motion-reduce:animate-none" />
+                <div className="mt-3 h-3 w-full animate-pulse rounded bg-gray-100 motion-reduce:animate-none" />
+                <div className="mt-2 h-3 w-5/6 animate-pulse rounded bg-gray-100 motion-reduce:animate-none" />
+                <p className="mt-5 flex items-center gap-2 text-xs text-gray-500">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin motion-reduce:animate-none" />
+                  Designing campaign {i + 1} of 3…
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : campaigns.length === 0 ? (
+          <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-8 text-center text-sm text-gray-600">
+            We couldn&apos;t design campaigns automatically this time.{" "}
+            {status.brandId ? (
+              <>
+                <Link
+                  href={`/brands/${status.brandId}/campaigns/new`}
+                  className="font-medium text-[#d63a40] underline"
+                >
+                  Start from a template
+                </Link>{" "}
+                or{" "}
+                <Link
+                  href={`/brands/${status.brandId}/campaigns/ai`}
+                  className="font-medium text-[#d63a40] underline"
+                >
+                  try the AI builder
+                </Link>
+                .
+              </>
             ) : (
               <button
                 onClick={() => router.push("/dashboard")}
-                className="font-medium text-[#FF5C62] underline"
+                className="font-medium text-[#d63a40] underline"
               >
                 Go to your dashboard
               </button>
             )}
-            .
           </div>
         ) : (
           <div className="mt-5 grid gap-5 lg:grid-cols-3">
-            {status.campaigns.map((c, i) => (
+            {campaigns.map((c, i) => (
               <CampaignCard
                 key={c.id}
                 campaign={c}
@@ -418,14 +508,14 @@ function CampaignCard({
           >
             {launched ? (
               <>
-                <Check className="h-4 w-4" /> Launched
+                <Check className="h-4 w-4" /> Opening your campaign…
               </>
             ) : launching ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" /> Launching…
+                <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" /> Setting it up…
               </>
             ) : (
-              "Launch this campaign"
+              "Use this campaign"
             )}
           </Button>
         </div>

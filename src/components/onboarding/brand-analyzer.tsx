@@ -20,7 +20,6 @@ const LOGO_URL =
 
 type Phase = "input" | "analyzing" | "results";
 
-const EXAMPLES = ["stripe.com", "notion.so", "glossier.com"];
 const DEFAULT_UPGRADE_HREF = `/billing/plan/${DEFAULT_PAID_PLAN_ID}`;
 
 function pollDelayMs(attempt: number) {
@@ -71,7 +70,16 @@ function looksLikeUrl(v: string): boolean {
   }
 }
 
-export function BrandAnalyzer({ firstName }: { firstName?: string }) {
+export function BrandAnalyzer({
+  firstName,
+  resumeJobId,
+  resumeUrl,
+}: {
+  firstName?: string;
+  /** Re-open an analysis the member already started (refresh / came back later). */
+  resumeJobId?: number;
+  resumeUrl?: string;
+}) {
   const [phase, setPhase] = useState<Phase>("input");
   const [url, setUrl] = useState("");
   const [touched, setTouched] = useState(false);
@@ -83,6 +91,7 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
   const [status, setStatus] = useState<AnalysisStatus | null>(null);
   /** Set once the member edits the address; until then it tracks the website. */
   const [customSlug, setCustomSlug] = useState<string | null>(null);
+  const [editingSlug, setEditingSlug] = useState(false);
 
   const errorId = `${useId()}-website-error`;
 
@@ -163,6 +172,20 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
       if (pollRef.current) clearTimeout(pollRef.current);
     };
   }, []);
+
+  // Resume an existing analysis instead of starting over.
+  const resumedRef = useRef(false);
+  useEffect(() => {
+    if (!resumeJobId || resumedRef.current) return;
+    resumedRef.current = true;
+    if (resumeUrl) setUrl(resumeUrl);
+    stoppedRef.current = false;
+    analyzeStartedRef.current = Date.now();
+    pollAttemptRef.current = 0;
+    setJobId(resumeJobId);
+    setPhase("analyzing");
+    void poll(resumeJobId);
+  }, [resumeJobId, resumeUrl, poll]);
 
   async function handleAnalyze(e: React.FormEvent) {
     e.preventDefault();
@@ -292,8 +315,7 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
         </h1>
         <p className="mt-4 max-w-xl text-lg text-gray-600">
           Drop in your website and our AI reads your brand, finds your social
-          presence, and scores your referral readiness — usually in about 15
-          seconds.
+          presence, and scores your referral readiness — usually in under a minute.
         </p>
 
         <form onSubmit={handleAnalyze} className="mt-8">
@@ -362,34 +384,35 @@ export function BrandAnalyzer({ firstName }: { firstName?: string }) {
           )}
           {error && <p className="mt-2 pl-1 text-sm text-red-500">{error}</p>}
 
-          {valid && (
+          {valid && (editingSlug || slugBlocked) ? (
             <div className="mt-4 rounded-2xl border border-[#ebeef0] bg-white/70 p-4 shadow-sm animate-in fade-in slide-in-from-top-1 duration-300 sm:p-5">
+              {slugBlocked && !editingSlug && (
+                <p className="mb-3 text-sm text-amber-800">
+                  That page address is taken. Pick another one below to continue.
+                </p>
+              )}
               <SlugAvailabilityField
                 value={slug}
                 onChange={(next) => setCustomSlug(next || null)}
                 availability={availability}
-                hint="We reserve this address the moment you hit Analyze."
+                hint="This is your program's public page. You can change it later."
                 disabled={submitting}
               />
             </div>
-          )}
-
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-gray-400">Try:</span>
-            {EXAMPLES.map((ex) => (
+          ) : valid && slug ? (
+            <p className="mt-3 pl-1 text-sm text-gray-500">
+              Your program page will be{" "}
+              <span className="font-medium text-gray-700">referrals.com/p/{slug}</span>
+              {" · "}
               <button
-                key={ex}
                 type="button"
-                onClick={() => {
-                  setUrl(ex);
-                  setTouched(false);
-                }}
-                className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs text-gray-600 transition hover:border-[#FF5C62]/40 hover:text-[#FF5C62]"
+                onClick={() => setEditingSlug(true)}
+                className="font-medium text-[#d63a40] underline-offset-4 hover:underline"
               >
-                {ex}
+                Change
               </button>
-            ))}
-          </div>
+            </p>
+          ) : null}
         </form>
 
         {needsUpgrade && <DomainUpgradeCard href={upgradeHref} />}

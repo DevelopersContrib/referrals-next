@@ -11,6 +11,7 @@
     "generate-blog": "tsx scripts/generate-blog-post.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
     "@auth/prisma-adapter": "^2.11.1",
     "@aws-sdk/client-s3": "^3.1079.0",
     "@aws-sdk/client-ses": "^3.1022.0",

@@ -13,10 +13,7 @@ import { toast } from "sonner";
 import { copyText } from "@/lib/clipboard";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  buildCampaignEmbedSnippets,
-  trimEmbedBase,
-} from "@/lib/campaign-embed-snippets";
+import { buildCampaignEmbedSnippets } from "@/lib/campaign-embed-snippets";
 import { CampaignPageEmbedPreview } from "@/components/campaigns/campaign-page-embed-preview";
 import {
   Code2Icon,
@@ -26,7 +23,6 @@ import {
   ShoppingBagIcon,
   GlobeIcon,
   Share2Icon,
-  NetworkIcon,
   CopyIcon,
   CheckIcon,
   ExternalLinkIcon,
@@ -66,7 +62,8 @@ export function IntegrationGuide({
   baseUrl,
   publicUrl,
   publicSegment,
-  brandDomain,
+  // Network "refer another site" links moved to /refer (Refer & Earn).
+  brandDomain: _brandDomain,
 }: IntegrationGuideProps) {
   const segment = useMemo(() => {
     if (publicSegment?.trim()) return publicSegment.trim();
@@ -84,12 +81,6 @@ export function IntegrationGuide({
     [baseUrl, campaignId, segment],
   );
   const widgetHref = `/brands/${brandId}/campaigns/${campaignId}/widget`;
-  const root = trimEmbedBase(baseUrl || "https://referrals.com");
-  const fromDomain = (brandDomain || "")
-    .trim()
-    .toLowerCase()
-    .replace(/^www\./, "");
-  const networkApi = `${root}/api/domain-refer?from=${fromDomain || "yourdomain.com"}&to=TARGET-DOMAIN.com`;
 
   const integrations = useMemo<IntegrationDef[]>(
     () => [
@@ -120,34 +111,6 @@ export function IntegrationGuide({
         ],
         code: snippets.js,
         codeLabel: "HTML",
-      },
-      {
-        id: "network",
-        label: "Refer another site",
-        icon: NetworkIcon,
-        tint: "text-fuchsia-500 bg-fuchsia-500/10",
-        tagline: "Earn $5 per lead",
-        blurb: (
-          <>
-            Earn{" "}
-            <strong className="font-medium text-foreground">
-              $5 in tokens
-            </strong>{" "}
-            every time you send a visitor to another domain in the network and
-            they sign up. Turn any outbound link into an attributed referral
-            link — mint one on demand from the API below (<code>from</code> =
-            your domain, <code>to</code> = the site you&rsquo;re linking to).
-          </>
-        ),
-        steps: [
-          "Call the API below — from is your domain, to is the network domain you want to link to.",
-          "It returns a tracking link (/t/…). Use that instead of a plain link to that site.",
-          "When a visitor you send there signs up, you earn $5 in tokens — attributed to your domain automatically.",
-          "The reward is ledgered now and minted to your wallet later (domain token if minted, else ADAO).",
-        ],
-        code: networkApi,
-        codeLabel: "Referral link API (GET)",
-        copyLabel: "Copy URL",
       },
       {
         id: "iframe",
@@ -271,7 +234,7 @@ export function IntegrationGuide({
         copyLabel: "Copy link",
       },
     ],
-    [snippets, widgetHref, publicUrl, networkApi, segment, campaignId],
+    [snippets, widgetHref, publicUrl, segment, campaignId],
   );
 
   // Starts on the default so server and client markup agree; the hash effect

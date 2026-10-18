@@ -30,6 +30,7 @@ export interface CrawlResult {
 }
 
 const PAGE_TIMEOUT_MS = 4_000;
+const HOME_TIMEOUT_MS = 9_000;
 const SOCIAL_HOST =
   /(?:^|\.)(facebook|instagram|twitter|x|linkedin|youtube|tiktok|pinterest)\.com$|^(?:facebook|instagram|linkedin|youtube|tiktok|pinterest)$/i;
 
@@ -203,7 +204,9 @@ export async function crawlSite(inputUrl: string): Promise<CrawlResult> {
     /* keep base */
   }
 
-  const home = await fetchPage(base);
+  // The homepage carries the logo, name and colors; give slow (cold-start)
+  // sites longer than the secondary pages get.
+  const home = await fetchPage(base, HOME_TIMEOUT_MS);
   const html = home.html;
   const finalBase = home.finalUrl || base;
   try {

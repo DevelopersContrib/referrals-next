@@ -25,14 +25,18 @@ export function buildPublicCampaignMetadata(
       slug: (brand as { slug?: string | null }).slug,
       domain: brand.domain,
     });
+  // White-label brands: the tab and link previews name the brand, not Referrals.com.
+  const brandName = formatBrandName(brand.domain) || brand.domain;
+  const whiteLabel = data.showBranding === false;
   return {
-    title,
+    title: whiteLabel ? { absolute: brandName ? `${title} | ${brandName}` : title } : title,
     description,
     ...(noindex ? { robots: { index: false, follow: false } } : {}),
     openGraph: {
       title,
       description,
       type: "website",
+      ...(whiteLabel && brandName ? { siteName: brandName } : {}),
       ...(data.heroImageUrl ? { images: [{ url: data.heroImageUrl }] } : {}),
     },
     ...(data.heroImageUrl
@@ -69,6 +73,7 @@ export function PublicCampaignPageView({
     snippets,
     heroImageUrl,
     designStyle,
+    poweredByHref,
     isLive,
   } = data;
   const headline = campaign.headline || campaign.name;
@@ -188,14 +193,15 @@ export function PublicCampaignPageView({
           <span className="font-medium text-slate-700">
             {formatBrandName(brand.domain)}
           </span>
-          {showBranding !== false && (
+          {showBranding !== false && poweredByHref && (
             <>
               <span className="mx-2 text-slate-300" aria-hidden>
                 |
               </span>
               <span>Powered by </span>
+              {/* Carries the owner's referral code, so signups from here credit them. */}
               <a
-                href="https://referrals.com/?utm_source=campaign&utm_medium=powered_by&utm_campaign=public_campaign"
+                href={poweredByHref}
                 className="font-medium underline-offset-2 hover:underline"
                 style={{ color: accentFrom }}
               >

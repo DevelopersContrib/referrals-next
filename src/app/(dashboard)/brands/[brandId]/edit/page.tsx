@@ -7,7 +7,6 @@ import {
   getBrandEntitlement,
 } from "@/lib/member-subscription";
 import { BrandEditPanel } from "@/components/brands/brand-edit-panel";
-import { BrandReferralLink } from "@/components/brands/brand-referral-link";
 import { ChevronRightIcon, HomeIcon } from "lucide-react";
 
 interface EditBrandPageProps {
@@ -23,8 +22,6 @@ export default async function EditBrandPage({ params }: EditBrandPageProps) {
   const entitlement = await getBrandEntitlement(brandIdNum, {
     applyAdminBypass: false,
   });
-  // Whitelabel / remove branding is paid-only for this brand.
-  const isPremium = Boolean(entitlement?.isPaid);
   const showUpgradeCta = brandShouldShowUpgradeCta(entitlement);
 
   return (
@@ -52,12 +49,10 @@ export default async function EditBrandPage({ params }: EditBrandPageProps) {
       >
         <BrandEditPanel
           brandId={brandId}
-          isPremium={isPremium}
           showUpgradeCta={showUpgradeCta}
         />
       </Suspense>
 
-      <BrandReferralLink brandId={brandId} />
     </div>
   );
 }

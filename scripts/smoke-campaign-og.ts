@@ -68,6 +68,8 @@ function mockPayload(heroImageUrl: string | null): PublicCampaignViewPayload {
     heroImageUrl,
     designStyle: "hero",
     isLive: true,
+    ownerPreview: false,
+    poweredByHref: null,
   };
 }
 

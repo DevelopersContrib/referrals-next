@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticateCron } from "@/lib/api/helpers";
+import { getSubscription } from "@/lib/paypal";
 
 export async function GET(req: NextRequest) {
   if (!authenticateCron(req)) {
@@ -23,65 +24,35 @@ export async function GET(req: NextRequest) {
       if (!plan.paypal_agreement_id) continue;
 
       try {
-        // Call PayPal to check subscription status
-        const tokenResponse = await fetch(
-          `${process.env.PAYPAL_API_URL || "https://api-m.paypal.com"}/v1/oauth2/token`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Basic ${Buffer.from(
-                `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
-              ).toString("base64")}`,
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: "grant_type=client_credentials",
-          }
-        );
-
-        if (!tokenResponse.ok) {
+        const agreement = await getSubscription(plan.paypal_agreement_id);
+        const status = String(agreement.status ?? "").toLowerCase();
+        if (!status) {
           failed++;
           continue;
         }
 
-        const tokenData = await tokenResponse.json();
+        await prisma.member_payment.updateMany({
+          where: {
+            member_id: plan.member_id,
+            transaction_id: plan.paypal_agreement_id,
+          },
+          data: {
+            status:
+              status === "active"
+                ? "completed"
+                : status === "cancelled"
+                  ? "cancelled"
+                  : status,
+          },
+        });
 
-        const agreementResponse = await fetch(
-          `${process.env.PAYPAL_API_URL || "https://api-m.paypal.com"}/v1/billing/subscriptions/${plan.paypal_agreement_id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${tokenData.access_token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (!agreementResponse.ok) {
-          failed++;
-          continue;
-        }
-
-        const agreement = await agreementResponse.json();
-
-        // Update payment record based on PayPal status
-        if (plan.payment_id) {
-          const status = agreement.status?.toLowerCase();
-
-          await prisma.member_payment.updateMany({
-            where: { id: plan.payment_id },
+        if (status === "cancelled" || status === "suspended") {
+          await prisma.member_plan.update({
+            where: { id: plan.id },
             data: {
-              status: status === "active" ? "active" : status === "cancelled" ? "cancelled" : status,
+              agreement_cancel: new Date().toISOString(),
             },
           });
-
-          // If subscription is cancelled or suspended, update the plan
-          if (status === "cancelled" || status === "suspended") {
-            await prisma.member_plan.update({
-              where: { id: plan.id },
-              data: {
-                agreement_cancel: new Date().toISOString(),
-              },
-            });
-          }
         }
 
         updated++;

@@ -1,11 +1,14 @@
+import { Suspense } from "react";
 import { auth } from "@/lib/auth";
+import { VerifyEmailBanner } from "@/components/auth/verify-email-banner";
+import { WhatsNew } from "@/components/dashboard/whats-new";
 import { prisma } from "@/lib/prisma";
 import {
   brandShouldShowUpgradeCta,
   countMemberBrands,
   getBrandEntitlement,
   getMemberEntitlement,
-  getPrimaryCheckoutBrand,
+  listMemberBrandBilling,
 } from "@/lib/member-subscription";
 import { enrollMemberInSignupReferral } from "@/lib/signup-referral";
 import { SignupInviteCard } from "@/components/auth/signup-invite-card";
@@ -126,7 +129,13 @@ export default async function DashboardPage() {
     redirect("/onboarding");
   }
 
-  const [entitlement, growthPlan, checkoutBrand] = await Promise.all([
+  const verifiedRow = await prisma.members.findUnique({
+    where: { id: memberId },
+    select: { is_verified: true },
+  });
+  const needsEmailVerify = !verifiedRow?.is_verified && Boolean(session.user.email);
+
+  const [entitlement, growthPlan, brandBilling] = await Promise.all([
     getMemberEntitlement(memberId, { applyAdminBypass: false }),
     prisma.plans.findUnique({
       where: { id: DEFAULT_PAID_PLAN_ID },
@@ -139,10 +148,12 @@ export default async function DashboardPage() {
         campaigns_participants: true,
       },
     }),
-    getPrimaryCheckoutBrand(memberId),
+    listMemberBrandBilling(memberId),
   ]);
-  // REF-J3: hide always-on upgrade nag for paid Growth.
-  const showUpgradeNag = !entitlement.isGrowth;
+  // Billing is per brand: only nag while a brand is still private, and point
+  // the card at that brand. A paid account plan (agency) hides it entirely.
+  const firstPrivateBrand = brandBilling.find((b) => b.status === "private") ?? null;
+  const showUpgradeNag = !entitlement.isGrowth && firstPrivateBrand !== null;
 
   let data;
   try {
@@ -259,16 +270,21 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {needsEmailVerify && session.user.email && (
+        <VerifyEmailBanner email={session.user.email} />
+      )}
       {/* Welcome Subheader Banner */}
       <div className="subheader flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Dashboard</h1>
           <p className="mt-1 text-sm text-white/80">
-            Welcome back, {userName}! Here is your referral program overview.
+            {stats.campaigns === 0
+              ? `Welcome, ${userName}! Let's get your first campaign set up.`
+              : `Welcome back, ${userName}! Here is your referral program overview.`}
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap lg:w-auto">
-          <Link href="/promotions" className="w-full sm:w-auto">
+          <Link href="/refer" className="w-full sm:w-auto">
             <Button className="min-h-11 w-full gap-2 border border-white/20 bg-white/20 text-white backdrop-blur-sm hover:bg-white/30 sm:w-auto">
               <ShareIcon className="size-4" />
               Refer Us
@@ -498,9 +514,17 @@ export default async function DashboardPage() {
               days={growthPlan?.days}
               noOfDomains={growthPlan?.no_of_domains}
               campaignsParticipants={growthPlan?.campaigns_participants}
-              brandId={checkoutBrand?.id ?? null}
+              brandId={firstPrivateBrand?.brandId ?? null}
             />
           )}
+
+          <Suspense
+            fallback={
+              <div className="h-72 animate-pulse rounded-2xl border border-gray-100 bg-white motion-reduce:animate-none" />
+            }
+          >
+            <WhatsNew />
+          </Suspense>
 
           {/* Quick Links Grid */}
           <div>

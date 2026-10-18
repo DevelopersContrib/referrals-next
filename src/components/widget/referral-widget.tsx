@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ShareButtons } from "./share-buttons";
 import { RewardDisplay } from "./reward-display";
 import { formatBrandName } from "@/lib/format-brand";
+import { BrandLogo } from "@/components/brands/brand-logo";
 import { copyText } from "@/lib/clipboard";
 
 interface WidgetConfig {
@@ -30,6 +31,8 @@ interface WidgetConfig {
   shareText?: string;
   shareTitle?: string;
   showBranding?: boolean;
+  brandDomain?: string;
+  brandLogoUrl?: string;
 }
 
 interface Participant {
@@ -248,6 +251,16 @@ export function ReferralWidget({
       )}
 
       <div style={{ padding: "24px" }}>
+        {config.brandDomain && (
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "12px" }}>
+            <BrandLogo
+              domain={config.brandDomain}
+              logoUrl={config.brandLogoUrl}
+              imgClassName="h-12 w-12 rounded-xl border border-gray-100 bg-white object-contain p-1"
+              fallbackClassName="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 text-lg font-bold text-gray-500"
+            />
+          </div>
+        )}
         {/* Header */}
         {config.headerTitle && (
           <h2

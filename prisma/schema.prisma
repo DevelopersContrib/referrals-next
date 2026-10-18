@@ -1098,3 +1098,18 @@ model billing_paypal_webhook_events {
   @@index([event_type, received_at], map: "idx_paypal_webhook_type")
   @@index([resource_id], map: "idx_paypal_webhook_resource")
 }
+
+/// B8: one row per follow-up email sent (or dry-run logged) to an unpaid brand owner.
+model unpaid_followup_sends {
+  id        BigInt   @id @default(autoincrement())
+  member_id Int
+  brand_id  Int
+  step      String   @db.VarChar(32)
+  sent_at   DateTime @default(now()) @db.Timestamp(0)
+  dry_run   Boolean  @default(false)
+
+  @@unique([member_id, brand_id, step], map: "uq_followup_member_brand_step")
+  @@index([member_id], map: "idx_followup_member")
+  @@index([brand_id], map: "idx_followup_brand")
+  @@index([step, sent_at], map: "idx_followup_step_sent")
+}

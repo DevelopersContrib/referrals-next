@@ -13,6 +13,12 @@ import {
 } from "@/lib/billing-constants";
 import { buildBrandedEngagementEmail } from "@/lib/engagement-email-templates";
 
+function isPrismaMissingTableOrColumn(err: unknown): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  const code = (err as { code?: string }).code;
+  return code === "P2021" || code === "P2022";
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type FollowupStep = "day0" | "day1" | "day3" | "day7" | "abandoned";
@@ -235,10 +241,18 @@ async function alreadySent(
   brandId: number,
   step: FollowupStep,
 ): Promise<boolean> {
-  const count = await prisma.unpaid_followup_sends.count({
-    where: { member_id: memberId, brand_id: brandId, step },
-  });
-  return count > 0;
+  try {
+    const count = await prisma.unpaid_followup_sends.count({
+      where: { member_id: memberId, brand_id: brandId, step },
+    });
+    return count > 0;
+  } catch (err: unknown) {
+    if (isPrismaMissingTableOrColumn(err)) {
+      console.warn(`[unpaid-followup] unpaid_followup_sends table/column missing — skipping dedup check`);
+      return false;
+    }
+    throw err;
+  }
 }
 
 async function recordSend(
@@ -248,14 +262,22 @@ async function recordSend(
   step: FollowupStep,
   dryRun: boolean,
 ): Promise<void> {
-  await prisma.unpaid_followup_sends.create({
-    data: {
-      member_id: memberId,
-      brand_id: brandId,
-      step,
-      dry_run: dryRun,
-    },
-  });
+  try {
+    await prisma.unpaid_followup_sends.create({
+      data: {
+        member_id: memberId,
+        brand_id: brandId,
+        step,
+        dry_run: dryRun,
+      },
+    });
+  } catch (err: unknown) {
+    if (isPrismaMissingTableOrColumn(err)) {
+      console.warn(`[unpaid-followup] unpaid_followup_sends table/column missing — skipping record`);
+      return;
+    }
+    throw err;
+  }
 }
 
 function renderEmail(

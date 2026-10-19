@@ -587,7 +587,6 @@ model plans {
   unit                   String? @default("month") @db.VarChar(100)
   no_unit                Int?    @default(0)
   days                   Int?    @default(0)
-  is_for_sale            Boolean @default(true)
 }
 
 model referral_coupons {

@@ -23,7 +23,9 @@ export function campaignSurfaceLabel(state: CampaignSurfaceState): string {
     case "paused":
       return "Paused";
     default:
-      return "Draft";
+      // "Private" rather than "Draft": the campaign is fully built, it just
+      // is not taking signups yet.
+      return "Private";
   }
 }
 

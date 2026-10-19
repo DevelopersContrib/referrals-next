@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Input } from "@/components/ui/input";
 import { siteUrl } from "@/lib/site-url";
+import { cn } from "@/lib/utils";
 import {
   listForumCategories,
   listForumTopics,
@@ -76,21 +78,24 @@ export default async function ForumPage({
               Search
             </Button>
           </form>
-          <Button
-            variant="outline"
-            size="sm"
-            className="min-h-11"
-            render={<Link href="/forum/activity" />}
+          <Link
+            href="/forum/activity"
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "min-h-11",
+            )}
           >
             Activity
-          </Button>
-          <Button
-            size="sm"
-            className="min-h-11 w-full sm:w-auto"
-            render={<Link href="/forum/new" />}
+          </Link>
+          <Link
+            href="/forum/new"
+            className={cn(
+              buttonVariants({ size: "sm" }),
+              "min-h-11 w-full sm:w-auto",
+            )}
           >
             New Topic
-          </Button>
+          </Link>
         </div>
       </div>
 
@@ -148,41 +153,31 @@ export default async function ForumPage({
       {list.totalPages > 1 ? (
         <div className="flex items-center justify-center gap-2">
           {list.page > 1 ? (
-            <Button
-              variant="outline"
-              size="sm"
-              render={
-                <Link
-                  href={forumHref({
-                    tab,
-                    category: categorySlug,
-                    page: list.page - 1,
-                  })}
-                />
-              }
+            <Link
+              href={forumHref({
+                tab,
+                category: categorySlug,
+                page: list.page - 1,
+              })}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               Previous
-            </Button>
+            </Link>
           ) : null}
           <span className="text-sm text-muted-foreground">
             Page {list.page} of {list.totalPages}
           </span>
           {list.page < list.totalPages ? (
-            <Button
-              variant="outline"
-              size="sm"
-              render={
-                <Link
-                  href={forumHref({
-                    tab,
-                    category: categorySlug,
-                    page: list.page + 1,
-                  })}
-                />
-              }
+            <Link
+              href={forumHref({
+                tab,
+                category: categorySlug,
+                page: list.page + 1,
+              })}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               Next
-            </Button>
+            </Link>
           ) : null}
         </div>
       ) : null}

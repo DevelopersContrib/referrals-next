@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Input } from "@/components/ui/input";
 import { siteUrl } from "@/lib/site-url";
+import { cn } from "@/lib/utils";
 import { listForumCategories, listForumTopics } from "@/lib/forum";
 import { ForumTopicList, forumHref } from "@/components/forum/topic-list";
 
@@ -88,41 +90,31 @@ export default async function ForumSearchPage({
       {q && list.totalPages > 1 ? (
         <div className="flex items-center justify-center gap-2">
           {list.page > 1 ? (
-            <Button
-              variant="outline"
-              size="sm"
-              render={
-                <Link
-                  href={forumHref({
-                    q,
-                    page: list.page - 1,
-                    path: "/forum/search",
-                  })}
-                />
-              }
+            <Link
+              href={forumHref({
+                q,
+                page: list.page - 1,
+                path: "/forum/search",
+              })}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               Previous
-            </Button>
+            </Link>
           ) : null}
           <span className="text-sm text-muted-foreground">
             Page {list.page} of {list.totalPages}
           </span>
           {list.page < list.totalPages ? (
-            <Button
-              variant="outline"
-              size="sm"
-              render={
-                <Link
-                  href={forumHref({
-                    q,
-                    page: list.page + 1,
-                    path: "/forum/search",
-                  })}
-                />
-              }
+            <Link
+              href={forumHref({
+                q,
+                page: list.page + 1,
+                path: "/forum/search",
+              })}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               Next
-            </Button>
+            </Link>
           ) : null}
         </div>
       ) : null}

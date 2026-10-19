@@ -8,6 +8,11 @@ import {
   listForumTopics,
   parseForumTab,
 } from "@/lib/forum";
+import {
+  assertPostLimits,
+  assertRateLimit,
+  shouldHoldForReview,
+} from "@/lib/forum-moderation";
 
 export async function GET(request: NextRequest) {
   try {
@@ -126,6 +131,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const limitError =
+      assertPostLimits(`${title}\n${content}`) || (await assertRateLimit(memberId));
+    if (limitError) {
+      return NextResponse.json({ error: limitError }, { status: 400 });
+    }
+
+    const pending = await shouldHoldForReview(memberId);
+
     // Generate slug from title
     const baseSlug = title
       .toLowerCase()
@@ -144,11 +157,20 @@ export async function POST(request: NextRequest) {
         category_id: category?.id ?? null,
         date_posted: now,
         last_activity_at: now,
-        status: "open",
+        status: pending ? "pending" : "open",
       },
     });
 
-    return NextResponse.json({ topic }, { status: 201 });
+    return NextResponse.json(
+      {
+        topic,
+        pending,
+        message: pending
+          ? "Your first post is waiting for approval and will not appear publicly yet."
+          : undefined,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Forum posts POST error:", error);
     return NextResponse.json(

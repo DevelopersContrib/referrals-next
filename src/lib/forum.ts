@@ -192,6 +192,7 @@ export async function listForumTopics(options: {
 
   if (tab === "unanswered") {
     const withReplies = await prisma.topic_comments.findMany({
+      where: { status: "open" },
       select: { topic_id: true },
       distinct: ["topic_id"],
     });
@@ -268,7 +269,7 @@ export async function listForumTopics(options: {
     topicIds.length
       ? prisma.topic_comments.groupBy({
           by: ["topic_id"],
-          where: { topic_id: { in: topicIds } },
+          where: { topic_id: { in: topicIds }, status: "open" },
           _count: { id: true },
         })
       : [],

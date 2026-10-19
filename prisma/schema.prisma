@@ -660,6 +660,22 @@ model topic_comments {
   answer      String?  @db.Text
   member_id   Int?
   date_posted DateTime @default(now()) @db.Timestamp(0)
+  status      String   @default("open") @db.VarChar(32)
+
+  @@index([status], map: "idx_topic_comments_status")
+}
+
+model topic_reports {
+  id          Int      @id @default(autoincrement())
+  topic_id    Int?
+  comment_id  Int?
+  reported_by Int
+  reason      String?  @db.VarChar(255)
+  status      String   @default("open") @db.VarChar(32)
+  created_at  DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([status], map: "idx_topic_reports_status")
+  @@index([topic_id], map: "idx_topic_reports_topic")
 }
 
 model topic_comments_votes {

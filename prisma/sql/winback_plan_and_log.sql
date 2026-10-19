@@ -2,16 +2,18 @@
 -- Additive only. Do NOT run until Maida approves.
 --
 -- 1) New plans row: "Brand, monthly — $1 first month"
---    is_for_sale = 0 keeps it off /pricing. Only reachable via direct link.
+--    Hidden from /pricing via WINBACK_PLAN_ID code-level rule (no DB column needed).
 --    price = 1.00, unit = month, days = 30, no_of_domains = 1
 --
 -- 2) winback_email_log table tracks every email sent by the win-back job.
 
--- Add is_for_sale column if it does not exist yet.
-ALTER TABLE plans ADD COLUMN IF NOT EXISTS is_for_sale TINYINT NOT NULL DEFAULT 1;
+-- ⚠️  Before running: verify that plans id=7 is free:
+--     SELECT id FROM plans WHERE id = 7;
+-- If a row already exists, pick a different id and update WINBACK_PLAN_ID in
+-- src/lib/billing-constants.ts to match.
 
-INSERT INTO plans (id, name, price, unit, days, no_of_domains, campaigns_participants, is_for_sale)
-VALUES (7, 'Brand, monthly — $1 first month', 1.00, 'month', 30, 1, 0, 0);
+INSERT INTO plans (id, name, price, unit, days, no_of_domains, campaigns_participants)
+VALUES (7, 'Brand, monthly — $1 first month', 1.00, 'month', 30, 1, 0);
 
 CREATE TABLE IF NOT EXISTS winback_email_log (
   id            INT AUTO_INCREMENT PRIMARY KEY,

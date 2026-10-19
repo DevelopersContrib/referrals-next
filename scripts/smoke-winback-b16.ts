@@ -182,10 +182,10 @@ function main() {
   } else {
     pass("SQL inserts winback plan");
   }
-  if (!sql.includes("is_for_sale")) {
-    fail("SQL must set is_for_sale = 0");
+  if (sql.includes("is_for_sale")) {
+    fail("SQL must NOT reference is_for_sale (column removed; use code-level WINBACK_PLAN_ID rule)");
   } else {
-    pass("SQL sets is_for_sale");
+    pass("SQL does not reference is_for_sale");
   }
   if (!sql.includes("winback_email_log")) {
     fail("SQL must create winback_email_log table");
@@ -200,10 +200,10 @@ function main() {
   } else {
     pass("Prisma schema has winback_email_log model");
   }
-  if (!schema.includes("is_for_sale")) {
-    fail("Prisma schema plans model must include is_for_sale");
+  if (schema.includes("is_for_sale")) {
+    fail("Prisma schema plans model must NOT include is_for_sale (column removed)");
   } else {
-    pass("Prisma schema plans model has is_for_sale");
+    pass("Prisma schema plans model does not have is_for_sale (code-level rule)");
   }
 
   // --- 10. Query script ---

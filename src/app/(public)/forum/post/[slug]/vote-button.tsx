@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 export function TopicVoteButton({
@@ -25,9 +26,16 @@ export function TopicVoteButton({
         const data = await res.json();
         setCount(data.voteCount ?? count + 1);
         setVoted(true);
+        return;
       }
+
+      toast.error(
+        res.status === 401
+          ? "Sign in to upvote this topic."
+          : "Could not record your vote. Please try again."
+      );
     } catch {
-      // silently fail
+      toast.error("Could not record your vote. Please try again.");
     }
   }
 

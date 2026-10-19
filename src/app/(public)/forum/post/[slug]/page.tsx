@@ -181,6 +181,11 @@ export default async function TopicDetailPage({
           {comments.length} {comments.length === 1 ? "Reply" : "Replies"}
         </h2>
         <div className="mt-4 space-y-4">
+          {comments.length === 0 ? (
+            <p className="text-muted-foreground">
+              No replies yet. Be the first to answer this question!
+            </p>
+          ) : null}
           {comments.map((comment) => (
             <Card key={comment.id}>
               <CardContent className="py-4">

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseId } from "@/lib/api/helpers";
 
 export async function POST(
   _request: NextRequest,
@@ -13,7 +14,10 @@ export async function POST(
     }
 
     const { commentId } = await params;
-    const cmtId = parseInt(commentId, 10);
+    const cmtId = parseId(commentId);
+    if (cmtId === null) {
+      return NextResponse.json({ error: "Comment not found" }, { status: 404 });
+    }
     const memberId = parseInt(session.user.id, 10);
 
     // Verify comment exists

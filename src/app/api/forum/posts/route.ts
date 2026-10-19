@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseId } from "@/lib/api/helpers";
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,12 +29,24 @@ export async function GET(request: NextRequest) {
 
     // List topics with optional filters
     const categoryId = searchParams.get("category_id");
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 100);
+    // parseInt yields NaN for junk like ?page=abc, and NaN survives Math.min /
+    // Math.max — it would reach Prisma's skip/take and throw a 500.
+    const asInt = (raw: string | null, fallback: number) => {
+      const n = parseInt(raw || "", 10);
+      return Number.isFinite(n) ? n : fallback;
+    };
+    const page = Math.max(1, asInt(searchParams.get("page"), 1));
+    const limit = Math.min(100, Math.max(1, asInt(searchParams.get("limit"), 20)));
     const offset = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
-    if (categoryId) where.category_id = parseInt(categoryId, 10);
+    if (categoryId) {
+      const parsed = parseId(categoryId);
+      if (parsed === null) {
+        return NextResponse.json({ error: "Category not found" }, { status: 404 });
+      }
+      where.category_id = parsed;
+    }
 
     const [topics, total] = await Promise.all([
       prisma.topics.findMany({

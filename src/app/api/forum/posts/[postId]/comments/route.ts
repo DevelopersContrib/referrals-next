@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseId } from "@/lib/api/helpers";
 
 export async function GET(
   _request: NextRequest,
@@ -13,7 +14,10 @@ export async function GET(
     }
 
     const { postId } = await params;
-    const topicId = parseInt(postId, 10);
+    const topicId = parseId(postId);
+    if (topicId === null) {
+      return NextResponse.json({ error: "Topic not found" }, { status: 404 });
+    }
 
     const comments = await prisma.topic_comments.findMany({
       where: { topic_id: topicId },
@@ -41,7 +45,10 @@ export async function POST(
     }
 
     const { postId } = await params;
-    const topicId = parseInt(postId, 10);
+    const topicId = parseId(postId);
+    if (topicId === null) {
+      return NextResponse.json({ error: "Topic not found" }, { status: 404 });
+    }
     const memberId = parseInt(session.user.id, 10);
 
     const body = await request.json();

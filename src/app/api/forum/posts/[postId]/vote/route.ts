@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseId } from "@/lib/api/helpers";
 
 export async function POST(
   _request: NextRequest,
@@ -13,7 +14,10 @@ export async function POST(
     }
 
     const { postId } = await params;
-    const topicId = parseInt(postId, 10);
+    const topicId = parseId(postId);
+    if (topicId === null) {
+      return NextResponse.json({ error: "Topic not found" }, { status: 404 });
+    }
     const memberId = parseInt(session.user.id, 10);
 
     // Verify topic exists

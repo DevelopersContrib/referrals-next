@@ -60,13 +60,19 @@ export async function POST(
       return NextResponse.json({ error: "Topic not found" }, { status: 404 });
     }
 
+    const now = new Date();
     const comment = await prisma.topic_comments.create({
       data: {
         topic_id: topicId,
         answer: answer.trim(),
         member_id: memberId,
-        date_posted: new Date(),
+        date_posted: now,
       },
+    });
+
+    await prisma.topics.update({
+      where: { id: topicId },
+      data: { last_activity_at: now },
     });
 
     return NextResponse.json({ comment }, { status: 201 });

@@ -5,8 +5,8 @@ import {
   isAnnouncementsSlug,
   isArchiveSlug,
   listForumCategories,
-  publicTopicOrderBy,
-  publicTopicWhere,
+  listForumTopics,
+  parseForumTab,
 } from "@/lib/forum";
 
 export async function GET(request: NextRequest) {
@@ -41,43 +41,34 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ topic });
     }
 
-    // List topics with optional filters
     const categoryId = searchParams.get("category_id");
     const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 100);
-    const offset = (page - 1) * limit;
-
     const parsedCategoryId = categoryId ? parseInt(categoryId, 10) : undefined;
     const category =
       parsedCategoryId && Number.isFinite(parsedCategoryId)
         ? await prisma.topic_categories.findUnique({
             where: { id: parsedCategoryId },
-            select: { id: true, is_archived: true },
+            select: { slug: true },
           })
         : null;
 
-    const where = await publicTopicWhere({
-      categoryId: category?.id,
-      includeArchive: category?.is_archived,
+    const list = await listForumTopics({
+      tab: parseForumTab(searchParams.get("tab")),
+      categorySlug: category?.slug,
+      page: Number.isFinite(page) ? page : 1,
+      memberId: Number.isFinite(memberId) ? memberId : null,
+      query: searchParams.get("q"),
     });
-
-    const [topics, total] = await Promise.all([
-      prisma.topics.findMany({
-        where,
-        orderBy: publicTopicOrderBy,
-        skip: offset,
-        take: limit,
-      }),
-      prisma.topics.count({ where }),
-    ]);
+    const topics = list.topics;
+    const total = list.total;
 
     return NextResponse.json({
       topics,
       pagination: {
-        page,
-        limit,
+        page: list.page,
+        limit: list.pageSize,
         total,
-        totalPages: Math.ceil(total / limit),
+        totalPages: list.totalPages,
       },
     });
   } catch (error) {

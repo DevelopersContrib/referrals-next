@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { siteUrl } from "@/lib/site-url";
 import {
   listForumCategories,
@@ -64,15 +65,17 @@ export default async function ForumPage({
             Discuss referral marketing, ask questions, and share insights.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="min-h-11"
-            render={<Link href="/forum/categories" />}
-          >
-            Categories
-          </Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <form action="/forum/search" className="flex gap-2">
+            <Input
+              name="q"
+              placeholder="Search topics"
+              className="min-h-11 w-full sm:w-56"
+            />
+            <Button type="submit" variant="outline" size="sm" className="min-h-11">
+              Search
+            </Button>
+          </form>
           <Button
             variant="outline"
             size="sm"
@@ -83,7 +86,7 @@ export default async function ForumPage({
           </Button>
           <Button
             size="sm"
-            className="min-h-11"
+            className="min-h-11 w-full sm:w-auto"
             render={<Link href="/forum/new" />}
           >
             New Topic

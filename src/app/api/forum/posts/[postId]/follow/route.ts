@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseId } from "@/lib/api/helpers";
 
 export async function POST(
   _request: NextRequest,
@@ -14,7 +15,10 @@ export async function POST(
 
     const memberId = parseInt(session.user.id, 10);
     const { postId } = await params;
-    const topicId = parseInt(postId, 10);
+    const topicId = parseId(postId);
+    if (topicId === null) {
+      return NextResponse.json({ error: "Topic not found" }, { status: 404 });
+    }
 
     const topic = await prisma.topics.findUnique({ where: { id: topicId } });
     if (!topic) {
@@ -51,7 +55,10 @@ export async function DELETE(
 
     const memberId = parseInt(session.user.id, 10);
     const { postId } = await params;
-    const topicId = parseInt(postId, 10);
+    const topicId = parseId(postId);
+    if (topicId === null) {
+      return NextResponse.json({ error: "Topic not found" }, { status: 404 });
+    }
 
     await prisma.topic_followers.deleteMany({
       where: { topic_id: topicId, member_id: memberId },

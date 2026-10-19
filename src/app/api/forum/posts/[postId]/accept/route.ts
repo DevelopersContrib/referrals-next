@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseId } from "@/lib/api/helpers";
 
 export async function POST(
   request: NextRequest,
@@ -14,15 +15,12 @@ export async function POST(
 
     const memberId = parseInt(session.user.id, 10);
     const { postId } = await params;
-    const topicId = parseInt(postId, 10);
+    const topicId = parseId(postId);
     const body = await request.json();
-    const commentId = parseInt(String(body.comment_id || "0"), 10);
+    const commentId = parseId(String(body.comment_id || ""));
 
-    if (!topicId || !commentId) {
-      return NextResponse.json(
-        { error: "Topic and comment are required." },
-        { status: 400 }
-      );
+    if (topicId === null || commentId === null) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     const [topic, comment, member] = await Promise.all([

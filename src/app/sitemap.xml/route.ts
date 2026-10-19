@@ -108,9 +108,25 @@ export async function GET() {
   // Dynamic pages: forum topics
   let topicUrls: { url: string; date_posted: Date }[] = [];
   try {
+    const archived = await prisma.topic_categories.findMany({
+      where: { is_archived: true },
+      select: { id: true },
+    });
+    const archivedIds = archived.map((c) => c.id);
     const topics = await prisma.topics.findMany({
       select: { slug: true, date_posted: true },
-      where: { slug: { not: null } },
+      where: {
+        slug: { not: null },
+        status: { in: ["open", "answered"] },
+        ...(archivedIds.length
+          ? {
+              OR: [
+                { category_id: null },
+                { category_id: { notIn: archivedIds } },
+              ],
+            }
+          : {}),
+      },
     });
     topicUrls = topics
       .filter((t) => t.slug)

@@ -9,6 +9,13 @@ import { TopicVoteButton } from "./vote-button";
 import { CommentForm } from "./comment-form";
 import { ReportButton } from "@/components/forum/report-button";
 
+function metaDescription(text: string | null | undefined) {
+  return (text || "Referrals.com forum discussion.")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 155);
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -17,16 +24,24 @@ export async function generateMetadata({
   const { slug } = await params;
   const topic = await prisma.topics.findFirst({
     where: { slug },
-    select: { title: true, content: true },
+    select: { title: true, content: true, status: true, category_id: true },
   });
-  const description = (topic?.content || "Referrals.com forum discussion.")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 160);
+  const category = topic?.category_id
+    ? await prisma.topic_categories.findUnique({
+        where: { id: topic.category_id },
+        select: { is_archived: true },
+      })
+    : null;
+  const noindex =
+    !topic ||
+    topic.status === "pending" ||
+    topic.status === "hidden" ||
+    Boolean(category?.is_archived);
   return {
     title: topic?.title || "Forum Topic",
-    description,
+    description: metaDescription(topic?.content),
     alternates: { canonical: siteUrl(`/forum/post/${slug}`) },
+    robots: noindex ? { index: false, follow: true } : undefined,
   };
 }
 
@@ -135,8 +150,35 @@ export default async function TopicDetailPage({
     commentVoteCounts.map((v) => [v.comment_id, v._count.id]),
   );
 
+  const openComments = comments.filter((c) => c.status === "open");
+  const accepted = topic.accepted_comment_id
+    ? comments.find((c) => c.id === topic.accepted_comment_id)
+    : null;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "QAPage",
+    mainEntity: {
+      "@type": "Question",
+      name: topic.title,
+      text: metaDescription(topic.content),
+      answerCount: openComments.length,
+      ...(accepted?.answer
+        ? {
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: accepted.answer,
+            },
+          }
+        : {}),
+    },
+  };
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Link href="/forum" className="hover:text-gray-900">
@@ -199,6 +241,19 @@ export default async function TopicDetailPage({
           ) : null}
         </CardContent>
       </Card>
+
+      {accepted?.answer ? (
+        <Card className="border-green-600">
+          <CardHeader>
+            <p className="text-sm font-medium text-green-700">Accepted answer</p>
+          </CardHeader>
+          <CardContent>
+            <div className="whitespace-pre-wrap wrap-break-word text-gray-700">
+              {accepted.answer}
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {/* Comments */}
       <div>

@@ -18,6 +18,8 @@ export default async function WidgetEmbedPage({
 
   const data = await getWidgetData(campaignId);
   if (!data) notFound();
+  // Not live (unpaid brand or draft): show nothing on the host site.
+  if (!data.canView) return null;
 
   return (
     <div style={{ padding: 0, margin: 0 }}>

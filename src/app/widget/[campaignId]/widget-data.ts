@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { brandMustShowBranding } from "@/lib/member-subscription";
+import { isCampaignPubliclyLive } from "@/lib/campaign-live";
 
 export async function getWidgetData(campaignId: number) {
   const [campaign, widget, reward, socialContent, allowedSocials, leaderboard] =
@@ -45,6 +47,16 @@ export async function getWidgetData(campaignId: number) {
 
   if (!campaign) return null;
 
+  // Only a published campaign on a paid brand is shown to the public. The
+  // signed-in owner can still preview a draft, same rule as widget sign-ups.
+  const isLive = await isCampaignPubliclyLive(campaign);
+  let canView = isLive;
+  if (!isLive) {
+    const session = await auth().catch(() => null);
+    const viewerId = session?.user?.id ? parseInt(session.user.id, 10) : 0;
+    canView = viewerId > 0 && campaign.member_id === viewerId;
+  }
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://referrals.com";
   const [showBranding, brand] = await Promise.all([
     brandMustShowBranding(campaign.url_id),
@@ -55,6 +67,8 @@ export async function getWidgetData(campaignId: number) {
   ]);
 
   return {
+    isLive,
+    canView,
     config: {
       campaignId,
       color: widget?.color || undefined,

@@ -13,6 +13,8 @@ export default async function WidgetPage({
 
   const data = await getWidgetData(campaignId);
   if (!data) notFound();
+  // Not live (unpaid brand or draft): render nothing. The owner still sees a preview.
+  if (!data.canView) return null;
 
   return (
     <div

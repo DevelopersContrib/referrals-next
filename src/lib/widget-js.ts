@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { isCampaignPubliclyLive } from "@/lib/campaign-live";
 
 export type WidgetPlacement = "embed" | "popup" | "floating" | "topbar";
 
@@ -69,6 +70,12 @@ export async function buildCampaignWidgetJs(
 
   if (!campaign) {
     return { ok: false, status: 404, message: "// Campaign not found" };
+  }
+
+  // Unpaid brand or unpublished campaign: an empty script, so nothing is drawn
+  // on the host site until the brand is paid for and the campaign is public.
+  if (!(await isCampaignPubliclyLive(campaign))) {
+    return { ok: true, js: "/* Referrals.com: this program is not live yet. */" };
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://referrals.com";

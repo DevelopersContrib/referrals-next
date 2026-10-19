@@ -20,6 +20,8 @@ export default async function WidgetPopupPage({
 
   const data = await getWidgetData(campaignId);
   if (!data) notFound();
+  // Not live (unpaid brand or draft): show nothing on the host site.
+  if (!data.canView) return null;
 
   return (
     <div

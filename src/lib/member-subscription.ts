@@ -5,7 +5,6 @@ import { isNetworkSyntheticParticipantEmail } from "@/lib/domain-referrer";
 import { corsHeaders } from "@/lib/api/helpers";
 import {
   DEFAULT_PAID_PLAN_ID,
-  FREE_DOMAIN_CAP,
   FREE_PARTICIPANT_CAP,
   TRIAL_DAYS,
   TRIAL_PLAN_ID,
@@ -509,54 +508,15 @@ export async function countMemberParticipants(memberId: number) {
   return Number(rows[0]?.c ?? 0);
 }
 
+/**
+ * Anyone can set up as many brands as they like, at any time, free. Paying is
+ * per brand and only needed to publish (campaigns go public, widget and
+ * sign-ups work). Kept as a function so callers have one place to change if a
+ * limit is ever needed again.
+ */
 export async function canMemberAddBrand(memberId: number) {
   const e = await getMemberEntitlement(memberId);
-  const unpaid = await countUnpaidSetupBrands(memberId);
-  if (unpaid < FREE_DOMAIN_CAP) {
-    return { ok: true as const, entitlement: e };
-  }
-  return {
-    ok: false as const,
-    entitlement: e,
-    reason: "domain_cap" as const,
-  };
-}
-
-/** Unpaid non-network brands that occupy the one free setup slot. */
-async function countUnpaidSetupBrands(memberId: number) {
-  const brands = await prisma.member_urls.findMany({
-    where: { member_id: memberId },
-    select: {
-      id: true,
-      in_vnoc: true,
-      vnoc_id: true,
-      plan_expiry: true,
-    },
-  });
-  let unpaid = 0;
-  for (const brand of brands) {
-    if (isVnocBrand(brand)) continue;
-    const entitled = await isBrandGrowthEntitled(brand.id);
-    if (entitled) continue;
-    if (await brandIsAbandonedDraft(brand.id)) continue;
-    unpaid += 1;
-  }
-  return unpaid;
-}
-
-async function brandIsAbandonedDraft(brandId: number) {
-  const [campaigns, analyses] = await Promise.all([
-    prisma.member_campaigns.count({ where: { url_id: brandId } }),
-    prisma.brand_analysis.findMany({
-      where: { url_id: brandId },
-      select: { status: true },
-    }),
-  ]);
-  if (campaigns > 0) return false;
-  if (analyses.length === 0) return false;
-  return analyses.every(
-    (row) => row.status === "failed" || row.status === "expired",
-  );
+  return { ok: true as const, entitlement: e };
 }
 
 export type BrandBillingRow = {

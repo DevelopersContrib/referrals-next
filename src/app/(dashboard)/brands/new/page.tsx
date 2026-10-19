@@ -12,7 +12,7 @@ export default function NewBrandPage() {
           </Button>
         </Link>
       </div>
-      <BrandAnalyzer />
+      <BrandAnalyzer skipSlotGate />
     </div>
   );
 }

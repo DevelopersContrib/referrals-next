@@ -74,11 +74,15 @@ export function BrandAnalyzer({
   firstName,
   resumeJobId,
   resumeUrl,
+  skipSlotGate,
 }: {
   firstName?: string;
   /** Re-open an analysis the member already started (refresh / came back later). */
   resumeJobId?: number;
   resumeUrl?: string;
+  /** When true, the unpaid-slot paywall is hidden and the analyze request
+   *  carries `source: "brands-new"` so the server skips the slot cap. */
+  skipSlotGate?: boolean;
 }) {
   const [phase, setPhase] = useState<Phase>("input");
   const [url, setUrl] = useState("");
@@ -200,14 +204,22 @@ export function BrandAnalyzer({
       const res = await fetch("/api/brands/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim(), slug }),
+        body: JSON.stringify({
+          url: url.trim(),
+          slug,
+          ...(skipSlotGate ? { source: "brands-new" } : {}),
+        }),
       });
       const data = await res.json();
 
       if (!res.ok) {
-        if (data.code === "REQUIRES_SUBSCRIPTION") {
+        if (data.code === "REQUIRES_SUBSCRIPTION" && !skipSlotGate) {
           setUpgradeHref(upgradeCheckoutHref(data));
           setNeedsUpgrade(true);
+        } else if (data.code === "REQUIRES_SUBSCRIPTION" && skipSlotGate) {
+          setError(
+            data.error || "Could not start the analysis. Please try again.",
+          );
         } else if (data.suggestion) {
           // Someone claimed the address between the check and this request.
           setCustomSlug(data.suggestion);
@@ -415,11 +427,13 @@ export function BrandAnalyzer({
           ) : null}
         </form>
 
-        {needsUpgrade && <DomainUpgradeCard href={upgradeHref} />}
+        {needsUpgrade && !skipSlotGate && <DomainUpgradeCard href={upgradeHref} />}
 
-        <p className="mt-8 text-xs text-gray-400">
-          Set up your brand here. Publishing the program is $9/month for this brand.
-        </p>
+        {!skipSlotGate && (
+          <p className="mt-8 text-xs text-gray-400">
+            Set up your brand here. Publishing the program is $9/month for this brand.
+          </p>
+        )}
       </div>
     </div>
   );

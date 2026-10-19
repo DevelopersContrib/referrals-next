@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminApiGuard } from "@/lib/require-platform-admin";
 import { prisma } from "@/lib/prisma";
+import { notifyTopicReply } from "@/lib/forum-emails";
 
 export async function GET() {
   const denied = await adminApiGuard();
@@ -79,6 +80,15 @@ export async function PATCH(req: NextRequest) {
           where: { id: comment.topic_id },
           data: { last_activity_at: new Date() },
         });
+        if (comment.member_id) {
+          await notifyTopicReply({
+            topicId: comment.topic_id,
+            commentId: comment.id,
+            replierId: comment.member_id,
+          }).catch((error) => {
+            console.error("Forum reply email failed:", error);
+          });
+        }
       }
     } else if (type === "comment" && action === "hide") {
       await prisma.topic_comments.update({

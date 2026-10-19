@@ -316,7 +316,7 @@ export function CampaignCreateEditor({
       });
 
       toast.success("Campaign created");
-      router.push(`/brands/${brandId}/campaigns/${campaignId}`);
+      router.push(`/brands/${brandId}/campaigns/${campaignId}?created=1`);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to create campaign",

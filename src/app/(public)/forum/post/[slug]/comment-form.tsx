@@ -33,14 +33,20 @@ export function CommentForm({
         body: JSON.stringify({ answer }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         setError(data.error || "Failed to post comment.");
         setLoading(false);
         return;
       }
 
       setAnswer("");
+      if (data.pending) {
+        setError(
+          data.message ||
+            "Your first post is waiting for approval and will not appear publicly yet.",
+        );
+      }
       router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");

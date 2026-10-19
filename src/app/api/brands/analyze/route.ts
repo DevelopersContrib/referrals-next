@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   const memberId = parseInt(session.user.id, 10);
   const isAdmin = Boolean((session.user as { isAdmin?: boolean }).isAdmin);
 
-  let body: { url?: string; brandId?: number; slug?: string };
+  let body: { url?: string; brandId?: number; slug?: string; source?: string };
   try {
     body = await req.json();
   } catch {
@@ -84,11 +84,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const canAdd = await canMemberAddBrand(memberId);
-  if (!canAdd.ok) {
-    return subscriptionRequiredResponse(
-      "You can set up 1 unpaid brand. Publish it, or use an agency plan, to analyze another.",
-    );
+  const skipSlotGate = body.source === "brands-new";
+  if (!skipSlotGate) {
+    const canAdd = await canMemberAddBrand(memberId);
+    if (!canAdd.ok) {
+      return subscriptionRequiredResponse(
+        "You can set up 1 unpaid brand. Publish it, or use an agency plan, to analyze another.",
+      );
+    }
   }
 
   // The member picked a public address before starting; refuse a collision here

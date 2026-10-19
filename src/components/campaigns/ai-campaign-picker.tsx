@@ -217,7 +217,9 @@ export function AiCampaignPicker({
 
       setLaunchedId(c.id);
       setTimeout(() => {
-        router.push(`/brands/${data.brandId}/campaigns/${data.campaignId}`);
+        router.push(
+          `/brands/${data.brandId}/campaigns/${data.campaignId}?created=1`,
+        );
       }, 600);
     } catch {
       setError("Something went wrong launching the campaign.");

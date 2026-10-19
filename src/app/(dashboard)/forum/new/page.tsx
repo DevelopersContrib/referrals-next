@@ -69,6 +69,14 @@ export default function NewTopicPage() {
       }
 
       const data = await res.json();
+      if (data.pending) {
+        setError(
+          data.message ||
+            "Your first post is waiting for approval and will not appear publicly yet.",
+        );
+        setLoading(false);
+        return;
+      }
       router.push(`/forum/post/${data.topic.slug || data.topic.id}`);
     } catch {
       setError("Something went wrong. Please try again.");

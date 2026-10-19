@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function ForumCategoriesPage() {
   const categories = await prisma.topic_categories.findMany({
-    orderBy: { name: "asc" },
+    orderBy: [{ sort_order: "asc" }, { name: "asc" }],
   });
 
   // Get topic counts per category
@@ -53,8 +53,14 @@ export default async function ForumCategoriesPage() {
                   <h2 className="text-lg font-semibold text-gray-900">
                     {category.name}
                   </h2>
+                  {category.description ? (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {category.description}
+                    </p>
+                  ) : null}
                   <p className="mt-2 text-sm text-muted-foreground">
                     {countMap.get(category.id) || 0} topics
+                    {category.is_archived ? " · read-only" : ""}
                   </p>
                 </CardContent>
               </Card>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { siteUrl } from "@/lib/site-url";
+import { publicTopicOrderBy, publicTopicWhere } from "@/lib/forum";
 
 export async function generateMetadata({
   params,
@@ -59,8 +60,11 @@ export default async function ForumCategoryPage({
   }
 
   const topics = await prisma.topics.findMany({
-    where: { category_id: category.id },
-    orderBy: { date_posted: "desc" },
+    where: await publicTopicWhere({
+      categoryId: category.id,
+      includeArchive: category.is_archived,
+    }),
+    orderBy: publicTopicOrderBy,
     take: 50,
   });
 

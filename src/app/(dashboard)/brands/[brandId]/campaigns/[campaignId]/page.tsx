@@ -32,7 +32,7 @@ import {
   getCampaignSurfaceState,
 } from "@/lib/campaign-live";
 import { CampaignGoLiveButton } from "@/components/campaigns/campaign-go-live-button";
-import { DEFAULT_PAID_PLAN_ID } from "@/lib/billing-constants";
+import { CampaignPublishModal } from "@/components/campaigns/campaign-publish-modal";
 import { LiveCelebration } from "@/components/campaigns/live-celebration";
 import {
   LockedUntilPublished,
@@ -56,14 +56,16 @@ import {
 
 interface CampaignDashboardPageProps {
   params: Promise<{ brandId: string; campaignId: string }>;
-  searchParams?: Promise<{ live?: string }>;
+  searchParams?: Promise<{ live?: string; created?: string }>;
 }
 
 export default async function CampaignDashboardPage({
   params,
   searchParams,
 }: CampaignDashboardPageProps) {
-  const justWentLive = (await searchParams)?.live === "1";
+  const query = await searchParams;
+  const justWentLive = query?.live === "1";
+  const justCreated = query?.created === "1";
   const session = await auth();
   if (!session?.user?.id) redirect("/signin");
 
@@ -89,9 +91,12 @@ export default async function CampaignDashboardPage({
     isBrandGrowthEntitled(urlId),
   ]);
   const statusLabel = campaignSurfaceLabel(surfaceState);
+  // Publishing is a billing action, so only the brand owner (or an admin) is
+  // offered it — team members and viewers see the state without the CTA.
+  const isOwner = brand.member_id === memberId || isAdmin;
   // Private + unpaid: lead every part of the page with the publish step.
-  const showPublishPush = surfaceState !== "live" && !brandEntitled;
-  const publishHref = `/billing/plan/${DEFAULT_PAID_PLAN_ID}?brandId=${urlId}&goLiveCampaign=${id}`;
+  const showPublishPush = surfaceState !== "live" && !brandEntitled && isOwner;
+  const publishHref = `/billing/checkout?brandId=${urlId}&goLiveCampaign=${id}`;
   const statusBadgeClass =
     surfaceState === "live"
       ? "border-0 bg-emerald-100 text-emerald-800 font-semibold uppercase tracking-wide"
@@ -285,6 +290,13 @@ export default async function CampaignDashboardPage({
         />
       )}
 
+      {justCreated && showPublishPush && (
+        <CampaignPublishModal
+          brandName={brand?.domain || "your brand"}
+          checkoutHref={publishHref}
+        />
+      )}
+
       {showPublishPush && (
         <PublishCampaignHero
           href={publishHref}
@@ -322,6 +334,11 @@ export default async function CampaignDashboardPage({
                     {look.label}
                   </span>
                   <Badge className={statusBadgeClass}>{statusLabel}</Badge>
+                  {surfaceState !== "live" && (
+                    <span className="text-xs font-medium text-gray-500">
+                      Not taking signups
+                    </span>
+                  )}
                 </div>
                 <h1 className="mt-2 text-2xl font-bold leading-tight tracking-tight text-gray-900 sm:text-3xl">
                   {headline}

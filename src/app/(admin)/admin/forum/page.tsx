@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { ModerationAction } from "@/components/forum/moderation-action";
 
 export default async function AdminForumPage({
   searchParams,
@@ -40,16 +41,32 @@ export default async function AdminForumPage({
     where.category_id = parseInt(category, 10);
   }
 
-  const [topics, total, categories] = await Promise.all([
-    prisma.topics.findMany({
-      where,
-      orderBy: { date_posted: "desc" },
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.topics.count({ where }),
-    prisma.topic_categories.findMany(),
-  ]);
+  const [topics, total, categories, pendingTopics, pendingComments, reports] =
+    await Promise.all([
+      prisma.topics.findMany({
+        where,
+        orderBy: { date_posted: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.topics.count({ where }),
+      prisma.topic_categories.findMany(),
+      prisma.topics.findMany({
+        where: { status: "pending" },
+        orderBy: { date_posted: "asc" },
+        take: 50,
+      }),
+      prisma.topic_comments.findMany({
+        where: { status: "pending" },
+        orderBy: { date_posted: "asc" },
+        take: 50,
+      }),
+      prisma.topic_reports.findMany({
+        where: { status: "open" },
+        orderBy: { created_at: "asc" },
+        take: 50,
+      }),
+    ]);
 
   const totalPages = Math.ceil(total / limit);
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
@@ -83,6 +100,112 @@ export default async function AdminForumPage({
           {total.toLocaleString()} total forum topics
         </p>
       </div>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-lg">Moderation queue</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div>
+            <h2 className="text-sm font-medium">Pending first posts</h2>
+            {pendingTopics.length === 0 ? (
+              <p className="mt-2 text-sm text-muted-foreground">None.</p>
+            ) : (
+              <ul className="mt-2 space-y-2">
+                {pendingTopics.map((topic) => (
+                  <li
+                    key={topic.id}
+                    className="flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{topic.title}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        #{topic.id} · {topic.slug}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <ModerationAction
+                        id={topic.id}
+                        type="topic"
+                        action="approve"
+                        label="Approve"
+                      />
+                      <ModerationAction
+                        id={topic.id}
+                        type="topic"
+                        action="hide"
+                        label="Hide"
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div>
+            <h2 className="text-sm font-medium">Pending replies</h2>
+            {pendingComments.length === 0 ? (
+              <p className="mt-2 text-sm text-muted-foreground">None.</p>
+            ) : (
+              <ul className="mt-2 space-y-2">
+                {pendingComments.map((comment) => (
+                  <li
+                    key={comment.id}
+                    className="flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <p className="min-w-0 truncate text-sm">
+                      #{comment.id} on topic {comment.topic_id}:{" "}
+                      {(comment.answer || "").slice(0, 120)}
+                    </p>
+                    <div className="flex gap-2">
+                      <ModerationAction
+                        id={comment.id}
+                        type="comment"
+                        action="approve"
+                        label="Approve"
+                      />
+                      <ModerationAction
+                        id={comment.id}
+                        type="comment"
+                        action="hide"
+                        label="Hide"
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div>
+            <h2 className="text-sm font-medium">Reports</h2>
+            {reports.length === 0 ? (
+              <p className="mt-2 text-sm text-muted-foreground">None.</p>
+            ) : (
+              <ul className="mt-2 space-y-2">
+                {reports.map((report) => (
+                  <li
+                    key={report.id}
+                    className="flex flex-col gap-2 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <p className="text-sm">
+                      {report.comment_id
+                        ? `Reply #${report.comment_id}`
+                        : `Topic #${report.topic_id}`}{" "}
+                      · {report.reason || "Reported"}
+                    </p>
+                    <ModerationAction
+                      id={report.id}
+                      type="report"
+                      action="resolve"
+                      label="Resolve"
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-4">
         {categories.map((cat) => (

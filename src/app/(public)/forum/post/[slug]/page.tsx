@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { siteUrl } from "@/lib/site-url";
 import { TopicVoteButton } from "./vote-button";
 import { CommentForm } from "./comment-form";
+import { ReportButton } from "@/components/forum/report-button";
 
 export async function generateMetadata({
   params,
@@ -43,7 +44,17 @@ export default async function TopicDetailPage({
     where: { slug },
   });
 
-  if (!topic) {
+  const viewer = memberId
+    ? await prisma.members.findUnique({
+        where: { id: memberId },
+        select: { is_team: true, is_admin: true },
+      })
+    : null;
+  const canModerate = Boolean(viewer?.is_team || viewer?.is_admin);
+  const isAuthor = memberId > 0 && topic?.member_id === memberId;
+  const isPublic = topic && (topic.status === "open" || topic.status === "answered");
+
+  if (!topic || (!isPublic && !isAuthor && !canModerate)) {
     return (
       <div className="py-12 text-center">
         <h1 className="text-2xl font-bold">Topic Not Found</h1>
@@ -85,7 +96,13 @@ export default async function TopicDetailPage({
   const [voteCount, comments, viewCount] = await Promise.all([
     prisma.topic_votes.count({ where: { topic_id: topic.id } }),
     prisma.topic_comments.findMany({
-      where: { topic_id: topic.id },
+      where: {
+        topic_id: topic.id,
+        OR: [
+          { status: "open" },
+          ...(memberId ? [{ member_id: memberId }] : []),
+        ],
+      },
       orderBy: { date_posted: "asc" },
     }),
     prisma.topic_views.count({ where: { topic_id: topic.id } }),
@@ -117,8 +134,6 @@ export default async function TopicDetailPage({
   const commentVoteMap = new Map(
     commentVoteCounts.map((v) => [v.comment_id, v._count.id]),
   );
-
-  const isAuthor = memberId > 0 && topic.member_id === memberId;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -173,9 +188,15 @@ export default async function TopicDetailPage({
           <div className="whitespace-pre-wrap wrap-break-word text-gray-700">
             {topic.content}
           </div>
-          <div className="mt-4 flex items-center gap-2">
+          <div className="mt-4 flex items-center gap-3">
             <TopicVoteButton topicId={topic.id} voteCount={voteCount} />
+            {memberId > 0 ? <ReportButton topicId={topic.id} /> : null}
           </div>
+          {topic.status === "pending" ? (
+            <p className="mt-3 text-sm text-amber-700">
+              This post is waiting for approval and is not public yet.
+            </p>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -208,6 +229,16 @@ export default async function TopicDetailPage({
                 </div>
                 <div className="mt-2 whitespace-pre-wrap wrap-break-word text-gray-700">
                   {comment.answer}
+                </div>
+                <div className="mt-2 flex items-center gap-3">
+                  {comment.status === "pending" ? (
+                    <span className="text-xs text-amber-700">
+                      Waiting for approval
+                    </span>
+                  ) : null}
+                  {memberId > 0 ? (
+                    <ReportButton topicId={topic.id} commentId={comment.id} />
+                  ) : null}
                 </div>
               </CardContent>
             </Card>

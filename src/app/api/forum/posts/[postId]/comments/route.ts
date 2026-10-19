@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { parseId } from "@/lib/api/helpers";
+import {
+  assertPostLimits,
+  assertRateLimit,
+  shouldHoldForReview,
+} from "@/lib/forum-moderation";
 
 export async function GET(
   _request: NextRequest,
@@ -20,7 +25,15 @@ export async function GET(
     }
 
     const comments = await prisma.topic_comments.findMany({
-      where: { topic_id: topicId },
+      where: {
+        topic_id: topicId,
+        OR: [
+          { status: "open" },
+          { member_id: Number.isFinite(parseInt(session.user.id, 10))
+            ? parseInt(session.user.id, 10)
+            : -1 },
+        ],
+      },
       orderBy: { date_posted: "asc" },
     });
 
@@ -67,6 +80,20 @@ export async function POST(
       return NextResponse.json({ error: "Topic not found" }, { status: 404 });
     }
 
+    if (topic.status === "pending" || topic.status === "hidden") {
+      return NextResponse.json(
+        { error: "This topic is not open for replies yet." },
+        { status: 403 }
+      );
+    }
+
+    const limitError =
+      assertPostLimits(answer) || (await assertRateLimit(memberId));
+    if (limitError) {
+      return NextResponse.json({ error: limitError }, { status: 400 });
+    }
+
+    const pending = await shouldHoldForReview(memberId);
     const now = new Date();
     const comment = await prisma.topic_comments.create({
       data: {
@@ -74,15 +101,27 @@ export async function POST(
         answer: answer.trim(),
         member_id: memberId,
         date_posted: now,
+        status: pending ? "pending" : "open",
       },
     });
 
-    await prisma.topics.update({
-      where: { id: topicId },
-      data: { last_activity_at: now },
-    });
+    if (!pending) {
+      await prisma.topics.update({
+        where: { id: topicId },
+        data: { last_activity_at: now },
+      });
+    }
 
-    return NextResponse.json({ comment }, { status: 201 });
+    return NextResponse.json(
+      {
+        comment,
+        pending,
+        message: pending
+          ? "Your first post is waiting for approval and will not appear publicly yet."
+          : undefined,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Comments POST error:", error);
     return NextResponse.json(

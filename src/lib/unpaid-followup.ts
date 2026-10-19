@@ -242,8 +242,10 @@ async function alreadySent(
   step: FollowupStep,
 ): Promise<boolean> {
   try {
+    // Dry-run rows only record who would have been emailed; they must not
+    // stop the real email once sending is switched on.
     const count = await prisma.unpaid_followup_sends.count({
-      where: { member_id: memberId, brand_id: brandId, step },
+      where: { member_id: memberId, brand_id: brandId, step, dry_run: false },
     });
     return count > 0;
   } catch (err: unknown) {
@@ -263,13 +265,18 @@ async function recordSend(
   dryRun: boolean,
 ): Promise<void> {
   try {
-    await prisma.unpaid_followup_sends.create({
-      data: {
+    // One row per member/brand/step: a real send replaces an earlier dry-run row.
+    await prisma.unpaid_followup_sends.upsert({
+      where: {
+        member_id_brand_id_step: { member_id: memberId, brand_id: brandId, step },
+      },
+      create: {
         member_id: memberId,
         brand_id: brandId,
         step,
         dry_run: dryRun,
       },
+      update: dryRun ? {} : { dry_run: false, sent_at: new Date() },
     });
   } catch (err: unknown) {
     if (isPrismaMissingTableOrColumn(err)) {
@@ -318,6 +325,19 @@ export async function runUnpaidFollowup(
     errors: 0,
     details: [],
   };
+
+  // Never send real email without the table that stops repeats; otherwise
+  // the same email would go out every day.
+  if (!dryRun) {
+    try {
+      await prisma.unpaid_followup_sends.count({ where: { id: 0 } });
+    } catch (err: unknown) {
+      if (isPrismaMissingTableOrColumn(err)) {
+        throw new Error("unpaid_followup_sends table is missing; refusing to send follow-up emails");
+      }
+      throw err;
+    }
+  }
 
   const unpaidBrands = await findUnpaidBrands(prisma);
 

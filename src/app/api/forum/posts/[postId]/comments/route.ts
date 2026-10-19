@@ -7,6 +7,7 @@ import {
   assertRateLimit,
   shouldHoldForReview,
 } from "@/lib/forum-moderation";
+import { notifyTopicReply } from "@/lib/forum-emails";
 
 export async function GET(
   _request: NextRequest,
@@ -109,6 +110,13 @@ export async function POST(
       await prisma.topics.update({
         where: { id: topicId },
         data: { last_activity_at: now },
+      });
+      await notifyTopicReply({
+        topicId,
+        commentId: comment.id,
+        replierId: memberId,
+      }).catch((error) => {
+        console.error("Forum reply email failed:", error);
       });
     }
 

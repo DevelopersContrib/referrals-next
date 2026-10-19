@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   if (denied) return denied;
   try {
     const body = await req.json();
-    const { email, name, password, plan_id, is_verified } = body;
+    const { email, name, password, plan_id, is_verified, is_admin } = body;
 
     if (!email || !name) {
       return NextResponse.json(
@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
         password: password ? hashSync(password, 10) : null,
         plan_id: plan_id ? parseInt(plan_id, 10) : 0,
         is_verified: is_verified ?? false,
+        is_admin: is_admin ?? false,
         date_signedup: new Date(),
       },
     });

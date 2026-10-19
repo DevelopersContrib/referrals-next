@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  isAnnouncementsSlug,
+  isArchiveSlug,
+  listForumCategories,
+  publicTopicOrderBy,
+  publicTopicWhere,
+} from "@/lib/forum";
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,12 +17,20 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
+    const memberId = parseInt(session.user.id, 10);
 
     // Return categories only
     if (searchParams.get("categoriesOnly") === "true") {
-      const categories = await prisma.topic_categories.findMany({
-        orderBy: { name: "asc" },
-      });
+      const member = Number.isFinite(memberId)
+        ? await prisma.members.findUnique({
+            where: { id: memberId },
+            select: { is_team: true },
+          })
+        : null;
+      let categories = await listForumCategories({ postableOnly: true });
+      if (!member?.is_team) {
+        categories = categories.filter((c) => !isAnnouncementsSlug(c.slug));
+      }
       return NextResponse.json({ categories });
     }
 
@@ -32,13 +47,24 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 100);
     const offset = (page - 1) * limit;
 
-    const where: Record<string, unknown> = {};
-    if (categoryId) where.category_id = parseInt(categoryId, 10);
+    const parsedCategoryId = categoryId ? parseInt(categoryId, 10) : undefined;
+    const category =
+      parsedCategoryId && Number.isFinite(parsedCategoryId)
+        ? await prisma.topic_categories.findUnique({
+            where: { id: parsedCategoryId },
+            select: { id: true, is_archived: true },
+          })
+        : null;
+
+    const where = await publicTopicWhere({
+      categoryId: category?.id,
+      includeArchive: category?.is_archived,
+    });
 
     const [topics, total] = await Promise.all([
       prisma.topics.findMany({
         where,
-        orderBy: { date_posted: "desc" },
+        orderBy: publicTopicOrderBy,
         skip: offset,
         take: limit,
       }),
@@ -81,6 +107,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const category =
+      category_id != null
+        ? await prisma.topic_categories.findUnique({
+            where: { id: Number(category_id) },
+            select: { id: true, slug: true, is_archived: true },
+          })
+        : null;
+
+    if (category && isArchiveSlug(category.slug)) {
+      return NextResponse.json(
+        { error: "The Archive is read-only." },
+        { status: 403 }
+      );
+    }
+
+    if (category && isAnnouncementsSlug(category.slug)) {
+      const member = await prisma.members.findUnique({
+        where: { id: memberId },
+        select: { is_team: true },
+      });
+      if (!member?.is_team) {
+        return NextResponse.json(
+          { error: "Only the team can post in Announcements." },
+          { status: 403 }
+        );
+      }
+    }
+
     // Generate slug from title
     const baseSlug = title
       .toLowerCase()
@@ -88,6 +142,7 @@ export async function POST(request: NextRequest) {
       .replace(/^-|-$/g, "")
       .substring(0, 150);
     const slug = `${baseSlug}-${Date.now()}`;
+    const now = new Date();
 
     const topic = await prisma.topics.create({
       data: {
@@ -95,8 +150,10 @@ export async function POST(request: NextRequest) {
         content,
         slug,
         member_id: memberId,
-        category_id: category_id || null,
-        date_posted: new Date(),
+        category_id: category?.id ?? null,
+        date_posted: now,
+        last_activity_at: now,
+        status: "open",
       },
     });
 

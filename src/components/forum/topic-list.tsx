@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import type { ForumTopicListItem } from "@/lib/forum";
+import { isAnnouncementsSlug, type ForumTopicListItem } from "@/lib/forum";
 import type { topic_categories } from "@prisma/client";
+import { NeedsAnswerBadge, needsAnswer } from "@/components/forum/badges";
 
 export function ForumTopicList({
   topics,
@@ -62,6 +63,12 @@ export function ForumTopicList({
                     <Badge variant="secondary" className="text-xs">
                       Answered
                     </Badge>
+                  ) : null}
+                  {needsAnswer({
+                    ...topic,
+                    isAnnouncement: isAnnouncementsSlug(category?.slug),
+                  }) ? (
+                    <NeedsAnswerBadge />
                   ) : null}
                   {category ? (
                     <Link href={`/forum/${category.slug || category.id}`}>

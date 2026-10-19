@@ -5,11 +5,17 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { siteUrl } from "@/lib/site-url";
+import { isAnnouncementsSlug } from "@/lib/forum";
 import { TopicVoteButton } from "./vote-button";
 import { CommentForm } from "./comment-form";
 import { ReportButton } from "@/components/forum/report-button";
 import { FollowButton } from "@/components/forum/follow-button";
 import { AcceptAnswerButton } from "@/components/forum/accept-answer-button";
+import {
+  NeedsAnswerBadge,
+  TeamBadge,
+  needsAnswer,
+} from "@/components/forum/badges";
 
 function metaDescription(text: string | null | undefined) {
   return (text || "Referrals.com forum discussion.")
@@ -145,10 +151,10 @@ export default async function TopicDetailPage({
     commentAuthorIds.length > 0
       ? await prisma.members.findMany({
           where: { id: { in: commentAuthorIds } },
-          select: { id: true, name: true },
+          select: { id: true, name: true, is_team: true },
         })
       : [];
-  const authorMap = new Map(commentAuthors.map((a) => [a.id, a.name]));
+  const authorMap = new Map(commentAuthors.map((a) => [a.id, a]));
 
   // Get comment vote counts
   const commentIds = comments.map((c) => c.id);
@@ -221,9 +227,7 @@ export default async function TopicDetailPage({
                 <span className="wrap-break-word">
                   by {author?.name || "Unknown"}
                 </span>
-                {author?.is_team ? (
-                  <Badge className="bg-[#7C3AED] text-xs text-white">TEAM</Badge>
-                ) : null}
+                {author?.is_team ? <TeamBadge /> : null}
                 {topic.is_pinned ? (
                   <Badge className="text-xs">Pinned</Badge>
                 ) : null}
@@ -231,6 +235,14 @@ export default async function TopicDetailPage({
                   <Badge variant="secondary" className="text-xs">
                     Answered
                   </Badge>
+                ) : null}
+                {needsAnswer({
+                  status: topic.status,
+                  replyCount: openComments.length,
+                  is_pinned: topic.is_pinned,
+                  isAnnouncement: isAnnouncementsSlug(category?.slug),
+                }) ? (
+                  <NeedsAnswerBadge />
                 ) : null}
                 <span>{new Date(topic.date_posted).toLocaleDateString()}</span>
                 <span>{viewCount} views</span>
@@ -296,15 +308,18 @@ export default async function TopicDetailPage({
               No replies yet. Be the first to answer this question!
             </p>
           ) : null}
-          {comments.map((comment) => (
+          {comments.map((comment) => {
+            const commentAuthor = comment.member_id
+              ? authorMap.get(comment.member_id)
+              : null;
+            return (
             <Card key={comment.id}>
               <CardContent className="py-4">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                   <span className="wrap-break-word font-medium text-gray-900">
-                    {comment.member_id
-                      ? authorMap.get(comment.member_id) || "Unknown"
-                      : "Unknown"}
+                    {commentAuthor?.name || "Unknown"}
                   </span>
+                  {commentAuthor?.is_team ? <TeamBadge /> : null}
                   <span>
                     {new Date(comment.date_posted).toLocaleDateString()}
                   </span>
@@ -335,7 +350,8 @@ export default async function TopicDetailPage({
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       </div>
 

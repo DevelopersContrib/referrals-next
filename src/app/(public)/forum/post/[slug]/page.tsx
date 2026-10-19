@@ -8,6 +8,8 @@ import { siteUrl } from "@/lib/site-url";
 import { TopicVoteButton } from "./vote-button";
 import { CommentForm } from "./comment-form";
 import { ReportButton } from "@/components/forum/report-button";
+import { FollowButton } from "@/components/forum/follow-button";
+import { AcceptAnswerButton } from "@/components/forum/accept-answer-button";
 
 function metaDescription(text: string | null | undefined) {
   return (text || "Referrals.com forum discussion.")
@@ -104,9 +106,21 @@ export default async function TopicDetailPage({
   const author = topic.member_id
     ? await prisma.members.findUnique({
         where: { id: topic.member_id },
-        select: { id: true, name: true },
+        select: { id: true, name: true, is_team: true },
       })
     : null;
+
+  const following =
+    memberId > 0
+      ? Boolean(
+          await prisma.topic_followers.findUnique({
+            where: {
+              topic_id_member_id: { topic_id: topic.id, member_id: memberId },
+            },
+          }),
+        )
+      : false;
+  const canAccept = isAuthor || canModerate;
 
   const [voteCount, comments, viewCount] = await Promise.all([
     prisma.topic_votes.count({ where: { topic_id: topic.id } }),
@@ -207,6 +221,17 @@ export default async function TopicDetailPage({
                 <span className="wrap-break-word">
                   by {author?.name || "Unknown"}
                 </span>
+                {author?.is_team ? (
+                  <Badge className="bg-[#7C3AED] text-xs text-white">TEAM</Badge>
+                ) : null}
+                {topic.is_pinned ? (
+                  <Badge className="text-xs">Pinned</Badge>
+                ) : null}
+                {topic.status === "answered" ? (
+                  <Badge variant="secondary" className="text-xs">
+                    Answered
+                  </Badge>
+                ) : null}
                 <span>{new Date(topic.date_posted).toLocaleDateString()}</span>
                 <span>{viewCount} views</span>
                 {category && (
@@ -216,6 +241,10 @@ export default async function TopicDetailPage({
                 )}
               </div>
             </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {memberId > 0 ? (
+                <FollowButton topicId={topic.id} following={following} />
+              ) : null}
             {isAuthor && (
               <Link
                 href={`/forum/post/${topic.slug}/edit`}
@@ -224,6 +253,7 @@ export default async function TopicDetailPage({
                 Edit
               </Link>
             )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -285,7 +315,7 @@ export default async function TopicDetailPage({
                 <div className="mt-2 whitespace-pre-wrap wrap-break-word text-gray-700">
                   {comment.answer}
                 </div>
-                <div className="mt-2 flex items-center gap-3">
+                <div className="mt-2 flex flex-wrap items-center gap-3">
                   {comment.status === "pending" ? (
                     <span className="text-xs text-amber-700">
                       Waiting for approval
@@ -293,6 +323,14 @@ export default async function TopicDetailPage({
                   ) : null}
                   {memberId > 0 ? (
                     <ReportButton topicId={topic.id} commentId={comment.id} />
+                  ) : null}
+                  {canAccept &&
+                  comment.status === "open" &&
+                  topic.accepted_comment_id !== comment.id ? (
+                    <AcceptAnswerButton
+                      topicId={topic.id}
+                      commentId={comment.id}
+                    />
                   ) : null}
                 </div>
               </CardContent>

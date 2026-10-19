@@ -517,6 +517,8 @@ model members {
   is_admin          Boolean?  @default(false)
   in_blog           Boolean?  @default(false)
   referred_by       Int?
+  is_team           Boolean   @default(false)
+  forum_digest      Boolean   @default(false)
 }
 
 model participants {
@@ -644,9 +646,12 @@ model todolist {
 }
 
 model topic_categories {
-  id   Int     @id @default(autoincrement())
-  name String? @db.VarChar(200)
-  slug String? @db.VarChar(200)
+  id          Int     @id @default(autoincrement())
+  name        String? @db.VarChar(200)
+  slug        String? @db.VarChar(200)
+  description String? @db.VarChar(255)
+  sort_order  Int     @default(0)
+  is_archived Boolean @default(false)
 }
 
 model topic_comments {
@@ -679,14 +684,33 @@ model topic_votes {
 }
 
 model topics {
-  id          Int      @id @default(autoincrement())
-  title       String   @db.VarChar(200)
-  content     String   @db.Text
-  member_id   Int?
-  category_id Int?
-  date_posted DateTime @default(now()) @db.Timestamp(0)
-  slug        String?  @db.VarChar(200)
-  filename    String?  @db.VarChar(200)
+  id                   Int       @id @default(autoincrement())
+  title                String    @db.VarChar(200)
+  content              String    @db.Text
+  member_id            Int?
+  category_id          Int?
+  date_posted          DateTime  @default(now()) @db.Timestamp(0)
+  slug                 String?   @db.VarChar(200)
+  filename             String?   @db.VarChar(200)
+  is_pinned            Boolean   @default(false)
+  status               String    @default("open") @db.VarChar(32)
+  last_activity_at     DateTime  @default(now()) @db.Timestamp(0)
+  accepted_comment_id  Int?
+  view_count           Int       @default(0)
+
+  @@index([is_pinned, last_activity_at], map: "idx_topics_pinned_activity")
+  @@index([status], map: "idx_topics_status")
+}
+
+model topic_followers {
+  id         Int      @id @default(autoincrement())
+  topic_id   Int
+  member_id  Int
+  created_at DateTime @default(now()) @db.Timestamp(0)
+
+  @@unique([topic_id, member_id], map: "uniq_topic_follower")
+  @@index([member_id], map: "idx_topic_followers_member")
+  @@index([topic_id], map: "idx_topic_followers_topic")
 }
 
 model url_plan {

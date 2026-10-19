@@ -60,9 +60,13 @@ export default async function TopicDetailPage({
     );
   }
 
-  // Record view
+  // Record view and bump the denormalized count used by the Top tab
   await prisma.topic_views.create({
     data: { topic_id: topic.id, viewed_by: memberId },
+  });
+  await prisma.topics.update({
+    where: { id: topic.id },
+    data: { view_count: { increment: 1 } },
   });
 
   const category = topic.category_id

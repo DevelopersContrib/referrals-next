@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { siteUrl } from "@/lib/site-url";
-import { publicTopicOrderBy, publicTopicWhere } from "@/lib/forum";
+import {
+  listForumCategories,
+  listForumTopics,
+  parseForumTab,
+} from "@/lib/forum";
+import { ForumTopicList, forumHref } from "@/components/forum/topic-list";
 
 export const metadata: Metadata = {
   title: "Community Forum",
@@ -14,39 +17,43 @@ export const metadata: Metadata = {
   alternates: { canonical: siteUrl("/forum") },
 };
 
-export default async function ForumPage() {
-  const where = await publicTopicWhere();
-  const topics = await prisma.topics.findMany({
-    where,
-    orderBy: publicTopicOrderBy,
-    take: 30,
-  });
+const TABS = [
+  { id: "latest", label: "Latest activity" },
+  { id: "top", label: "Top" },
+  { id: "unanswered", label: "Unanswered" },
+  { id: "following", label: "Following" },
+] as const;
 
-  const categories = await prisma.topic_categories.findMany({
-    orderBy: [{ sort_order: "asc" }, { name: "asc" }],
-  });
-  const categoryMap = new Map(categories.map((c) => [c.id, c]));
+export default async function ForumPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string; category?: string; page?: string }>;
+}) {
+  const session = await auth();
+  const memberId = session?.user?.id ? parseInt(session.user.id, 10) : null;
+  const params = await searchParams;
+  const tab = parseForumTab(params.tab);
+  const categorySlug = params.category || null;
+  const page = parseInt(params.page || "1", 10);
 
-  // Get vote and comment counts for all topics
-  const topicIds = topics.map((t) => t.id);
-
-  const [voteCounts, commentCounts] = await Promise.all([
-    prisma.topic_votes.groupBy({
-      by: ["topic_id"],
-      where: { topic_id: { in: topicIds } },
-      _count: { id: true },
+  const [list, categories] = await Promise.all([
+    listForumTopics({
+      tab,
+      categorySlug,
+      page: Number.isFinite(page) ? page : 1,
+      memberId,
     }),
-    prisma.topic_comments.groupBy({
-      by: ["topic_id"],
-      where: { topic_id: { in: topicIds } },
-      _count: { id: true },
-    }),
+    listForumCategories(),
   ]);
 
-  const voteMap = new Map(voteCounts.map((v) => [v.topic_id, v._count.id]));
-  const commentMap = new Map(
-    commentCounts.map((c) => [c.topic_id, c._count.id]),
-  );
+  const emptyMessage =
+    tab === "following" && !memberId
+      ? "Sign in to see topics you follow."
+      : tab === "following"
+        ? "You are not following any topics yet."
+        : tab === "unanswered"
+          ? "All topics have a reply."
+          : "No topics yet. Be the first to start a discussion!";
 
   return (
     <div className="space-y-6">
@@ -70,14 +77,6 @@ export default async function ForumPage() {
             variant="outline"
             size="sm"
             className="min-h-11"
-            render={<Link href="/forum/unanswered" />}
-          >
-            Unanswered
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="min-h-11"
             render={<Link href="/forum/activity" />}
           >
             Activity
@@ -92,67 +91,98 @@ export default async function ForumPage() {
         </div>
       </div>
 
-      <div className="space-y-3">
-        {topics.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              No topics yet. Be the first to start a discussion!
-            </CardContent>
-          </Card>
-        ) : (
-          topics.map((topic) => {
-            const category = topic.category_id
-              ? categoryMap.get(topic.category_id)
-              : null;
-            const votes = voteMap.get(topic.id) || 0;
-            const comments = commentMap.get(topic.id) || 0;
-
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap gap-2">
+          {TABS.map((item) => {
+            const active = tab === item.id;
             return (
-              <Card key={topic.id}>
-                <CardContent className="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:gap-4">
-                  <div className="flex gap-6 lg:gap-4">
-                    <div className="flex flex-col items-center gap-1 text-center min-w-[60px]">
-                      <span className="text-lg font-bold">{votes}</span>
-                      <span className="text-xs text-muted-foreground">
-                        votes
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1 text-center min-w-[60px]">
-                      <span className="text-lg font-bold">{comments}</span>
-                      <span className="text-xs text-muted-foreground">
-                        replies
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <Link
-                      href={`/forum/post/${topic.slug || topic.id}`}
-                      className="block wrap-break-word font-medium text-gray-900 hover:text-blue-600"
-                    >
-                      {topic.title}
-                    </Link>
-                    <div className="mt-1 flex flex-wrap items-center gap-2">
-                      {topic.is_pinned ? (
-                        <Badge className="text-xs">Pinned</Badge>
-                      ) : null}
-                      {category && (
-                        <Link href={`/forum/${category.slug || category.id}`}>
-                          <Badge variant="secondary" className="text-xs">
-                            {category.name}
-                          </Badge>
-                        </Link>
-                      )}
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(topic.last_activity_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <Link
+                key={item.id}
+                href={forumHref({ tab: item.id, category: categorySlug })}
+                className={`min-h-11 rounded-md px-3 py-2 text-sm ${
+                  active
+                    ? "bg-gray-900 text-white"
+                    : "bg-muted text-muted-foreground hover:text-gray-900"
+                }`}
+              >
+                {item.label}
+              </Link>
             );
-          })
-        )}
+          })}
+        </div>
+        <form className="flex min-h-11 items-center gap-2">
+          {tab !== "latest" ? (
+            <input type="hidden" name="tab" value={tab} />
+          ) : null}
+          <label htmlFor="category" className="text-sm text-muted-foreground">
+            Category
+          </label>
+          <select
+            id="category"
+            name="category"
+            defaultValue={categorySlug || ""}
+            className="min-h-11 rounded-md border bg-background px-3 text-sm"
+          >
+            <option value="">All categories</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.slug || ""}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          <Button type="submit" variant="outline" size="sm" className="min-h-11">
+            Filter
+          </Button>
+        </form>
       </div>
+
+      <ForumTopicList
+        topics={list.topics}
+        categories={categories}
+        emptyMessage={emptyMessage}
+      />
+
+      {list.totalPages > 1 ? (
+        <div className="flex items-center justify-center gap-2">
+          {list.page > 1 ? (
+            <Button
+              variant="outline"
+              size="sm"
+              render={
+                <Link
+                  href={forumHref({
+                    tab,
+                    category: categorySlug,
+                    page: list.page - 1,
+                  })}
+                />
+              }
+            >
+              Previous
+            </Button>
+          ) : null}
+          <span className="text-sm text-muted-foreground">
+            Page {list.page} of {list.totalPages}
+          </span>
+          {list.page < list.totalPages ? (
+            <Button
+              variant="outline"
+              size="sm"
+              render={
+                <Link
+                  href={forumHref({
+                    tab,
+                    category: categorySlug,
+                    page: list.page + 1,
+                  })}
+                />
+              }
+            >
+              Next
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
 
       <p className="text-sm text-muted-foreground">
         Older threads from 2019–2021 have moved to the{" "}

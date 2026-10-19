@@ -42,7 +42,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Member not found" }, { status: 404 });
 
     const body = await req.json();
-    const { name, email, password, plan_id, is_verified, is_partner } = body;
+    const { name, email, password, plan_id, is_verified, is_partner, is_admin } = body;
 
     const data: Record<string, unknown> = {};
     if (name !== undefined) data.name = name;
@@ -51,6 +51,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     if (plan_id !== undefined) data.plan_id = parseInt(plan_id, 10);
     if (is_verified !== undefined) data.is_verified = is_verified;
     if (is_partner !== undefined) data.is_partner = is_partner;
+    if (is_admin !== undefined) data.is_admin = is_admin;
 
     const updated = await prisma.members.update({ where: { id }, data });
 

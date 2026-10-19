@@ -5,15 +5,17 @@
  *   npx tsx scripts/seed-forum-2026.ts
  */
 import { PrismaClient } from "@prisma/client";
+import {
+  FORUM_CATEGORIES,
+  PINNED_TOPIC_SLUGS,
+  SEEDED_TOPIC_CATEGORY,
+} from "../src/lib/forum-constants";
 
 const prisma = new PrismaClient();
 
 const AUTHOR_EMAIL = "maidabarrientos@gmail.com";
 
-const categories = [
-  { name: "Getting started", slug: "getting-started" },
-  { name: "Campaigns", slug: "campaigns" },
-] as const;
+const categories = FORUM_CATEGORIES.filter((c) => !c.is_archived);
 
 type SeedPost = {
   slug: string;
@@ -24,11 +26,15 @@ type SeedPost = {
   reply?: { date: string; answer: string };
 };
 
+function categoryFor(slug: string, fallback: string) {
+  return SEEDED_TOPIC_CATEGORY[slug] || fallback;
+}
+
 const posts: SeedPost[] = [
   {
     slug: "how-publishing-a-brand-works",
     title: "How publishing a brand works",
-    categorySlug: "getting-started",
+    categorySlug: categoryFor("how-publishing-a-brand-works", "getting-started"),
     date: "2026-10-16T16:00:00.000Z",
     content: `You can set up a brand before you pay. It stays private, and the widget will not take signups yet.
 
@@ -44,7 +50,10 @@ I set the first brand up, checked the campaign while it was still private, then 
   {
     slug: "campaign-stays-private-until-you-pay",
     title: "A new campaign stays private until the brand is paid",
-    categorySlug: "campaigns",
+    categorySlug: categoryFor(
+      "campaign-stays-private-until-you-pay",
+      "campaigns-rewards",
+    ),
     date: "2026-10-12T16:00:00.000Z",
     content: `Creating a campaign no longer sends you off to checkout. You get a “Campaign created” message and land on the campaign page.
 
@@ -64,7 +73,10 @@ Share that link only after the brand is published. Before that, people who open 
   {
     slug: "widget-signups-wait-until-publish",
     title: "Widget signups wait until the brand is published",
-    categorySlug: "getting-started",
+    categorySlug: categoryFor(
+      "widget-signups-wait-until-publish",
+      "getting-started",
+    ),
     date: "2026-10-02T16:00:00.000Z",
     content: `I embedded the widget, sent it to a friend, and the signup was refused. That was expected: the brand was still private.
 
@@ -80,7 +92,10 @@ Worth checking the brand’s billing status before you send the link out.`,
   {
     slug: "what-reward-are-you-using-for-saas",
     title: "What reward are you using for a SaaS referral?",
-    categorySlug: "campaigns",
+    categorySlug: categoryFor(
+      "what-reward-are-you-using-for-saas",
+      "campaigns-rewards",
+    ),
     date: "2026-09-22T16:00:00.000Z",
     content: `I am setting a signup goal, not a visit goal. A visit is too easy to inflate, and the reward should fire when someone actually creates an account.
 
@@ -91,7 +106,10 @@ How many signups are you requiring before the reward is earned?`,
   {
     slug: "double-sided-or-single-reward",
     title: "Double-sided reward, or only thank the referrer?",
-    categorySlug: "campaigns",
+    categorySlug: categoryFor(
+      "double-sided-or-single-reward",
+      "campaigns-rewards",
+    ),
     date: "2026-09-08T16:00:00.000Z",
     content: `A double-sided offer (the referrer and the new customer both get something) has been easier to explain than a referrer-only bonus. The new person has a reason to finish signup, not just click.
 
@@ -102,7 +120,10 @@ If you have run both, which one actually got shared?`,
   {
     slug: "browse-programs-by-industry",
     title: "Suggestion: browse public programs by industry",
-    categorySlug: "feature-suggestions",
+    categorySlug: categoryFor(
+      "browse-programs-by-industry",
+      "feature-requests",
+    ),
     date: "2026-08-20T16:00:00.000Z",
     content: `The public brand pages are useful once you already know the company. They are harder to browse when you want “tools for agencies” or “local services.”
 
@@ -113,7 +134,10 @@ Would you use that, or is search by name enough?`,
   {
     slug: "api-access-is-limited-to-your-campaigns",
     title: "API access only returns your own campaigns",
-    categorySlug: "community-governance",
+    categorySlug: categoryFor(
+      "api-access-is-limited-to-your-campaigns",
+      "widgets-api",
+    ),
     date: "2026-08-06T16:00:00.000Z",
     content: `If you connect Zapier or call the API, the key only sees campaigns on your account. Asking for someone else’s campaign id comes back as not found. A missing or bad key is rejected before any data is returned.
 
@@ -138,26 +162,28 @@ async function main() {
       where: { slug: category.slug },
       select: { id: true },
     });
-    const row =
-      existing ??
-      (await prisma.topic_categories.create({
-        data: { name: category.name, slug: category.slug },
-        select: { id: true },
-      }));
+    const row = existing
+      ? await prisma.topic_categories.update({
+          where: { id: existing.id },
+          data: {
+            name: category.name,
+            description: category.description,
+            sort_order: category.sort_order,
+            is_archived: category.is_archived,
+          },
+          select: { id: true },
+        })
+      : await prisma.topic_categories.create({
+          data: {
+            name: category.name,
+            slug: category.slug,
+            description: category.description,
+            sort_order: category.sort_order,
+            is_archived: category.is_archived,
+          },
+          select: { id: true },
+        });
     categoryIds.set(category.slug, row.id);
-  }
-
-  const existingFeature = await prisma.topic_categories.findFirst({
-    where: { slug: "feature-suggestions" },
-    select: { id: true },
-  });
-  const existingCommunity = await prisma.topic_categories.findFirst({
-    where: { slug: "community-governance" },
-    select: { id: true },
-  });
-  if (existingFeature) categoryIds.set("feature-suggestions", existingFeature.id);
-  if (existingCommunity) {
-    categoryIds.set("community-governance", existingCommunity.id);
   }
 
   let created = 0;
@@ -178,6 +204,8 @@ async function main() {
       continue;
     }
 
+    const postedAt = new Date(post.date);
+    const lastActivity = post.reply ? new Date(post.reply.date) : postedAt;
     const topic = await prisma.topics.create({
       data: {
         title: post.title,
@@ -185,7 +213,12 @@ async function main() {
         slug: post.slug,
         member_id: author.id,
         category_id: categoryId,
-        date_posted: new Date(post.date),
+        date_posted: postedAt,
+        last_activity_at: lastActivity,
+        is_pinned: PINNED_TOPIC_SLUGS.includes(
+          post.slug as (typeof PINNED_TOPIC_SLUGS)[number],
+        ),
+        status: "open",
       },
       select: { id: true, slug: true },
     });

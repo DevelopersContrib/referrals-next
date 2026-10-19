@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { siteUrl } from "@/lib/site-url";
+import { publicTopicOrderBy, publicTopicWhere } from "@/lib/forum";
 
 export const metadata: Metadata = {
   title: "Community Forum",
@@ -14,12 +15,16 @@ export const metadata: Metadata = {
 };
 
 export default async function ForumPage() {
+  const where = await publicTopicWhere();
   const topics = await prisma.topics.findMany({
-    orderBy: { date_posted: "desc" },
+    where,
+    orderBy: publicTopicOrderBy,
     take: 30,
   });
 
-  const categories = await prisma.topic_categories.findMany();
+  const categories = await prisma.topic_categories.findMany({
+    orderBy: [{ sort_order: "asc" }, { name: "asc" }],
+  });
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
   // Get vote and comment counts for all topics
@@ -127,6 +132,9 @@ export default async function ForumPage() {
                       {topic.title}
                     </Link>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
+                      {topic.is_pinned ? (
+                        <Badge className="text-xs">Pinned</Badge>
+                      ) : null}
                       {category && (
                         <Link href={`/forum/${category.slug || category.id}`}>
                           <Badge variant="secondary" className="text-xs">
@@ -135,7 +143,7 @@ export default async function ForumPage() {
                         </Link>
                       )}
                       <span className="text-xs text-muted-foreground">
-                        {new Date(topic.date_posted).toLocaleDateString()}
+                        {new Date(topic.last_activity_at).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
@@ -145,6 +153,14 @@ export default async function ForumPage() {
           })
         )}
       </div>
+
+      <p className="text-sm text-muted-foreground">
+        Older threads from 2019–2021 have moved to the{" "}
+        <Link href="/forum/archive" className="text-blue-600 hover:underline">
+          Archive
+        </Link>
+        .
+      </p>
     </div>
   );
 }

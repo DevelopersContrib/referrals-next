@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { siteUrl } from "@/lib/site-url";
+import { publicTopicWhere } from "@/lib/forum";
 
 export const metadata: Metadata = {
   title: "Unanswered Forum Topics",
@@ -21,10 +22,15 @@ export default async function ForumUnansweredPage() {
     .map((c) => c.topic_id)
     .filter((id): id is number => id !== null);
 
-  // Get topics with 0 comments
+  const publicWhere = await publicTopicWhere();
   const topics = await prisma.topics.findMany({
-    where: answeredIds.length > 0 ? { id: { notIn: answeredIds } } : {},
-    orderBy: { date_posted: "desc" },
+    where: {
+      AND: [
+        publicWhere,
+        answeredIds.length > 0 ? { id: { notIn: answeredIds } } : {},
+      ],
+    },
+    orderBy: { last_activity_at: "desc" },
     take: 50,
   });
 

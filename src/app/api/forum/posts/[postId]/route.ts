@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseId } from "@/lib/api/helpers";
 
 export async function GET(
   _request: NextRequest,
@@ -13,7 +14,10 @@ export async function GET(
     }
 
     const { postId } = await params;
-    const id = parseInt(postId, 10);
+    const id = parseId(postId);
+    if (id === null) {
+      return NextResponse.json({ error: "Topic not found" }, { status: 404 });
+    }
 
     const topic = await prisma.topics.findUnique({ where: { id } });
     if (!topic) {
@@ -41,7 +45,10 @@ export async function PUT(
     }
 
     const { postId } = await params;
-    const id = parseInt(postId, 10);
+    const id = parseId(postId);
+    if (id === null) {
+      return NextResponse.json({ error: "Topic not found" }, { status: 404 });
+    }
     const memberId = parseInt(session.user.id, 10);
 
     const existing = await prisma.topics.findUnique({ where: { id } });
@@ -100,7 +107,10 @@ export async function DELETE(
     }
 
     const { postId } = await params;
-    const id = parseInt(postId, 10);
+    const id = parseId(postId);
+    if (id === null) {
+      return NextResponse.json({ error: "Topic not found" }, { status: 404 });
+    }
     const memberId = parseInt(session.user.id, 10);
 
     const existing = await prisma.topics.findUnique({ where: { id } });

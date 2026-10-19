@@ -53,26 +53,37 @@ export default async function ForumPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/forum/categories">
-            <Button variant="outline" size="sm" className="min-h-11">
-              Categories
-            </Button>
-          </Link>
-          <Link href="/forum/unanswered">
-            <Button variant="outline" size="sm" className="min-h-11">
-              Unanswered
-            </Button>
-          </Link>
-          <Link href="/forum/activity">
-            <Button variant="outline" size="sm" className="min-h-11">
-              Activity
-            </Button>
-          </Link>
-          <Link href="/forum/new">
-            <Button size="sm" className="min-h-11">
-              New Topic
-            </Button>
-          </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            className="min-h-11"
+            render={<Link href="/forum/categories" />}
+          >
+            Categories
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="min-h-11"
+            render={<Link href="/forum/unanswered" />}
+          >
+            Unanswered
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="min-h-11"
+            render={<Link href="/forum/activity" />}
+          >
+            Activity
+          </Button>
+          <Button
+            size="sm"
+            className="min-h-11"
+            render={<Link href="/forum/new" />}
+          >
+            New Topic
+          </Button>
         </div>
       </div>
 

@@ -27,6 +27,10 @@
     {
       "path": "/api/cron/checkout-abandonment",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/unpaid-followup",
+      "schedule": "0 9 * * *"
     }
   ]
 }

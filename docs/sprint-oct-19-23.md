@@ -59,6 +59,15 @@ Billing rules for this sprint:
 
 ## B4 — Confirm checkout works in production (2h) — CRITICAL · Ronan + Maida
 
+> **Code/tools done (VNOC-66165):** `scripts/billing-checkout-health.ts`
+> summarizes checkout event error counts and PayPal webhook verification
+> status over a `--since` window. Full checklist at
+> `docs/b4-prod-checkout-checklist.md`. The Oct 18 billing code (B1–B5,
+> B7, B9, B11–B15) is confirmed on main.
+> **Remaining:** Deploy main to production. Ronan runs the health script.
+> Maida makes the $9 purchase. Verify the brand went live per the
+> checklist.
+
 The reuse/fallback bugs are fixed in code. Production has not taken a known-good $9 yet, and the Oct 18 billing branch is not deployed.
 
 **Done when:**
@@ -68,6 +77,15 @@ The reuse/fallback bugs are fixed in code. Production has not taken a known-good
 - One real $9 purchase made end to end (Maida pays) and the brand went live
 
 ## B2 — Orphan payments from before the brand-id fix (1h) — CRITICAL · Ronan + Maida
+
+> **Code/tools done (VNOC-66166):** `scripts/orphan-payments.ts` lists
+> member_payment rows with no matching url_plan (member, email, amount, date,
+> PayPal ids, brands with live/private status). Supports `--csv`.
+> `scripts/attach-orphan-payment.ts` attaches a payment to a brand (dry-run
+> by default).
+> **Remaining:** Ronan runs orphan-payments on prod, sends CSV to Maida. Maida
+> decides each row (attach to brand or refund). Ronan runs attach script with
+> `--apply` only after Maida's approval.
 
 Checkout now requires a brand. People who already paid with no `url_plan` may still have a private brand.
 
@@ -81,6 +99,13 @@ Checkout now requires a brand. People who already paid with no `url_plan` may st
 $9/mo alone is slow: $1,000/mo needs about 111 paying brands. This task brings in money this week from people already in the system.
 
 ## B16 — Win back members who set up a brand but never paid (6h) — CRITICAL · Ronan + Maida
+
+**Code done** — see PR. Remaining for Maida/Ronan:
+- [ ] Run `prisma/sql/winback_plan_and_log.sql` on production (creates plan row + log table)
+- [ ] Create the PayPal billing plan (admin script or first checkout triggers it)
+- [ ] Run `scripts/winback-unpaid-brands.ts` on prod, send list+count to Maida
+- [ ] Maida approves copy
+- [ ] Send first batch: `WINBACK_SEND=true npx tsx scripts/winback-send-emails.ts --send`
 
 These are the warmest leads: they wanted the product and stopped at the paywall.
 
@@ -127,11 +152,20 @@ The Go Live CTA now lives on the brand homepage (and is hidden for admins / Unli
 
 **Done when:**
 
-- A scheduled job in `vercel.json` sends unpaid brand owners a series on day 0, 1, 3 and 7, plus one email after an abandoned checkout
-- Every email links to checkout for that specific brand
-- The copy matches the $9/mo pay-to-publish model (Maida approves the copy)
+- [x] A scheduled job in `vercel.json` sends unpaid brand owners a series on day 0, 1, 3 and 7, plus one email after an abandoned checkout _(code done in PR)_
+- [x] Every email links to checkout for that specific brand _(code done in PR)_
+- [ ] The copy matches the $9/mo pay-to-publish model — **Maida approves the copy**
+- [ ] `UNPAID_FOLLOWUP_EMAILS_ENABLED=true` set in Vercel env — **Lee enables after approval**
 
 ## B18 — Subscriber report + Unlimited renewals (3h) — HIGH · Ronan + Maida
+
+> **Code/tools done (VNOC-66167):** `scripts/subscriber-report.ts` lists active
+> subscribers per plan from `member_plan` + `url_plan` with optional `--paypal`
+> status check and `--csv` output. Premium Unlimited subscribers are highlighted.
+> Draft emails in `docs/drafts/b18-plan-rename-emails.md`.
+> **Remaining:** Ronan runs the report on prod, sends CSV to Maida. Maida
+> reviews the report, approves the email copy, and decides each Premium
+> Unlimited renewal.
 
 Same-price plans and Unlimited brand coverage are already in code. What is left is the list and the emails.
 
@@ -148,13 +182,24 @@ Same-price plans and Unlimited brand coverage are already in code. What is left 
 
 ## P2 — If time is left Friday
 
-## B10 — MRR ignores per-brand subscriptions (2h) — MEDIUM · Ronan
+## B10 — MRR ignores per-brand subscriptions (2h) — ✅ DONE · Ronan
+
+PR: `cursor/b10-mrr-fix-ed7e`
 
 **Problem:** MRR only counts `members.plan_id`, so per-brand payments are missing. It can show $0 while people are paying.
 
 **Where:** `src/lib/admin-subscriptions.ts:91`, `src/lib/revenue.ts:121`, `scripts/paid-funnel-snapshot.ts`.
 
-**Done when:** MRR is the sum of active `url_plan` and `member_plan` subscriptions, and it matches PayPal.
+**Done:**
+- MRR is now the sum of active `url_plan` and `member_plan` subscriptions
+- Yearly plans normalised to monthly (price / 12)
+- Cancelled / suspended / expired subscriptions excluded
+- Same PayPal agreement in both tables counted once
+- VNOC / network brands stay at $0
+- Shared helper: `src/lib/mrr.ts` (`computeActiveMrr` / `computeMrrFromRows`)
+- Smoke test: `scripts/smoke-mrr.ts`
+
+**Still open (needs prod access — Lee):** Verify computed MRR matches PayPal active subscriptions total. Requires PayPal API read against the live account.
 
 ---
 

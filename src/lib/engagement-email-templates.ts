@@ -192,9 +192,9 @@ const FEATURE_TOUR: FeatureEmail[] = [
     subject: "Feature check: your plan & billing",
     heading: "Grow when you’re ready",
     bodyHtml: [
-      p(`Your <strong>Billing</strong> page shows Free vs paid plans. Upgrade when you need more brands, campaigns, or volume — stay lean until then.`),
-      featureCard("Plans", "Dashboard → Billing. Compare plans anytime; cancel from the same place if you ever upgrade."),
-      tip("Launch on Free, upgrade when a campaign is clearly working."),
+      p(`Your <strong>Billing</strong> page shows your plan. Publish a brand for <strong>$9/mo</strong> to go live and start accepting signups.`),
+      featureCard("Plans", "Dashboard → Billing. Publish your brand, manage your subscription, or cancel anytime."),
+      tip("Set up your brand for free, then publish for $9/mo when you're ready to go live."),
     ].join(""),
     ctaLabel: "View billing →",
     ctaHref: "{{siteUrl}}/billing",

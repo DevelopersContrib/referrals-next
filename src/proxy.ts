@@ -2,6 +2,32 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { brandForHost, isAppHost, normalizeHost, ROOT_DOMAIN } from "@/lib/brand-domains";
 
+// ── Encoded-slash normaliser ────────────────────────────────────────
+const ENCODED_SLASH_RE = /%(?:2[fF]|5[cC])/;
+
+/**
+ * Decode percent-encoded forward/back-slashes, collapse runs of `/`,
+ * enforce a single leading `/`, and strip a trailing `/` (except bare `/`).
+ */
+export function normalizeEncodedSlashPath(raw: string): string {
+  let p = raw.replace(/%2[fF]/g, "/").replace(/%5[cC]/g, "/");
+  p = p.replace(/\/\/+/g, "/");
+  if (!p.startsWith("/")) p = "/" + p;
+  if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
+  return p;
+}
+
+function isSafeRedirect(path: string): boolean {
+  if (path.startsWith("//")) return false;
+  try {
+    return new URL(path, "http://localhost").hostname === "localhost";
+  } catch {
+    return false;
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────
+
 /** Paths a white-label host serves as-is (assets, tracking, widget, APIs). */
 const BRAND_HOST_PASSTHROUGH = ["/_next", "/api/", "/t/", "/t2/", "/go/", "/widget"];
 
@@ -35,6 +61,20 @@ async function brandHostResponse(request: NextRequest, host: string) {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Intercept paths with URL-encoded slashes/backslashes (%2F, %5C) before
+  // they reach the App Router, which 500s on the decoded path mismatch.
+  if (ENCODED_SLASH_RE.test(pathname)) {
+    const normalized = normalizeEncodedSlashPath(pathname);
+    if (normalized !== pathname) {
+      if (!isSafeRedirect(normalized)) {
+        return new NextResponse("Bad Request", { status: 400 });
+      }
+      const url = request.nextUrl.clone();
+      url.pathname = normalized;
+      return NextResponse.redirect(url, 308);
+    }
+  }
 
   const host = normalizeHost(
     request.headers.get("host") ?? request.headers.get("x-forwarded-host")?.split(",")[0],

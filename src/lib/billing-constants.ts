@@ -13,10 +13,14 @@ export const AGENCY_10_PLAN_ID = 4;
 export const AGENCY_50_PLAN_ID = 5;
 export const UNLIMITED_PLAN_ID = 3;
 
+/** Win-back $1 first-month offer (B16). Never shown on /pricing. */
+export const WINBACK_PLAN_ID = 7;
+
 export const PLAN_PUBLIC_NAME: Record<number, string> = {
   2: "Brand, monthly",
   6: "Brand, yearly",
   4: "Agency 10",
   5: "Agency 50",
   3: "Premium Unlimited",
+  7: "Brand, monthly — $1 first month",
 };

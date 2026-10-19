@@ -72,7 +72,11 @@ export function CommentForm({
           </div>
         )}
         {signedIn ? <form onSubmit={handleSubmit} className="space-y-3">
+          <label htmlFor="forum-reply" className="sr-only">
+            Your reply
+          </label>
           <Textarea
+            id="forum-reply"
             placeholder="Write your reply..."
             rows={4}
             value={answer}

@@ -3,6 +3,7 @@
  *   npx tsx scripts/paid-funnel-snapshot.ts
  */
 import { prisma } from "../src/lib/prisma";
+import { computeActiveMrr } from "../src/lib/mrr";
 
 function n(v: unknown) {
   return Number(v ?? 0);
@@ -86,7 +87,7 @@ async function main() {
   );
 
   console.error("subscriptions / mrr…");
-  const [active, cancelled, pending, totalMp, newThisMonth] = await Promise.all([
+  const [active, cancelled, pending, totalMp, newThisMonth, mrr] = await Promise.all([
     prisma.member_plan.count({
       where: { agreement_activate: { not: null }, agreement_cancel: null },
     }),
@@ -96,15 +97,8 @@ async function main() {
     }),
     prisma.member_plan.count(),
     prisma.member_plan.count({ where: { date_added: { gte: monthStart } } }),
+    computeActiveMrr(),
   ]);
-  const mrrRows = await prisma.$queryRawUnsafe<{ mrr: number | null }[]>(`
-    SELECT COALESCE(
-      SUM(CASE WHEN pl.unit = 'year' THEN pl.price / 12 ELSE pl.price END),
-    0) AS mrr
-    FROM members m
-    JOIN plans pl ON pl.id = m.plan_id
-    WHERE m.plan_id > 0 AND m.plan_expiry > NOW() AND pl.price > 0
-  `);
 
   const mpStatus = await prisma.$queryRawUnsafe<{ status: string; c: bigint }[]>(`
     SELECT
@@ -234,7 +228,7 @@ async function main() {
       pending,
       total: totalMp,
       newThisMonth,
-      mrr: Number(mrrRows[0]?.mrr ?? 0),
+      mrr,
     },
     funnel: {
       total,

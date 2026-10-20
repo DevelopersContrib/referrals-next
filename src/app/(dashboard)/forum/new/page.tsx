@@ -37,10 +37,24 @@ export default function NewTopicPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // Sidebar cards link here with a category already chosen, e.g. the forum's
+    // "Show your campaign" card. Read it off the URL rather than with
+    // useSearchParams, which would need a Suspense boundary around this page
+    // or the production build fails.
+    const preset =
+      new URLSearchParams(window.location.search).get("category") || "";
+
     fetch("/api/forum/posts?categoriesOnly=true")
       .then((res) => res.json())
-      .then((data) => {
-        if (data.categories) setCategories(data.categories);
+      .then((data: { categories?: Category[] }) => {
+        if (!data.categories) return;
+        setCategories(data.categories);
+        // Apply the preselection only once the options exist. Selecting an id
+        // the list does not hold yet leaves the trigger showing that raw id
+        // instead of the category name.
+        if (data.categories.some((c) => String(c.id) === preset)) {
+          setCategoryId(preset);
+        }
       })
       .catch(() => {});
   }, []);
@@ -112,7 +126,16 @@ export default function NewTopicPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Select value={categoryId} onValueChange={(val: string | null) => setCategoryId(val || "")}>
+              {/* Base UI renders the raw value in the trigger unless it is
+                  given this id-to-name map, which showed the category id
+                  instead of its name. */}
+              <Select
+                items={Object.fromEntries(
+                  categories.map((c) => [String(c.id), c.name ?? "Untitled"]),
+                )}
+                value={categoryId}
+                onValueChange={(val: string | null) => setCategoryId(val || "")}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>

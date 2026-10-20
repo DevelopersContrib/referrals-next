@@ -6,12 +6,15 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { Input } from "@/components/ui/input";
 import { siteUrl } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
+import { prisma } from "@/lib/prisma";
 import {
   listForumCategories,
   listForumTopics,
   parseForumTab,
 } from "@/lib/forum";
 import { ForumTopicList, forumHref } from "@/components/forum/topic-list";
+import { ForumSidebar } from "@/components/forum/forum-sidebar";
+import { SidebarDisclosure } from "@/components/forum/sidebar-disclosure";
 
 export const metadata: Metadata = {
   title: "Community Forum",
@@ -73,6 +76,20 @@ export default async function ForumPage({
     listForumCategories(),
   ]);
 
+  const viewer = memberId
+    ? await prisma.members.findUnique({
+        where: { id: memberId },
+        select: { forum_digest: true },
+      })
+    : null;
+
+  // Archived categories are reachable through the Archive link under the list,
+  // so the sidebar lists the ones a member can actually post in.
+  const sidebarCategories = categories.filter((c) => !c.is_archived);
+  const campaignCategory = sidebarCategories.find(
+    (c) => c.slug === "show-your-campaign" || c.name === "Show your campaign",
+  );
+
   const emptyMessage =
     tab === "following" && !memberId
       ? "Sign in to see topics you follow."
@@ -83,8 +100,12 @@ export default async function ForumPage({
           : "No topics yet. Be the first to start a discussion!";
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="grid items-start gap-6 min-[900px]:grid-cols-[minmax(0,1fr)_320px]">
+      {/* Container queries, not viewport ones: beside the sidebar this column
+          is far narrower than the window, and the header and tab rows were
+          going side-by-side at widths where they did not fit. */}
+      <div className="@container min-w-0 space-y-6">
+      <div className="flex flex-col gap-4 @2xl:flex-row @2xl:items-center @2xl:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Forum</h1>
           <p className="mt-1 text-muted-foreground">
@@ -123,7 +144,7 @@ export default async function ForumPage({
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 @2xl:flex-row @2xl:items-center @2xl:justify-between">
         <div className="flex flex-wrap gap-2">
           {TABS.map((item) => {
             const active = tab === item.id;
@@ -147,7 +168,7 @@ export default async function ForumPage({
             scroll sideways, so the button could not be reached at all. */}
         <nav
           aria-label="Categories"
-          className="flex min-w-0 max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] lg:flex-wrap lg:justify-end lg:overflow-visible lg:pb-0 [&::-webkit-scrollbar]:hidden"
+          className="flex min-w-0 max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] @2xl:flex-wrap @2xl:justify-end @2xl:overflow-visible @2xl:pb-0 [&::-webkit-scrollbar]:hidden"
         >
           <CategoryChip
             href={forumHref({ tab })}
@@ -216,6 +237,26 @@ export default async function ForumPage({
         </Link>
         .
       </p>
+      </div>
+
+      <aside>
+        <SidebarDisclosure>
+          <ForumSidebar
+            categories={sidebarCategories}
+            activeSlug={categorySlug}
+            hrefFor={(slug) => forumHref({ tab, category: slug })}
+            showCampaignHref={
+              campaignCategory
+                ? `/forum/new?category=${campaignCategory.id}`
+                : null
+            }
+            digest={{
+              signedIn: Boolean(memberId),
+              enabled: Boolean(viewer?.forum_digest),
+            }}
+          />
+        </SidebarDisclosure>
+      </aside>
     </div>
   );
 }

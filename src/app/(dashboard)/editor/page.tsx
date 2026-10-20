@@ -41,9 +41,9 @@ function EditorContent() {
       .then((res) => res.json())
       .then((data) => {
         if (data.name) setTitle(data.name);
-        if (data.body_text || data.description) {
-          setContent(data.body_text || data.description || "");
-        }
+        const bt = typeof data.body_text === "string" && data.body_text !== "[object Object]"
+          ? data.body_text : "";
+        setContent(bt || data.description || "");
       })
       .catch(() => {
         // New content

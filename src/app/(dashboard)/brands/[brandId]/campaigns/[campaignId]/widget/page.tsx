@@ -82,7 +82,7 @@ export default function WidgetCustomizerPage() {
             success_message: data.widget.success_message || "",
             field_label_1: data.widget.field_label_1 || "Full Name",
             field_label_2: data.widget.field_label_2 || "Email Address",
-            body_text: data.widget.body_text || "",
+            body_text: (typeof data.widget.body_text === "string" && data.widget.body_text !== "[object Object]") ? data.widget.body_text : "",
             stats_on: data.widget.stats_on ?? true,
             banner_image_url: data.widget.banner_image_url || "",
             background_image: data.widget.background_image || "",
@@ -149,7 +149,9 @@ export default function WidgetCustomizerPage() {
         text_color: data.text_color ?? prev.text_color,
         background_color: data.background_color ?? prev.background_color,
         body_text:
-          data.body_text != null ? String(data.body_text) : prev.body_text,
+          typeof data.body_text === "string" && data.body_text !== "[object Object]"
+            ? data.body_text
+            : prev.body_text,
       }));
       toast.success("Widget draft updated — review and click Save to publish.");
     } catch (e) {

@@ -57,7 +57,9 @@ export const publicTopicOrderBy: Prisma.topicsOrderByWithRelationInput[] = [
   { last_activity_at: "desc" },
 ];
 
-export async function listForumCategories(options?: { postableOnly?: boolean }) {
+export async function listForumCategories(options?: {
+  postableOnly?: boolean;
+}) {
   const categories = await prisma.topic_categories.findMany({
     orderBy: [{ sort_order: "asc" }, { name: "asc" }],
   });
@@ -99,6 +101,23 @@ export type ForumTopicListItem = {
   voteCount: number;
   replyCount: number;
 };
+
+/**
+ * Authors for a page of topics, for the avatar and Team badge in each row.
+ * Kept out of listForumTopics so that query stays a single pass over topics.
+ */
+export async function listTopicAuthors(topics: ForumTopicListItem[]) {
+  const ids = [
+    ...new Set(
+      topics.map((t) => t.member_id).filter((id): id is number => !!id),
+    ),
+  ];
+  if (ids.length === 0) return [];
+  return prisma.members.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, name: true, is_team: true },
+  });
+}
 
 export async function listForumTopics(options: {
   tab?: ForumTab;
@@ -227,9 +246,7 @@ export async function listForumTopics(options: {
             _count: { id: true },
           })
         : [];
-    const voteMap = new Map(
-      voteCounts.map((v) => [v.topic_id, v._count.id]),
-    );
+    const voteMap = new Map(voteCounts.map((v) => [v.topic_id, v._count.id]));
     candidates.sort((a, b) => {
       if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
       const voteDiff = (voteMap.get(b.id) || 0) - (voteMap.get(a.id) || 0);

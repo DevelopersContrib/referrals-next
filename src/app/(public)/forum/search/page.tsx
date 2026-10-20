@@ -6,7 +6,11 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { Input } from "@/components/ui/input";
 import { siteUrl } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
-import { listForumCategories, listForumTopics } from "@/lib/forum";
+import {
+  listForumCategories,
+  listForumTopics,
+  listTopicAuthors,
+} from "@/lib/forum";
 import { ForumTopicList, forumHref } from "@/components/forum/topic-list";
 
 export const metadata: Metadata = {
@@ -44,8 +48,12 @@ export default async function ForumSearchPage({
     listForumCategories(),
   ]);
 
+  const authors = await listTopicAuthors(list.topics);
+
   return (
-    <div className="space-y-6">
+    // The topic rows size themselves with container queries, so they need a
+    // container to measure even where there is no sidebar beside them.
+    <div className="@container space-y-6">
       <div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Link href="/forum" className="hover:text-gray-900">
@@ -82,6 +90,7 @@ export default async function ForumSearchPage({
       <ForumTopicList
         topics={list.topics}
         categories={categories}
+        authors={authors}
         emptyMessage={
           q ? `No topics match “${q}”.` : "Enter a search to see topics."
         }

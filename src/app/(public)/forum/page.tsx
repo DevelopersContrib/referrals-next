@@ -10,8 +10,10 @@ import { prisma } from "@/lib/prisma";
 import {
   listForumCategories,
   listForumTopics,
+  listTopicAuthors,
   parseForumTab,
 } from "@/lib/forum";
+import { PinnedTopics } from "@/components/forum/pinned-topics";
 import { ForumTopicList, forumHref } from "@/components/forum/topic-list";
 import { ForumSidebar } from "@/components/forum/forum-sidebar";
 import { SidebarDisclosure } from "@/components/forum/sidebar-disclosure";
@@ -76,6 +78,18 @@ export default async function ForumPage({
     listForumCategories(),
   ]);
 
+  const authors = await listTopicAuthors(list.topics);
+
+  // Pinned threads lead the list already, so lifting them into their own row
+  // would show them twice. They are pulled out here, and only where the reader
+  // has not narrowed things down with a tab, a category or a later page.
+  const showPinned = tab === "latest" && !categorySlug && list.page === 1;
+  const pinnedTopics = showPinned
+    ? list.topics.filter((t) => t.is_pinned).slice(0, 2)
+    : [];
+  const pinnedIds = new Set(pinnedTopics.map((t) => t.id));
+  const rowTopics = list.topics.filter((t) => !pinnedIds.has(t.id));
+
   const viewer = memberId
     ? await prisma.members.findUnique({
         where: { id: memberId },
@@ -99,164 +113,206 @@ export default async function ForumPage({
           ? "All topics have a reply."
           : "No topics yet. Be the first to start a discussion!";
 
-  return (
-    <div className="grid items-start gap-6 min-[900px]:grid-cols-[minmax(0,1fr)_320px]">
-      {/* Container queries, not viewport ones: beside the sidebar this column
-          is far narrower than the window, and the header and tab rows were
-          going side-by-side at widths where they did not fit. */}
-      <div className="@container min-w-0 space-y-6">
-      <div className="flex flex-col gap-4 @2xl:flex-row @2xl:items-center @2xl:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Forum</h1>
-          <p className="mt-1 text-muted-foreground">
-            Discuss referral marketing, ask questions, and share insights.
-          </p>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <form action="/forum/search" className="flex gap-2">
-            <Input
-              name="q"
-              placeholder="Search topics"
-              className="min-h-11 w-full sm:w-56"
-            />
-            <Button type="submit" variant="outline" size="sm" className="min-h-11">
-              Search
-            </Button>
-          </form>
-          <Link
-            href="/forum/activity"
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "min-h-11",
-            )}
-          >
-            Activity
-          </Link>
-          <Link
-            href="/forum/new"
-            className={cn(
-              buttonVariants({ size: "sm" }),
-              "min-h-11 w-full sm:w-auto",
-            )}
-          >
-            New Topic
-          </Link>
-        </div>
+  const listHeader = (
+    // Tabs and categories sit on their own rows. Side by side the chips
+    // crowded the tabs badly enough to break them onto three lines at 1440px.
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap gap-2">
+        {TABS.map((item) => {
+          const active = tab === item.id;
+          return (
+            <Link
+              key={item.id}
+              href={forumHref({ tab: item.id, category: categorySlug })}
+              aria-current={active ? "page" : undefined}
+              className={`flex min-h-11 items-center rounded-md px-3 text-sm ${
+                active
+                  ? "bg-gray-900 text-white"
+                  : "bg-muted text-muted-foreground hover:text-gray-900"
+              }`}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
       </div>
-
-      <div className="flex flex-col gap-3 @2xl:flex-row @2xl:items-center @2xl:justify-between">
-        <div className="flex flex-wrap gap-2">
-          {TABS.map((item) => {
-            const active = tab === item.id;
-            return (
-              <Link
-                key={item.id}
-                href={forumHref({ tab: item.id, category: categorySlug })}
-                className={`min-h-11 rounded-md px-3 py-2 text-sm ${
-                  active
-                    ? "bg-gray-900 text-white"
-                    : "bg-muted text-muted-foreground hover:text-gray-900"
-                }`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
-        {/* Chips rather than a select: a long category name made the select and
-            its Filter button overflow a 390px screen, where the page cannot
-            scroll sideways, so the button could not be reached at all. */}
-        <nav
-          aria-label="Categories"
-          className="flex min-w-0 max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] @2xl:flex-wrap @2xl:justify-end @2xl:overflow-visible @2xl:pb-0 [&::-webkit-scrollbar]:hidden"
-        >
+      {/* Chips rather than a select: a long category name made the select and
+          its Filter button overflow a 390px screen, where the page cannot
+          scroll sideways, so the button could not be reached at all. */}
+      <nav
+        aria-label="Categories"
+        className="flex min-w-0 max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] @xl:flex-wrap @xl:overflow-visible @xl:pb-0 [&::-webkit-scrollbar]:hidden"
+      >
+        <CategoryChip
+          href={forumHref({ tab })}
+          active={!categorySlug}
+          label="All categories"
+        />
+        {categories.map((category) => (
           <CategoryChip
-            href={forumHref({ tab })}
-            active={!categorySlug}
-            label="All categories"
+            key={category.id}
+            href={forumHref({ tab, category: category.slug })}
+            active={categorySlug === category.slug}
+            label={category.name || "Untitled"}
           />
-          {categories.map((category) => (
-            <CategoryChip
-              key={category.id}
-              href={forumHref({ tab, category: category.slug })}
-              active={categorySlug === category.slug}
-              label={category.name || "Untitled"}
-            />
-          ))}
+        ))}
+      </nav>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <section className="@container rounded-xl bg-card px-4 py-6 ring-1 ring-foreground/10 sm:px-6">
+        <nav aria-label="Breadcrumb">
+          <ol className="flex items-center gap-2 text-sm text-muted-foreground">
+            <li>
+              <Link
+                href="/"
+                className="inline-flex min-h-11 items-center hover:text-gray-900"
+              >
+                Home
+              </Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page" className="text-gray-900">
+              Community
+            </li>
+          </ol>
         </nav>
-      </div>
 
-      <ForumTopicList
-        topics={list.topics}
-        categories={categories}
-        emptyMessage={emptyMessage}
-      />
-
-      {list.totalPages > 1 ? (
-        <div className="flex items-center justify-center gap-2">
-          {list.page > 1 ? (
+        <div className="mt-3 flex flex-col gap-4 @2xl:flex-row @2xl:items-end @2xl:justify-between">
+          <div>
+            <h1 className="font-heading text-3xl font-bold text-gray-900">
+              Referrals.com Community
+            </h1>
+            <p className="mt-1 text-muted-foreground">
+              Ask questions, share what is working, and get answers from the
+              team and other members.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Link
-              href={forumHref({
-                tab,
-                category: categorySlug,
-                page: list.page - 1,
-              })}
+              href="/forum/activity"
               className={cn(
                 buttonVariants({ variant: "outline", size: "sm" }),
-                "min-h-11 px-4",
+                "min-h-11",
               )}
             >
-              Previous
+              Activity
             </Link>
-          ) : null}
-          <span className="text-sm text-muted-foreground">
-            Page {list.page} of {list.totalPages}
-          </span>
-          {list.page < list.totalPages ? (
             <Link
-              href={forumHref({
-                tab,
-                category: categorySlug,
-                page: list.page + 1,
-              })}
-              className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "min-h-11 px-4",
-              )}
+              href="/forum/new"
+              className={cn(buttonVariants({ size: "sm" }), "min-h-11 px-5")}
             >
-              Next
+              New topic
             </Link>
-          ) : null}
+          </div>
         </div>
-      ) : null}
 
-      <p className="text-sm text-muted-foreground">
-        Older threads from 2019–2021 have moved to the{" "}
-        <Link href="/forum/archive" className="text-blue-600 hover:underline">
-          Archive
-        </Link>
-        .
-      </p>
-      </div>
-
-      <aside>
-        <SidebarDisclosure>
-          <ForumSidebar
-            categories={sidebarCategories}
-            activeSlug={categorySlug}
-            hrefFor={(slug) => forumHref({ tab, category: slug })}
-            showCampaignHref={
-              campaignCategory
-                ? `/forum/new?category=${campaignCategory.id}`
-                : null
-            }
-            digest={{
-              signedIn: Boolean(memberId),
-              enabled: Boolean(viewer?.forum_digest),
-            }}
+        <form
+          action="/forum/search"
+          className="mt-4 flex flex-col gap-2 sm:flex-row"
+        >
+          <Input
+            name="q"
+            placeholder="Search topics"
+            aria-label="Search topics"
+            className="min-h-11 sm:max-w-md"
           />
-        </SidebarDisclosure>
-      </aside>
+          <Button type="submit" variant="outline" className="min-h-11 px-5">
+            Search
+          </Button>
+        </form>
+      </section>
+
+      <div className="grid items-start gap-6 min-[900px]:grid-cols-[minmax(0,1fr)_320px]">
+        {/* Container queries, not viewport ones: beside the sidebar this column
+            is far narrower than the window, and the header and tab rows were
+            going side-by-side at widths where they did not fit. */}
+        <div className="@container min-w-0 space-y-6">
+          <PinnedTopics topics={pinnedTopics} categories={categories} />
+
+          <ForumTopicList
+            topics={rowTopics}
+            categories={categories}
+            authors={authors}
+            header={listHeader}
+            emptyMessage={emptyMessage}
+          />
+
+          {list.totalPages > 1 ? (
+            <div className="flex items-center justify-center gap-2">
+              {list.page > 1 ? (
+                <Link
+                  href={forumHref({
+                    tab,
+                    category: categorySlug,
+                    page: list.page - 1,
+                  })}
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "min-h-11 px-4",
+                  )}
+                >
+                  Previous
+                </Link>
+              ) : null}
+              <span className="text-sm text-muted-foreground">
+                Page {list.page} of {list.totalPages}
+              </span>
+              {list.page < list.totalPages ? (
+                <Link
+                  href={forumHref({
+                    tab,
+                    category: categorySlug,
+                    page: list.page + 1,
+                  })}
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "min-h-11 px-4",
+                  )}
+                >
+                  Next
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div className="flex flex-col gap-3 rounded-xl bg-muted/50 px-4 py-4 @xl:flex-row @xl:items-center @xl:justify-between @xl:px-6">
+            <p className="text-sm text-muted-foreground">
+              Older threads from 2019–2021 have moved to the Archive.
+            </p>
+            <Link
+              href="/forum/archive"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "min-h-11 shrink-0 px-4",
+              )}
+            >
+              Browse archive
+            </Link>
+          </div>
+        </div>
+
+        <aside>
+          <SidebarDisclosure>
+            <ForumSidebar
+              categories={sidebarCategories}
+              activeSlug={categorySlug}
+              hrefFor={(slug) => forumHref({ tab, category: slug })}
+              showCampaignHref={
+                campaignCategory
+                  ? `/forum/new?category=${campaignCategory.id}`
+                  : null
+              }
+              digest={{
+                signedIn: Boolean(memberId),
+                enabled: Boolean(viewer?.forum_digest),
+              }}
+            />
+          </SidebarDisclosure>
+        </aside>
+      </div>
     </div>
   );
 }

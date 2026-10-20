@@ -494,6 +494,7 @@ export default function WidgetCustomizerPage() {
                     />
                   </div>
                 </div>
+                {formData.background_type === "color" && (
                 <div className="space-y-2">
                   <Label htmlFor="background_color">Background color</Label>
                   <div className="flex gap-2">
@@ -514,6 +515,7 @@ export default function WidgetCustomizerPage() {
                     />
                   </div>
                 </div>
+                )}
               </div>
 
               <div className="space-y-2">

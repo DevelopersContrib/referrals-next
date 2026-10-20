@@ -1,6 +1,13 @@
 import path from "path";
 import type { NextConfig } from "next";
 
+// Where the old site's uploaded files are stored. Override with
+// LEGACY_UPLOADS_BASE_URL if the bucket or CDN changes.
+const LEGACY_UPLOADS_BASE_URL = (
+  process.env.LEGACY_UPLOADS_BASE_URL ||
+  "https://referralsassets.s3.us-east-1.amazonaws.com"
+).replace(/\/+$/, "");
+
 const nextConfig: NextConfig = {
   // Pin Turbopack to this app — a ~/pnpm-lock.yaml otherwise wins as workspace root.
   turbopack: {
@@ -104,6 +111,13 @@ const nextConfig: NextConfig = {
         source: "/plans",
         destination: "/pricing",
         permanent: true,
+      },
+      // Images uploaded through the old PHP editor are saved in campaign text
+      // as www.referrals.com/assets/uploads/<file>. The files live in S3 now.
+      {
+        source: "/assets/uploads/:path*",
+        destination: `${LEGACY_UPLOADS_BASE_URL}/assets/uploads/:path*`,
+        permanent: false,
       },
       // ── Retired marketing pages (Oct 2026 clean-up) ──
       { source: "/services", destination: "/pricing", permanent: true },

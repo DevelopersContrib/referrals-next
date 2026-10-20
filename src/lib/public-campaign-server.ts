@@ -9,13 +9,7 @@ import {
 import { isCampaignDesign, type CampaignDesignStyle } from "@/lib/analysis/campaign-design";
 import { isUnownedTrademarkBrand } from "@/lib/blocked-brands";
 import { poweredByHref } from "@/lib/powered-by";
-
-function safeBodyText(v: unknown): string | null {
-  if (typeof v !== "string") return null;
-  const trimmed = v.trim();
-  if (!trimmed || trimmed === "[object Object]") return null;
-  return trimmed;
-}
+import { bodyTextToPlain } from "@/lib/body-text";
 
 export type PublicCampaignBrand = {
   id: number;
@@ -227,7 +221,7 @@ export async function fetchPublicCampaignViewData(
       url_id: campaign.url_id,
       headline: widget?.header_title || campaign.name,
       pitch: widget?.description || null,
-      landing: safeBodyText(widget?.body_text) || payload.landingCopy || null,
+      landing: bodyTextToPlain(widget?.body_text) || payload.landingCopy || null,
     },
     participantCount,
     topSharers,

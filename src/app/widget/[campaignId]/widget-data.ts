@@ -2,18 +2,16 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { brandMustShowBranding } from "@/lib/member-subscription";
 import { isCampaignPubliclyLive } from "@/lib/campaign-live";
+import { cleanBodyHtml } from "@/lib/body-text";
 
 /**
  * Coerce body_text to a usable string, or undefined.
  * Guards against non-string DB values (Prisma Json / Buffer) being String()-
  * coerced to "[object Object]", and treats an already-persisted poison value
- * as empty so it is never rendered.
+ * or an emptied rich-text box ("<p></p>") as empty so it is never rendered.
  */
 function safeBodyText(v: unknown): string | undefined {
-  if (typeof v !== "string") return undefined;
-  const trimmed = v.trim();
-  if (!trimmed || trimmed === "[object Object]") return undefined;
-  return trimmed;
+  return cleanBodyHtml(v) ?? undefined;
 }
 
 export async function getWidgetData(campaignId: number) {

@@ -114,4 +114,28 @@ describe("ReferralWidget background rendering", () => {
     });
     expect(html).toContain("url(https://example.com/banner.png)");
   });
+
+  it("uses white when backgroundType is image but no backgroundImage is set", () => {
+    const html = render({
+      backgroundType: "image",
+      backgroundColor: "000000",
+    });
+    expect(html).toContain("#ffffff");
+    expect(html).not.toContain("#000000");
+  });
+
+  it("uses backgroundColor when backgroundType is color", () => {
+    const html = render({
+      backgroundType: "color",
+      backgroundColor: "abcdef",
+    });
+    expect(html).toContain("#abcdef");
+  });
+
+  it("uses backgroundColor when backgroundType is undefined (legacy compat)", () => {
+    const html = render({
+      backgroundColor: "cc00ff",
+    });
+    expect(html).toContain("#cc00ff");
+  });
 });

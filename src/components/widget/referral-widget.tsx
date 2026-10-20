@@ -221,7 +221,10 @@ export function ReferralWidget({
     bgStyle.backgroundPosition = "center";
   } else if (config.backgroundType === "transparent") {
     bgStyle.backgroundColor = "transparent";
-  } else if (config.backgroundColor) {
+  } else if (
+    (config.backgroundType === "color" || !config.backgroundType) &&
+    config.backgroundColor
+  ) {
     bgStyle.backgroundColor = `#${config.backgroundColor.replace("#", "")}`;
   } else {
     bgStyle.backgroundColor = "#ffffff";

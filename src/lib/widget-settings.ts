@@ -37,11 +37,15 @@ export interface WidgetSettings {
   countdown_end?: string;
 }
 
-/** Normalize a hex color to 6 lowercase hex chars (no '#'), or undefined. */
+/** Normalize a hex color to 6 lowercase hex chars (no '#'), or undefined.
+ *  Accepts 3-digit shorthand (e.g. "f0a" → "ff00aa"). */
 function hex(v: unknown): string | undefined {
   if (typeof v !== "string") return undefined;
   const s = v.trim().replace(/^#/, "");
-  return /^[0-9a-fA-F]{6}$/.test(s) ? s.toLowerCase() : undefined;
+  if (/^[0-9a-fA-F]{6}$/.test(s)) return s.toLowerCase();
+  if (/^[0-9a-fA-F]{3}$/.test(s))
+    return (s[0] + s[0] + s[1] + s[1] + s[2] + s[2]).toLowerCase();
+  return undefined;
 }
 
 function str(v: unknown, max: number): string | undefined {

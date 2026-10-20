@@ -72,8 +72,14 @@ const TEXT_200 = [
   "join_button_text",
   "popup_button_text",
   "popup_button_position",
-  "background_image",
 ] as const;
+
+/**
+ * Fields that the editor may explicitly clear by sending an empty string.
+ * When the incoming value is an empty (or whitespace-only) string, we write
+ * `null` to the DB so the old value doesn't linger.
+ */
+const CLEARABLE_URLS = ["background_image", "banner_image_url"] as const;
 
 /**
  * Validate + sanitize an untrusted widget-settings object into a Prisma-safe
@@ -122,6 +128,14 @@ export function sanitizeWidgetSettings(input: unknown): Record<string, unknown> 
   const success = str(b.success_message, 4000);
   if (success !== undefined) out.success_message = success;
 
+  for (const k of CLEARABLE_URLS) {
+    const v = b[k];
+    if (typeof v === "string") {
+      const trimmed = v.trim();
+      out[k] = trimmed ? trimmed.slice(0, 500) : null;
+    }
+  }
+
   if (
     typeof b.body_text === "string" &&
     b.body_text.trim() &&
@@ -129,11 +143,15 @@ export function sanitizeWidgetSettings(input: unknown): Record<string, unknown> 
   ) {
     out.body_text = sanitizeWidgetHtml(b.body_text).slice(0, 4_000_000);
   }
-  if (typeof b.banner_image_url === "string" && b.banner_image_url.trim()) {
-    out.banner_image_url = b.banner_image_url.trim().slice(0, 4_000_000);
-  }
+
   if (typeof b.stats_on === "boolean") out.stats_on = b.stats_on;
   if (typeof b.allow_countdown === "boolean") out.allow_countdown = b.allow_countdown;
+
+  // When the chosen background type doesn't use images, null out the image
+  // so stale URLs don't leak into the embed.
+  if (out.background_type && out.background_type !== "image") {
+    out.background_image = null;
+  }
 
   return out;
 }

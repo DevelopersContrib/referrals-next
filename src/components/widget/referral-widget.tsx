@@ -212,14 +212,17 @@ export function ReferralWidget({
     }
   }
 
-  // Background style
+  // Background style — respect backgroundType strictly so clearing the image
+  // in the editor actually takes effect on the embed.
   const bgStyle: React.CSSProperties = {};
-  if (config.backgroundType === "color" && config.backgroundColor) {
-    bgStyle.backgroundColor = `#${config.backgroundColor.replace("#", "")}`;
-  } else if (config.backgroundImage) {
+  if (config.backgroundType === "image" && config.backgroundImage) {
     bgStyle.backgroundImage = `url(${config.backgroundImage})`;
     bgStyle.backgroundSize = "cover";
     bgStyle.backgroundPosition = "center";
+  } else if (config.backgroundType === "transparent") {
+    bgStyle.backgroundColor = "transparent";
+  } else if (config.backgroundColor) {
+    bgStyle.backgroundColor = `#${config.backgroundColor.replace("#", "")}`;
   } else {
     bgStyle.backgroundColor = "#ffffff";
   }

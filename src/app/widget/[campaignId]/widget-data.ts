@@ -3,6 +3,19 @@ import { auth } from "@/lib/auth";
 import { brandMustShowBranding } from "@/lib/member-subscription";
 import { isCampaignPubliclyLive } from "@/lib/campaign-live";
 
+/**
+ * Coerce body_text to a usable string, or undefined.
+ * Guards against non-string DB values (Prisma Json / Buffer) being String()-
+ * coerced to "[object Object]", and treats an already-persisted poison value
+ * as empty so it is never rendered.
+ */
+function safeBodyText(v: unknown): string | undefined {
+  if (typeof v !== "string") return undefined;
+  const trimmed = v.trim();
+  if (!trimmed || trimmed === "[object Object]") return undefined;
+  return trimmed;
+}
+
 export async function getWidgetData(campaignId: number) {
   const [campaign, widget, reward, socialContent, allowedSocials, leaderboard] =
     await Promise.all([
@@ -86,7 +99,7 @@ export async function getWidgetData(campaignId: number) {
       headerFontColor: widget?.header_font_color || undefined,
       headerDescriptionColor: widget?.header_description_color || undefined,
       successMessage: widget?.success_message || undefined,
-      bodyText: widget?.body_text || undefined,
+      bodyText: safeBodyText(widget?.body_text),
       allowedSocials:
         allowedSocials.length > 0
           ? allowedSocials.map((s) => s.social_id)

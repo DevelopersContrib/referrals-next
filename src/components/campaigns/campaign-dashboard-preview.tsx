@@ -11,6 +11,13 @@ import {
 } from "@/lib/analysis/apply-campaign-suggestion";
 import { ExternalLinkIcon, PuzzleIcon } from "lucide-react";
 
+function safeBodyText(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const trimmed = v.trim();
+  if (!trimmed || trimmed === "[object Object]") return null;
+  return trimmed;
+}
+
 type PreviewProps = {
   brandDomain: string;
   brandLogoUrl?: string | null;
@@ -163,7 +170,7 @@ export function previewFromRecords(input: {
     brandLogoUrl: input.brandLogoUrl,
     headline: input.headline,
     pitch: input.pitch,
-    landing: input.widget?.body_text || payload.landingCopy || null,
+    landing: safeBodyText(input.widget?.body_text) || payload.landingCopy || null,
     buttonText:
       input.widget?.join_button_text ||
       input.widget?.button_text ||

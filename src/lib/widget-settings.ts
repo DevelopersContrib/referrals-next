@@ -122,7 +122,11 @@ export function sanitizeWidgetSettings(input: unknown): Record<string, unknown> 
   const success = str(b.success_message, 4000);
   if (success !== undefined) out.success_message = success;
 
-  if (typeof b.body_text === "string" && b.body_text.trim()) {
+  if (
+    typeof b.body_text === "string" &&
+    b.body_text.trim() &&
+    b.body_text.trim() !== "[object Object]"
+  ) {
     out.body_text = sanitizeWidgetHtml(b.body_text).slice(0, 4_000_000);
   }
   if (typeof b.banner_image_url === "string" && b.banner_image_url.trim()) {

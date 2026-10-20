@@ -419,7 +419,10 @@ Ensure color fields match /^[0-9A-Fa-f]{6}$/.`;
         return /^[0-9A-Fa-f]{6}$/.test(s) ? s : "6366f1";
       };
 
-      const bodyHtml = sanitizeWidgetHtml(String(parsed.body_text || ""));
+      const rawBody = parsed.body_text;
+      const bodyHtml = sanitizeWidgetHtml(
+        typeof rawBody === "string" ? rawBody : "",
+      );
 
       return NextResponse.json({
         header_title: String(parsed.header_title || "Join our referral program").slice(0, 120),

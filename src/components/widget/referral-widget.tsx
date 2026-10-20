@@ -291,7 +291,7 @@ export function ReferralWidget({
         )}
 
         {/* Body text */}
-        {config.bodyText && step === "signup" && (
+        {config.bodyText && config.bodyText !== "[object Object]" && step === "signup" && (
           <div
             style={{
               margin: "0 0 16px",
@@ -329,7 +329,7 @@ export function ReferralWidget({
                 htmlFor="rw-name"
                 style={{ display: "block", marginBottom: "4px", fontSize: "13px", fontWeight: 500, color: textColor }}
               >
-                {config.fieldLabel2 || "Name"}
+                {config.fieldLabel1 || "Full Name"}
               </label>
               <input
                 id="rw-name"
@@ -353,7 +353,7 @@ export function ReferralWidget({
                 htmlFor="rw-email"
                 style={{ display: "block", marginBottom: "4px", fontSize: "13px", fontWeight: 500, color: textColor }}
               >
-                {config.fieldLabel1 || "Email"}
+                {config.fieldLabel2 || "Email Address"}
               </label>
               <input
                 id="rw-email"

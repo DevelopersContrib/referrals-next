@@ -35,7 +35,9 @@ export function ForumTopicList({
         return (
           <Card key={topic.id}>
             <CardContent className="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:gap-4">
-              <div className="flex gap-6 lg:gap-4">
+              {/* On phones the counts read as a footnote under the topic, which
+                  is why they come second until the row goes horizontal. */}
+              <div className="order-2 flex gap-6 lg:order-none lg:gap-4">
                 <div className="flex min-w-[60px] flex-col items-center gap-1 text-center">
                   <span className="text-lg font-bold">{topic.voteCount}</span>
                   <span className="text-xs text-muted-foreground">votes</span>
@@ -45,10 +47,10 @@ export function ForumTopicList({
                   <span className="text-xs text-muted-foreground">replies</span>
                 </div>
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="order-1 min-w-0 flex-1 lg:order-none">
                 <Link
                   href={`/forum/post/${topic.slug || topic.id}`}
-                  className="wrap-break-word block font-medium text-gray-900 hover:text-blue-600"
+                  className="wrap-break-word flex min-h-11 items-center font-medium text-gray-900 hover:text-blue-600"
                 >
                   {topic.title}
                 </Link>
@@ -71,8 +73,14 @@ export function ForumTopicList({
                     <NeedsAnswerBadge />
                   ) : null}
                   {category ? (
-                    <Link href={`/forum/${category.slug || category.id}`}>
-                      <Badge variant="secondary" className="text-xs">
+                    <Link
+                      href={`/forum/${category.slug || category.id}`}
+                      className="inline-flex min-h-11 max-w-full items-center"
+                    >
+                      <Badge
+                        variant="secondary"
+                        className="max-w-full truncate text-xs"
+                      >
                         {category.name}
                       </Badge>
                     </Link>

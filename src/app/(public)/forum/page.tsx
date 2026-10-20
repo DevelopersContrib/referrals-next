@@ -27,6 +27,30 @@ const TABS = [
   { id: "following", label: "Following" },
 ] as const;
 
+function CategoryChip({
+  href,
+  active,
+  label,
+}: {
+  href: string;
+  active: boolean;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm whitespace-nowrap ${
+        active
+          ? "border-gray-900 bg-gray-900 text-white"
+          : "border-border bg-background text-muted-foreground hover:text-gray-900"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
+
 export default async function ForumPage({
   searchParams,
 }: {
@@ -118,30 +142,27 @@ export default async function ForumPage({
             );
           })}
         </div>
-        <form className="flex min-h-11 items-center gap-2">
-          {tab !== "latest" ? (
-            <input type="hidden" name="tab" value={tab} />
-          ) : null}
-          <label htmlFor="category" className="text-sm text-muted-foreground">
-            Category
-          </label>
-          <select
-            id="category"
-            name="category"
-            defaultValue={categorySlug || ""}
-            className="min-h-11 rounded-md border bg-background px-3 text-sm"
-          >
-            <option value="">All categories</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.slug || ""}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <Button type="submit" variant="outline" size="sm" className="min-h-11">
-            Filter
-          </Button>
-        </form>
+        {/* Chips rather than a select: a long category name made the select and
+            its Filter button overflow a 390px screen, where the page cannot
+            scroll sideways, so the button could not be reached at all. */}
+        <nav
+          aria-label="Categories"
+          className="flex min-w-0 max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] lg:flex-wrap lg:justify-end lg:overflow-visible lg:pb-0 [&::-webkit-scrollbar]:hidden"
+        >
+          <CategoryChip
+            href={forumHref({ tab })}
+            active={!categorySlug}
+            label="All categories"
+          />
+          {categories.map((category) => (
+            <CategoryChip
+              key={category.id}
+              href={forumHref({ tab, category: category.slug })}
+              active={categorySlug === category.slug}
+              label={category.name || "Untitled"}
+            />
+          ))}
+        </nav>
       </div>
 
       <ForumTopicList
@@ -159,7 +180,10 @@ export default async function ForumPage({
                 category: categorySlug,
                 page: list.page - 1,
               })}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "min-h-11 px-4",
+              )}
             >
               Previous
             </Link>
@@ -174,7 +198,10 @@ export default async function ForumPage({
                 category: categorySlug,
                 page: list.page + 1,
               })}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "min-h-11 px-4",
+              )}
             >
               Next
             </Link>

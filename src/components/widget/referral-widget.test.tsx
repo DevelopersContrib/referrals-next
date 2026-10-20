@@ -69,3 +69,49 @@ describe("ReferralWidget bodyText rendering", () => {
     expect(html).not.toContain("line-height:1.6");
   });
 });
+
+describe("ReferralWidget background rendering", () => {
+  it("applies background image only when backgroundType is image", () => {
+    const html = render({
+      backgroundType: "image",
+      backgroundImage: "https://example.com/bg.png",
+    });
+    expect(html).toContain("url(https://example.com/bg.png)");
+  });
+
+  it("does not render background image when backgroundType is transparent", () => {
+    const html = render({
+      backgroundType: "transparent",
+      backgroundImage: "https://example.com/bg.png",
+    });
+    expect(html).not.toContain("url(https://example.com/bg.png)");
+    expect(html).toContain("transparent");
+  });
+
+  it("does not render background image when backgroundType is color", () => {
+    const html = render({
+      backgroundType: "color",
+      backgroundColor: "ff0000",
+      backgroundImage: "https://example.com/bg.png",
+    });
+    expect(html).not.toContain("url(https://example.com/bg.png)");
+    expect(html).toContain("#ff0000");
+  });
+
+  it("uses white default when no background config", () => {
+    const html = render({});
+    expect(html).toContain("#ffffff");
+  });
+
+  it("does not render banner when bannerImageUrl is absent", () => {
+    const html = render({ bannerImageUrl: undefined });
+    expect(html).not.toContain("background-image");
+  });
+
+  it("renders banner when bannerImageUrl is present", () => {
+    const html = render({
+      bannerImageUrl: "https://example.com/banner.png",
+    });
+    expect(html).toContain("url(https://example.com/banner.png)");
+  });
+});

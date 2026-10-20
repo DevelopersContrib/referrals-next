@@ -200,12 +200,23 @@ export default function WidgetCustomizerPage() {
 
   const isPopup = formData.placement === "popup";
 
+  const previewBg: React.CSSProperties =
+    formData.background_type === "image" && formData.background_image
+      ? {
+          backgroundImage: `url(${formData.background_image})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }
+      : formData.background_type === "transparent"
+        ? { backgroundColor: "transparent" }
+        : { backgroundColor: `#${formData.background_color}` };
+
   // The widget exactly as a visitor sees it — reused for both embed & popup previews.
   const widgetCard = (
     <div
       className="w-full rounded-xl border border-black/5 p-5 shadow-lg"
       style={{
-        backgroundColor: `#${formData.background_color}`,
+        ...previewBg,
         color: `#${formData.text_color}`,
       }}
     >
@@ -506,6 +517,27 @@ export default function WidgetCustomizerPage() {
               </div>
 
               <div className="space-y-2">
+                <Label>Background type</Label>
+                <Select
+                  value={formData.background_type}
+                  onValueChange={(val: string | null) => {
+                    const v = val || "color";
+                    updateField("background_type", v);
+                    if (v !== "image") updateField("background_image", "");
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="color">Solid color</SelectItem>
+                    <SelectItem value="image">Background image</SelectItem>
+                    <SelectItem value="transparent">None / transparent</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label>Placement</Label>
                 <Select
                   value={formData.placement}
@@ -547,15 +579,17 @@ export default function WidgetCustomizerPage() {
                   }}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Background image</Label>
-                <ImageInput
-                  value={formData.background_image}
-                  onChange={(url) => updateField("background_image", url)}
-                  uploadType="widget"
-                  previewClass="h-32"
-                />
-              </div>
+              {formData.background_type === "image" && (
+                <div className="space-y-2">
+                  <Label>Background image</Label>
+                  <ImageInput
+                    value={formData.background_image}
+                    onChange={(url) => updateField("background_image", url)}
+                    uploadType="widget"
+                    previewClass="h-32"
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 

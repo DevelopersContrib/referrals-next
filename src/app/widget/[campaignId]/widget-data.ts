@@ -95,7 +95,10 @@ export async function getWidgetData(campaignId: number) {
       textColor: widget?.text_color || undefined,
       backgroundColor: widget?.background_color || undefined,
       backgroundType: widget?.background_type || undefined,
-      backgroundImage: widget?.background_image || undefined,
+      backgroundImage:
+        widget?.background_type === "image"
+          ? widget?.background_image || undefined
+          : undefined,
       headerFontColor: widget?.header_font_color || undefined,
       headerDescriptionColor: widget?.header_description_color || undefined,
       successMessage: widget?.success_message || undefined,

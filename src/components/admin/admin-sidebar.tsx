@@ -38,6 +38,7 @@ const billingNav = [
   { title: "Plans", href: "/admin/plans" },
   { title: "Subscriptions", href: "/admin/subscriptions" },
   { title: "Transactions", href: "/admin/payments" },
+  { title: "PayPal Errors", href: "/admin/paypal-errors" },
 ];
 
 const contentNav = [

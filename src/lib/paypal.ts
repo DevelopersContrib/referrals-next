@@ -22,8 +22,8 @@ export { client, ordersController, ApiError };
 
 export async function createSubscriptionPlan(planName: string, amount: string, interval: "MONTH" | "YEAR" = "MONTH") {
   // PayPal Subscriptions API - create billing plan
-  const response = await fetch(
-    `${getPayPalApiBaseUrl()}/v1/billing/plans`,
+  const response = await paypalFetch(
+    "create_plan", "/v1/billing/plans",
     {
       method: "POST",
       headers: {
@@ -61,8 +61,8 @@ export async function createSubscription(
   cancelUrl: string,
   customId?: string
 ) {
-  const response = await fetch(
-    `${getPayPalApiBaseUrl()}/v1/billing/subscriptions`,
+  const response = await paypalFetch(
+    "create_subscription", "/v1/billing/subscriptions",
     {
       method: "POST",
       headers: {
@@ -86,8 +86,8 @@ export async function createSubscription(
 }
 
 export async function cancelSubscription(subscriptionId: string, reason: string = "Customer requested cancellation") {
-  const response = await fetch(
-    `${getPayPalApiBaseUrl()}/v1/billing/subscriptions/${subscriptionId}/cancel`,
+  const response = await paypalFetch(
+    "cancel_subscription", `/v1/billing/subscriptions/${subscriptionId}/cancel`,
     {
       method: "POST",
       headers: {
@@ -103,8 +103,8 @@ export async function cancelSubscription(subscriptionId: string, reason: string 
 }
 
 export async function getSubscription(subscriptionId: string) {
-  const response = await fetch(
-    `${getPayPalApiBaseUrl()}/v1/billing/subscriptions/${subscriptionId}`,
+  const response = await paypalFetch(
+    "get_subscription", `/v1/billing/subscriptions/${subscriptionId}`,
     {
       headers: {
         Authorization: `Bearer ${await getAccessToken()}`,
@@ -116,8 +116,8 @@ export async function getSubscription(subscriptionId: string) {
 }
 
 export async function getBillingPlan(planId: string) {
-  const response = await fetch(
-    `${getPayPalApiBaseUrl()}/v1/billing/plans/${planId}`,
+  const response = await paypalFetch(
+    "get_plan", `/v1/billing/plans/${planId}`,
     {
       headers: {
         Authorization: `Bearer ${await getAccessToken()}`,
@@ -133,8 +133,8 @@ async function postSubscriptionAction(
   action: "activate" | "suspend",
   reason: string,
 ) {
-  const response = await fetch(
-    `${getPayPalApiBaseUrl()}/v1/billing/subscriptions/${subscriptionId}/${action}`,
+  const response = await paypalFetch(
+    `${action}_subscription`, `/v1/billing/subscriptions/${subscriptionId}/${action}`,
     {
       method: "POST",
       headers: {
@@ -168,6 +168,92 @@ export function getPayPalApiBaseUrl(): string {
     : "https://api-m.sandbox.paypal.com";
 }
 
+/**
+ * Every PayPal REST call goes through here. Responses are returned untouched;
+ * when PayPal answers with an error (or the request fails), the operation,
+ * status, PayPal's debug id and its error message are saved to paypal_api_log
+ * for the admin PayPal Errors page. Request bodies, tokens and card details
+ * are never stored. Logging can't break a payment: it never throws.
+ */
+async function paypalFetch(operation: string, path: string, init: RequestInit = {}): Promise<Response> {
+  const method = (init.method || "GET").toUpperCase();
+  let response: Response;
+  try {
+    response = await fetch(`${getPayPalApiBaseUrl()}${path}`, init);
+  } catch (error) {
+    await logPaypalApiError({
+      operation,
+      method,
+      path,
+      status: 0,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
+  if (!response.ok) {
+    let body: Record<string, unknown> = {};
+    try {
+      body = (await response.clone().json()) as Record<string, unknown>;
+    } catch {
+      /* not JSON */
+    }
+    const details = Array.isArray(body.details) ? JSON.stringify(body.details).slice(0, 2000) : null;
+    await logPaypalApiError({
+      operation,
+      method,
+      path,
+      status: response.status,
+      debugId: response.headers.get("paypal-debug-id") || (typeof body.debug_id === "string" ? body.debug_id : null),
+      errorName:
+        (typeof body.name === "string" && body.name) || (typeof body.error === "string" && body.error) || null,
+      message:
+        (typeof body.message === "string" && body.message) ||
+        (typeof body.error_description === "string" && body.error_description) ||
+        null,
+      details,
+    });
+  }
+  return response;
+}
+
+async function logPaypalApiError(entry: {
+  operation: string;
+  method: string;
+  path: string;
+  status: number;
+  debugId?: string | null;
+  errorName?: string | null;
+  message?: string | null;
+  details?: string | null;
+}) {
+  // Ids in the path (plan, subscription) help find the record in PayPal; no secrets live in paths.
+  const path = entry.path.split("?")[0].slice(0, 255);
+  console.error(
+    `[paypal] ${entry.operation} ${entry.method} ${path} -> ${entry.status}`,
+    entry.errorName || "",
+    entry.message || "",
+    entry.debugId ? `debug_id=${entry.debugId}` : "",
+  );
+  try {
+    const { prisma } = await import("@/lib/prisma");
+    await prisma.paypal_api_log.create({
+      data: {
+        operation: entry.operation.slice(0, 64),
+        method: entry.method.slice(0, 8),
+        path,
+        status: entry.status,
+        debug_id: entry.debugId?.slice(0, 64) ?? null,
+        error_name: entry.errorName?.slice(0, 128) ?? null,
+        message: entry.message?.slice(0, 2000) ?? null,
+        details: entry.details ?? null,
+        mode: process.env.PAYPAL_MODE === "live" ? "live" : "sandbox",
+      },
+    });
+  } catch (error) {
+    console.warn("[paypal] could not save API error log:", error instanceof Error ? error.message.split("\n")[0] : error);
+  }
+}
+
 export interface PayPalWebhookHeaders {
   transmissionId: string;
   transmissionTime: string;
@@ -186,8 +272,8 @@ export async function verifyWebhookSignature(
     return false;
   }
 
-  const response = await fetch(
-    `${getPayPalApiBaseUrl()}/v1/notifications/verify-webhook-signature`,
+  const response = await paypalFetch(
+    "verify_webhook", "/v1/notifications/verify-webhook-signature",
     {
       method: "POST",
       headers: {
@@ -224,8 +310,8 @@ export async function getAccessToken(): Promise<string> {
     `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
   ).toString("base64");
 
-  const response = await fetch(
-    `${getPayPalApiBaseUrl()}/v1/oauth2/token`,
+  const response = await paypalFetch(
+    "get_access_token", "/v1/oauth2/token",
     {
       method: "POST",
       headers: {
@@ -254,8 +340,8 @@ export async function getOrCreateProduct(): Promise<string> {
   const existing = await findProductIdByName(PAYPAL_PRODUCT_NAME);
   if (existing) return existing;
 
-  const response = await fetch(
-    `${getPayPalApiBaseUrl()}/v1/catalogs/products`,
+  const response = await paypalFetch(
+    "create_product", "/v1/catalogs/products",
     {
       method: "POST",
       headers: {
@@ -278,8 +364,8 @@ async function findProductIdByName(name: string): Promise<string | null> {
   const token = await getAccessToken();
 
   for (let page = 1; page <= 5; page++) {
-    const response = await fetch(
-      `${getPayPalApiBaseUrl()}/v1/catalogs/products?page_size=20&page=${page}`,
+    const response = await paypalFetch(
+      "list_products", `/v1/catalogs/products?page_size=20&page=${page}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     if (!response.ok) return null;
@@ -305,8 +391,8 @@ export async function findSubscriptionPlanIdByName(
   const productFilter = productId ? `&product_id=${encodeURIComponent(productId)}` : "";
 
   for (let page = 1; page <= 5; page++) {
-    const response = await fetch(
-      `${getPayPalApiBaseUrl()}/v1/billing/plans?page_size=20&page=${page}${productFilter}`,
+    const response = await paypalFetch(
+      "list_plans", `/v1/billing/plans?page_size=20&page=${page}${productFilter}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     if (!response.ok) return null;

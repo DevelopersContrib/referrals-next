@@ -1167,3 +1167,22 @@ model unpaid_followup_sends {
   @@index([brand_id], map: "idx_followup_brand")
   @@index([step, sent_at], map: "idx_followup_step_sent")
 }
+
+/// PayPal REST errors (non-2xx answers or failed requests) from src/lib/paypal.ts,
+/// shown on the admin PayPal Errors page. No request bodies or secrets.
+model paypal_api_log {
+  id         BigInt   @id @default(autoincrement())
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  mode       String   @default("live") @db.VarChar(8)
+  operation  String   @db.VarChar(64)
+  method     String   @db.VarChar(8)
+  path       String   @db.VarChar(255)
+  status     Int
+  debug_id   String?  @db.VarChar(64)
+  error_name String?  @db.VarChar(128)
+  message    String?  @db.Text
+  details    String?  @db.Text
+
+  @@index([created_at], map: "idx_paypal_api_log_created")
+  @@index([operation], map: "idx_paypal_api_log_operation")
+}

@@ -77,22 +77,31 @@ export function CommentForm({
             {error}
           </div>
         )}
-        {signedIn ? <form onSubmit={handleSubmit} className="space-y-3">
-          <label htmlFor="forum-reply" className="sr-only">
-            Your reply
-          </label>
-          <Textarea
-            id="forum-reply"
-            placeholder="Write your reply..."
-            rows={4}
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            required
-          />
-          <Button type="submit" size="sm" disabled={loading}>
-            {loading ? "Posting..." : "Post Reply"}
-          </Button>
-        </form> : null}
+        {signedIn ? (
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <label
+              htmlFor="forum-reply"
+              className="block text-sm font-medium text-gray-900"
+            >
+              Your reply
+            </label>
+            <Textarea
+              id="forum-reply"
+              aria-describedby="forum-reply-help"
+              placeholder="Write your reply..."
+              rows={4}
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              required
+            />
+            <p id="forum-reply-help" className="text-sm text-muted-foreground">
+              A new member&apos;s first post is reviewed before it appears.
+            </p>
+            <Button type="submit" size="sm" className="min-h-11" disabled={loading}>
+              {loading ? "Posting..." : "Post Reply"}
+            </Button>
+          </form>
+        ) : null}
       </CardContent>
     </Card>
   );

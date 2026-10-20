@@ -11,11 +11,22 @@ import { CommentForm } from "./comment-form";
 import { ReportButton } from "@/components/forum/report-button";
 import { FollowButton } from "@/components/forum/follow-button";
 import { AcceptAnswerButton } from "@/components/forum/accept-answer-button";
+import { ShareButton } from "@/components/forum/share-button";
+import {
+  AboutThisTopic,
+  ReadyToGoLive,
+  RelatedTopics,
+  SignInCta,
+} from "@/components/forum/topic-sidebar";
 import {
   NeedsAnswerBadge,
   TeamBadge,
   needsAnswer,
 } from "@/components/forum/badges";
+import {
+  getPrimaryCheckoutBrand,
+  shouldShowBrandPublishCta,
+} from "@/lib/member-subscription";
 
 function metaDescription(text: string | null | undefined) {
   return (text || "Referrals.com forum discussion.")
@@ -174,6 +185,56 @@ export default async function TopicDetailPage({
   const accepted = topic.accepted_comment_id
     ? comments.find((c) => c.id === topic.accepted_comment_id)
     : null;
+
+  const related = topic.category_id
+    ? await prisma.topics.findMany({
+        where: {
+          category_id: topic.category_id,
+          id: { not: topic.id },
+          status: { in: ["open", "answered"] },
+        },
+        orderBy: { last_activity_at: "desc" },
+        take: 5,
+        select: { id: true, slug: true, title: true },
+      })
+    : [];
+  const relatedReplyCounts =
+    related.length > 0
+      ? await prisma.topic_comments.groupBy({
+          by: ["topic_id"],
+          where: {
+            topic_id: { in: related.map((t) => t.id) },
+            status: "open",
+          },
+          _count: { id: true },
+        })
+      : [];
+  const relatedReplyMap = new Map(
+    relatedReplyCounts.map((r) => [r.topic_id, r._count.id]),
+  );
+  const relatedTopics = related.map((t) => ({
+    ...t,
+    replyCount: relatedReplyMap.get(t.id) ?? 0,
+  }));
+
+  // The billing upsell only makes sense for a reader who already has a brand
+  // waiting to be published; `shouldShowBrandPublishCta` drops it once that
+  // brand is live, so a paying customer is not asked to pay again.
+  const checkoutBrand =
+    memberId > 0 ? await getPrimaryCheckoutBrand(memberId) : null;
+  const showGoLive = checkoutBrand
+    ? await shouldShowBrandPublishCta({
+        brandId: checkoutBrand.id,
+        viewerMemberId: memberId,
+        isViewerAdmin: Boolean(viewer?.is_admin),
+      })
+    : false;
+
+  const otherComments = accepted
+    ? comments.filter((c) => c.id !== accepted.id)
+    : comments;
+
+  const topicPath = `/forum/post/${topic.slug || topic.id}`;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "QAPage",
@@ -194,19 +255,22 @@ export default async function TopicDetailPage({
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-6xl">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <nav
+        aria-label="Breadcrumb"
+        className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
+      >
         <Link href="/forum" className="hover:text-gray-900">
           Forum
         </Link>
         {category && (
           <>
-            <span>/</span>
+            <span aria-hidden="true">/</span>
             <Link
               href={`/forum/${category.slug || category.id}`}
               className="hover:text-gray-900"
@@ -215,8 +279,14 @@ export default async function TopicDetailPage({
             </Link>
           </>
         )}
-      </div>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page" className="wrap-break-word text-gray-900">
+          {topic.title}
+        </span>
+      </nav>
 
+      <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 space-y-6">
       {/* Topic */}
       <Card>
         <CardHeader>
@@ -253,10 +323,11 @@ export default async function TopicDetailPage({
                 )}
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
               {memberId > 0 ? (
                 <FollowButton topicId={topic.id} following={following} />
               ) : null}
+              <ShareButton url={siteUrl(topicPath)} title={topic.title} />
             {isAuthor && (
               <Link
                 href={`/forum/post/${topic.slug}/edit`}
@@ -285,9 +356,25 @@ export default async function TopicDetailPage({
       </Card>
 
       {accepted?.answer ? (
-        <Card className="border-green-600">
+        <Card className="border-green-600 bg-green-50/40">
           <CardHeader>
-            <p className="text-sm font-medium text-green-700">Accepted answer</p>
+            <p className="text-sm font-semibold text-green-700">
+              Accepted answer
+            </p>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+              <span className="wrap-break-word font-medium text-gray-900">
+                {(accepted.member_id
+                  ? authorMap.get(accepted.member_id)?.name
+                  : null) || "Unknown"}
+              </span>
+              {accepted.member_id && authorMap.get(accepted.member_id)?.is_team ? (
+                <TeamBadge />
+              ) : null}
+              <span>{new Date(accepted.date_posted).toLocaleDateString()}</span>
+              <span className="text-xs">
+                {commentVoteMap.get(accepted.id) || 0} votes
+              </span>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="whitespace-pre-wrap wrap-break-word text-gray-700">
@@ -308,7 +395,9 @@ export default async function TopicDetailPage({
               No replies yet. Be the first to answer this question!
             </p>
           ) : null}
-          {comments.map((comment) => {
+          {/* The accepted answer already has its own block above, so it is not
+              repeated here. */}
+          {otherComments.map((comment) => {
             const commentAuthor = comment.member_id
               ? authorMap.get(comment.member_id)
               : null;
@@ -356,7 +445,37 @@ export default async function TopicDetailPage({
       </div>
 
       {/* Comment Form */}
-      <CommentForm topicId={topic.id} signedIn={memberId > 0} callbackPath={`/forum/post/${topic.slug || topic.id}`} />
+      <CommentForm
+        topicId={topic.id}
+        signedIn={memberId > 0}
+        callbackPath={topicPath}
+      />
+        </div>
+
+        <aside className="space-y-6">
+          {/* replyCount counts the same list the heading does, so an author
+              looking at their own held-for-review reply is not shown
+              "1 Reply" beside "Replies 0". */}
+          <AboutThisTopic
+            askedOn={topic.date_posted}
+            lastActivity={topic.last_activity_at}
+            viewCount={viewCount}
+            replyCount={comments.length}
+            categoryName={category?.name ?? null}
+            categoryHref={
+              category ? `/forum/${category.slug || category.id}` : null
+            }
+          />
+          <RelatedTopics topics={relatedTopics} />
+          {memberId > 0 ? (
+            showGoLive ? (
+              <ReadyToGoLive brandName={checkoutBrand?.domain ?? null} />
+            ) : null
+          ) : (
+            <SignInCta callbackPath={topicPath} />
+          )}
+        </aside>
+      </div>
     </div>
   );
 }

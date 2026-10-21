@@ -10,6 +10,9 @@ vi.mock("@/lib/brand-domains", () => ({
   ROOT_DOMAIN: "referrals.com",
 }));
 
+// The real clone config, under the alias proxy.ts imports it by.
+vi.mock("@/lib/network-sites", () => import("./lib/network-sites"));
+
 // Import proxy after the mock is registered.
 const { proxy } = await import("./proxy");
 
@@ -114,5 +117,63 @@ describe("proxy() – encoded-slash handling", () => {
     const loc = new URL(res.headers.get("location")!);
     expect(loc.pathname).toBe("/dashboard");
     expect(loc.searchParams.get("tab")).toBe("stats");
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  proxy() – referral network clones                                 */
+/* ------------------------------------------------------------------ */
+
+function hostRequest(host: string, path: string): NextRequest {
+  return new NextRequest(new URL(path, `http://${host}`), {
+    headers: { "x-forwarded-host": host },
+  });
+}
+
+describe("proxy() – network clone hosts", () => {
+  it("rewrites a clone's home page to /network/<key>", async () => {
+    const res = await proxy(hostRequest("referrals-net.localhost", "/"));
+    expect(new URL(res.headers.get("x-middleware-rewrite")!).pathname).toBe(
+      "/network/referrals-net",
+    );
+  });
+
+  it("sends clone sign-up through referrals.com /go so it is credited", async () => {
+    const res = await proxy(hostRequest("referrals-net.localhost", "/signup"));
+    expect(res.status).toBe(307);
+    const loc = new URL(res.headers.get("location")!);
+    expect(loc.pathname).toBe("/go");
+    expect(loc.searchParams.get("ref")).toBe("referrals.net");
+  });
+
+  it("sends signed-in pages to referrals.com", async () => {
+    const res = await proxy(hostRequest("referrals-net.localhost", "/dashboard?tab=1"));
+    expect(res.status).toBe(307);
+    const loc = new URL(res.headers.get("location")!);
+    expect(loc.hostname).not.toBe("referrals-net.localhost");
+    expect(`${loc.pathname}${loc.search}`).toBe("/dashboard?tab=1");
+  });
+
+  it("serves an enabled clone on its real domain, and stops when disabled", async () => {
+    const { networkSiteByKey } = await import("./lib/network-sites");
+    const site = networkSiteByKey("referrals-net")!;
+    const was = site.enabled;
+    try {
+      site.enabled = true;
+      const on = await proxy(hostRequest("referrals.net", "/"));
+      expect(new URL(on.headers.get("x-middleware-rewrite")!).pathname).toBe("/network/referrals-net");
+      site.enabled = false;
+      const off = await proxy(hostRequest("referrals.net", "/"));
+      expect(off.headers.get("x-middleware-rewrite")).toBeNull();
+    } finally {
+      site.enabled = was;
+    }
+  });
+
+  it("hides /network/* on referrals.com", async () => {
+    const res = await proxy(makeRequest("/network/referrals-net"));
+    expect(new URL(res.headers.get("x-middleware-rewrite")!).pathname).toBe(
+      "/_network-not-found",
+    );
   });
 });

@@ -1,0 +1,21 @@
+/* The one moment of motion on a clone page: the showcase's news arrives. */
+.arrive {
+  animation: arrive 520ms 1100ms both cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrive {
+    animation: none;
+  }
+}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getSocialProofStats } from "@/lib/social-proof";
 import { AuthHeroPanel } from "@/components/auth/auth-hero-panel";
 import { SignInForm } from "@/components/auth/signin-form";
+import { NetworkViaNote } from "@/components/auth/network-via-note";
 
 export const dynamic = "force-dynamic";
 
@@ -26,12 +27,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function SignInPage() {
-  const stats = await getSocialProofStats();
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ via?: string | string[] }>;
+}) {
+  const [stats, { via }] = await Promise.all([getSocialProofStats(), searchParams]);
 
   return (
     <div className="grid min-h-[calc(100vh-4rem)] lg:grid-cols-2">
-      <div className="flex items-center justify-center px-4 py-12 sm:px-8">
+      <div className="flex flex-col items-center justify-center px-4 py-12 sm:px-8">
+        <NetworkViaNote via={via} />
         <SignInForm />
       </div>
       <AuthHeroPanel stats={stats} variant="signin" />

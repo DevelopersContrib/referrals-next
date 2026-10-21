@@ -1,0 +1,178 @@
+/* Playful motion for clone pages. Everything stops under reduced motion. */
+
+/* Confetti: falls once when the page opens, then fades away. */
+.confetti {
+  position: absolute;
+  inset: -12% -6% 0 -6%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.piece {
+  position: absolute;
+  top: 0;
+  width: 9px;
+  height: 15px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: fall 2.8s cubic-bezier(0.25, 0.6, 0.35, 1) both;
+}
+
+.piece:nth-child(3n) {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+@keyframes fall {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px) rotate(0deg);
+  }
+  12% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(var(--drop)) rotate(var(--spin));
+  }
+}
+
+/* Ticker: a slow loop; pauses while hovered. */
+.tickerTrack {
+  display: flex;
+  width: max-content;
+  animation: marquee 45s linear infinite;
+}
+
+.tickerWrap:hover .tickerTrack {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Stickers: tilted, straighten up when pointed at. */
+.sticker {
+  transform: rotate(var(--tilt));
+  transition: transform 180ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.sticker:hover {
+  transform: rotate(0deg) scale(1.08);
+}
+
+/* Chain: a link travels between people, then the reward pops. */
+.token {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  translate: 0 -50%;
+  opacity: 0;
+  animation: travel 4.5s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes travel {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  40% {
+    left: calc(100% - 2rem);
+    opacity: 1;
+  }
+  48%,
+  100% {
+    left: calc(100% - 2rem);
+    opacity: 0;
+  }
+}
+
+.reward {
+  animation: pop 4.5s infinite;
+  animation-delay: var(--delay);
+  transform-origin: center bottom;
+}
+
+@keyframes pop {
+  0%,
+  38% {
+    transform: scale(0) rotate(-14deg);
+    opacity: 0;
+  }
+  46% {
+    transform: scale(1.18) rotate(-6deg);
+    opacity: 1;
+  }
+  52%,
+  88% {
+    transform: scale(1) rotate(-6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(-6deg);
+    opacity: 0;
+  }
+}
+
+/* Faces bob a little, out of step with each other. */
+.bob {
+  animation: bob 3.2s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes bob {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Buttons get a small happy bounce on hover. */
+.bouncy {
+  transition: transform 160ms cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+
+.bouncy:hover {
+  transform: translateY(-2px) rotate(-1.5deg) scale(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .piece {
+    display: none;
+  }
+  .tickerTrack {
+    animation: none;
+    flex-wrap: wrap;
+    width: auto;
+  }
+  .sticker,
+  .sticker:hover,
+  .bouncy,
+  .bouncy:hover {
+    transition: none;
+  }
+  .bouncy:hover {
+    transform: none;
+  }
+  .token {
+    display: none;
+  }
+  .reward {
+    animation: none;
+    transform: rotate(-6deg);
+    opacity: 1;
+  }
+  .bob {
+    animation: none;
+  }
+}

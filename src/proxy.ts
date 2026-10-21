@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { brandForHost, isAppHost, normalizeHost, ROOT_DOMAIN } from "@/lib/brand-domains";
+import {
+  isNetworkDesign,
+  NETWORK_DESIGN_COOKIE,
+  NETWORK_DESIGN_HEADER,
+  NETWORK_SITE_HEADER,
+  networkRoute,
+  networkSiteForHost,
+  type NetworkSite,
+} from "@/lib/network-sites";
 
 // ── Encoded-slash normaliser ────────────────────────────────────────
 const ENCODED_SLASH_RE = /%(?:2[fF]|5[cC])/;
@@ -59,6 +68,35 @@ async function brandHostResponse(request: NextRequest, host: string) {
   return NextResponse.redirect(`https://www.${ROOT_DOMAIN}${pathname}${search}`, 307);
 }
 
+/**
+ * A referral network clone (referrals.net, ...) shows its own few landing
+ * pages; sign-in, sign-up and everything signed-in go to referrals.com.
+ */
+function networkSiteResponse(request: NextRequest, site: NetworkSite) {
+  const { pathname, search } = request.nextUrl;
+  const route = networkRoute(site, pathname, search);
+  if (route.kind === "next") return NextResponse.next();
+  if (route.kind === "redirect") return NextResponse.redirect(route.url, 307);
+  const url = request.nextUrl.clone();
+  url.pathname = route.pathname;
+  const headers = new Headers(request.headers);
+  headers.set(NETWORK_SITE_HEADER, site.key);
+
+  // Local design preview: ?design=poster, remembered in a cookie while browsing.
+  const asked = request.nextUrl.searchParams.get("design");
+  const design =
+    process.env.NODE_ENV !== "production"
+      ? [asked, request.cookies.get(NETWORK_DESIGN_COOKIE)?.value].find(isNetworkDesign)
+      : undefined;
+  if (design) headers.set(NETWORK_DESIGN_HEADER, design);
+
+  const res = NextResponse.rewrite(url, { request: { headers } });
+  if (design && isNetworkDesign(asked)) {
+    res.cookies.set(NETWORK_DESIGN_COOKIE, design, { path: "/", sameSite: "lax" });
+  }
+  return res;
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -79,7 +117,14 @@ export async function proxy(request: NextRequest) {
   const host = normalizeHost(
     request.headers.get("host") ?? request.headers.get("x-forwarded-host")?.split(",")[0],
   );
+  const networkSite = networkSiteForHost(host);
+  if (networkSite) return networkSiteResponse(request, networkSite);
   if (!isAppHost(host)) return brandHostResponse(request, host);
+
+  // Clone pages only render on their own domain (see networkSiteResponse).
+  if (pathname === "/network" || pathname.startsWith("/network/")) {
+    return NextResponse.rewrite(new URL("/_network-not-found", request.url));
+  }
 
   // Public routes — always accessible
   const publicPrefixes = [

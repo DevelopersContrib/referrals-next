@@ -490,6 +490,7 @@ model member_urls {
   referral_campaign_id Int? // the ONE campaign this brand's /go/<domain> link attributes to
   /// Owner switch: hide the "Powered by Referrals.com" link on public pages.
   hide_powered_by      Boolean   @default(false)
+  @@index([member_id], map: "idx_member_urls_member_id")
 }
 
 model member_zapier {
@@ -519,6 +520,7 @@ model members {
   referred_by       Int?
   is_team           Boolean   @default(false)
   forum_digest      Boolean   @default(false)
+  @@index([date_signedup], map: "idx_members_date_signedup")
 }
 
 model participants {
@@ -1185,4 +1187,22 @@ model paypal_api_log {
 
   @@index([created_at], map: "idx_paypal_api_log_created")
   @@index([operation], map: "idx_paypal_api_log_operation")
+}
+
+/// Reoon email checks at sign-up (and backfills), for the admin Sign-ups report.
+/// member_id is null when the address was blocked and no account was created.
+model member_email_checks {
+  id            BigInt   @id @default(autoincrement())
+  member_id     Int?
+  email         String   @db.VarChar(200)
+  status        String   @db.VarChar(32)
+  verdict       String   @db.VarChar(8)
+  is_disposable Boolean?
+  score         Int?
+  source        String   @default("signup") @db.VarChar(16)
+  checked_at    DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([member_id], map: "idx_member_email_checks_member")
+  @@index([checked_at], map: "idx_member_email_checks_checked")
+  @@index([verdict], map: "idx_member_email_checks_verdict")
 }

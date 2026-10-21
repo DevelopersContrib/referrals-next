@@ -6,6 +6,7 @@ import { sendVerificationEmail } from "@/lib/ses";
 import { postVnocAttribution } from "@/lib/vnoc-attribution";
 import { enrollMemberInSignupReferral } from "@/lib/signup-referral";
 import { requestIp, verifyTurnstile } from "@/lib/turnstile";
+import { checkEmail, recordEmailCheck } from "@/lib/reoon";
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,6 +52,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Keep fake and throwaway addresses out (Reoon). Off without a key, and a
+    // Reoon outage never blocks a sign-up.
+    const emailCheck = await checkEmail(email.trim().toLowerCase());
+    if (emailCheck?.verdict === "block") {
+      await recordEmailCheck({ email, memberId: null, check: emailCheck, source: "signup" });
+      return NextResponse.json(
+        {
+          error:
+            emailCheck.status === "disposable" || emailCheck.isDisposable
+              ? "Please sign up with a permanent email address, not a temporary one."
+              : "That email address doesn't look like it can receive mail. Please check it or use another.",
+          code: "EMAIL_REJECTED",
+        },
+        { status: 400 }
+      );
+    }
+
     // Create member
     const verificationCode = randomBytes(32).toString("hex");
     const hashedPassword = hashSync(password, 12);
@@ -69,6 +87,9 @@ export async function POST(req: NextRequest) {
         plan_expiry: null,
       },
     });
+    if (emailCheck) {
+      await recordEmailCheck({ email, memberId: member.id, check: emailCheck, source: "signup" });
+    }
 
     // Optionally create the first brand if a website was provided.
     // (Website is collected during post-signup onboarding, not at signup.)

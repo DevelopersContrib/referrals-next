@@ -26,6 +26,7 @@ const overviewNav = [
 
 const managementNav = [
   { title: "Members", href: "/admin/members" },
+  { title: "Sign-ups", href: "/admin/signups" },
   { title: "Brands", href: "/admin/brands" },
   { title: "Campaigns", href: "/admin/campaigns" },
   { title: "Participants", href: "/admin/participants" },

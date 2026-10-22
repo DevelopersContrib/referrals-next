@@ -7,6 +7,7 @@ import Script from "next/script";
 import { SessionProvider, useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { useCases } from "@/lib/use-cases";
+import { SkipLink, MAIN_CONTENT_ID } from "@/components/skip-link";
 
 const LOGO_URL =
   "https://d1p6j71028fbjm.cloudfront.net/logos/logo-new-referral-1.png";
@@ -159,6 +160,8 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen min-w-0 flex-col overflow-x-hidden bg-gradient-to-b from-white via-rose-50/40 to-orange-50/40 text-gray-900">
+      <SkipLink />
+
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-rose-100 bg-white/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -493,7 +496,9 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* Main content */}
-      <main className="flex-1">{children}</main>
+      <main id={MAIN_CONTENT_ID} tabIndex={-1} className="flex-1 outline-none">
+        {children}
+      </main>
 
       {/* Footer */}
       <footer className="border-t border-slate-700/80 bg-slate-800">

@@ -88,7 +88,10 @@
   --destructive: #dc3545;
   --border: #ebeef0;
   --input: #ebeef0;
-  --ring: #ff5c62;
+  /* Focus indicators need 3:1 against what surrounds them (WCAG 1.4.11). The
+     coral #ff5c62 managed 1.76:1 on white, so the ring was all but invisible
+     on the surface it appears on most. */
+  --ring: #d63a40;
   --chart-1: #ff5c62;
   --chart-2: #28a745;
   --chart-3: #ffc107;

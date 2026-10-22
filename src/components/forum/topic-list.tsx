@@ -61,6 +61,9 @@ export function ForumTopicList({
 }) {
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
   const authorMap = new Map(authors.map((a) => [a.id, a]));
+  // One instant for the whole page, so two rows posted seconds apart cannot
+  // land on opposite sides of the 24h "Needs an answer" cutoff.
+  const now = Date.now();
 
   return (
     <Card className="gap-0 p-0">
@@ -118,6 +121,7 @@ export function ForumTopicList({
                     {needsAnswer({
                       ...topic,
                       isAnnouncement: isAnnouncementsSlug(category?.slug),
+                      now,
                     }) ? (
                       <NeedsAnswerBadge />
                     ) : null}

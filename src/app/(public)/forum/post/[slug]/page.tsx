@@ -310,6 +310,7 @@ export default async function TopicDetailPage({
                   status: topic.status,
                   replyCount: openComments.length,
                   is_pinned: topic.is_pinned,
+                  date_posted: topic.date_posted,
                   isAnnouncement: isAnnouncementsSlug(category?.slug),
                 }) ? (
                   <NeedsAnswerBadge />

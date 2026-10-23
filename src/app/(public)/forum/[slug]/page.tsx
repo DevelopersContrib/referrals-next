@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { siteUrl } from "@/lib/site-url";
 import { publicTopicOrderBy, publicTopicWhere } from "@/lib/forum";
+import { ForumEmptyState } from "@/components/forum/empty-state";
 
 export async function generateMetadata({
   params,
@@ -103,16 +104,13 @@ export default async function ForumCategoryPage({
 
       <div className="space-y-3">
         {topics.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              No topics in this category yet.
-              <Link
-                href="/forum/new"
-                className="ml-1 text-blue-600 hover:underline"
-              >
-                Create one
-              </Link>
-            </CardContent>
+          <Card className="p-0">
+            <ForumEmptyState
+              title={`No topics in ${category.name} yet`}
+              description="Be the first to post here, or look through the other categories."
+              action={{ href: "/forum/new", label: "Ask a question" }}
+              secondaryAction={{ href: "/forum", label: "All categories" }}
+            />
           </Card>
         ) : (
           topics.map((topic) => {

@@ -50,20 +50,25 @@ export function ForumTopicList({
   categories,
   authors = [],
   header,
-  emptyMessage,
+  empty,
+  now,
 }: {
   topics: ForumTopicListItem[];
   categories: Pick<topic_categories, "id" | "name" | "slug">[];
   authors?: TopicAuthor[];
   /** Tabs and the category filter, which sit inside the same card as the rows. */
   header?: React.ReactNode;
-  emptyMessage: string;
+  /** Shown in place of the rows. Owns its own padding; see ForumEmptyState. */
+  empty: React.ReactNode;
+  /**
+   * The instant to judge the 24h "Needs an answer" cutoff against. Taken once
+   * per request by the page, so two rows posted seconds apart cannot land on
+   * opposite sides of it, and so this component stays pure.
+   */
+  now: number;
 }) {
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
   const authorMap = new Map(authors.map((a) => [a.id, a]));
-  // One instant for the whole page, so two rows posted seconds apart cannot
-  // land on opposite sides of the 24h "Needs an answer" cutoff.
-  const now = Date.now();
 
   return (
     <Card className="gap-0 p-0">
@@ -72,9 +77,7 @@ export function ForumTopicList({
       ) : null}
 
       {topics.length === 0 ? (
-        <div className="px-4 py-12 text-center text-muted-foreground">
-          {emptyMessage}
-        </div>
+        empty
       ) : (
         <div className="divide-y divide-border">
           {topics.map((topic) => {

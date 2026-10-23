@@ -12,6 +12,7 @@ import {
   listTopicAuthors,
 } from "@/lib/forum";
 import { ForumTopicList, forumHref } from "@/components/forum/topic-list";
+import { ForumEmptyState } from "@/components/forum/empty-state";
 
 export const metadata: Metadata = {
   title: "Search Forum",
@@ -44,6 +45,7 @@ export default async function ForumSearchPage({
           pageSize: 20,
           totalPages: 1,
           categoryId: null,
+          fetchedAt: 0,
         }),
     listForumCategories(),
   ]);
@@ -77,24 +79,36 @@ export default async function ForumSearchPage({
         </Button>
       </form>
 
-      {q ? (
+      {/* The count is dropped on a miss: the empty state below already says
+          nothing matched, and saying it twice reads like a stutter. */}
+      {q && list.total > 0 ? (
         <p className="text-sm text-muted-foreground">
           {list.total} result{list.total === 1 ? "" : "s"} for “{q}”
         </p>
-      ) : (
+      ) : !q ? (
         <p className="text-sm text-muted-foreground">
           Search topic titles, bodies, and replies.
         </p>
-      )}
+      ) : null}
 
-      <ForumTopicList
-        topics={list.topics}
-        categories={categories}
-        authors={authors}
-        emptyMessage={
-          q ? `No topics match “${q}”.` : "Enter a search to see topics."
-        }
-      />
+      {/* Before anything is typed there is nothing to report, so the list is
+          left off entirely rather than shown as an empty card. */}
+      {q ? (
+        <ForumTopicList
+          topics={list.topics}
+          categories={categories}
+          authors={authors}
+          now={list.fetchedAt}
+          empty={
+            <ForumEmptyState
+              title={`No topics match “${q}”`}
+              description="Try a shorter or different word. Search covers topic titles, bodies and replies."
+              action={{ href: "/forum", label: "Browse the forum" }}
+              secondaryAction={{ href: "/forum/new", label: "Ask a question" }}
+            />
+          }
+        />
+      ) : null}
 
       {q && list.totalPages > 1 ? (
         <div className="flex items-center justify-center gap-2">

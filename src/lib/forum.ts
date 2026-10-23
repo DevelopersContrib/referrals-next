@@ -132,7 +132,14 @@ export async function listForumTopics(options: {
   pageSize: number;
   totalPages: number;
   categoryId: number | null;
+  /**
+   * The clock when this page of topics was read. Age-based UI, meaning the
+   * 24h "Needs an answer" cutoff, judges every row against it, so rows posted
+   * seconds apart cannot fall on opposite sides, and the components stay pure.
+   */
+  fetchedAt: number;
 }> {
+  const fetchedAt = Date.now();
   const tab = options.tab ?? "latest";
   const page = Math.max(1, options.page ?? 1);
   const pageSize = FORUM_PAGE_SIZE;
@@ -189,6 +196,7 @@ export async function listForumTopics(options: {
         pageSize,
         totalPages: 0,
         categoryId,
+        fetchedAt,
       };
     }
     const follows = await prisma.topic_followers.findMany({
@@ -204,6 +212,7 @@ export async function listForumTopics(options: {
         pageSize,
         totalPages: 0,
         categoryId,
+        fetchedAt,
       };
     }
     extraFilters.push({ id: { in: followIds } });
@@ -317,5 +326,6 @@ export async function listForumTopics(options: {
     pageSize,
     totalPages: Math.max(1, Math.ceil(total / pageSize)),
     categoryId,
+    fetchedAt,
   };
 }

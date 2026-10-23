@@ -15,6 +15,7 @@ import {
 } from "@/lib/forum";
 import { PinnedTopics } from "@/components/forum/pinned-topics";
 import { ForumTopicList, forumHref } from "@/components/forum/topic-list";
+import { ForumEmptyState } from "@/components/forum/empty-state";
 import { ForumSidebar } from "@/components/forum/forum-sidebar";
 import { SidebarDisclosure } from "@/components/forum/sidebar-disclosure";
 
@@ -104,14 +105,53 @@ export default async function ForumPage({
     (c) => c.slug === "show-your-campaign" || c.name === "Show your campaign",
   );
 
-  const emptyMessage =
-    tab === "following" && !memberId
-      ? "Sign in to see topics you follow."
-      : tab === "following"
-        ? "You are not following any topics yet."
-        : tab === "unanswered"
-          ? "All topics have a reply."
-          : "No topics yet. Be the first to start a discussion!";
+  // Each empty list has a different cause, so each gets its own way out. The
+  // category cases name the category: "no topics yet" beside an active filter
+  // reads as a broken forum rather than a narrow filter.
+  const activeCategory = categorySlug
+    ? categories.find((c) => c.slug === categorySlug)
+    : null;
+  const categoryLabel = activeCategory?.name ?? "this category";
+
+  const empty =
+    tab === "following" && !memberId ? (
+      <ForumEmptyState
+        title="Sign in to see topics you follow"
+        description="Following a topic emails you whenever someone replies to it."
+        action={{ href: "/signin?callbackUrl=/forum", label: "Sign in" }}
+        secondaryAction={{ href: "/signup", label: "Create an account" }}
+      />
+    ) : tab === "following" ? (
+      <ForumEmptyState
+        title="You are not following any topics yet"
+        description="Open a topic and choose Follow, and we will email you when someone replies."
+        action={{ href: "/forum", label: "Browse latest topics" }}
+      />
+    ) : tab === "unanswered" ? (
+      <ForumEmptyState
+        title={
+          activeCategory
+            ? `Every question in ${categoryLabel} has an answer`
+            : "Every question has an answer"
+        }
+        description="Nothing is waiting on a reply right now. Ask something new, or see what the community is discussing."
+        action={{ href: "/forum/new", label: "Ask a question" }}
+        secondaryAction={{ href: "/forum", label: "Browse latest topics" }}
+      />
+    ) : activeCategory ? (
+      <ForumEmptyState
+        title={`No topics in ${categoryLabel} yet`}
+        description="Be the first to post here, or look through the other categories."
+        action={{ href: "/forum/new", label: "Ask a question" }}
+        secondaryAction={{ href: "/forum", label: "All categories" }}
+      />
+    ) : (
+      <ForumEmptyState
+        title="No topics yet"
+        description="Be the first to start a discussion. The team reads every thread."
+        action={{ href: "/forum/new", label: "Ask a question" }}
+      />
+    );
 
   const listHeader = (
     // Tabs and categories sit on their own rows. Side by side the chips
@@ -237,7 +277,8 @@ export default async function ForumPage({
             categories={categories}
             authors={authors}
             header={listHeader}
-            emptyMessage={emptyMessage}
+            empty={empty}
+            now={list.fetchedAt}
           />
 
           {list.totalPages > 1 ? (

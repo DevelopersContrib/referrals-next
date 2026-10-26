@@ -32,7 +32,7 @@ export function TopicVoteButton({
       toast.error(
         res.status === 401
           ? "Sign in to upvote this topic."
-          : "Could not record your vote. Please try again."
+          : "Could not record your vote. Please try again.",
       );
     } catch {
       toast.error("Could not record your vote. Please try again.");
@@ -43,6 +43,7 @@ export function TopicVoteButton({
     <Button
       variant={voted ? "default" : "outline"}
       size="sm"
+      className="min-h-11 px-4"
       onClick={handleVote}
       disabled={voted}
     >

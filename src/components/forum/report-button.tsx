@@ -41,7 +41,10 @@ export function ReportButton({
       type="button"
       variant="ghost"
       size="sm"
-      className="h-auto px-0 text-xs text-muted-foreground"
+      // 44px tall and wide enough to hit on a phone. The padding is cancelled
+      // by the matching negative margin, so the label still lines up with the
+      // meta text beside it exactly as it did at 18px.
+      className="-mx-2 min-h-11 px-2 text-xs text-muted-foreground"
       onClick={report}
       disabled={state === "sending"}
     >

@@ -265,7 +265,15 @@ export default async function TopicDetailPage({
         aria-label="Breadcrumb"
         className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
       >
-        <Link href="/forum" className="hover:text-gray-900">
+        {/* min-h-11 on the links, matching the forum home, so the two
+            breadcrumb hops are reachable on a phone without the 20px row
+            they sat in before. The padding widens short labels like "Forum",
+            which is only 43px of text, and the negative margin cancels it so
+            the spacing between hops is unchanged. */}
+        <Link
+          href="/forum"
+          className="-mx-1 inline-flex min-h-11 items-center px-1 hover:text-gray-900"
+        >
           Forum
         </Link>
         {category && (
@@ -273,7 +281,7 @@ export default async function TopicDetailPage({
             <span aria-hidden="true">/</span>
             <Link
               href={`/forum/${category.slug || category.id}`}
-              className="hover:text-gray-900"
+              className="-mx-1 inline-flex min-h-11 items-center px-1 hover:text-gray-900"
             >
               {category.name}
             </Link>

@@ -33,7 +33,10 @@ export default async function PlanCheckoutPage({
   if (price <= 0) redirect("/billing");
   const unit = plan.unit || "month";
   const isPaid = true;
-  const priceLabel = `$${price.toFixed(2)}/${unit}`;
+  const isWinback = plan.id === WINBACK_PLAN_ID;
+  const priceLabel = isWinback
+    ? "$1 first month, then $9/month"
+    : `$${price.toFixed(2)}/${unit}`;
   const memberId = parseInt(session.user.id, 10);
   const parsedBrandId = brandId ? parseInt(brandId, 10) : null;
   const parsedGoLive = goLiveCampaign ? parseInt(goLiveCampaign, 10) : null;
@@ -145,8 +148,9 @@ export default async function PlanCheckoutPage({
               </span>
             </div>
             <p className="mt-2 text-sm text-gray-600">
-              {plan.days || 30}-day billing cycle. Cancel anytime. This brand
-              stays private until payment, then the widget can accept signups.
+              {isWinback
+                ? "$1 for your first month, then $9/month. Cancel anytime. This brand stays private until payment, then the widget can accept signups."
+                : `${plan.days || 30}-day billing cycle. Cancel anytime. This brand stays private until payment, then the widget can accept signups.`}
             </p>
           </div>
 
@@ -181,9 +185,14 @@ export default async function PlanCheckoutPage({
                     Total today
                   </span>
                   <span className="text-2xl font-bold tracking-tight text-gray-900">
-                    {priceLabel}
+                    {isWinback ? "$1.00" : priceLabel}
                   </span>
                 </div>
+                {isWinback && (
+                  <p className="mt-1 text-sm font-medium text-[#926efb]">
+                    Then $9/month after the first month
+                  </p>
+                )}
                 {brand?.domain && (
                   <p className="mt-1 text-sm text-gray-500">
                     For brand · {brand.domain}

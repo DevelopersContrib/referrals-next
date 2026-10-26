@@ -2,6 +2,8 @@ import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getBillingPlan, getSubscription } from "@/lib/paypal";
 import { paypalPlanNameFor } from "@/lib/billing-paypal-plan";
+import { winbackPaypalPlanName } from "@/lib/billing-winback";
+import { WINBACK_PLAN_ID } from "@/lib/billing-constants";
 import { postVnocAttribution, resolveVnocPlan } from "@/lib/vnoc-attribution";
 import { handlePaidEngagementTransition } from "@/lib/engagement";
 import { getPrimaryCheckoutBrand, isVnocBrand } from "@/lib/member-subscription";
@@ -157,7 +159,10 @@ export async function activatePaidSubscription(opts: {
       const paypalPlan = (await getBillingPlan(paypalPlanId).catch(() => null)) as
         | { name?: string }
         | null;
-      if (paypalPlan?.name !== paypalPlanNameFor(plan)) {
+      const expectedName = plan.id === WINBACK_PLAN_ID
+        ? winbackPaypalPlanName()
+        : paypalPlanNameFor(plan);
+      if (paypalPlan?.name !== expectedName) {
         console.error(
           `[billing] plan mismatch: paypal plan ${paypalPlanId} is not the plan for ${plan.id}`
         );

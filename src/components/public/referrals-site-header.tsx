@@ -71,7 +71,7 @@ export function ReferralsSiteHeader({ menu = true }: { menu?: boolean }) {
           )}
           <Link
             href="/signup"
-            className="rounded-lg bg-[#FF5C62] px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#ff4f58]"
+            className="rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[#b83239]"
           >
             Start your program
           </Link>

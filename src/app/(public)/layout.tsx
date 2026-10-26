@@ -255,7 +255,7 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
                 </div>
                 <Link
                   href="/dashboard"
-                  className="rounded-lg bg-[#FF5C62] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#ff4f58] hover:shadow-lg hover:shadow-[#FF5C62]/25"
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#b83239] hover:shadow-lg hover:shadow-primary/25"
                 >
                   Dashboard
                 </Link>
@@ -277,7 +277,7 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
                 </Link>
                 <Link
                   href="/signup"
-                  className="rounded-lg bg-[#FF5C62] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#ff4f58] hover:shadow-lg hover:shadow-[#FF5C62]/25"
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#b83239] hover:shadow-lg hover:shadow-primary/25"
                 >
                   Sign Up
                 </Link>
@@ -456,7 +456,7 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
                     <Link
                       href="/dashboard"
                       onClick={() => setMobileOpen(false)}
-                      className="rounded-lg bg-[#FF5C62] px-4 py-2 text-center text-sm font-medium text-white hover:bg-[#ff4f58]"
+                      className="rounded-lg bg-primary px-4 py-2 text-center text-sm font-medium text-white hover:bg-[#b83239]"
                     >
                       Go to dashboard
                     </Link>
@@ -483,7 +483,7 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
                     <Link
                       href="/signup"
                       onClick={() => setMobileOpen(false)}
-                      className="rounded-lg bg-[#FF5C62] px-4 py-2 text-center text-sm font-medium text-white hover:bg-[#ff4f58]"
+                      className="rounded-lg bg-primary px-4 py-2 text-center text-sm font-medium text-white hover:bg-[#b83239]"
                     >
                       Sign Up
                     </Link>

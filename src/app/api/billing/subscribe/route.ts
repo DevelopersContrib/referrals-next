@@ -8,6 +8,8 @@ import {
   newCheckoutAttemptId,
 } from "@/lib/billing-checkout-log";
 import { getPrimaryCheckoutBrand } from "@/lib/member-subscription";
+import { WINBACK_PLAN_ID } from "@/lib/billing-constants";
+import { resolveWinbackPaypalPlanId, memberHasUsedWinbackOffer } from "@/lib/billing-winback";
 
 /**
  * Redirect checkout fallback: creates the subscription server-side and returns
@@ -108,11 +110,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (plan.id === WINBACK_PLAN_ID) {
+      const alreadyUsed = await memberHasUsedWinbackOffer(memberId);
+      if (alreadyUsed) {
+        await logCheckoutEvent({
+          attemptId,
+          memberId,
+          planId: plan.id,
+          brandId,
+          eventName: "server_error",
+          checkoutMode: "redirect",
+          errorCode: "WINBACK_ALREADY_USED",
+          errorMessage: "Member has already used the $1 win-back offer",
+        });
+        return NextResponse.json(
+          { error: "This offer has already been used.", code: "WINBACK_ALREADY_USED" },
+          { status: 409 },
+        );
+      }
+    }
+
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const returnUrl = `${appUrl}/api/billing/execute?planId=${planId}&attemptId=${attemptId}${brandId ? `&brandId=${brandId}` : ""}`;
     const cancelUrl = `${appUrl}/billing`;
 
-    const paypalPlanId = await resolvePaypalPlanId(plan);
+    const paypalPlanId = plan.id === WINBACK_PLAN_ID
+      ? await resolveWinbackPaypalPlanId()
+      : await resolvePaypalPlanId(plan);
     if (!paypalPlanId) {
       await logCheckoutEvent({
         attemptId,

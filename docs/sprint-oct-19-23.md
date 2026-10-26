@@ -89,6 +89,8 @@ The reuse/fallback bugs are fixed in code. Production has not taken a known-good
 
 Checkout now requires a brand. People who already paid with no `url_plan` may still have a private brand.
 
+**Gap fix (PR ronan.dev/b16-b2-b8-gap-fixes):** `attach-orphan-payment.ts` previously only set `member_payment.url_id`. The app treats a brand as paid via `url_plan` + `member_urls.plan_expiry`, so attaching the payment alone left the brand private. Fixed: in `--apply` mode the script now also creates the `url_plan` row (agreement id, payment_id from `member_plan`) and sets/extends `member_urls.plan_expiry`. Idempotent — safe to run twice.
+
 **Done when:**
 
 - A list of existing `member_payment` rows with no matching `url_plan` is sent to Maida
@@ -106,6 +108,8 @@ $9/mo alone is slow: $1,000/mo needs about 111 paying brands. This task brings i
 - [ ] Run `scripts/winback-unpaid-brands.ts` on prod, send list+count to Maida
 - [ ] Maida approves copy
 - [ ] Send first batch: `WINBACK_SEND=true npx tsx scripts/winback-send-emails.ts --send`
+
+**Gap fix (PR ronan.dev/b16-b2-b8-gap-fixes):** `resolveWinbackPaypalPlanId()` had no callers — plan 7 checkout went through the generic `resolvePaypalPlanId`, which would create a plain $1/month-forever plan instead of the $1 trial + $9 regular plan. Fixed: both `/api/billing/subscribe` and `/api/billing/checkout-config` now route plan 7 to `resolveWinbackPaypalPlanId()`. Server-side one-use-per-member win-back eligibility check added to both routes (was only on the checkout page). Activation (`billing-activation.ts`) now recognises the winback PayPal plan name. Checkout page shows "$1 first month, then $9/month".
 
 These are the warmest leads: they wanted the product and stopped at the paywall.
 
@@ -156,6 +160,8 @@ The Go Live CTA now lives on the brand homepage (and is hidden for admins / Unli
 - [x] Every email links to checkout for that specific brand _(code done in PR)_
 - [ ] The copy matches the $9/mo pay-to-publish model — **Maida approves the copy**
 - [ ] `UNPAID_FOLLOWUP_EMAILS_ENABLED=true` set in Vercel env — **Lee enables after approval**
+
+**Gap fix (PR ronan.dev/b16-b2-b8-gap-fixes):** (a) `findUnpaidBrands` had no date cutoff or batch cap — enabling the flag would email years of old brands. Fixed: added a 30-day cutoff (brands with `date_added >= now - 30d`, overridable via `UNPAID_FOLLOWUP_CUTOFF_DAYS`), a per-run cap of 200 (overridable via `UNPAID_FOLLOWUP_PER_RUN_CAP`), and a 14-day time window for abandoned checkouts (overridable via `UNPAID_FOLLOWUP_ABANDONED_WINDOW_DAYS`). (b) "Paid" previously meant any `url_plan` row ever, even for cancelled plans. Fixed: now uses the same entitlement logic as `getBrandEntitlement` — checks `plan_expiry` is in the future + `price > 0`, and excludes brands covered by an active Agency/Unlimited account plan. Off-by-default/dry-run behaviour unchanged.
 
 ## B18 — Subscriber report + Unlimited renewals (3h) — HIGH · Ronan + Maida
 

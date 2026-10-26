@@ -7,6 +7,8 @@ import {
   newCheckoutAttemptId,
 } from "@/lib/billing-checkout-log";
 import { getPrimaryCheckoutBrand } from "@/lib/member-subscription";
+import { WINBACK_PLAN_ID } from "@/lib/billing-constants";
+import { resolveWinbackPaypalPlanId, memberHasUsedWinbackOffer } from "@/lib/billing-winback";
 
 /**
  * GET /api/billing/checkout-config?planId=2
@@ -109,7 +111,19 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const paypalPlanId = await resolvePaypalPlanId(plan);
+  if (plan.id === WINBACK_PLAN_ID) {
+    const alreadyUsed = await memberHasUsedWinbackOffer(memberId);
+    if (alreadyUsed) {
+      return NextResponse.json(
+        { error: "This offer has already been used.", code: "WINBACK_ALREADY_USED" },
+        { status: 409 },
+      );
+    }
+  }
+
+  const paypalPlanId = plan.id === WINBACK_PLAN_ID
+    ? await resolveWinbackPaypalPlanId()
+    : await resolvePaypalPlanId(plan);
   if (!paypalPlanId) {
     await logCheckoutEvent({
       attemptId,

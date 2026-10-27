@@ -519,7 +519,8 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
                 Build scalable and robust referral systems
               </p>
               <p className="mt-4 text-sm text-slate-300">
-                <span className="text-slate-500">Phone:</span> 1-888-Referrals
+                {/* slate-400, not 500: on this footer 500 is only 3.07:1. */}
+                <span className="text-slate-400">Phone:</span> 1-888-Referrals
               </p>
               {/* Social Icons */}
               <div className="mt-4 flex items-center gap-3">
@@ -627,7 +628,8 @@ function PublicLayoutInner({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          <div className="mt-10 border-t border-slate-700 pt-8 text-center text-sm text-slate-500">
+          {/* slate-400, not 500: on this footer 500 is only 3.07:1. */}
+          <div className="mt-10 border-t border-slate-700 pt-8 text-center text-sm text-slate-400">
             &copy; {new Date().getFullYear()} Referrals.com. All rights reserved.
           </div>
         </div>

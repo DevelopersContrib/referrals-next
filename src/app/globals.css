@@ -78,7 +78,10 @@
      2.89:1, below the 4.5:1 AA threshold; this darker red reaches 4.63:1.
      Coral stays in use for accents, where it is not carrying text. */
   --primary: #d63a40;
-  --primary-foreground: oklch(0.985 0 0);
+  /* Pure white, not the off-white oklch(0.985) shadcn ships. On --primary
+     that off-white measures 4.43:1 and misses AA by a hair; white reaches
+     4.63:1. At this lightness the two are indistinguishable on screen. */
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -116,7 +119,7 @@
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: #d63a40;
-  --primary-foreground: oklch(0.985 0 0);
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);

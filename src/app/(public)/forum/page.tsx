@@ -168,7 +168,9 @@ export default async function ForumPage({
               className={`flex min-h-11 items-center rounded-md px-3 text-sm ${
                 active
                   ? "bg-gray-900 text-white"
-                  : "bg-muted text-muted-foreground hover:text-gray-900"
+                  : // gray-700 rather than muted-foreground: grey-on-grey left
+                    // the inactive tabs at 4.35:1, just under AA.
+                    "bg-muted text-gray-700 hover:text-gray-900"
               }`}
             >
               {item.label}

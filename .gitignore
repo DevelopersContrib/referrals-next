@@ -2,6 +2,11 @@
 
 # dependencies
 /node_modules
+# pnpm is the package manager for this repo (see "packageManager" in
+# package.json). A second lockfile drifts from pnpm-lock.yaml and makes
+# installs differ between machines and CI.
+/package-lock.json
+/yarn.lock
 /.pnp
 .pnp.*
 .yarn/*

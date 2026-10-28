@@ -34,6 +34,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+# Local dev server output, when `next dev` is redirected to a file. It is
+# machine-specific and changes on every run, so it only creates noise in diffs.
+/dev.log
 
 # env files (can opt-in for committing if needed)
 .env*

@@ -393,14 +393,16 @@ Screen: **Forum home · phone**.
 
 **Forum (Joseph + Andre)**
 
-- [ ] `/forum` shows no 2019–2021 threads outside Archive
-- [ ] Pinned topics on top, then topics by latest activity
-- [ ] Search finds topics by title and body
-- [ ] Topic page shows the Accepted answer block and Team badge
-- [ ] A new account's first post waits for approval
-- [ ] Reply email and weekly digest both send in a test
-- [ ] Phone layout has no sideways scrolling at 390px
-- [ ] Each topic page has its own title, description, canonical and valid JSON-LD; sitemap lists all live topics
+- [x] `/forum` shows no 2019–2021 threads outside Archive
+- [x] Pinned topics on top, then topics by latest activity
+- [x] Search finds topics by title and body
+- [x] Topic page shows the Accepted answer block and Team badge
+- [x] A new account's first post waits for approval
+- [ ] Reply email and weekly digest both send in a test — blocked, no SES credentials outside production. The digest cron rejects unauthenticated calls and its dry run returns 200; the real send still needs confirming by someone with credentials.
+- [x] Phone layout has no sideways scrolling at 390px
+- [x] Each topic page has its own title, description, canonical and valid JSON-LD; sitemap lists all live topics
+
+Ticked from the A6 end-to-end smoke run on Oct 28 (46 of 47 checks passed) plus a 390px re-measure. One open defect, with Joseph under JJ9: a missing or hidden topic renders "Topic Not Found" but still returns HTTP 200 instead of 404.
 
 ---
 

@@ -70,8 +70,8 @@ export function AnalysisPipeline({
         <div className="animate-in fade-in slide-in-from-left-4 duration-500">
           <div className="flex items-center gap-3">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FF5C62] opacity-75 motion-reduce:hidden" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#FF5C62]" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#D63A40] opacity-75 motion-reduce:hidden" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#D63A40]" />
             </span>
             <p className="text-sm font-medium text-gray-500">
               Analyzing <span className="font-semibold text-gray-900">{domain}</span>

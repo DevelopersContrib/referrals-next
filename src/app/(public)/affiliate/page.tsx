@@ -70,7 +70,7 @@ export default function AffiliatePage() {
               { step: "3", title: "Earn", desc: "Earn commissions for every paying customer you refer. Track your earnings in real-time." },
             ].map((item) => (
               <div key={item.step} className="text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#FF5C62] text-2xl font-bold text-white">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#D63A40] text-2xl font-bold text-white">
                   {item.step}
                 </div>
                 <h3 className="text-xl font-semibold">{item.title}</h3>
@@ -108,7 +108,7 @@ export default function AffiliatePage() {
           <div className="rounded-2xl bg-gradient-to-r from-[#FF5C62] to-[#ff8a6c] p-12">
             <h2 className="text-3xl font-bold text-white">Refer and Earn Rewards</h2>
             <p className="mt-4 text-lg text-white/80">Start earning today. No upfront costs, no commitments.</p>
-            <Link href="/signup" className="mt-6 inline-block rounded-lg bg-white px-8 py-3 font-semibold text-[#FF5C62] transition-all hover:shadow-xl">
+            <Link href="/signup" className="mt-6 inline-block rounded-lg bg-white px-8 py-3 font-semibold text-[#D63A40] transition-all hover:shadow-xl">
               Join Affiliate Program
             </Link>
           </div>

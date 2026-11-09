@@ -287,7 +287,7 @@ function GradientAccent() {
   return (
     <div
       aria-hidden
-      className="h-1 bg-linear-to-r from-brand to-brand-violet md:absolute md:inset-y-0 md:inset-s-0 md:h-auto md:w-1 md:bg-linear-to-b"
+      className="h-1 bg-linear-to-r from-brand-accent to-brand-violet-accent md:absolute md:inset-y-0 md:inset-s-0 md:h-auto md:w-1 md:bg-linear-to-b"
     />
   );
 }

@@ -47,7 +47,7 @@ export default function ResourcesPage() {
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_45%_at_50%_-15%,rgba(255,92,98,0.16),transparent)]" />
         <div className="relative mx-auto max-w-4xl px-4 py-16 text-center sm:py-20">
-          <span className="inline-flex rounded-full border border-rose-200/80 bg-white/80 px-3 py-1 text-xs font-semibold text-[#FF5C62] shadow-sm">
+          <span className="inline-flex rounded-full border border-rose-200/80 bg-white/80 px-3 py-1 text-xs font-semibold text-[#D63A40] shadow-sm">
             Referral marketing hub
           </span>
           <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
@@ -97,7 +97,7 @@ export default function ResourcesPage() {
                   {u.label}
                 </h3>
                 <p className="mt-2 text-sm text-gray-600">{u.subhead}</p>
-                <span className="mt-4 inline-block text-sm font-semibold text-[#926efb]">
+                <span className="mt-4 inline-block text-sm font-semibold text-[#8056FA]">
                   Read the playbook →
                 </span>
               </Link>
@@ -115,7 +115,7 @@ export default function ResourcesPage() {
             </h2>
             <Link
               href="/blog"
-              className="text-sm font-semibold text-[#926efb] hover:underline"
+              className="text-sm font-semibold text-[#8056FA] hover:underline"
             >
               View all →
             </Link>
@@ -127,7 +127,7 @@ export default function ResourcesPage() {
                 href={`/blog/${post.slug}`}
                 className="group rounded-2xl border border-rose-100 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               >
-                <p className="text-xs font-medium uppercase tracking-wide text-[#FF5C62]">
+                <p className="text-xs font-medium uppercase tracking-wide text-[#D63A40]">
                   {post.tags?.[0] || "Guide"}
                 </p>
                 <h3 className="mt-2 font-semibold text-gray-900 group-hover:text-[#FF5C62]">
@@ -153,7 +153,7 @@ export default function ResourcesPage() {
           </p>
           <Link
             href="/signup"
-            className="mt-6 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#ff646c] shadow-lg transition hover:bg-gray-50"
+            className="mt-6 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#D63A40] shadow-lg transition hover:bg-gray-50"
           >
             Create account
           </Link>

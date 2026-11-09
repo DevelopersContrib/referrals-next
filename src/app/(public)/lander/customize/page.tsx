@@ -161,7 +161,7 @@ export default function LanderCustomizePage() {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="rounded-lg bg-[#FF5C62] px-6 py-2.5 text-sm font-medium text-white transition-all hover:bg-[#ff4f58] disabled:opacity-50"
+                  className="rounded-lg bg-[#D63A40] px-6 py-2.5 text-sm font-medium text-white transition-all hover:bg-[#B83239] disabled:opacity-50"
                 >
                   {saving ? "Saving..." : "Save Customization"}
                 </button>

@@ -94,7 +94,7 @@ export default async function UseCasePage({ params }: Props) {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
               href={signupHref}
-              className="rounded-xl bg-[#FF5C62] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:bg-[#ff4f58]"
+              className="rounded-xl bg-[#D63A40] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:bg-[#B83239]"
             >
               Set up your program free
             </Link>

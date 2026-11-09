@@ -27,7 +27,7 @@ export default function LanderDefaultPage() {
             />
             <button
               type="submit"
-              className="rounded-lg bg-[#FF5C62] px-6 py-3 text-sm font-medium text-white transition-all hover:bg-[#ff4f58] hover:shadow-lg hover:shadow-[#FF5C62]/25"
+              className="rounded-lg bg-[#D63A40] px-6 py-3 text-sm font-medium text-white transition-all hover:bg-[#B83239] hover:shadow-lg hover:shadow-[#FF5C62]/25"
             >
               Get Started
             </button>

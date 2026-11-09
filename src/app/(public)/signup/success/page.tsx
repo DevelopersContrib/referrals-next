@@ -85,7 +85,7 @@ export default async function SignupSuccessPage({
           <div className="mt-6 flex flex-col gap-2">
             <Link
               href="/signin"
-              className="inline-block rounded-xl bg-[#FF5C62] px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-[#ff4f58] hover:shadow-lg hover:shadow-[#FF5C62]/25"
+              className="inline-block rounded-xl bg-[#D63A40] px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-[#B83239] hover:shadow-lg hover:shadow-[#FF5C62]/25"
             >
               Go to sign in
             </Link>

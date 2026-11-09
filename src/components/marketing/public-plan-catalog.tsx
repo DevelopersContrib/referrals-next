@@ -139,7 +139,7 @@ function PublicPlanCard({
             "mt-6 flex min-h-11 w-full items-center justify-center rounded-xl px-4 py-3 text-center text-sm font-semibold text-white shadow-md transition-all focus-visible:outline-2 focus-visible:outline-offset-2",
             isPopular
               ? "bg-gradient-to-r from-[#926efb] to-[#7c3aed] shadow-violet-300/40 hover:brightness-105 focus-visible:outline-[#926efb]"
-              : "bg-[#926efb] hover:bg-[#7c5ce0] focus-visible:outline-[#926efb]",
+              : "bg-[#8056FA] hover:bg-[#6B45D6] focus-visible:outline-[#926efb]",
           )}
         >
           {ctaLabel}

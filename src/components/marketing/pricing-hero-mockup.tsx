@@ -77,7 +77,7 @@ export function PricingHeroMockup({ plans }: { plans: CatalogPlan[] }) {
                       {row.price}
                     </p>
                     {row.active ? (
-                      <span className="mt-0.5 inline-block rounded-full bg-[#926efb] px-2 py-0.5 text-[9px] font-semibold text-white">
+                      <span className="mt-0.5 inline-block rounded-full bg-[#8056FA] px-2 py-0.5 text-[9px] font-semibold text-white">
                         Most popular
                       </span>
                     ) : null}

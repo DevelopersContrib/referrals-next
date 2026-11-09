@@ -112,7 +112,7 @@ export function HeroCampaignSlideshow() {
           <span
             key={mockup.title}
             className={`h-2 rounded-full transition-all duration-500 ${
-              idx === activeIndex ? "w-8 bg-[#FF5C62]" : "w-2 bg-rose-200"
+              idx === activeIndex ? "w-8 bg-[#D63A40]" : "w-2 bg-rose-200"
             }`}
             aria-hidden
           />

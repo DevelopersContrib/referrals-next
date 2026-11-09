@@ -56,7 +56,7 @@ function CouponContent() {
         <div className="text-5xl mb-4">❌</div>
         <h1 className="text-xl font-semibold text-white mb-2">Invalid Coupon Link</h1>
         <p className="text-gray-400 mb-6">This coupon link is invalid or has expired.</p>
-        <Link href="/" className="bg-[#FF5C62] hover:bg-[#e54e54] text-white font-semibold px-6 py-3 rounded-lg transition-colors">
+        <Link href="/" className="bg-[#D63A40] hover:bg-[#B83239] text-white font-semibold px-6 py-3 rounded-lg transition-colors">
           Go Home
         </Link>
       </div>
@@ -84,7 +84,7 @@ function CouponContent() {
           setCopyState(ok ? "copied" : "failed");
           setTimeout(() => setCopyState("idle"), 2000);
         }}
-        className="bg-[#926efb] hover:bg-[#7c5be8] text-white font-semibold px-8 py-3 rounded-lg transition-colors mb-4 w-full"
+        className="bg-[#8056FA] hover:bg-[#7c5be8] text-white font-semibold px-8 py-3 rounded-lg transition-colors mb-4 w-full"
       >
         {copyState === "copied"
           ? "Copied!"

@@ -523,7 +523,7 @@ export default function FeaturesPage() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid min-w-0 items-center gap-6 sm:gap-8 lg:grid-cols-[1fr_minmax(0,420px)] lg:gap-12">
             <div className="min-w-0 text-center lg:text-left">
-              <span className="inline-flex rounded-full border border-rose-200/80 bg-white/80 px-3 py-1 text-xs font-semibold text-[#FF5C62] shadow-sm backdrop-blur">
+              <span className="inline-flex rounded-full border border-rose-200/80 bg-white/80 px-3 py-1 text-xs font-semibold text-[#D63A40] shadow-sm backdrop-blur">
                 Built for growth teams
               </span>
               <h1 className="mt-3 text-[1.65rem] font-bold leading-tight tracking-tight text-gray-900 min-[380px]:text-[1.85rem] sm:mt-4 sm:text-4xl md:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
@@ -539,7 +539,7 @@ export default function FeaturesPage() {
               <div className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:mt-6 sm:gap-3 lg:justify-start">
                 <Link
                   href="/signup"
-                  className="rounded-xl bg-[#FF5C62] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:bg-[#ff4f58]"
+                  className="rounded-xl bg-[#D63A40] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:bg-[#B83239]"
                 >
                   Create account
                 </Link>
@@ -617,7 +617,7 @@ export default function FeaturesPage() {
           <div className="mt-8 flex items-center justify-center gap-4">
             <Link
               href="/signup"
-              className="rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#ff646c] shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
+              className="rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#D63A40] shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
             >
               Create account
             </Link>

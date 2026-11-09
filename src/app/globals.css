@@ -53,12 +53,20 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* Referrals red brand colors */
-  --color-brand: #ff5c62;
-  --color-brand-hover: #ff4f58;
+  /* Referrals red brand colors.
+     brand and brand-violet carry text (text-brand is used 174 times,
+     bg-brand 114), so both have to clear 4.5:1 against white. The display
+     coral #ff5c62 only reached 3.02:1 and the violet #926efb 3.59:1; these
+     darker values reach 4.63:1 and 4.53:1 with the same hue. The original
+     coral lives on as brand-accent below, for borders, gradients and tints
+     that carry no text. */
+  --color-brand: #d63a40;
+  --color-brand-hover: #b83239;
+  --color-brand-accent: #ff5c62;
   --color-brand-light: #ffe5e7;
   --color-brand-foreground: #ffffff;
-  --color-brand-violet: #926efb;
+  --color-brand-violet: #8056fa;
+  --color-brand-violet-accent: #926efb;
   --color-success: #28a745;
   --color-success-light: #e8f5e9;
   --color-warning: #ffc107;
@@ -183,20 +191,24 @@ input:-webkit-autofill {
 
 /* Metronic-inspired dashboard utility classes */
 @layer utilities {
+  /* These shadow the utilities Tailwind generates from the tokens above, so
+     they have to track those values or the two disagree. bg/text carry text
+     and use the accessible brand; border/ring never do, so they keep the
+     display coral. */
   .bg-brand {
-    background-color: #ff5c62;
+    background-color: var(--color-brand);
   }
   .bg-brand-hover {
-    background-color: #ff4f58;
+    background-color: var(--color-brand-hover);
   }
   .text-brand {
-    color: #ff5c62;
+    color: var(--color-brand);
   }
   .border-brand {
-    border-color: #ff5c62;
+    border-color: var(--color-brand-accent);
   }
   .ring-brand {
-    --tw-ring-color: #ff5c62;
+    --tw-ring-color: var(--color-brand-accent);
   }
 
   .bg-dashboard {

@@ -251,7 +251,7 @@ export default async function AdminDashboardPage() {
                         {p.value > 0 ? fmt(p.value) : ""}
                       </span>
                       <div
-                        className="w-full min-w-[8px] max-w-[40px] rounded-t bg-[#ff5c62] transition-all hover:bg-[#e84b51]"
+                        className="w-full min-w-[8px] max-w-[40px] rounded-t bg-[#D63A40] transition-all hover:bg-[#e84b51]"
                         style={{ height: `${barPx}px` }}
                       />
                       <span className="text-[10px] text-muted-foreground">{p.label}</span>

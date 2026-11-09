@@ -284,7 +284,7 @@ export default function DeveloperPage() {
           <Card>
             <CardContent>
               <h3 className="mb-3 font-heading font-semibold">Base URL</h3>
-              <code className="block rounded-lg bg-muted px-4 py-3 font-mono text-sm text-brand">
+              <code className="block rounded-lg bg-muted px-4 py-3 font-mono text-sm">
                 https://referrals.com/api/v1
               </code>
             </CardContent>

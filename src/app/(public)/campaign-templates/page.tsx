@@ -44,7 +44,7 @@ const templates: TemplateDef[] = [
     bestFor: "Ecommerce & Shopify",
     icon: Share2Icon,
     gradient: "from-[#FF5C62] via-[#ff7a6f] to-[#ff9a8b]",
-    chipClass: "bg-[#FF5C62] text-white",
+    chipClass: "bg-[#D63A40] text-white",
   },
   {
     slug: "token-reward",
@@ -53,7 +53,7 @@ const templates: TemplateDef[] = [
     bestFor: "Web3 projects",
     icon: CoinsIcon,
     gradient: "from-[#6b4bb7] via-[#926efb] to-[#b8a4fc]",
-    chipClass: "bg-[#926efb] text-white",
+    chipClass: "bg-[#8056FA] text-white",
   },
   {
     slug: "download-giveaway",
@@ -62,7 +62,7 @@ const templates: TemplateDef[] = [
     bestFor: "Creators & newsletters",
     icon: DownloadIcon,
     gradient: "from-[#e11d48] via-[#FF5C62] to-[#fb7185]",
-    chipClass: "bg-[#FF5C62] text-white",
+    chipClass: "bg-[#D63A40] text-white",
   },
   {
     slug: "photo-voting",
@@ -71,7 +71,7 @@ const templates: TemplateDef[] = [
     bestFor: "Communities & contests",
     icon: CameraIcon,
     gradient: "from-[#5b21b6] via-[#7c3aed] to-[#a78bfa]",
-    chipClass: "bg-[#926efb] text-white",
+    chipClass: "bg-[#8056FA] text-white",
   },
   {
     slug: "poll-campaign",
@@ -80,7 +80,7 @@ const templates: TemplateDef[] = [
     bestFor: "Local & newsletters",
     icon: BarChart3Icon,
     gradient: "from-[#be123c] via-[#FF5C62] to-[#fda4af]",
-    chipClass: "bg-[#FF5C62] text-white",
+    chipClass: "bg-[#D63A40] text-white",
   },
   {
     slug: "closed-beta",
@@ -89,7 +89,7 @@ const templates: TemplateDef[] = [
     bestFor: "Startups & SaaS",
     icon: LockIcon,
     gradient: "from-[#4c1d95] via-[#6d28d9] to-[#8b5cf6]",
-    chipClass: "bg-[#926efb] text-white",
+    chipClass: "bg-[#8056FA] text-white",
   },
   {
     slug: "info-bar",
@@ -98,7 +98,7 @@ const templates: TemplateDef[] = [
     bestFor: "Any website",
     icon: PanelTopIcon,
     gradient: "from-[#9f1239] via-[#FF5C62] to-[#fecdd3]",
-    chipClass: "bg-[#FF5C62] text-white",
+    chipClass: "bg-[#D63A40] text-white",
   },
   {
     slug: "full-page",
@@ -107,7 +107,7 @@ const templates: TemplateDef[] = [
     bestFor: "Launches & agencies",
     icon: Maximize2Icon,
     gradient: "from-[#3b0764] via-[#7c3aed] to-[#c4b5fd]",
-    chipClass: "bg-[#926efb] text-white",
+    chipClass: "bg-[#8056FA] text-white",
   },
 ];
 
@@ -182,7 +182,7 @@ export default function CampaignTemplatesPage() {
                     <div className="mt-4 flex gap-2 border-t border-white/5 pt-4">
                       <Link
                         href={`/signup?ref=templates&tpl=${encodeURIComponent(t.slug)}`}
-                        className="flex flex-1 items-center justify-center rounded-xl bg-[#FF5C62] py-2.5 text-center text-xs font-semibold text-white transition hover:bg-[#ff4f58]"
+                        className="flex flex-1 items-center justify-center rounded-xl bg-[#D63A40] py-2.5 text-center text-xs font-semibold text-white transition hover:bg-[#B83239]"
                       >
                         Use template
                       </Link>
@@ -210,7 +210,7 @@ export default function CampaignTemplatesPage() {
           </p>
           <Link
             href="/signup"
-            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#FF5C62] px-8 py-3.5 text-sm font-semibold text-white transition hover:bg-[#ff4f58] hover:shadow-lg hover:shadow-[#FF5C62]/20"
+            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#D63A40] px-8 py-3.5 text-sm font-semibold text-white transition hover:bg-[#B83239] hover:shadow-lg hover:shadow-[#FF5C62]/20"
           >
             Build a custom campaign
             <ArrowRightIcon className="size-4" />

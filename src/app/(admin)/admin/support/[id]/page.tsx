@@ -230,7 +230,7 @@ export default function AdminSupportTicketPage() {
           type="button"
           onClick={sendReply}
           disabled={sending || !reply.trim()}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#ff646c] text-white text-sm font-medium disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#D63A40] text-white text-sm font-medium disabled:opacity-50"
         >
           <Send className="h-4 w-4" />
           {internalNote ? "Add note" : "Send reply"}

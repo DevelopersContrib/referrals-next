@@ -128,7 +128,7 @@ export default function AboutPage() {
                 "Integrate with the tools you already use through our REST API and Zapier.",
               ].map((item) => (
                 <li key={item} className="flex gap-3 text-gray-400">
-                  <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#ff646c]" />
+                  <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#D63A40]" />
                   <span>{item}</span>
                 </li>
               ))}
@@ -215,7 +215,7 @@ export default function AboutPage() {
           </p>
           <Link
             href="/signup"
-            className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#ff646c] shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
+            className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#D63A40] shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
           >
             Create account
           </Link>

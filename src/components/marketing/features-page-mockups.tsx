@@ -84,7 +84,7 @@ export function FeaturesDashboardShowcase() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,92,98,0.12),transparent_50%)]" />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex rounded-full border border-rose-200 bg-white px-3 py-1 text-xs font-semibold text-[#FF5C62] shadow-sm">
+          <span className="inline-flex rounded-full border border-rose-200 bg-white px-3 py-1 text-xs font-semibold text-[#D63A40] shadow-sm">
             Live product preview
           </span>
           <h2 className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
@@ -126,7 +126,7 @@ export function FeaturesDashboardShowcase() {
                 <span className="rounded-lg border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur">
                   Refer Us
                 </span>
-                <span className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#FF5C62] shadow-md">
+                <span className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#D63A40] shadow-md">
                   + New Brand
                 </span>
               </div>
@@ -183,7 +183,7 @@ export function FeaturesDashboardShowcase() {
                 </p>
                 <Link
                   href="/pricing"
-                  className="mt-3 inline-block rounded-lg bg-[#FF5C62] px-3 py-2 text-xs font-semibold text-white hover:bg-[#ff4f58]"
+                  className="mt-3 inline-block rounded-lg bg-[#D63A40] px-3 py-2 text-xs font-semibold text-white hover:bg-[#B83239]"
                 >
                   View plans
                 </Link>

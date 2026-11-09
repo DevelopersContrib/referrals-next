@@ -173,7 +173,7 @@ export default async function CampaignTemplateDetailPage({
             <ArrowLeftIcon className="size-4" />
             All templates
           </Link>
-          <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-[#FF5C62]">
+          <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-[#D63A40]">
             Best for {template.bestFor}
           </p>
           <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">{template.title}</h1>
@@ -187,7 +187,7 @@ export default async function CampaignTemplateDetailPage({
           <ol className="mt-8 space-y-3">
             {template.steps.map((step, index) => (
               <li key={step} className="flex gap-3 text-sm text-gray-200">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#FF5C62] text-xs font-semibold text-white">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#D63A40] text-xs font-semibold text-white">
                   {index + 1}
                 </span>
                 <span className="pt-0.5">{step}</span>
@@ -196,7 +196,7 @@ export default async function CampaignTemplateDetailPage({
           </ol>
           <Link
             href={`/signup?ref=templates&tpl=${encodeURIComponent(template.slug)}`}
-            className="mt-10 inline-flex items-center gap-2 rounded-xl bg-[#FF5C62] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#ff4f58]"
+            className="mt-10 inline-flex items-center gap-2 rounded-xl bg-[#D63A40] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#B83239]"
           >
             Use this template
             <ArrowRightIcon className="size-4" />

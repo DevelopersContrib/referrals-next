@@ -153,7 +153,7 @@ export default function AdminSupportPage() {
           <button
             type="button"
             onClick={search}
-            className="px-3 py-2 rounded-lg bg-[#ff646c] text-white hover:bg-[#ff4f58]"
+            className="px-3 py-2 rounded-lg bg-[#D63A40] text-white hover:bg-[#B83239]"
           >
             <Search className="h-4 w-4" />
           </button>

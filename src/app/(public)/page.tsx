@@ -515,7 +515,7 @@ export default async function HomePage() {
             <div className="mt-5 flex flex-col gap-2 sm:mt-6 sm:flex-row sm:gap-3">
               <Link
                 href="/signup?ref=home-hero"
-                className="rounded-xl bg-[#FF5C62] px-7 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-[#FF5C62]/25 transition-all hover:bg-[#ff4f58] hover:shadow-xl hover:shadow-[#FF5C62]/35"
+                className="rounded-xl bg-[#D63A40] px-7 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-[#FF5C62]/25 transition-all hover:bg-[#B83239] hover:shadow-xl hover:shadow-[#FF5C62]/35"
               >
                 Set up your program free
               </Link>
@@ -561,7 +561,7 @@ export default async function HomePage() {
             </div>
 
             <div className="mt-4 rounded-xl border border-rose-100 bg-white/90 p-3 shadow-sm backdrop-blur sm:mt-5 sm:rounded-2xl sm:p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#FF5C62]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#D63A40]">
                 Live activity
               </p>
               <div className="mt-3 space-y-2 text-sm text-gray-700">
@@ -757,7 +757,7 @@ export default async function HomePage() {
           <div className="mt-10 text-center">
             <Link
               href="/pricing"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#926efb]/30 bg-white px-6 py-3 text-sm font-semibold text-[#926efb] shadow-sm transition hover:border-[#926efb] hover:bg-[#926efb]/5"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#926efb]/30 bg-white px-6 py-3 text-sm font-semibold text-[#8056FA] shadow-sm transition hover:border-[#926efb] hover:bg-[#926efb]/5"
             >
               See full pricing details
             </Link>
@@ -806,7 +806,7 @@ export default async function HomePage() {
           </p>
           <Link
             href={isLoggedIn ? "/billing" : "/signup"}
-            className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#FF5C62] shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
+            className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#D63A40] shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
           >
             {isLoggedIn ? "Choose a plan" : "Set up your program free"}
           </Link>

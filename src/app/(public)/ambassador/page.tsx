@@ -30,7 +30,7 @@ export default function AmbassadorPage() {
           <div className="flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
             <Link
               href="/signup"
-              className="rounded-lg bg-[#FF5C62] px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-[#e54e54] sm:px-8 sm:py-4 sm:text-lg"
+              className="rounded-lg bg-[#D63A40] px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-[#B83239] sm:px-8 sm:py-4 sm:text-lg"
             >
               Apply Now — It&apos;s Free
             </Link>
@@ -177,7 +177,7 @@ export default function AmbassadorPage() {
           </p>
           <Link
             href="/signup"
-            className="bg-[#FF5C62] hover:bg-[#e54e54] text-white font-semibold px-10 py-4 rounded-lg transition-colors text-lg inline-block"
+            className="bg-[#D63A40] hover:bg-[#B83239] text-white font-semibold px-10 py-4 rounded-lg transition-colors text-lg inline-block"
           >
             Apply Now — Free to Join
           </Link>

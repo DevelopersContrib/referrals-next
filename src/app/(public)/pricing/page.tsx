@@ -111,7 +111,7 @@ export default async function PricingPage() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid min-w-0 items-center gap-6 sm:gap-8 lg:grid-cols-[1fr_minmax(0,400px)] lg:gap-12">
             <div className="min-w-0 text-center lg:text-left">
-              <span className="inline-flex rounded-full border border-rose-200/80 bg-white/80 px-3 py-1 text-xs font-semibold text-[#FF5C62] shadow-sm backdrop-blur">
+              <span className="inline-flex rounded-full border border-rose-200/80 bg-white/80 px-3 py-1 text-xs font-semibold text-[#D63A40] shadow-sm backdrop-blur">
                 Set up free · $9/mo per brand to publish
               </span>
               <h1 className="mt-3 text-[1.65rem] font-bold leading-tight tracking-tight text-gray-900 min-[380px]:text-[1.85rem] sm:mt-4 sm:text-4xl md:text-5xl lg:text-[3.25rem] lg:leading-[1.08]">
@@ -138,7 +138,7 @@ export default async function PricingPage() {
               <div className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:mt-6 sm:gap-3 lg:justify-start">
                 <Link
                   href={primaryCtaHref}
-                  className="rounded-xl bg-[#FF5C62] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:bg-[#ff4f58]"
+                  className="rounded-xl bg-[#D63A40] px-6 py-3 text-base font-semibold text-white shadow-lg shadow-rose-300/40 transition hover:bg-[#B83239]"
                 >
                   {primaryCtaLabel}
                 </Link>
@@ -161,7 +161,7 @@ export default async function PricingPage() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-rose-200 to-transparent" />
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="mb-8 text-center sm:mb-10">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#926efb]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#8056FA]">
               Available plans
             </span>
             <h2 className="mt-2 text-3xl font-bold text-gray-900 sm:text-4xl">
@@ -232,11 +232,15 @@ export default async function PricingPage() {
                 key={testimonial.name}
                 className="rounded-2xl border border-rose-100/80 bg-white p-6 shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg"
               >
-                <div className="mb-4 flex gap-0.5 text-amber-400" aria-hidden>
+                {/* amber-600, not 400: the stars carry the rating visually, so
+                    they need 3:1 as a graphical object and 400 was only 1.72:1.
+                    They stay aria-hidden, with the rating given as text. */}
+                <div className="mb-4 flex gap-0.5 text-amber-600" aria-hidden>
                   {[1, 2, 3, 4, 5].map((i) => (
                     <span key={i}>★</span>
                   ))}
                 </div>
+                <span className="sr-only">Rated 5 out of 5</span>
                 <p className="text-sm leading-relaxed text-gray-700">
                   &ldquo;{testimonial.quote}&rdquo;
                 </p>
@@ -268,7 +272,7 @@ export default async function PricingPage() {
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
             <Link
               href={primaryCtaHref}
-              className="inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#ff646c] shadow-lg transition-all hover:bg-gray-50 hover:shadow-xl"
+              className="inline-block rounded-xl bg-white px-8 py-3.5 text-lg font-semibold text-[#D63A40] shadow-lg transition-all hover:bg-gray-50 hover:shadow-xl"
             >
               {primaryCtaLabel}
             </Link>

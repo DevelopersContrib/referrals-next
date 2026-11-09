@@ -87,7 +87,7 @@ function SignupShareContent() {
               type="button"
               onClick={handleCopy}
               disabled={!referralUrl}
-              className="flex-shrink-0 rounded-md bg-[#FF5C62] px-4 py-1.5 text-xs font-medium text-white transition-all hover:bg-[#ff4f58] disabled:opacity-50"
+              className="flex-shrink-0 rounded-md bg-[#D63A40] px-4 py-1.5 text-xs font-medium text-white transition-all hover:bg-[#B83239] disabled:opacity-50"
             >
               {status === "copied"
                 ? "Copied!"

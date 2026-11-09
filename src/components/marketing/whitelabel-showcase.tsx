@@ -36,7 +36,7 @@ export function WhitelabelHeroMockup() {
               <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
             </span>
             <span className="truncate font-mono text-[11px] font-medium text-gray-700">
-              refer.<span className="text-[#926efb]">yourbrand</span>.com
+              refer.<span className="text-[#8056FA]">yourbrand</span>.com
             </span>
             <span className="ml-auto shrink-0 rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">
               TLS
@@ -124,7 +124,7 @@ export function WhitelabelGoLivePipeline() {
     <div className="relative overflow-hidden rounded-3xl border border-rose-100/80 bg-gradient-to-br from-white via-violet-50/30 to-rose-50/40 p-8 shadow-xl ring-1 ring-black/5 sm:p-10">
       <div className="pointer-events-none absolute -right-20 top-1/2 h-64 w-64 -translate-y-1/2 rounded-full bg-[#926efb]/10 blur-3xl" />
       <div className="relative mx-auto max-w-3xl text-center">
-        <span className="text-xs font-bold uppercase tracking-wider text-[#926efb]">
+        <span className="text-xs font-bold uppercase tracking-wider text-[#8056FA]">
           Go live
         </span>
         <h2 className="mt-2 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
@@ -206,7 +206,7 @@ export function WhitelabelSurfacesMockup() {
                 <div className="h-2 w-full rounded bg-gray-100" />
                 <div className="h-2 w-5/6 rounded bg-gray-100" />
                 <div className="mt-2 flex gap-2">
-                  <span className="rounded-md bg-[#FF5C62] px-2 py-1 text-[9px] font-semibold text-white">
+                  <span className="rounded-md bg-[#D63A40] px-2 py-1 text-[9px] font-semibold text-white">
                     Join
                   </span>
                   <span className="rounded-md border border-gray-200 bg-white px-2 py-1 text-[9px] text-gray-600">
@@ -260,8 +260,8 @@ export function WhitelabelEmailWidgetStrip() {
           <div className="flex items-center justify-between">
             <span className="text-sm font-bold text-gray-900">Share & win</span>
             <div className="flex gap-1">
-              <span className="size-3 rounded-full bg-[#FF5C62]" />
-              <span className="size-3 rounded-full bg-[#926efb]" />
+              <span className="size-3 rounded-full bg-[#D63A40]" />
+              <span className="size-3 rounded-full bg-[#8056FA]" />
               <span className="size-3 rounded-full bg-gray-200" />
             </div>
           </div>

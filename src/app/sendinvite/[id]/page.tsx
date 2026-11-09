@@ -59,7 +59,7 @@ export default function SendInvitePage() {
             <p className="text-gray-400 mb-6">This invite link may have expired or is invalid.</p>
             <Link
               href="/"
-              className="bg-[#FF5C62] hover:bg-[#e54e54] text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+              className="bg-[#D63A40] hover:bg-[#B83239] text-white font-semibold px-6 py-3 rounded-lg transition-colors"
             >
               Go Home
             </Link>

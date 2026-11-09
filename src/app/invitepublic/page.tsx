@@ -57,7 +57,7 @@ function InvitePublicContent() {
         {campaign && (
           <Link
             href={`/p/${campaign.brand.slug}/campaign/${campaign.id}`}
-            className="bg-[#926efb] hover:bg-[#7c5be8] text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+            className="bg-[#8056FA] hover:bg-[#7c5be8] text-white font-semibold px-6 py-3 rounded-lg transition-colors"
           >
             View Campaign
           </Link>
@@ -101,7 +101,7 @@ function InvitePublicContent() {
         <button
           type="submit"
           disabled={status === "submitting"}
-          className="w-full bg-[#FF5C62] hover:bg-[#e54e54] disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition-colors"
+          className="w-full bg-[#D63A40] hover:bg-[#B83239] disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition-colors"
         >
           {status === "submitting" ? "Joining..." : "Join & Get My Referral Link"}
         </button>
@@ -109,9 +109,9 @@ function InvitePublicContent() {
 
       <p className="text-center text-gray-500 text-xs mt-6">
         By joining, you agree to our{" "}
-        <Link href="/terms" className="text-[#926efb] hover:underline">Terms</Link>{" "}
+        <Link href="/terms" className="text-[#a78bfa] hover:underline">Terms</Link>{" "}
         and{" "}
-        <Link href="/privacy" className="text-[#926efb] hover:underline">Privacy Policy</Link>.
+        <Link href="/privacy" className="text-[#a78bfa] hover:underline">Privacy Policy</Link>.
       </p>
     </div>
   );

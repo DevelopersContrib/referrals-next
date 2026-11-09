@@ -74,7 +74,7 @@ export function SignupInviteCard({
         <button
           type="button"
           onClick={copyLink}
-          className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg bg-[#FF5C62] px-3 text-xs font-semibold text-white hover:bg-[#ff4f58]"
+          className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg bg-[#D63A40] px-3 text-xs font-semibold text-white hover:bg-[#B83239]"
         >
           {status === "copied" ? (
             <CheckIcon className="size-3.5" />

@@ -129,7 +129,7 @@ export function AiCampaignBrief({
   return (
     <section className="overflow-hidden rounded-2xl border border-[#ebeef0] bg-white shadow-sm">
       <div className="border-b border-[#ebeef0] px-5 py-4 sm:px-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#FF5C62]">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[#D63A40]">
           Step {step} of 4
         </p>
         <h2
@@ -163,7 +163,7 @@ export function AiCampaignBrief({
               <li key={label} className="flex flex-1 items-center gap-2">
                 <span
                   className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
-                    done || active ? "bg-[#FF5C62] text-white" : "bg-[#eef0f3] text-[#a7abc3]"
+                    done || active ? "bg-[#D63A40] text-white" : "bg-[#eef0f3] text-[#a7abc3]"
                   }`}
                 >
                   {done ? <Check className="size-3.5" /> : n}
@@ -204,7 +204,7 @@ export function AiCampaignBrief({
                     <p className="mt-3 text-sm font-bold text-[#575962]">{g.title}</p>
                     <p className="mt-1 text-xs leading-relaxed text-[#a7abc3]">{goalWhy(status, g.id)}</p>
                     {g.id === recGoal && (
-                      <span className="mt-2 inline-block rounded-full bg-[#fff1f1] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#FF5C62]">
+                      <span className="mt-2 inline-block rounded-full bg-[#fff1f1] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#D63A40]">
                         Suggested
                       </span>
                     )}
@@ -279,7 +279,7 @@ export function AiCampaignBrief({
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-bold text-[#575962]">{meta.label}</p>
                       {id === recDesign && (
-                        <span className="rounded-full bg-[#fff1f1] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#FF5C62]">
+                        <span className="rounded-full bg-[#fff1f1] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#D63A40]">
                           Suggested
                         </span>
                       )}
@@ -347,7 +347,7 @@ export function AiCampaignBrief({
         {step < 4 ? (
           <Button
             type="button"
-            className="bg-[#FF5C62] text-white hover:bg-[#e54e54]"
+            className="bg-[#D63A40] text-white hover:bg-[#B83239]"
             onClick={() => setStep((s) => (s === 4 ? 4 : ((s + 1) as 1 | 2 | 3 | 4)))}
           >
             Continue
@@ -356,7 +356,7 @@ export function AiCampaignBrief({
           <Button
             type="button"
             disabled={submitting}
-            className="bg-[#FF5C62] text-white hover:bg-[#e54e54]"
+            className="bg-[#D63A40] text-white hover:bg-[#B83239]"
             onClick={() =>
               onSubmit({ goalKind, goalType, color, copyTone, designStyle, wantImage })
             }
@@ -467,7 +467,7 @@ function ToneOption({
       <div className="flex items-center gap-2">
         <p className="text-sm font-semibold text-[#575962]">{label}</p>
         {badge ? (
-          <span className="rounded-full bg-[#fff1f1] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#FF5C62]">
+          <span className="rounded-full bg-[#fff1f1] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#D63A40]">
             {badge}
           </span>
         ) : null}

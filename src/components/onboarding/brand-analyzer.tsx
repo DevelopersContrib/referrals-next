@@ -281,7 +281,7 @@ export function BrandAnalyzer({
           website or a different one.
         </p>
         <Button
-          className="mt-6 gap-1.5 bg-[#FF5C62] px-6 font-semibold hover:bg-[#ff4f58]"
+          className="mt-6 gap-1.5 bg-[#D63A40] px-6 font-semibold hover:bg-[#B83239]"
           onClick={() => {
             stoppedRef.current = false;
             setJobId(null);
@@ -367,7 +367,7 @@ export function BrandAnalyzer({
                   ? "Pick an available public address first"
                   : undefined
               }
-              className="h-11 shrink-0 gap-1.5 rounded-xl bg-[#FF5C62] px-5 text-sm font-semibold hover:bg-[#ff4f58]"
+              className="h-11 shrink-0 gap-1.5 rounded-xl bg-[#D63A40] px-5 text-sm font-semibold hover:bg-[#B83239]"
             >
               {submitting ? (
                 <>

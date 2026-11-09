@@ -98,7 +98,7 @@ function SignInFormInner() {
 
         <Button
           type="submit"
-          className="w-full bg-[#FF5C62] hover:bg-[#ff4f58]"
+          className="w-full bg-[#D63A40] hover:bg-[#B83239]"
           disabled={loading}
         >
           {loading ? "Signing in…" : "Sign in"}

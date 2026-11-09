@@ -160,7 +160,7 @@ function Template5() {
         {/* Video placeholder */}
         <div className="relative mx-auto aspect-video max-w-lg overflow-hidden rounded-2xl bg-gradient-to-br from-[#292A2D] to-[#1a1b1e] shadow-2xl">
           <div className="absolute inset-0 flex items-center justify-center">
-            <button className="flex h-20 w-20 items-center justify-center rounded-full bg-[#FF5C62] shadow-lg shadow-[#FF5C62]/30 transition-transform hover:scale-110">
+            <button className="flex h-20 w-20 items-center justify-center rounded-full bg-[#D63A40] shadow-lg shadow-[#FF5C62]/30 transition-transform hover:scale-110">
               <svg
                 className="ml-1 h-8 w-8 text-white"
                 fill="currentColor"

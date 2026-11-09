@@ -7,7 +7,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  /* Open Sans per the brand spec. This pointed at itself, so the value was
+     invalid and font-sans resolved to nothing; text only looked right because
+     the body sets Open Sans inline. Remove that inline style and the whole
+     site would lose its font. */
+  --font-sans: var(--font-open-sans);
   --font-mono: var(--font-geist-mono);
   /* Dosis for headings per the brand spec. This pointed at --font-sans, which
      is never defined, so font-heading silently fell back to Open Sans. */

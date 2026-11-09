@@ -55,7 +55,8 @@ export function WhitelabelHeroMockup() {
                 YB
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                {/* gray-500, not 400: on white 400 is only 2.6:1. */}
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
                   Your program
                 </p>
                 <p className="truncate text-sm font-bold text-gray-900">Invite friends, earn rewards</p>
@@ -229,7 +230,8 @@ export function WhitelabelEmailWidgetStrip() {
         <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
           <div className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/70 to-transparent animate-wl-shimmer opacity-60" />
         </div>
-        <p className="text-xs font-bold uppercase tracking-wide text-gray-400">
+        {/* gray-500, not 400: on white 400 is only 2.6:1. */}
+        <p className="text-xs font-bold uppercase tracking-wide text-gray-500">
           Transactional email
         </p>
         <div className="mt-4 rounded-xl border border-gray-100 bg-gray-50/80 p-4">

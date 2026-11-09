@@ -108,7 +108,8 @@ export function FeaturesDashboardShowcase() {
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <span className="hidden sm:inline">Search</span>
-              <span className="rounded-md border border-gray-200 bg-white px-2 py-1 text-[10px] text-gray-400">
+              {/* gray-500, not 400: on white 400 is only 2.6:1. */}
+              <span className="rounded-md border border-gray-200 bg-white px-2 py-1 text-[10px] text-gray-500">
                 ⌘K
               </span>
             </div>

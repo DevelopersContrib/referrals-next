@@ -139,7 +139,9 @@ export default function CampaignTemplatesPage() {
           <div className="mb-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-white sm:text-2xl">Browse by use case</h2>
-              <p className="mt-1 text-sm text-gray-500">
+              {/* gray-400, not 500: this sits on the dark hero, so it has to
+                  get lighter, not darker. 500 was 3.71:1 here. */}
+              <p className="mt-1 text-sm text-gray-400">
                 Every template is included when you publish ($9/mo per brand). Pick the
                 one that fits your business.
               </p>

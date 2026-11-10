@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -28,6 +29,11 @@ import {
   getBrandEntitlement,
 } from "@/lib/member-subscription";
 import { BrandUpgradeCta } from "@/components/brands/brand-upgrade-cta";
+
+export const metadata: Metadata = {
+  title: "Manage brands",
+  robots: { index: false, follow: false },
+};
 
 export default async function BrandsPage() {
   const session = await auth();

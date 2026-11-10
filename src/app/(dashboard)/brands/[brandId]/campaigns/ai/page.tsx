@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { getBrandIfAccessible } from "@/lib/brand-access";
 import { prisma } from "@/lib/prisma";
@@ -5,6 +6,11 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeftIcon } from "lucide-react";
 import { AiCampaignPicker } from "@/components/campaigns/ai-campaign-picker";
+
+export const metadata: Metadata = {
+  title: "AI campaign builder",
+  robots: { index: false, follow: false },
+};
 
 interface AiCampaignPageProps {
   params: Promise<{ brandId: string }>;

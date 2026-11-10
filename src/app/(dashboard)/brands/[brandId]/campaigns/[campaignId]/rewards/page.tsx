@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { getCampaignIfAccessible } from "@/lib/brand-access";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CampaignRewardSettings } from "@/components/campaigns/campaign-reward-settings";
+
+export const metadata: Metadata = {
+  title: "Rewards & coupons",
+  robots: { index: false, follow: false },
+};
 
 interface RewardsPageProps {
   params: Promise<{ brandId: string; campaignId: string }>;

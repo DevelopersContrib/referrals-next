@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { unstable_cache } from "next/cache";
 import { auth } from "@/lib/auth";
@@ -32,6 +33,11 @@ import {
   ArrowRightIcon,
   LayoutGridIcon,
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  robots: { index: false, follow: false },
+};
 
 const BIG_ACCOUNT_CAMPAIGNS = 500;
 

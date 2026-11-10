@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { sessionIsPlatformAdmin } from "@/lib/require-platform-admin";
 import { AllBrandsTable } from "@/components/brands/all-brands-table";
 import { ChevronRightIcon, HomeIcon } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "All brands",
+  robots: { index: false, follow: false },
+};
 
 export default async function AllBrandsPage() {
   const session = await auth();

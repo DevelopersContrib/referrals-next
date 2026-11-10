@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Deals",
+  robots: { index: false, follow: false },
+};
 
 export default async function DealsPage({
   params,

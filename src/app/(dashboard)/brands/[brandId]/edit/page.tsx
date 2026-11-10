@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -8,6 +9,11 @@ import {
 } from "@/lib/member-subscription";
 import { BrandEditPanel } from "@/components/brands/brand-edit-panel";
 import { ChevronRightIcon, HomeIcon } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Edit brand",
+  robots: { index: false, follow: false },
+};
 
 interface EditBrandPageProps {
   params: Promise<{ brandId: string }>;

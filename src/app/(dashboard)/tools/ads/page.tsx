@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { AdsManager } from "@/components/tools/ads-manager";
+
+export const metadata: Metadata = {
+  title: "Ads",
+  robots: { index: false, follow: false },
+};
 
 export default async function AdsToolPage({ searchParams }: { searchParams?: Promise<{ brandId?: string }> }) {
 	const session = await auth();

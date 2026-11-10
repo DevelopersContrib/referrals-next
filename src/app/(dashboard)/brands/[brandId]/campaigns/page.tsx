@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { getBrandIfAccessible } from "@/lib/brand-access";
 import { prisma } from "@/lib/prisma";
@@ -20,6 +21,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+
+export const metadata: Metadata = {
+  title: "Campaigns",
+  robots: { index: false, follow: false },
+};
 
 interface CampaignListPageProps {
   params: Promise<{ brandId: string }>;

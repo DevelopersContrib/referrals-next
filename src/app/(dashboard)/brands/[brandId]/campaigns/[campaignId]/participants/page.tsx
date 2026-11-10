@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { getCampaignIfAccessible } from "@/lib/brand-access";
 import { prisma } from "@/lib/prisma";
@@ -5,6 +6,11 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ParticipantTable } from "@/components/campaigns/participant-table";
+
+export const metadata: Metadata = {
+  title: "Participants",
+  robots: { index: false, follow: false },
+};
 
 interface ParticipantsPageProps {
   params: Promise<{ brandId: string; campaignId: string }>;

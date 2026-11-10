@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -24,6 +25,11 @@ import {
   PlayIcon,
   LinkIcon,
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Developer",
+  robots: { index: false, follow: false },
+};
 
 interface PageProps {
   params: Promise<{ brandId: string }>;

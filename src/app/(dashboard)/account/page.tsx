@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -15,6 +16,11 @@ import {
   ArrowRightIcon,
 } from "lucide-react";
 import { getMemberEntitlement } from "@/lib/member-subscription";
+
+export const metadata: Metadata = {
+  title: "Account settings",
+  robots: { index: false, follow: false },
+};
 
 export default async function AccountPage() {
   const session = await auth();

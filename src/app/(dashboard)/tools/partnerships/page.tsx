@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { PartnershipsBrowser } from "@/components/tools/partnerships-browser";
+
+export const metadata: Metadata = {
+  title: "Partnerships",
+  robots: { index: false, follow: false },
+};
 
 export default async function PartnershipsToolPage() {
 	const session = await auth();

@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { getBrandIfAccessible } from "@/lib/brand-access";
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { isBrandGrowthEntitled } from "@/lib/member-subscription";
 import { CampaignCreateFlow } from "@/components/campaigns/campaign-create-flow";
+
+export const metadata: Metadata = {
+  title: "New campaign",
+  robots: { index: false, follow: false },
+};
 
 interface NewCampaignPageProps {
   params: Promise<{ brandId: string }>;

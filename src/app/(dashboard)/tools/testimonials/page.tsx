@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -9,6 +10,11 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+
+export const metadata: Metadata = {
+  title: "Testimonials",
+  robots: { index: false, follow: false },
+};
 
 export default async function TestimonialsToolPage() {
   const session = await auth();

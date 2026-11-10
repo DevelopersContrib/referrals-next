@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BrandAnalyzer } from "@/components/onboarding/brand-analyzer";
+
+export const metadata: Metadata = {
+  title: "New brand",
+  robots: { index: false, follow: false },
+};
 
 export default function NewBrandPage() {
   return (

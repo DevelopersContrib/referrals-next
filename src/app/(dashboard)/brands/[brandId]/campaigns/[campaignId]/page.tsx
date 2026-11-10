@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import {
   getBrandIfAccessible,
@@ -53,6 +54,11 @@ import {
   PuzzleIcon,
   TargetIcon,
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Campaign",
+  robots: { index: false, follow: false },
+};
 
 interface CampaignDashboardPageProps {
   params: Promise<{ brandId: string; campaignId: string }>;
